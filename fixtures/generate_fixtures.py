@@ -34,7 +34,9 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches, Pt
 from pptx import Presentation
+from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+from pptx.oxml.ns import qn
 from pptx.util import Emu, Inches as PptxInches, Pt as PptxPt
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import LETTER
@@ -51,6 +53,7 @@ GENERATED_DIR = Path(__file__).resolve().parent / "generated"
 PARITY_DIR = GENERATED_DIR / "parity"
 STRESS_DIR = GENERATED_DIR / "stress"
 IMAGES_DIR = GENERATED_DIR / "images"
+REPORT_FILENAME = "generation_report.json"
 
 # Fixed timestamps used everywhere a library would otherwise default to
 # "now" -- the single source of the "no wall-clock in any fixture" rule.
@@ -120,6 +123,21 @@ def save_pptx(presentation: Presentation, path: Path) -> None:
     set_pptx_core_properties(presentation)
     presentation.save(str(path))
     normalize_zip_timestamps(path)
+
+
+def add_target_arrowhead(connector, arrow_type: str = "triangle") -> None:
+    """python-pptx has no public API for line-end arrowheads, so this patches
+    the OOXML directly: adds <a:tailEnd type="..."/> to the connector's
+    <a:ln> line-properties element (the "tail" end is the line's target/end
+    point -- the "head" end is its source/start point). Inserted before any
+    existing <a:extLst> to respect CT_LineProperties' element ordering."""
+    ln = connector.line._get_or_add_ln()
+    tail_end = ln.makeelement(qn("a:tailEnd"), {"type": arrow_type})
+    ext_lst = ln.find(qn("a:extLst"))
+    if ext_lst is not None:
+        ext_lst.addprevious(tail_end)
+    else:
+        ln.append(tail_end)
 
 
 # --- parity suite ------------------------------------------------------
@@ -222,32 +240,43 @@ def generate_parity_pptx(manifest: ReferenceManifest, image_bytes: bytes, out_pa
     prs.slide_height = PptxInches(7.5)
     blank_layout = prs.slide_layouts[6]
 
-    # Slide 0 (unit 0)
+    # Slide 0 (unit 0) -- fixed vertical budget (slide height 7.5in) so
+    # body/heading2/table never overlap regardless of how many lines the
+    # (compact, 11pt) body paragraphs wrap to:
+    #   title:     0.30 - 0.90
+    #   body:      1.00 - 3.30  (2.3in, comfortably fits 7 paragraphs @ 11pt)
+    #   heading2:  3.50 - 3.95
+    #   table:     4.15 - 6.15
     slide0 = prs.slides.add_slide(blank_layout)
-    title_box = slide0.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(9), PptxInches(0.8))
+    title_box = slide0.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(9), PptxInches(0.6))
     title_tf = title_box.text_frame
     title_tf.text = suite.headings[0].text
     title_tf.paragraphs[0].font.size = PptxPt(24)
     title_tf.paragraphs[0].font.bold = True
 
-    body_box = slide0.shapes.add_textbox(PptxInches(0.5), PptxInches(1.2), PptxInches(9), PptxInches(2.6))
+    body_box = slide0.shapes.add_textbox(PptxInches(0.5), PptxInches(1.0), PptxInches(9), PptxInches(2.3))
     body_tf = body_box.text_frame
     body_tf.word_wrap = True
+    for margin in ("margin_left", "margin_right", "margin_top", "margin_bottom"):
+        setattr(body_tf, margin, PptxPt(2))
     paragraphs_text = _parity_unit0_paragraphs(manifest)
-    body_tf.text = paragraphs_text[0]
-    for text in paragraphs_text[1:]:
-        p = body_tf.add_paragraph()
-        p.text = text
+    for index, text in enumerate(paragraphs_text):
+        paragraph = body_tf.paragraphs[0] if index == 0 else body_tf.add_paragraph()
+        paragraph.text = text
+        paragraph.font.size = PptxPt(11)
+        paragraph.space_before = PptxPt(0)
+        paragraph.space_after = PptxPt(4)
+        paragraph.line_spacing = 1.0
 
-    heading2_box = slide0.shapes.add_textbox(PptxInches(0.5), PptxInches(4.0), PptxInches(9), PptxInches(0.5))
+    heading2_box = slide0.shapes.add_textbox(PptxInches(0.5), PptxInches(3.5), PptxInches(9), PptxInches(0.45))
     heading2_tf = heading2_box.text_frame
     heading2_tf.text = suite.headings[1].text
-    heading2_tf.paragraphs[0].font.size = PptxPt(18)
+    heading2_tf.paragraphs[0].font.size = PptxPt(16)
     heading2_tf.paragraphs[0].font.bold = True
 
     table_fact = suite.tables[0]
     graphic_frame = slide0.shapes.add_table(
-        table_fact.n_rows, table_fact.n_cols, PptxInches(0.5), PptxInches(4.6), PptxInches(6), PptxInches(2)
+        table_fact.n_rows, table_fact.n_cols, PptxInches(0.5), PptxInches(4.15), PptxInches(6), PptxInches(2)
     )
     pptx_table = graphic_frame.table
     for cell in table_fact.cells:
@@ -345,15 +374,36 @@ def generate_stress_pptx_overlapping_textboxes(manifest: ReferenceManifest, out_
     prs.slide_height = PptxInches(7.5)
     slide = prs.slides.add_slide(prs.slide_layouts[6])
 
+    # Partial physical overlap (NOT identical coordinates) so the front/back
+    # stacking has a real geometric relationship, not just a z_order label.
+    # Keyed by z_order: 0 = stale/behind, 1 = current/in front.
+    box_position_by_z_order = {
+        0: (PptxInches(1.0), PptxInches(1.0)),
+        1: (PptxInches(1.8), PptxInches(1.5)),
+    }
+    box_size = (PptxInches(6), PptxInches(1.2))
+
+    shapes_by_z_order = {}
     # Add lower z_order first so it renders behind; higher z_order last so
     # it renders in front -- python-pptx stacks shapes in add order.
     for box in sorted(fixture.text_boxes, key=lambda b: b.z_order):
-        shape = slide.shapes.add_textbox(PptxInches(1.0), PptxInches(1.0), PptxInches(6), PptxInches(1.2))
+        left, top = box_position_by_z_order[box.z_order]
+        shape = slide.shapes.add_textbox(left, top, *box_size)
         shape.text_frame.text = box.text
+        shapes_by_z_order[box.z_order] = shape
+
+    # The foreground (highest z_order) box gets an opaque fill so it visibly
+    # occludes the stale box behind it -- otherwise both are transparent and
+    # the declared stacking has no visible effect.
+    foreground_shape = shapes_by_z_order[max(shapes_by_z_order)]
+    foreground_shape.fill.solid()
+    foreground_shape.fill.fore_color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+    foreground_shape.line.color.rgb = RGBColor(0x00, 0x00, 0x00)
+    foreground_shape.line.width = PptxPt(1)
 
     table_fact = fixture.table
     graphic_frame = slide.shapes.add_table(
-        table_fact.n_rows, table_fact.n_cols, PptxInches(1.0), PptxInches(3.0), PptxInches(5), PptxInches(1.5)
+        table_fact.n_rows, table_fact.n_cols, PptxInches(1.0), PptxInches(3.2), PptxInches(5), PptxInches(1.5)
     )
     pptx_table = graphic_frame.table
     for cell in table_fact.cells:
@@ -396,6 +446,11 @@ def generate_stress_pptx_native_diagram(manifest: ReferenceManifest, out_path: P
         )
         connector.begin_connect(source_shape, 3)  # right-middle connection site
         connector.end_connect(target_shape, 1)  # left-middle connection site
+        connector.line.color.rgb = RGBColor(0x00, 0x00, 0x00)
+        connector.line.width = PptxPt(2)
+        # Directed edge -> a visible target-end arrowhead. python-pptx has no
+        # public API for this; see add_target_arrowhead()'s docstring.
+        add_target_arrowhead(connector, "triangle")
 
     save_pptx(prs, out_path)
 
@@ -469,19 +524,29 @@ def generate_all() -> dict:
 
     import hashlib
 
-    generated_files = sorted(GENERATED_DIR.rglob("*"))
+    # Exclude the report file from its own inventory -- without this, a
+    # second generate_all() call (e.g. back-to-back in a determinism test,
+    # with no directory cleanup in between) would pick up the PREVIOUS run's
+    # report.json in the rglob scan and hash it into the NEW report, making
+    # the report self-referential and stale.
+    generated_files = sorted(
+        path for path in GENERATED_DIR.rglob("*")
+        if path.is_file() and path.name != REPORT_FILENAME
+    )
     file_hashes = {}
     for path in generated_files:
-        if path.is_file():
-            digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            file_hashes[str(path.relative_to(GENERATED_DIR))] = {"sha256": digest, "size_bytes": path.stat().st_size}
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        # POSIX-style keys (never backslashes), so the report is portable
+        # and independently reproducible regardless of host OS.
+        relative_key = path.relative_to(GENERATED_DIR).as_posix()
+        file_hashes[relative_key] = {"sha256": digest, "size_bytes": path.stat().st_size}
 
     report = {
         "manifest_version": manifest.manifest_version,
         "manifest_sha256": manifest_sha256,
         "files": file_hashes,
     }
-    (GENERATED_DIR / "generation_report.json").write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+    (GENERATED_DIR / REPORT_FILENAME).write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
 
     console.print(f"[bold green]Generated {len(file_hashes)} files under {GENERATED_DIR}[/bold green]")
     return report

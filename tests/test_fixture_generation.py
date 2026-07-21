@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import re
 import shutil
 import zipfile
@@ -249,11 +250,22 @@ def test_stress_pdf_two_column_and_merged_table(manifest):
         assert cell.text in joined
 
 
+def _rect_from_shape(shape) -> tuple[int, int, int, int]:
+    return (shape.left, shape.top, shape.left + shape.width, shape.top + shape.height)
+
+
+def _rects_intersect(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> bool:
+    ax0, ay0, ax1, ay1 = a
+    bx0, by0, bx1, by1 = b
+    return ax0 < bx1 and bx0 < ax1 and ay0 < by1 and by0 < ay1
+
+
 def test_stress_pptx_overlapping_textboxes_both_present_with_z_order(manifest):
     fixture = manifest.stress_suite.pptx_overlapping_textboxes
     prs = Presentation(GENERATED_DIR / "stress/STRESS_PPTX_001.pptx")
     slide = prs.slides[0]
-    textbox_texts = [s.text_frame.text for s in slide.shapes if s.has_text_frame and not s.has_table]
+    textboxes = [s for s in slide.shapes if s.has_text_frame and not s.has_table]
+    textbox_texts = [s.text_frame.text for s in textboxes]
     # Added in z_order-sorted order (lowest/back first), so shape order in
     # the tree reflects z_order directly.
     expected_order = [b.text for b in sorted(fixture.text_boxes, key=lambda b: b.z_order)]
@@ -262,6 +274,49 @@ def test_stress_pptx_overlapping_textboxes_both_present_with_z_order(manifest):
     graphic_frame = next(s for s in slide.shapes if s.has_table)
     for cell in fixture.table.cells:
         assert graphic_frame.table.cell(cell.row, cell.col).text == cell.text
+
+
+def test_stress_pptx_overlapping_textboxes_both_exist():
+    prs = Presentation(GENERATED_DIR / "stress/STRESS_PPTX_001.pptx")
+    slide = prs.slides[0]
+    textboxes = [s for s in slide.shapes if s.has_text_frame and not s.has_table]
+    assert len(textboxes) == 2
+
+
+def test_stress_pptx_overlapping_textboxes_rectangles_intersect():
+    prs = Presentation(GENERATED_DIR / "stress/STRESS_PPTX_001.pptx")
+    slide = prs.slides[0]
+    textboxes = [s for s in slide.shapes if s.has_text_frame and not s.has_table]
+    rect_a, rect_b = [_rect_from_shape(s) for s in textboxes]
+    assert _rects_intersect(rect_a, rect_b)
+
+
+def test_stress_pptx_overlapping_textboxes_positions_not_identical():
+    prs = Presentation(GENERATED_DIR / "stress/STRESS_PPTX_001.pptx")
+    slide = prs.slides[0]
+    textboxes = [s for s in slide.shapes if s.has_text_frame and not s.has_table]
+    positions = [(s.left, s.top) for s in textboxes]
+    assert positions[0] != positions[1]
+
+
+def test_stress_pptx_overlapping_textboxes_foreground_has_opaque_fill(manifest):
+    from pptx.enum.dml import MSO_FILL_TYPE
+
+    fixture = manifest.stress_suite.pptx_overlapping_textboxes
+    prs = Presentation(GENERATED_DIR / "stress/STRESS_PPTX_001.pptx")
+    slide = prs.slides[0]
+    textboxes = [s for s in slide.shapes if s.has_text_frame and not s.has_table]
+
+    # Shape order in the tree matches z_order (lowest first); the foreground
+    # box is the last one added, i.e. the one with the highest z_order.
+    foreground_text = max(fixture.text_boxes, key=lambda b: b.z_order).text
+    foreground_shape = next(s for s in textboxes if s.text_frame.text == foreground_text)
+    background_shape = next(s for s in textboxes if s.text_frame.text != foreground_text)
+
+    assert foreground_shape.fill.type == MSO_FILL_TYPE.SOLID
+    # The background (stale) box is left with no explicit fill, unlike the
+    # foreground one -- that contrast is what makes the stacking visible.
+    assert background_shape.fill.type != MSO_FILL_TYPE.SOLID
 
 
 def test_stress_pptx_native_diagram_shapes_and_connectors(manifest):
@@ -278,6 +333,47 @@ def test_stress_pptx_native_diagram_shapes_and_connectors(manifest):
     # generic "connector" type.
     connector_count = sum(1 for s in slide.shapes if s.shape_type == MSO_SHAPE_TYPE.LINE)
     assert connector_count == len(fixture.diagram_edges)
+
+
+def test_stress_pptx_native_diagram_connectors_reference_correct_shapes_and_have_arrowheads(manifest):
+    """For every manifest edge: a native connector exists whose a:stCxn/
+    a:endCxn resolve to the declared source/target shape ids, and it carries
+    a target-end (a:tailEnd) arrowhead -- verified directly against the OOXML
+    since python-pptx exposes none of this through its public API."""
+    from pptx.oxml.ns import qn
+
+    fixture = manifest.stress_suite.pptx_native_diagram
+    prs = Presentation(GENERATED_DIR / "stress/STRESS_PPTX_002.pptx")
+    slide = prs.slides[0]
+
+    shape_id_by_label = {
+        s.text_frame.text: s.shape_id for s in slide.shapes if s.has_text_frame
+    }
+    label_by_fact_id = {node.fact_id: node.label for node in fixture.diagram_nodes}
+
+    connectors = [s for s in slide.shapes if s._element.tag == qn("p:cxnSp")]
+    assert len(connectors) == len(fixture.diagram_edges)
+
+    for edge in fixture.diagram_edges:
+        expected_source_id = shape_id_by_label[label_by_fact_id[edge.source]]
+        expected_target_id = shape_id_by_label[label_by_fact_id[edge.target]]
+
+        match = None
+        for connector in connectors:
+            cxn_sp_pr = connector._element.find(qn("p:nvCxnSpPr") + "/" + qn("p:cNvCxnSpPr"))
+            st_cxn = cxn_sp_pr.find(qn("a:stCxn"))
+            end_cxn = cxn_sp_pr.find(qn("a:endCxn"))
+            if st_cxn is not None and end_cxn is not None:
+                if int(st_cxn.get("id")) == expected_source_id and int(end_cxn.get("id")) == expected_target_id:
+                    match = connector
+                    break
+        assert match is not None, f"no connector found for edge {edge.fact_id} ({edge.source} -> {edge.target})"
+
+        ln = match._element.find(".//" + qn("a:ln"))
+        assert ln is not None, f"connector for edge {edge.fact_id} has no <a:ln>"
+        tail_end = ln.find(qn("a:tailEnd"))
+        assert tail_end is not None, f"connector for edge {edge.fact_id} has no target-end arrowhead"
+        assert tail_end.get("type") == "triangle"
 
 
 # --- 4. shared PNG identical wherever embedded ------------------------------
@@ -369,13 +465,17 @@ def test_parity_and_stress_pdfs_do_have_glyph_operators():
 
 
 def test_regeneration_is_byte_deterministic(tmp_path):
+    """Covers generation_report.json too, not just the 12 fixture files --
+    now that the report excludes itself from its own inventory (see the
+    generation_report.json tests below), it's no longer self-referential and
+    is fully deterministic like everything else."""
     snapshot_dir = tmp_path / "run1"
     shutil.copytree(GENERATED_DIR, snapshot_dir)
 
     shutil.rmtree(GENERATED_DIR)
     gf.generate_all()
 
-    files1 = sorted(p for p in snapshot_dir.rglob("*") if p.is_file() and p.name != "generation_report.json")
+    files1 = sorted(p for p in snapshot_dir.rglob("*") if p.is_file())
     mismatches = []
     for path1 in files1:
         rel = path1.relative_to(snapshot_dir)
@@ -392,6 +492,61 @@ def test_regeneration_produces_same_manifest_sha256():
     report1 = gf.generate_all()
     report2 = gf.generate_all()
     assert report1["manifest_sha256"] == report2["manifest_sha256"]
+
+
+# --- generation_report.json correctness -------------------------------------
+
+
+def _load_report() -> dict:
+    return json.loads((GENERATED_DIR / gf.REPORT_FILENAME).read_text(encoding="utf-8"))
+
+
+def test_generation_report_excludes_itself():
+    report = _load_report()
+    assert gf.REPORT_FILENAME not in report["files"]
+
+
+def test_generation_report_lists_exactly_the_12_benchmark_artifacts():
+    report = _load_report()
+    assert sorted(report["files"]) == sorted(EXPECTED_FILES)
+    assert len(report["files"]) == 12
+
+
+def test_generation_report_hashes_match_files_on_disk():
+    report = _load_report()
+    for relative_key, entry in report["files"].items():
+        path = GENERATED_DIR / relative_key
+        assert path.exists(), f"{relative_key} listed in report but missing on disk"
+        actual_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert actual_hash == entry["sha256"], f"hash mismatch for {relative_key}"
+        assert path.stat().st_size == entry["size_bytes"]
+
+
+def test_generation_report_keys_contain_no_backslashes():
+    report = _load_report()
+    for relative_key in report["files"]:
+        assert "\\" not in relative_key, f"non-POSIX path key in report: {relative_key!r}"
+
+
+# --- 5. PARITY_001.pptx slide 1 shape geometry regression -------------------
+
+
+def test_parity_pptx_slide1_shapes_do_not_overlap():
+    """Regression test for the body-text-overflows-into-heading bug: the
+    body, "Recovery Objectives" heading, and table rectangles (plus the
+    title, for completeness) must be pairwise non-overlapping."""
+    prs = Presentation(GENERATED_DIR / "parity/PARITY_001.pptx")
+    slide0 = prs.slides[0]
+    shapes = list(slide0.shapes)
+    assert len(shapes) == 4  # title, body, heading2, table
+
+    rects = {shape.name: _rect_from_shape(shape) for shape in shapes}
+    names = list(rects)
+    overlapping_pairs = [
+        (a, b) for i, a in enumerate(names) for b in names[i + 1:]
+        if _rects_intersect(rects[a], rects[b])
+    ]
+    assert not overlapping_pairs, f"overlapping shapes on parity slide 1: {overlapping_pairs}"
 
 
 # --- 8. no LLM or external API used -----------------------------------------
