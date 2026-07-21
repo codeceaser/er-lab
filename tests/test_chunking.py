@@ -1,4 +1,4 @@
-"""Tests for the canonical chunking layer (Stage 4 / Stage 4.1).
+"""Tests for the canonical chunking layer (Stage 4 / Stage 4.1 / Stage 4.2).
 
 Uses manually constructed CanonicalDocument objects only -- the Stage 3
 source fixtures (DOCX/PDF/PPTX) are deliberately not parsed here; that's a
@@ -38,6 +38,7 @@ from ingestion_bench.chunking import (
     ChunkingConfig,
     ChunkSourceRef,
     DocumentRevisionContext,
+    TextFragment,
     canonical_sha256,
     chunk_document,
     compute_document_revision_id,
@@ -339,9 +340,9 @@ def test_table_becomes_standalone_chunk_with_all_cells_and_spans():
     assert chunk.chunk_type == "table"
     assert chunk.source_element_ids == ["t1"]
     assert "**Header**" in chunk.source_text
-    assert "row=0,col=0,header,colspan=2" in chunk.source_text
-    assert "row=1,col=0" in chunk.source_text
-    assert "row=1,col=1" in chunk.source_text
+    assert "row=0,col=0,header=true,rowspan=1,colspan=2" in chunk.source_text
+    assert "row=1,col=0,header=false,rowspan=1,colspan=1" in chunk.source_text
+    assert "row=1,col=1,header=false,rowspan=1,colspan=1" in chunk.source_text
 
 
 def test_table_as_standalone_false_merges_with_surrounding_text():
@@ -511,21 +512,37 @@ def test_split_oversized_text_algorithm_is_documented_and_deterministic():
     text = "First sentence. Second sentence. Third sentence."
     fragments = split_oversized_text(text, max_chars=20)
     assert fragments == split_oversized_text(text, max_chars=20)  # deterministic
-    assert "".join(fragments).replace(" ", "") == text.replace(" ", "")  # no content lost
-    assert all(len(f) <= 20 or " " not in f for f in fragments)  # never splits mid-word
+    assert "".join(f.text for f in fragments) == text  # exact, lossless reconstruction (no whitespace normalization)
+    assert all(len(f.text) <= 20 or " " not in f.text for f in fragments)  # never splits mid-word
+    assert [f.fragment_index for f in fragments] == list(range(len(fragments)))
+    for f in fragments:
+        assert text[f.start_char:f.end_char] == f.text  # span is a verbatim slice of the source text
 
 
 def test_split_oversized_text_falls_back_to_whitespace_for_long_sentence():
     text = "Word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12."
     fragments = split_oversized_text(text, max_chars=15)
-    assert all(len(f) <= 15 for f in fragments)
-    assert " ".join(fragments) == text  # no words lost, reassembles exactly
+    assert all(len(f.text) <= 15 for f in fragments)
+    assert "".join(f.text for f in fragments) == text  # no words lost, reassembles exactly
+
+
+def test_split_oversized_text_fragments_are_ordered_and_nonoverlapping():
+    text = "Alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu."
+    fragments = split_oversized_text(text, max_chars=20)
+    assert len(fragments) > 1
+    assert fragments[0].start_char == 0
+    assert fragments[-1].end_char == len(text)
+    for prev, nxt in zip(fragments, fragments[1:]):
+        assert prev.end_char == nxt.start_char  # contiguous, non-overlapping
+
+
+def test_split_oversized_text_empty_text_returns_single_zero_length_fragment():
+    fragments = split_oversized_text("", max_chars=20)
+    assert len(fragments) == 1
+    assert fragments[0] == TextFragment(text="", fragment_index=0, start_char=0, end_char=0)
 
 
 def test_oversized_paragraph_splits_deterministically_and_retains_source_id():
-    # Deliberately non-repetitive sentences: identical fragment text across
-    # a split would collide with the accidental-duplicate-occurrence guard
-    # (chunking rule 10) even though it is a legitimate split, not a bug.
     long_text = " ".join(f"This is sentence number {i} in a long paragraph." for i in range(15))
     document = _doc(paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text=long_text)])
     chunks = _chunk(document, ChunkingConfig(max_chars=100))
@@ -713,8 +730,8 @@ def test_sparse_table_renders_explicit_row_col_for_missing_cells():
     )
     document = _doc(tables=[table])
     chunk = _chunk(document)[0]
-    assert "TopLeft [row=0,col=0]" in chunk.source_text
-    assert "BottomRight [row=1,col=1]" in chunk.source_text
+    assert "TopLeft [row=0,col=0,header=false,rowspan=1,colspan=1]" in chunk.source_text
+    assert "BottomRight [row=1,col=1,header=false,rowspan=1,colspan=1]" in chunk.source_text
 
 
 def test_table_cell_starting_at_nonzero_column_preserves_column_index():
@@ -727,7 +744,7 @@ def test_table_cell_starting_at_nonzero_column_preserves_column_index():
     )
     document = _doc(tables=[table])
     chunk = _chunk(document)[0]
-    assert "OnlyCell [row=1,col=2]" in chunk.source_text
+    assert "OnlyCell [row=1,col=2,header=false,rowspan=1,colspan=1]" in chunk.source_text
     assert "col=0" not in chunk.source_text.split("OnlyCell")[1]  # not misattributed to col 0
 
 
@@ -1021,3 +1038,278 @@ def test_canonical_chunk_carries_revision_lineage_fields():
 def test_text_sha256_is_deterministic_and_content_sensitive():
     assert text_sha256("hello") == text_sha256("hello")
     assert text_sha256("hello") != text_sha256("goodbye")
+
+
+# =====================================================================
+# Stage 4.2 correctness patch
+# =====================================================================
+
+# --- 28. fragment-level provenance for oversized-element splitting ----------
+
+
+def test_repeated_sentence_paragraph_splits_without_duplicate_occurrence_error():
+    """The exact scenario that used to trip the Stage 4.1
+    duplicate-occurrence guard: a paragraph that repeats the same sentence
+    verbatim. Fragment-level (start_char, end_char) provenance means the
+    guard now sees each fragment as distinct even when its rendered text
+    is identical to another fragment's."""
+    sentence = "This exact sentence repeats. "
+    long_text = sentence * 10
+    document = _doc(paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text=long_text)])
+    chunks = _chunk(document, ChunkingConfig(max_chars=60))  # must not raise
+
+    assert len(chunks) > 1
+    assert len(set(c.chunk_id for c in chunks)) == len(chunks)  # unique chunk ids
+
+    spans = [(chunk.source_refs[0].start_char, chunk.source_refs[0].end_char) for chunk in chunks]
+    assert spans == sorted(spans)  # ordered
+    assert spans[0][0] == 0
+    assert spans[-1][1] == len(long_text)
+    for (_, prev_end), (next_start, _) in zip(spans, spans[1:]):
+        assert prev_end == next_start  # contiguous, non-overlapping
+
+    reconstructed = "".join(chunk.source_text for chunk in chunks)
+    assert reconstructed == long_text  # lossless
+
+
+def test_identifier_annotation_routed_to_later_fragment_by_offset():
+    prefix = "Intro sentence one. Intro sentence two. Intro sentence three. "
+    identifier_text = "APP-998877"
+    long_text = (
+        prefix * 3
+        + f"Application {identifier_text} is referenced here. "
+        + "Trailing filler sentence. " * 3
+    )
+    start_char = long_text.index(identifier_text)
+    end_char = start_char + len(identifier_text)
+
+    identifier = IdentifierAnnotation(
+        annotation_id="a1", target_ref="p1", unit_index=0,
+        derivation="extracted", extraction_method="text_scan",
+        raw_text=identifier_text, normalized_value=identifier_text,
+        start_char=start_char, end_char=end_char,
+    )
+    document = _doc(
+        paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text=long_text)],
+        annotations=[identifier],
+    )
+    chunks = _chunk(document, ChunkingConfig(max_chars=80))
+    assert len(chunks) > 1
+
+    fragment0_chunk = next(c for c in chunks if c.source_refs[0].fragment_index == 0)
+    assert "a1" not in fragment0_chunk.annotation_ids  # identifier is well past fragment 0
+
+    matching = [c for c in chunks if "a1" in c.annotation_ids]
+    assert matching  # routed to at least one later fragment
+    for c in matching:
+        ref = c.source_refs[0]
+        assert ref.fragment_index > 0
+        assert ref.start_char < end_char and ref.end_char > start_char  # overlaps the identifier's span
+
+
+def test_chunk_source_ref_fragment_fields_default_to_none_when_not_split():
+    document = _doc(paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text="Short.")])
+    chunk = _chunk(document)[0]
+    ref = chunk.source_refs[0]
+    assert ref.fragment_index is None
+    assert ref.start_char is None
+    assert ref.end_char is None
+
+
+def test_chunk_source_ref_rejects_unpaired_char_span():
+    with pytest.raises(ValidationError):
+        ChunkSourceRef(element_id="x", unit_index=0, element_type="paragraph", start_char=5, end_char=None)
+
+
+def test_chunk_source_ref_rejects_start_greater_than_end():
+    with pytest.raises(ValidationError):
+        ChunkSourceRef(element_id="x", unit_index=0, element_type="paragraph", start_char=10, end_char=5)
+
+
+def test_chunk_source_ref_rejects_negative_fragment_index():
+    with pytest.raises(ValidationError):
+        ChunkSourceRef(element_id="x", unit_index=0, element_type="paragraph", fragment_index=-1)
+
+
+def test_text_fragment_rejects_start_greater_than_end():
+    with pytest.raises(ValidationError):
+        TextFragment(text="x", fragment_index=0, start_char=10, end_char=5)
+
+
+# --- 29. active heading annotation rendering is preserved --------------------
+
+
+def test_heading_extracted_annotation_content_appears_in_body_chunk_source_text():
+    heading = CanonicalHeading(block_id="h1", unit_index=0, order_index=0, text="H1", level=1)
+    extracted = OcrAnnotation(
+        annotation_id="a1", target_ref="h1", unit_index=0,
+        extraction_method="rapidocr", text="Heading OCR text",
+    )
+    paragraph = CanonicalParagraph(block_id="p1", unit_index=0, order_index=1, text="Body.")
+    document = _doc(headings=[heading], paragraphs=[paragraph], annotations=[extracted])
+    chunk = _chunk(document)[0]
+    assert chunk.source_text == "Body.\n\n[Heading: H1] OCR: Heading OCR text"
+    assert "a1" in chunk.annotation_ids  # traceable by annotation_id
+    assert chunk.model_derived_text is None
+
+
+def test_heading_model_derived_annotation_content_appears_in_model_derived_text_and_respects_config():
+    heading = CanonicalHeading(block_id="h1", unit_index=0, order_index=0, text="H1", level=1)
+    model_derived = ImageDescriptionAnnotation(
+        annotation_id="a1", target_ref="h1", unit_index=0,
+        extraction_method="openai_vision_enrichment", description="Heading-level insight.",
+    )
+    paragraph = CanonicalParagraph(block_id="p1", unit_index=0, order_index=1, text="Body.")
+    document = _doc(headings=[heading], paragraphs=[paragraph], annotations=[model_derived])
+
+    chunk_on = _chunk(document, ChunkingConfig(include_model_derived_annotations=True))[0]
+    chunk_off = _chunk(document, ChunkingConfig(include_model_derived_annotations=False))[0]
+
+    expected_model_derived = "[Heading: H1] Description (model-derived, unverified): Heading-level insight."
+    assert chunk_on.model_derived_text == expected_model_derived  # present in the appropriate field
+    # model_derived_text itself is always populated, regardless of config --
+    # only retrieval_text is config-filtered.
+    assert chunk_off.model_derived_text == expected_model_derived
+    assert "a1" in chunk_on.annotation_ids  # traceable by annotation_id
+
+    assert "Heading-level insight" in chunk_on.retrieval_text
+    assert "Heading-level insight" not in chunk_off.retrieval_text
+
+
+def test_heading_annotation_content_reaches_standalone_lonely_heading_ancestor_chunk():
+    """An ancestor heading's own rendered annotation content must also
+    reach a DESCENDANT heading's standalone (no-content) chunk, not just
+    ids -- the same rule as for ordinary body content."""
+    parent = CanonicalHeading(block_id="h1", unit_index=0, order_index=0, text="Parent", level=1)
+    parent_annotation = OcrAnnotation(
+        annotation_id="a1", target_ref="h1", unit_index=0,
+        extraction_method="rapidocr", text="Parent OCR",
+    )
+    child = CanonicalHeading(block_id="h2", unit_index=0, order_index=1, text="Child", level=2)
+    document = _doc(headings=[parent, child], annotations=[parent_annotation])
+    chunks = _chunk(document)
+    child_chunk = next(c for c in chunks if c.source_element_ids == ["h2"])
+    assert child_chunk.source_text == "Child\n\n[Heading: Parent] OCR: Parent OCR"
+    assert "a1" in child_chunk.annotation_ids
+
+
+# --- 30. revision version-label canonicalization -----------------------------
+
+
+def test_version_label_is_normalized_on_storage():
+    rc = _revision_context(logical_document_id="LOGICAL1", source_document_sha256="a" * 64, version_label="  Draft  ")
+    assert rc.version_label == "draft"
+
+
+def test_version_label_rejects_empty_after_strip():
+    with pytest.raises(ValidationError):
+        DocumentRevisionContext(
+            logical_document_id="LOGICAL1",
+            document_revision_id="0" * 64,
+            source_document_sha256="a" * 64,
+            version_label="   ",
+        )
+
+
+def test_logical_document_id_rejects_empty_after_strip():
+    with pytest.raises(ValidationError):
+        DocumentRevisionContext(
+            logical_document_id="   ",
+            document_revision_id="0" * 64,
+            source_document_sha256="a" * 64,
+        )
+
+
+def test_equal_normalized_version_label_gives_identical_stored_lineage_and_chunk_metadata():
+    rc_a = _revision_context(logical_document_id="LOGICAL1", source_document_sha256="a" * 64, version_label="Draft")
+    rc_b = _revision_context(logical_document_id="LOGICAL1", source_document_sha256="a" * 64, version_label="draft")
+    assert rc_a.version_label == rc_b.version_label == "draft"
+    assert rc_a.document_revision_id == rc_b.document_revision_id
+
+    document = _doc(source_sha256="a" * 64, paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text="Body.")])
+    chunk_a = _chunk(document, revision_context=rc_a)[0]
+    chunk_b = _chunk(document, revision_context=rc_b)[0]
+    assert chunk_a.model_dump_json() == chunk_b.model_dump_json()  # fully identical serialized lineage + content
+
+
+# --- 31. embedding_input_sha256 is optional for non-textual chunks ----------
+
+
+def test_asset_only_picture_chunk_has_no_embedding_input_hash():
+    picture = CanonicalPicture(picture_id="pic1", unit_index=0, content_sha256="c" * 64, artifact_ref="parity/pic1.png")
+    document = _doc(pictures=[picture])
+    chunk = _chunk(document)[0]
+    assert chunk.retrieval_text == ""
+    assert chunk.embedding_input_sha256 is None
+
+
+def test_nontextual_picture_chunks_do_not_share_embedding_hash_of_empty_string():
+    picture_a = CanonicalPicture(picture_id="pic1", unit_index=0, content_sha256="c" * 64, artifact_ref="parity/pic1.png")
+    picture_b = CanonicalPicture(picture_id="pic2", unit_index=1, content_sha256="d" * 64, artifact_ref="parity/pic2.png")
+    document = _doc(pictures=[picture_a, picture_b])
+    chunks = _chunk(document)
+    assert len(chunks) == 2
+    assert all(c.embedding_input_sha256 is None for c in chunks)
+
+
+def test_nonempty_retrieval_text_chunk_has_embedding_input_hash():
+    document = _sample_document()
+    chunk = _chunk(document)[0]
+    assert chunk.retrieval_text
+    assert chunk.embedding_input_sha256 == text_sha256(chunk.retrieval_text)
+
+
+def test_canonical_chunk_allows_none_embedding_input_sha256_round_trip():
+    picture = CanonicalPicture(picture_id="pic1", unit_index=0, content_sha256="c" * 64, artifact_ref="parity/pic1.png")
+    document = _doc(pictures=[picture])
+    chunk = _chunk(document)[0]
+    data = json.loads(chunk.model_dump_json())
+    assert data["embedding_input_sha256"] is None
+    restored = CanonicalChunk.model_validate(data)
+    assert restored.embedding_input_sha256 is None
+
+
+def test_canonical_chunk_rejects_malformed_embedding_input_sha256_when_present():
+    document = _sample_document()
+    chunk = _chunk(document)[0]
+    data = json.loads(chunk.model_dump_json())
+    assert data["embedding_input_sha256"] is not None
+    data["embedding_input_sha256"] = "not-a-sha256"
+    with pytest.raises(ValidationError):
+        CanonicalChunk.model_validate(data)
+
+
+# --- 32. all stable hash identities are validated ----------------------------
+
+
+def test_canonical_chunk_rejects_malformed_chunk_id():
+    document = _sample_document()
+    chunk = _chunk(document)[0]
+    data = json.loads(chunk.model_dump_json())
+    data["chunk_id"] = "not-a-sha256"
+    with pytest.raises(ValidationError):
+        CanonicalChunk.model_validate(data)
+
+
+def test_canonical_chunk_rejects_malformed_document_revision_id():
+    document = _sample_document()
+    chunk = _chunk(document)[0]
+    data = json.loads(chunk.model_dump_json())
+    data["document_revision_id"] = "not-a-sha256"
+    with pytest.raises(ValidationError):
+        CanonicalChunk.model_validate(data)
+
+
+# --- 33. table metadata always includes every field explicitly --------------
+
+
+def test_table_rendering_always_includes_header_and_span_defaults():
+    table = CanonicalTable(
+        table_id="t1", unit_index=0, order_index=0, n_rows=1, n_cols=1,
+        cells=[CanonicalTableCell(row=0, col=0, text="Plain")],
+    )
+    document = _doc(tables=[table])
+    chunk = _chunk(document)[0]
+    # a plain, non-header, non-spanning cell still states header=false and
+    # rowspan=1/colspan=1 explicitly -- never omitted as an implied default.
+    assert "Plain [row=0,col=0,header=false,rowspan=1,colspan=1]" in chunk.source_text

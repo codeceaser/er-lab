@@ -44,6 +44,35 @@ def text_sha256(text: str) -> str:
 ChunkSourceElementType = Literal["heading", "paragraph", "list_item", "table", "picture", "caption"]
 
 
+def _validate_char_span(start_char: int | None, end_char: int | None, where: str) -> None:
+    if (start_char is None) != (end_char is None):
+        raise ValueError(f"{where}: start_char and end_char must either both be None or both be populated")
+    if start_char is not None and end_char is not None:
+        if not (0 <= start_char <= end_char):
+            raise ValueError(f"{where}: start_char ({start_char}) must satisfy 0 <= start_char <= end_char ({end_char})")
+
+
+class TextFragment(BaseModel):
+    """One deterministic, lossless fragment of a split oversized element
+    (Stage 4.2 chunking rule): text is always the exact verbatim slice
+    original_text[start_char:end_char] -- never a whitespace-normalized
+    reconstruction -- so concatenating every fragment's text in
+    fragment_index order always reproduces the original text exactly."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str
+    fragment_index: int = Field(ge=0)
+    start_char: int = Field(ge=0)
+    end_char: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _validate_span(self) -> TextFragment:
+        if self.start_char > self.end_char:
+            raise ValueError(f"start_char ({self.start_char}) must be <= end_char ({self.end_char})")
+        return self
+
+
 class ChunkSourceRef(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -52,6 +81,20 @@ class ChunkSourceRef(BaseModel):
     order_index: int | None = Field(default=None, ge=0)
     bbox: BoundingBox | None = None
     element_type: ChunkSourceElementType
+
+    # Populated only when this ref points at one fragment of a split
+    # oversized element (Stage 4.2) -- otherwise all three stay None. This
+    # is what lets two fragments with byte-identical text (e.g. a paragraph
+    # that repeats the same sentence) remain distinguishable, auditable,
+    # and non-colliding in content_sha256/duplicate-occurrence detection.
+    fragment_index: int | None = Field(default=None, ge=0)
+    start_char: int | None = None
+    end_char: int | None = None
+
+    @model_validator(mode="after")
+    def _validate_char_span(self) -> ChunkSourceRef:
+        _validate_char_span(self.start_char, self.end_char, "ChunkSourceRef")
+        return self
 
 
 class ChunkAssetRef(BaseModel):
@@ -74,6 +117,18 @@ class ChunkAssetRef(BaseModel):
         return validate_sha256_hex(v, "content_sha256")
 
 
+def _normalize_version_label(version_label: str | None) -> str | None:
+    """Canonical normalization (strip, lower-case) shared between
+    compute_document_revision_id's hash input and
+    DocumentRevisionContext.version_label's OWN stored value (Stage 4.2) --
+    so "Draft" and "draft" don't just hash identically, they are STORED
+    identically, and every serialized field derived from them (chunk
+    lineage metadata included) is byte-identical too."""
+    if version_label is None:
+        return None
+    return version_label.strip().lower()
+
+
 def compute_document_revision_id(
     logical_document_id: str,
     source_document_sha256: str,
@@ -83,13 +138,12 @@ def compute_document_revision_id(
     """Deterministic document_revision_id: SHA-256 over stable identity
     components only -- never a random UUID. logical_document_id is never a
     filename (the caller derives it from a stable, non-filename document
-    identity); version_label is normalized (stripped, lower-cased) before
-    hashing so equivalent labels never disagree on revision identity."""
-    normalized_version_label = version_label.strip().lower() if version_label else None
+    identity); version_label is normalized before hashing so equivalent
+    labels never disagree on revision identity."""
     payload = {
         "logical_document_id": logical_document_id,
         "source_document_sha256": source_document_sha256,
-        "version_label": normalized_version_label,
+        "version_label": _normalize_version_label(version_label),
         "revision_number": revision_number,
     }
     return canonical_sha256(payload)
@@ -135,6 +189,30 @@ class DocumentRevisionContext(BaseModel):
     @classmethod
     def _document_revision_id_is_valid_sha256(cls, v: str) -> str:
         return validate_sha256_hex(v, "document_revision_id")
+
+    @field_validator("logical_document_id")
+    @classmethod
+    def _logical_document_id_is_nonempty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("logical_document_id must not be empty (or all-whitespace)")
+        return v
+
+    @field_validator("version_label")
+    @classmethod
+    def _version_label_is_normalized_and_nonempty(cls, v: str | None) -> str | None:
+        """Stores the CANONICALLY NORMALIZED value, not the caller's raw
+        string -- see _normalize_version_label. A caller who supplies a
+        version_label must supply real content; pass None (not "") to mean
+        'no version label'."""
+        if v is None:
+            return None
+        normalized = _normalize_version_label(v)
+        if not normalized:
+            raise ValueError(
+                "version_label, when supplied, must be nonempty after stripping whitespace -- "
+                "use None to mean 'no version label'"
+            )
+        return normalized
 
     @model_validator(mode="after")
     def _validate_document_revision_id_is_deterministic(self) -> DocumentRevisionContext:
@@ -219,14 +297,28 @@ class CanonicalChunk(BaseModel):
     content_sha256: str
 
     # SHA-256 of retrieval_text -- the exact normalized text passed to the
-    # embedding model for Stage 4. Used for embedding reuse/deduplication;
-    # deliberately independent of document_revision_id and of provenance, so
-    # identical retrieval_text across chunks/revisions can share one
-    # embedding even when content_sha256 differs.
-    embedding_input_sha256: str
+    # embedding model. None when retrieval_text is empty (e.g. an asset-only
+    # picture chunk with no caption/OCR/model-derived text): there is no
+    # meaningful embedding input, and every such chunk must NOT collapse
+    # onto the SHA-256 of "" as if they were interchangeable duplicates.
+    # Used for embedding reuse/deduplication when present; deliberately
+    # independent of document_revision_id and of provenance, so identical
+    # retrieval_text across chunks/revisions can share one embedding even
+    # when content_sha256 differs.
+    embedding_input_sha256: str | None = None
 
     chunker_version: str
     chunking_config_hash: str
+
+    @field_validator("chunk_id")
+    @classmethod
+    def _chunk_id_is_valid_sha256(cls, v: str) -> str:
+        return validate_sha256_hex(v, "chunk_id")
+
+    @field_validator("document_revision_id")
+    @classmethod
+    def _document_revision_id_is_valid_sha256(cls, v: str) -> str:
+        return validate_sha256_hex(v, "document_revision_id")
 
     @field_validator("content_sha256")
     @classmethod
@@ -245,7 +337,9 @@ class CanonicalChunk(BaseModel):
 
     @field_validator("embedding_input_sha256")
     @classmethod
-    def _embedding_input_sha256_is_valid(cls, v: str) -> str:
+    def _embedding_input_sha256_is_valid(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
         return validate_sha256_hex(v, "embedding_input_sha256")
 
     @model_validator(mode="after")

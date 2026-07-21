@@ -29,6 +29,7 @@ from .model import (
     ChunkingConfig,
     ChunkSourceRef,
     DocumentRevisionContext,
+    TextFragment,
     canonical_sha256,
     compute_chunking_config_hash,
     text_sha256,
@@ -38,63 +39,89 @@ from .renderers import render_extracted_annotation, render_list_item, render_mod
 # Bumped whenever the CHUNKING ALGORITHM changes (ordering, packing, or
 # rendering rules) -- not when ChunkingConfig's *values* change, which is
 # what chunking_config_hash is for.
-CHUNKER_VERSION = "1.0.0"
+CHUNKER_VERSION = "1.1.0"
 
 _TYPE_RANK = {"heading": 0, "paragraph": 1, "list_item": 2, "table": 3, "picture": 4}
 
-_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+")
+_WORD_BOUNDARY_RE = re.compile(r"\s+")
 
 
-def split_oversized_text(text: str, max_chars: int) -> list[str]:
+def _boundary_offsets(text: str, start: int, end: int, boundary_re: re.Pattern) -> list[int]:
+    """Absolute offsets of the end of each boundary_re match strictly
+    within text[start:end] -- candidate split points."""
+    return [m.end() for m in boundary_re.finditer(text, start, end)]
+
+
+def _pack_boundary_spans(text: str, start: int, end: int, boundary_re: re.Pattern, max_chars: int) -> list[tuple[int, int]]:
+    """Greedily packs [start, end) into contiguous, non-overlapping spans
+    aligned to boundary_re's split points, each up to max_chars, covering
+    every character exactly once -- concatenating the spans' verbatim text
+    always reconstructs text[start:end] with zero loss (no whitespace
+    normalization). A single boundary-delimited unit that is itself already
+    longer than max_chars becomes its own (still oversized) span rather
+    than being force-split mid-unit."""
+    boundaries = _boundary_offsets(text, start, end, boundary_re)
+    unit_bounds = sorted(set([start, *boundaries, end]))
+
+    spans: list[tuple[int, int]] = []
+    span_start: int | None = None
+    span_end: int | None = None
+    for i in range(len(unit_bounds) - 1):
+        u_start, u_end = unit_bounds[i], unit_bounds[i + 1]
+        if span_start is None:
+            span_start, span_end = u_start, u_end
+        elif (u_end - span_start) <= max_chars:
+            span_end = u_end
+        else:
+            spans.append((span_start, span_end))
+            span_start, span_end = u_start, u_end
+    if span_start is not None:
+        spans.append((span_start, span_end))
+    return spans
+
+
+def split_oversized_text(text: str, max_chars: int) -> list[TextFragment]:
     """Deterministic fallback split for a single source element whose own
     text exceeds max_chars (chunking rule 4). Always the same algorithm, no
-    randomness:
+    randomness, and always lossless/exact -- every returned TextFragment's
+    (start_char, end_char) span is a verbatim slice of `text` (never a
+    whitespace-normalized reconstruction), spans are contiguous and
+    non-overlapping in fragment_index order, and concatenating every
+    fragment's text reproduces `text` exactly:
 
       1. Split on sentence boundaries (after '.', '!', or '?' followed by
-         whitespace).
-      2. Greedily pack consecutive sentences into fragments, each up to
-         max_chars.
-      3. If a single sentence is itself still longer than max_chars, split
-         IT on whitespace (word) boundaries and greedily pack words into
-         sub-fragments up to max_chars.
-      4. If a single word is still longer than max_chars (pathological),
-         it becomes its own oversized fragment rather than being cut
-         mid-word -- word integrity is never broken.
+         whitespace); greedily pack consecutive sentences (together with
+         their trailing separating whitespace) into spans up to max_chars.
+      2. Any resulting span still longer than max_chars (a single sentence
+         already exceeding max_chars) is re-packed at whitespace (word)
+         boundaries instead.
+      3. A single word still longer than max_chars (pathological) becomes
+         its own oversized fragment rather than being cut mid-word --
+         word integrity is never broken.
+
+    Because fragments carry their own exact source span, two fragments
+    that happen to contain identical text (e.g. a paragraph that repeats
+    the same sentence) remain distinguishable by span alone -- this is
+    what lets chunk_document's duplicate-occurrence guard tell a legitimate
+    repeated fragment apart from an actual accidental duplicate.
     """
-    sentences = [s for s in _SENTENCE_SPLIT_RE.split(text) if s]
-    fragments: list[str] = []
-    current = ""
+    if not text:
+        return [TextFragment(text=text, fragment_index=0, start_char=0, end_char=0)]
 
-    def flush_current() -> None:
-        nonlocal current
-        if current:
-            fragments.append(current)
-            current = ""
+    sentence_spans = _pack_boundary_spans(text, 0, len(text), _SENTENCE_BOUNDARY_RE, max_chars)
 
-    for sentence in sentences:
-        if len(sentence) > max_chars:
-            flush_current()
-            word_current = ""
-            for word in sentence.split(" "):
-                candidate = f"{word_current} {word}".strip() if word_current else word
-                if word_current and len(candidate) > max_chars:
-                    fragments.append(word_current)
-                    word_current = word
-                else:
-                    word_current = candidate
-            if word_current:
-                fragments.append(word_current)
-            continue
-
-        candidate = f"{current} {sentence}".strip() if current else sentence
-        if current and len(candidate) > max_chars:
-            flush_current()
-            current = sentence
+    final_spans: list[tuple[int, int]] = []
+    for span_start, span_end in sentence_spans:
+        if span_end - span_start <= max_chars:
+            final_spans.append((span_start, span_end))
         else:
-            current = candidate
+            final_spans.extend(_pack_boundary_spans(text, span_start, span_end, _WORD_BOUNDARY_RE, max_chars))
 
-    flush_current()
-    return fragments if fragments else [text]
+    return [
+        TextFragment(text=text[span_start:span_end], fragment_index=i, start_char=span_start, end_char=span_end)
+        for i, (span_start, span_end) in enumerate(final_spans)
+    ]
 
 
 def _join_source_texts(parts: list[str]) -> str:
@@ -117,16 +144,27 @@ class _RenderedElement:
     # kept separate from source_text so a heading's own extracted-annotation
     # rendering never leaks into every downstream chunk's heading breadcrumb.
     raw_text: str | None = None
+    # This element's own extracted-annotation text, unmerged (headings
+    # only -- other kinds leave this ""; their extra_src is already folded
+    # into source_text directly since they never need a "raw" breadcrumb
+    # form). Kept so a heading's own extracted-annotation content can be
+    # deterministically re-surfaced on every chunk beneath it (Stage 4.2).
+    extra_source_text: str = ""
     asset_refs: list[ChunkAssetRef] = field(default_factory=list)
+    # (annotation_id, start_char, end_char) for every IdentifierAnnotation
+    # targeting this element with concrete character offsets -- paragraphs/
+    # list_items only, used solely when the element gets split (Stage 4.2
+    # chunking rule: route identifiers to the fragment whose span
+    # contains/overlaps them, instead of defaulting every identifier onto
+    # fragment 0).
+    positioned_identifier_spans: list[tuple[str, int, int]] = field(default_factory=list)
 
 
 @dataclass
 class _HeadingFrame:
     level: int
     heading_text: str
-    # heading_text + any extracted-annotation text -- used only when this
-    # heading is popped with no content and becomes its own standalone chunk.
-    standalone_source_text: str
+    extra_source_text: str
     element_id: str
     unit_index: int
     source_ref: ChunkSourceRef
@@ -135,11 +173,38 @@ class _HeadingFrame:
     has_content: bool = False
 
 
+def _render_heading_frames_annotations(frames: list[_HeadingFrame]) -> tuple[list[str], str, str | None]:
+    """Deterministically merges a list of active/ancestor heading frames'
+    own annotation ids and rendered annotation content (Stage 4.2: heading
+    annotations must contribute their actual rendered CONTENT to every
+    chunk beneath them, not just their ids). Extracted and model-derived
+    text are kept separate, and each line is labeled with its owning
+    heading's text so the content's origin is never ambiguous."""
+    ann_ids = [aid for frame in frames for aid in frame.annotation_ids]
+    extracted_lines = [f"[Heading: {frame.heading_text}] {frame.extra_source_text}" for frame in frames if frame.extra_source_text]
+    model_derived_lines = [f"[Heading: {frame.heading_text}] {frame.model_derived_text}" for frame in frames if frame.model_derived_text]
+    extracted_text = "\n".join(extracted_lines)
+    model_derived_text = "\n".join(model_derived_lines) if model_derived_lines else None
+    return ann_ids, extracted_text, model_derived_text
+
+
 def _annotations_by_target(document: CanonicalDocument) -> dict[str, list]:
     grouped: dict[str, list] = defaultdict(list)
     for annotation in document.annotations:
         grouped[annotation.target_ref].append(annotation)
     return grouped
+
+
+def _positioned_identifier_spans(annotations_by_target: dict[str, list], element_id: str) -> list[tuple[str, int, int]]:
+    """(annotation_id, start_char, end_char) for every IdentifierAnnotation
+    targeting element_id that has concrete character offsets into that
+    element's own text -- sorted by annotation_id for determinism."""
+    annotations = sorted(annotations_by_target.get(element_id, []), key=lambda a: a.annotation_id)
+    return [
+        (a.annotation_id, a.start_char, a.end_char)
+        for a in annotations
+        if isinstance(a, IdentifierAnnotation) and a.start_char is not None and a.end_char is not None
+    ]
 
 
 def _render_annotations_for_element(
@@ -230,7 +295,7 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
                 order_index=heading.order_index, bbox=heading.bbox, element_type="heading",
             )],
             source_text=source_text, model_derived_text=model_text, heading_level=heading.level,
-            raw_text=heading.text,
+            raw_text=heading.text, extra_source_text=extra_src,
         )
         keyed.append(((heading.unit_index, heading.order_index, _TYPE_RANK["heading"], heading.block_id), element))
 
@@ -248,6 +313,7 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
                 order_index=paragraph.order_index, bbox=paragraph.bbox, element_type="paragraph",
             )],
             source_text=source_text, model_derived_text=model_text,
+            positioned_identifier_spans=_positioned_identifier_spans(annotations_by_target, paragraph.block_id),
         )
         keyed.append(((paragraph.unit_index, paragraph.order_index, _TYPE_RANK["paragraph"], paragraph.block_id), element))
 
@@ -266,6 +332,7 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
                 order_index=item.order_index, bbox=item.bbox, element_type="list_item",
             )],
             source_text=source_text, model_derived_text=model_text,
+            positioned_identifier_spans=_positioned_identifier_spans(annotations_by_target, item.block_id),
         )
         keyed.append(((item.unit_index, item.order_index, _TYPE_RANK["list_item"], item.block_id), element))
 
@@ -362,14 +429,16 @@ def chunk_document(
     def current_heading_path() -> list[str]:
         return [frame.heading_text for frame in heading_stack]
 
-    def active_heading_context() -> tuple[list[str], list[ChunkSourceRef], list[str]]:
-        """Outermost-to-innermost active heading ids/refs, plus their own
-        annotation ids (in stack order) -- so a heading's annotations are
-        never silently lost when content beneath it is chunked."""
+    def active_heading_context() -> tuple[list[str], list[ChunkSourceRef], list[str], str, str | None]:
+        """Outermost-to-innermost active heading ids/refs, their own
+        annotation ids, and their own rendered annotation content (kept
+        separately as extracted vs. model-derived) -- so a heading's
+        annotations are never silently lost, and their *content* (not just
+        their ids) reaches every chunk emitted while they are active."""
         ids = [frame.element_id for frame in heading_stack]
         refs = [frame.source_ref for frame in heading_stack]
-        ann_ids = [aid for frame in heading_stack for aid in frame.annotation_ids]
-        return ids, refs, ann_ids
+        ann_ids, extracted_text, model_derived_text = _render_heading_frames_annotations(heading_stack)
+        return ids, refs, ann_ids, extracted_text, model_derived_text
 
     def mark_headings_have_content() -> None:
         for frame in heading_stack:
@@ -414,7 +483,7 @@ def chunk_document(
         if config.include_model_derived_annotations and model_derived_text:
             retrieval_parts.append(f"Model-derived (unverified):\n{model_derived_text}")
         retrieval_text = "\n\n".join(retrieval_parts)
-        embedding_input_sha256 = text_sha256(retrieval_text)
+        embedding_input_sha256 = text_sha256(retrieval_text) if retrieval_text else None
 
         chunk_id = stable_element_id(
             document.doc_id,
@@ -472,17 +541,20 @@ def chunk_document(
         if not buffer:
             return
         chunk_type = buffer_chunk_type()
-        source_text = _join_source_texts([element.source_text for element in buffer])
-        model_derived_parts = [element.model_derived_text for element in buffer if element.model_derived_text]
-        model_derived_text = "\n".join(model_derived_parts) if model_derived_parts else None
+        own_source_text = _join_source_texts([element.source_text for element in buffer])
+        own_model_derived_parts = [element.model_derived_text for element in buffer if element.model_derived_text]
+        own_model_derived_text = "\n".join(own_model_derived_parts) if own_model_derived_parts else None
         source_element_ids = [eid for element in buffer for eid in element.element_ids]
         own_annotation_ids = [aid for element in buffer for aid in element.annotation_ids]
         source_refs = [ref for element in buffer for ref in element.source_refs]
         asset_refs = [ref for element in buffer for ref in element.asset_refs]
         unit_indices = sorted(buffer_unit_indices)
 
-        heading_ids, heading_refs, heading_ann_ids = active_heading_context()
+        heading_ids, heading_refs, heading_ann_ids, heading_extracted_text, heading_model_derived_text = active_heading_context()
         annotation_ids = list(dict.fromkeys(own_annotation_ids + heading_ann_ids))
+        source_text = _join_source_texts([own_source_text, heading_extracted_text])
+        model_derived_parts = [p for p in (own_model_derived_text, heading_model_derived_text) if p]
+        model_derived_text = "\n".join(model_derived_parts) if model_derived_parts else None
 
         emit_chunk(
             chunk_type, unit_indices, current_heading_path(),
@@ -499,13 +571,17 @@ def chunk_document(
             if not frame.has_content:
                 ancestor_ids = [f.element_id for f in heading_stack]
                 ancestor_refs = [f.source_ref for f in heading_stack]
-                ancestor_ann_ids = [aid for f in heading_stack for aid in f.annotation_ids]
+                ancestor_ann_ids, ancestor_extracted_text, ancestor_model_derived_text = _render_heading_frames_annotations(heading_stack)
                 merged_annotation_ids = list(dict.fromkeys(frame.annotation_ids + ancestor_ann_ids))
+                own_standalone_text = frame.heading_text + (f"\n{frame.extra_source_text}" if frame.extra_source_text else "")
+                source_text = _join_source_texts([own_standalone_text, ancestor_extracted_text])
+                model_derived_parts = [p for p in (frame.model_derived_text, ancestor_model_derived_text) if p]
+                model_derived_text = "\n".join(model_derived_parts) if model_derived_parts else None
                 emit_chunk(
                     "text", [frame.unit_index], [f.heading_text for f in heading_stack],
                     ancestor_ids, ancestor_refs,
                     [frame.element_id], merged_annotation_ids, [frame.source_ref], [],
-                    frame.standalone_source_text, frame.model_derived_text,
+                    source_text, model_derived_text,
                 )
 
     for element in elements:
@@ -514,7 +590,7 @@ def chunk_document(
             pop_headings_to_level(element.heading_level)
             heading_stack.append(_HeadingFrame(
                 level=element.heading_level, heading_text=element.raw_text or "",
-                standalone_source_text=element.source_text,
+                extra_source_text=element.extra_source_text,
                 element_id=element.element_ids[0], unit_index=element.unit_index,
                 source_ref=element.source_refs[0],
                 annotation_ids=list(element.annotation_ids), model_derived_text=element.model_derived_text,
@@ -535,16 +611,40 @@ def chunk_document(
                 if config.oversized_element_policy == "split":
                     fragments = split_oversized_text(element.source_text, config.max_chars)
                 else:
-                    fragments = [element.source_text]
-                heading_ids, heading_refs, heading_ann_ids = active_heading_context()
-                for fragment_index, fragment in enumerate(fragments):
-                    own_ann = list(element.annotation_ids) if fragment_index == 0 else []
-                    fragment_ann = list(dict.fromkeys(own_ann + (heading_ann_ids if fragment_index == 0 else [])))
+                    fragments = [TextFragment(text=element.source_text, fragment_index=0, start_char=0, end_char=len(element.source_text))]
+
+                heading_ids, heading_refs, heading_ann_ids, heading_extracted_text, heading_model_derived_text = active_heading_context()
+                base_ref = element.source_refs[0]
+                positioned_ids = {aid for aid, _, _ in element.positioned_identifier_spans}
+                default_bucket_ann = [aid for aid in element.annotation_ids if aid not in positioned_ids]
+
+                for fragment in fragments:
+                    fragment_ref = base_ref.model_copy(update={
+                        "fragment_index": fragment.fragment_index,
+                        "start_char": fragment.start_char,
+                        "end_char": fragment.end_char,
+                    })
+                    # Identifiers with concrete offsets are routed to every
+                    # fragment whose span contains or overlaps them (half-
+                    # open interval overlap test); everything else (the
+                    # element's own non-positioned annotations) still
+                    # defaults to fragment 0 only, as in Stage 4.
+                    routed_ids = [
+                        aid for aid, id_start, id_end in element.positioned_identifier_spans
+                        if id_start < fragment.end_char and id_end > fragment.start_char
+                    ]
+                    own_ids = routed_ids + (default_bucket_ann if fragment.fragment_index == 0 else [])
+                    fragment_ann = list(dict.fromkeys(own_ids + heading_ann_ids))
+                    fragment_model_derived_own = element.model_derived_text if fragment.fragment_index == 0 else None
+                    fragment_source_text = _join_source_texts([fragment.text, heading_extracted_text])
+                    fragment_model_derived_parts = [p for p in (fragment_model_derived_own, heading_model_derived_text) if p]
+                    fragment_model_derived = "\n".join(fragment_model_derived_parts) if fragment_model_derived_parts else None
+
                     emit_chunk(
                         "text", [element.unit_index], current_heading_path(),
                         heading_ids, heading_refs,
-                        list(element.element_ids), fragment_ann, list(element.source_refs), [],
-                        fragment, element.model_derived_text if fragment_index == 0 else None,
+                        list(element.element_ids), fragment_ann, [fragment_ref], [],
+                        fragment_source_text, fragment_model_derived,
                     )
                 continue
 
@@ -565,14 +665,17 @@ def chunk_document(
             # Standalone tables/pictures never merge with surrounding text,
             # in either direction -- flush whatever text preceded it first.
             flush_buffer()
-            heading_ids, heading_refs, heading_ann_ids = active_heading_context()
+            heading_ids, heading_refs, heading_ann_ids, heading_extracted_text, heading_model_derived_text = active_heading_context()
             annotation_ids = list(dict.fromkeys(list(element.annotation_ids) + heading_ann_ids))
+            source_text = _join_source_texts([element.source_text, heading_extracted_text])
+            model_derived_parts = [p for p in (element.model_derived_text, heading_model_derived_text) if p]
+            model_derived_text = "\n".join(model_derived_parts) if model_derived_parts else None
             emit_chunk(
                 element.kind, [element.unit_index], current_heading_path(),
                 heading_ids, heading_refs,
                 list(element.element_ids), annotation_ids,
                 list(element.source_refs), list(element.asset_refs),
-                element.source_text, element.model_derived_text,
+                source_text, model_derived_text,
             )
         else:
             # Not standalone: merge into the current buffer like a packable
@@ -590,9 +693,14 @@ def chunk_document(
     pop_headings_to_level(0)
 
     # Reject accidental duplicate chunk occurrences within this single
-    # revision (chunking rule 10, Stage 4.1): same ordered source element
-    # ids, same source references, and same content_sha256 would mean the
-    # same underlying content was chunked twice by this call.
+    # revision (chunking rule 10, Stage 4.1; fragment-aware since Stage
+    # 4.2): keyed on ordered source element ids, the FULL serialized
+    # source_refs (which, for a split element's fragments, now carries a
+    # distinct fragment_index/start_char/end_char per fragment), and
+    # content_sha256. Two fragments of the same paragraph with identical
+    # TEXT (e.g. a repeated sentence) are never flagged, because their
+    # source_refs -- and therefore this key -- differ by span even when
+    # their rendered text does not.
     seen_occurrences: set[tuple] = set()
     for chunk in chunks:
         occurrence_key = (
