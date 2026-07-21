@@ -1,0 +1,12 @@
+psycopg[binary]>=3.1
+sqlalchemy>=2.0
+pgvector>=0.3
+python-dotenv>=1.0
+rich>=13.7
+sentence-transformers>=3.0
+openai
+pytest
+python-docx
+python-pptx
+reportlab
+pillow

@@ -1,0 +1,292 @@
+{
+  "manifest_version": "1.2.1",
+  "status": "approved_frozen",
+  "note": "FROZEN Stage 1 manifest (version 1.2.1), approved. Reviewed across four revisions; see BENCHMARK_CONTRACT.md (approved Stage 1 contract) for the full rationale. This file's content must not change without a new manifest_version. manifest_sha256 is computed over this file's canonical JSON serialization by ingestion_bench.canonical.hashing.compute_manifest_sha256 and is intentionally not embedded in this file (a hash of the manifest cannot include itself).",
+  "domain": "Enterprise Resilience (synthetic, unrelated to the src/ GraphRAG POC corpus)",
+
+  "parity_suite": {
+    "suite_id": "parity",
+    "doc_id": "PARITY_001",
+    "description": "Same semantic knowledge rendered natively in DOCX, PDF, and PPTX. TWO logical units per format: unit 0 = text/distractors/table, unit 1 = picture/caption. A hard unit boundary (page break in DOCX/PDF, slide break in PPTX) is inserted between them.",
+    "units": [
+      { "unit_index": 0, "unit_type": "page_or_slide", "content": "text_distractors_table" },
+      { "unit_index": 1, "unit_type": "page_or_slide", "content": "picture_caption" }
+    ],
+
+    "headings": [
+      { "fact_id": "H_001", "level": 1, "text": "Enterprise Resilience Overview: Payment Settlement Service", "expected_location": { "unit_index": 0, "role": "title" } },
+      { "fact_id": "H_002", "level": 2, "text": "Recovery Objectives", "expected_location": { "unit_index": 0, "role": "section_heading", "precedes": "T_001" } },
+      { "fact_id": "H_003", "level": 2, "text": "Escalation Flow", "expected_location": { "unit_index": 1, "role": "section_heading", "precedes": "PIC_001" } }
+    ],
+
+    "paragraphs": [
+      { "fact_id": "P_001", "text": "Application APP-224510 supports the Payment Settlement business service.", "expected_location": { "unit_index": 0, "role": "body_paragraph", "order_hint": 1 } },
+      { "fact_id": "P_002", "text": "APP-224510 is in scope for Regulatory Obligation O-31.", "expected_location": { "unit_index": 0, "role": "body_paragraph", "order_hint": 2 } },
+      { "fact_id": "P_003", "text": "Regulatory Obligation O-31 is satisfied by Control C-88.", "expected_location": { "unit_index": 0, "role": "body_paragraph", "order_hint": 3 } },
+      { "fact_id": "P_004", "text": "Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.", "expected_location": { "unit_index": 0, "role": "body_paragraph", "order_hint": 4 } },
+      { "fact_id": "P_005", "text": "Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.", "expected_location": { "unit_index": 0, "role": "body_paragraph", "order_hint": 5 } }
+    ],
+
+    "list_items": [],
+
+    "identifiers": {
+      "note": "Occurrence lists below are the CURATED, formally tracked ground truth used by the identifier-recall metrics. They are deliberately not an exhaustive substring scan: distractor_facts D_001 and D_002 each also mention the real identifier once in passing (APP-224510 in D_001's 'superseded by' clause; C-88 in D_002's 'replaced by' clause) for narrative closure — these incidental mentions are intentionally NOT double-counted here, to keep the tracked ground truth curated rather than derived by blind text-scanning. If occurrence-level recall should instead be scored as an exhaustive scan, that is an open item for Stage 2 (see BENCHMARK_CONTRACT.md).",
+      "target_identifiers": [
+        {
+          "fact_id": "ID_001", "normalized_value": "APP-224510", "is_distractor": false,
+          "occurrences": [
+            { "raw_text": "APP-224510", "source_fact": "P_001" },
+            { "raw_text": "APP-224510", "source_fact": "P_002" }
+          ]
+        },
+        {
+          "fact_id": "ID_002", "normalized_value": "O-31", "is_distractor": false,
+          "occurrences": [
+            { "raw_text": "O-31", "source_fact": "P_002" },
+            { "raw_text": "O-31", "source_fact": "P_003" }
+          ]
+        },
+        {
+          "fact_id": "ID_003", "normalized_value": "C-88", "is_distractor": false,
+          "occurrences": [
+            { "raw_text": "C-88", "source_fact": "P_003" },
+            { "raw_text": "C-88", "source_fact": "P_004" }
+          ]
+        },
+        {
+          "fact_id": "ID_004", "normalized_value": "P-205", "is_distractor": false,
+          "occurrences": [
+            { "raw_text": "P-205", "source_fact": "P_004" },
+            { "raw_text": "P-205", "source_fact": "CAP_001" },
+            { "raw_text": "P-205", "source_fact": "VF_NODE_003", "note": "OCR/vision-visible inside the parity image itself, not plain text" }
+          ]
+        }
+      ],
+      "distractor_identifiers": [
+        {
+          "fact_id": "ID_D001", "normalized_value": "APP-224499", "is_distractor": true,
+          "occurrences": [
+            { "raw_text": "APP-224499", "source_fact": "D_001" }
+          ],
+          "false_merge_risk": "Shares a 6-digit numeric prefix pattern with APP-224510 but is a distinct token. A parser must not normalize/merge it into APP-224510."
+        },
+        {
+          "fact_id": "ID_D002", "normalized_value": "C-88a", "is_distractor": true,
+          "occurrences": [
+            { "raw_text": "C-88a", "source_fact": "D_002" },
+            { "raw_text": "C-88a", "source_fact": "D_002" }
+          ],
+          "false_merge_risk": "Contains 'C-88' as a literal substring. Matching MUST use exact identifier token boundaries (the character immediately following '88' must not be alphanumeric) so 'C-88' is never counted as occurring inside 'C-88a', and vice versa 'C-88a' must never be counted as a match for the real identifier 'C-88'."
+        }
+      ],
+      "occurrence_totals": {
+        "target_identifiers_total_occurrences": 9,
+        "target_identifiers_unique_count": 4,
+        "distractor_identifiers_total_occurrences": 3,
+        "distractor_identifiers_unique_count": 2
+      }
+    },
+
+    "distractor_facts": [
+      {
+        "fact_id": "D_001",
+        "text": "APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.",
+        "purpose": "Confusable identifier (APP-224499 vs. APP-224510), near-identical prefix — tests whether extraction distinguishes them instead of merging/aliasing.",
+        "expected_location": { "unit_index": 0, "role": "body_paragraph", "order_hint": 6 }
+      },
+      {
+        "fact_id": "D_002",
+        "text": "Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.",
+        "purpose": "Confusable identifier (C-88a vs. C-88), C-88 is a literal substring of C-88a — the primary token-boundary stress case.",
+        "expected_location": { "unit_index": 0, "role": "body_paragraph", "order_hint": 7 }
+      }
+    ],
+
+    "tables": [
+      {
+        "fact_id": "T_001",
+        "expected_location": { "unit_index": 0, "role": "table", "after_heading": "H_002" },
+        "n_rows": 4,
+        "n_cols": 2,
+        "cells": [
+          { "row": 0, "col": 0, "text": "Metric", "is_header": true },
+          { "row": 0, "col": 1, "text": "Value", "is_header": true },
+          { "row": 1, "col": 0, "text": "RTO", "is_header": false },
+          { "row": 1, "col": 1, "text": "4 hours", "is_header": false },
+          { "row": 2, "col": 0, "text": "RPO", "is_header": false },
+          { "row": 2, "col": 1, "text": "1 hour", "is_header": false },
+          { "row": 3, "col": 0, "text": "Legacy RPO (C-88a, retired)", "is_header": false },
+          { "row": 3, "col": 1, "text": "N/A", "is_header": false }
+        ],
+        "notes": "Row 3 is a distractor row tied to the retired C-88a identifier. Native table (DOCX table / PDF TableFormer / PPTX native table) — never routed through vision enrichment."
+      }
+    ],
+
+    "captions": [
+      { "fact_id": "CAP_001", "text": "Figure 1: Escalation flow from incident detection to activation of Recovery Procedure P-205.", "target_picture": "PIC_001", "expected_location": { "unit_index": 1, "role": "caption", "after_heading": "H_003" } }
+    ],
+
+    "pictures": [
+      {
+        "fact_id": "PIC_001",
+        "shared_image_ref": "diagram_v1",
+        "expected_location": { "unit_index": 1, "role": "picture", "after_heading": "H_003" },
+        "description_for_generator": "One deterministically-generated PNG (via Pillow, fixed coordinates, no randomness), embedded identically in all three formats. Canvas 700x160px, white background.",
+        "expected_picture_class": "diagram",
+        "expected_picture_class_note": "Provisional label. Must be reconciled against Docling's actual picture-classifier label taxonomy during Stage 5 implementation.",
+        "expected_ocr_tokens": [
+          "Incident Detected",
+          "Escalate to Resilience Team",
+          "Activate Procedure P-205"
+        ]
+      }
+    ],
+
+    "diagram_nodes": [
+      { "fact_id": "VF_NODE_001", "label": "Incident Detected", "bbox_px": [20, 20, 200, 90] },
+      { "fact_id": "VF_NODE_002", "label": "Escalate to Resilience Team", "bbox_px": [260, 20, 460, 90] },
+      { "fact_id": "VF_NODE_003", "label": "Activate Procedure P-205", "bbox_px": [500, 20, 680, 90] }
+    ],
+    "diagram_edges": [
+      { "fact_id": "VF_EDGE_001", "source": "VF_NODE_001", "target": "VF_NODE_002", "directed": true },
+      { "fact_id": "VF_EDGE_002", "source": "VF_NODE_002", "target": "VF_NODE_003", "directed": true }
+    ],
+    "diagram_nodes_edges_note": "These are recoverable from the flat parity image ONLY via a VisionEnricher (paths B/C/D) mapping to DiagramNodeAnnotation/DiagramEdgeAnnotation with extraction_method identifying the enricher. DOCLING_STANDARD_LOCAL (path A) alone cannot recover node/edge semantics from a flat raster image — it may recover the OCR text tokens only (see expected_ocr_tokens above), via a separate OcrAnnotation.",
+
+    "visual_distractor_facts": [
+      {
+        "fact_id": "VD_001",
+        "claim": "The escalation flow includes a fourth step for executive notification.",
+        "claim_type": "diagram_node",
+        "purpose": "Plausible-sounding but false node claim. Scored only against structured DiagramNodeAnnotation/DiagramEdgeAnnotation output — never against ImageDescriptionAnnotation/summary prose, which is human-review only and is never deterministically scored."
+      }
+    ]
+  },
+
+  "stress_suite": {
+    "suite_id": "stress",
+    "description": "Small, format-specific and capability-specific fixtures. No cross-format parity required.",
+
+    "docx_nested_structure": {
+      "doc_id": "STRESS_DOCX_001",
+      "format": "docx",
+      "headings": [
+        { "fact_id": "SH_001", "level": 1, "text": "Business Continuity Roles" },
+        { "fact_id": "SH_002", "level": 2, "text": "Primary Responders" },
+        { "fact_id": "SH_003", "level": 3, "text": "On-call Rotation" }
+      ],
+      "list_items": [
+        { "fact_id": "SL_001", "text": "Resilience Engineering Team", "indent_level": 0, "list_id": "roles" },
+        { "fact_id": "SL_002", "text": "Incident Commander", "indent_level": 1, "list_id": "roles", "parent": "SL_001" },
+        { "fact_id": "SL_003", "text": "Technical Lead", "indent_level": 1, "list_id": "roles", "parent": "SL_001" },
+        { "fact_id": "SL_004", "text": "Primary (Mon-Wed)", "indent_level": 2, "list_id": "roles", "parent": "SL_003" },
+        { "fact_id": "SL_005", "text": "Secondary (Thu-Fri)", "indent_level": 2, "list_id": "roles", "parent": "SL_003" }
+      ],
+      "notes": "Tests multi-level heading hierarchy (H1>H2>H3) and 3-level nested list fidelity, native DOCX structures."
+    },
+
+    "pdf_complex_layout": {
+      "doc_id": "STRESS_PDF_001",
+      "format": "pdf",
+      "layout": "two_column",
+      "paragraphs": [
+        { "fact_id": "SP_001", "column": 1, "text": "Column one covers the primary recovery timeline for Payment Settlement." },
+        { "fact_id": "SP_002", "column": 2, "text": "Column two covers the secondary failover timeline for the same service." }
+      ],
+      "tables": [
+        {
+          "fact_id": "ST_001",
+          "n_rows": 3,
+          "n_cols": 3,
+          "cells": [
+            { "row": 0, "col": 0, "text": "Phase", "is_header": true },
+            { "row": 0, "col": 1, "text": "Owner", "is_header": true, "col_span": 2 },
+            { "row": 1, "col": 0, "text": "Detection", "is_header": false },
+            { "row": 1, "col": 1, "text": "Resilience Engineering Team", "is_header": false, "col_span": 2 },
+            { "row": 2, "col": 0, "text": "Recovery", "is_header": false },
+            { "row": 2, "col": 1, "text": "Incident Commander", "is_header": false },
+            { "row": 2, "col": 2, "text": "Technical Lead", "is_header": false }
+          ],
+          "notes": "Header row has a col_span=2 merged cell; tests row/column fidelity under merged cells. Native TableFormer extraction — never vision-enriched."
+        }
+      ],
+      "notes": "Tests reading order under a two-column layout plus a merged-cell table, entirely within DOCLING_STANDARD_LOCAL (no VLM)."
+    },
+
+    "pptx_overlapping_textboxes": {
+      "doc_id": "STRESS_PPTX_001",
+      "format": "pptx",
+      "text_boxes": [
+        { "fact_id": "SB_001", "text": "Primary annotation: RTO target 4h", "z_order": 1 },
+        { "fact_id": "SB_002", "text": "Superseded annotation: RTO target 6h (draft, do not use)", "z_order": 0 }
+      ],
+      "table": {
+        "fact_id": "SB_TBL_001",
+        "n_rows": 2,
+        "n_cols": 2,
+        "cells": [
+          { "row": 0, "col": 0, "text": "Region", "is_header": true },
+          { "row": 0, "col": 1, "text": "Status", "is_header": true },
+          { "row": 1, "col": 0, "text": "EMEA", "is_header": false },
+          { "row": 1, "col": 1, "text": "Active", "is_header": false }
+        ]
+      },
+      "evaluation_expectation": "BOTH SB_001 and SB_002 must be extracted as distinct blocks. z_order must be retained on each block where the format/parser exposes it. The parser/evaluator must NOT infer that front-most (higher z_order) implies authoritative or correct — both are equally valid extracted facts; picking a 'winner' is out of scope.",
+      "notes": "Native PPTX table alongside two overlapping text boxes (one stale, rendered behind)."
+    },
+
+    "pptx_native_diagram": {
+      "doc_id": "STRESS_PPTX_002",
+      "format": "pptx",
+      "description": "Native PPTX shapes + connectors (not a rasterized image). This fixture measures an EXPLORATORY capability, not an assumed one: whether DOCLING_STANDARD_LOCAL can reconstruct diagram structure from native shape objects. No capability is assumed in advance.",
+      "capability_breakdown": {
+        "node_labels": "Can the text labels of each shape be extracted at all (independent of shape/connector detection)?",
+        "shapes": "Can the shape objects themselves be detected as discrete elements (bbox, count)?",
+        "connectors": "Can connector objects between shapes be detected as discrete elements, independent of knowing what they connect?",
+        "source_target_linkage": "For a detected connector, can its source shape and target shape be correctly identified?",
+        "direction": "For a detected connector, can its directionality (arrow direction) be correctly identified?"
+      },
+      "diagram_nodes": [
+        { "fact_id": "DN_001", "label": "Detect" },
+        { "fact_id": "DN_002", "label": "Contain" },
+        { "fact_id": "DN_003", "label": "Recover" }
+      ],
+      "diagram_edges": [
+        { "fact_id": "DE_001", "source": "DN_001", "target": "DN_002", "directed": true },
+        { "fact_id": "DE_002", "source": "DN_002", "target": "DN_003", "directed": true }
+      ]
+    },
+
+    "chart_visual_stress": {
+      "doc_id": "STRESS_CHART_001",
+      "format": "png_embedded_in_pdf",
+      "description": "One deterministically-generated bar chart (Pillow, fixed coordinates, no randomness) — quarterly recovery-test pass rates. For vision-enricher scoring (paths B/C/D) only; DOCLING_STANDARD_LOCAL alone has no semantic-numeric-reading capability.",
+      "expected_picture_class": "chart",
+      "visual_facts": [
+        { "fact_id": "CF_001", "fact_type": "numeric", "subject": "Q1 pass rate", "relation": "equals", "object": null, "value": 82, "unit": "%", "raw_text": "Q1: 82%" },
+        { "fact_id": "CF_002", "fact_type": "numeric", "subject": "Q2 pass rate", "relation": "equals", "object": null, "value": 88, "unit": "%", "raw_text": "Q2: 88%" },
+        { "fact_id": "CF_003", "fact_type": "numeric", "subject": "Q3 pass rate", "relation": "equals", "object": null, "value": 91, "unit": "%", "raw_text": "Q3: 91%" },
+        { "fact_id": "CF_004", "fact_type": "numeric", "subject": "Q4 pass rate", "relation": "equals", "object": null, "value": 95, "unit": "%", "raw_text": "Q4: 95%" },
+        { "fact_id": "CC_001", "fact_type": "comparative", "subject": "Q4 pass rate", "relation": "greater_than", "object": "Q1 pass rate", "value": null, "unit": null, "raw_text": "Q4 higher than Q1" },
+        { "fact_id": "CC_002", "fact_type": "comparative", "subject": "Q3 pass rate", "relation": "greater_than", "object": "Q2 pass rate", "value": null, "unit": null, "raw_text": "Q3 higher than Q2" }
+      ],
+      "unsupported_claims": [
+        {
+          "fact_id": "CU_001",
+          "fact_type": "numeric",
+          "subject": "Q2 pass rate", "relation": "greater_than", "object": null, "value": 95, "unit": "%",
+          "claim": "Pass rate exceeded 95% in Q2.",
+          "is_supported": false,
+          "reason": "Q2 value is 88%, not >95%. A correct VisualFactAnnotation set must NOT assert this. Scored only against structured VisualFactAnnotation output, never against summary prose."
+        }
+      ]
+    },
+
+    "scanned_pdf_ocr_stress": {
+      "doc_id": "STRESS_SCANNED_001",
+      "format": "pdf_image_only",
+      "description": "Single-page PDF containing ONLY a rasterized image of text (no digital text layer at all) — forces OCR to be the sole extraction path. Contrasts with the born-digital parity PDF. This is real OcrAnnotation territory (RapidOCR / Docling's OCR pipeline), not a VisionEnricher/VisibleTextAnnotation case.",
+      "expected_ocr_text": "This page intentionally contains no digital text layer. Recovery Procedure P-205 must be tested quarterly."
+    }
+  }
+}

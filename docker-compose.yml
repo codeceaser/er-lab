@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: er_graphrag_poc_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: er_admin
+      POSTGRES_PASSWORD: er_admin_pw
+      POSTGRES_DB: er_graphrag_poc
+    ports:
+      # Host port 5434 (not 5433) to avoid clashing with a native PostgreSQL
+      # install already bound to 5433 on this machine.
+      - "5434:5432"
+    volumes:
+      - er_graphrag_poc_pgdata:/var/lib/postgresql/data
+
+volumes:
+  er_graphrag_poc_pgdata:

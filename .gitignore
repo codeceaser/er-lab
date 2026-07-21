@@ -1,0 +1,16 @@
+# Secrets — never commit
+.env
+
+# Local tool config
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Virtual environment (also self-excluded via .venv/.gitignore)
+.venv/
+
+# Generated, regenerable artifacts
+fixtures/generated/
