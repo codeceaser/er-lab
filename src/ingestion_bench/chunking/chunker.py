@@ -9,20 +9,30 @@ already says was extracted -- it does not interpret or judge truth.
 
 chunk_document() is pure: it never mutates the input CanonicalDocument,
 performs no filesystem/network/database I/O, and is fully deterministic --
-same document + same config always produces byte-identical serialized
-output (see stable ID / content-hash design below).
+same document + same config + same revision context always produces
+byte-identical serialized output (see stable ID / content-hash design
+below).
 """
 
 from __future__ import annotations
 
 import re
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ingestion_bench.canonical import CanonicalDocument, DiagramNodeAnnotation, IdentifierAnnotation
 from ingestion_bench.canonical.hashing import stable_element_id
 
-from .model import CanonicalChunk, ChunkingConfig, ChunkSourceRef, canonical_sha256, compute_chunking_config_hash
+from .model import (
+    CanonicalChunk,
+    ChunkAssetRef,
+    ChunkingConfig,
+    ChunkSourceRef,
+    DocumentRevisionContext,
+    canonical_sha256,
+    compute_chunking_config_hash,
+    text_sha256,
+)
 from .renderers import render_extracted_annotation, render_list_item, render_model_derived_annotation, render_table_text
 
 # Bumped whenever the CHUNKING ALGORITHM changes (ordering, packing, or
@@ -102,15 +112,26 @@ class _RenderedElement:
     source_text: str
     model_derived_text: str | None
     heading_level: int | None = None
+    # Plain, undecorated element text (heading.text only, with no extracted-
+    # annotation text merged in) -- used for heading_path / heading_source_*,
+    # kept separate from source_text so a heading's own extracted-annotation
+    # rendering never leaks into every downstream chunk's heading breadcrumb.
+    raw_text: str | None = None
+    asset_refs: list[ChunkAssetRef] = field(default_factory=list)
 
 
 @dataclass
 class _HeadingFrame:
     level: int
-    text: str
+    heading_text: str
+    # heading_text + any extracted-annotation text -- used only when this
+    # heading is popped with no content and becomes its own standalone chunk.
+    standalone_source_text: str
     element_id: str
     unit_index: int
     source_ref: ChunkSourceRef
+    annotation_ids: list[str]
+    model_derived_text: str | None
     has_content: bool = False
 
 
@@ -209,6 +230,7 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
                 order_index=heading.order_index, bbox=heading.bbox, element_type="heading",
             )],
             source_text=source_text, model_derived_text=model_text, heading_level=heading.level,
+            raw_text=heading.text,
         )
         keyed.append(((heading.unit_index, heading.order_index, _TYPE_RANK["heading"], heading.block_id), element))
 
@@ -293,6 +315,11 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
         order_index = provenance_order_index.get(picture.picture_id)
         sort_order_index = order_index if order_index is not None else float("inf")
 
+        asset_refs = [ChunkAssetRef(
+            picture_id=picture.picture_id, artifact_ref=picture.artifact_ref,
+            content_sha256=picture.content_sha256, unit_index=picture.unit_index, bbox=picture.bbox,
+        )]
+
         element = _RenderedElement(
             kind="picture",
             unit_index=picture.unit_index,
@@ -301,6 +328,7 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
             annotation_ids=annotation_ids,
             source_refs=source_refs,
             source_text=source_text, model_derived_text=model_text,
+            asset_refs=asset_refs,
         )
         keyed.append(((picture.unit_index, sort_order_index, _TYPE_RANK["picture"], picture.picture_id), element))
 
@@ -308,7 +336,18 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
     return [element for _, element in keyed]
 
 
-def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = None) -> list[CanonicalChunk]:
+def chunk_document(
+    document: CanonicalDocument,
+    config: ChunkingConfig | None = None,
+    *,
+    revision_context: DocumentRevisionContext,
+) -> list[CanonicalChunk]:
+    if document.source_sha256 != revision_context.source_document_sha256:
+        raise ValueError(
+            "document.source_sha256 does not match revision_context.source_document_sha256: "
+            f"{document.source_sha256!r} != {revision_context.source_document_sha256!r}"
+        )
+
     config = config or ChunkingConfig()
     config_hash = compute_chunking_config_hash(config)
     elements = _build_ordered_elements(document)
@@ -321,7 +360,16 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
     buffer_unit_indices: set[int] = set()
 
     def current_heading_path() -> list[str]:
-        return [frame.text for frame in heading_stack]
+        return [frame.heading_text for frame in heading_stack]
+
+    def active_heading_context() -> tuple[list[str], list[ChunkSourceRef], list[str]]:
+        """Outermost-to-innermost active heading ids/refs, plus their own
+        annotation ids (in stack order) -- so a heading's annotations are
+        never silently lost when content beneath it is chunked."""
+        ids = [frame.element_id for frame in heading_stack]
+        refs = [frame.source_ref for frame in heading_stack]
+        ann_ids = [aid for frame in heading_stack for aid in frame.annotation_ids]
+        return ids, refs, ann_ids
 
     def mark_headings_have_content() -> None:
         for frame in heading_stack:
@@ -331,14 +379,17 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
         chunk_type: str,
         unit_indices: list[int],
         heading_path: list[str],
+        heading_source_element_ids: list[str],
+        heading_source_refs: list[ChunkSourceRef],
         source_element_ids: list[str],
         annotation_ids: list[str],
         source_refs: list[ChunkSourceRef],
+        asset_refs: list[ChunkAssetRef],
         source_text: str,
         model_derived_text: str | None,
     ) -> None:
         nonlocal chunk_index
-        if not source_text and not model_derived_text:
+        if not source_text and not model_derived_text and not asset_refs:
             return  # never emit a genuinely empty chunk
 
         content_payload = {
@@ -349,6 +400,9 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
             "annotation_ids": annotation_ids,
             "source_text": source_text,
             "model_derived_text": model_derived_text,
+            "source_refs": [ref.model_dump(mode="json") for ref in source_refs],
+            "heading_source_refs": [ref.model_dump(mode="json") for ref in heading_source_refs],
+            "asset_refs": [ref.model_dump(mode="json") for ref in asset_refs],
         }
         content_sha256 = canonical_sha256(content_payload)
 
@@ -360,13 +414,14 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
         if config.include_model_derived_annotations and model_derived_text:
             retrieval_parts.append(f"Model-derived (unverified):\n{model_derived_text}")
         retrieval_text = "\n\n".join(retrieval_parts)
+        embedding_input_sha256 = text_sha256(retrieval_text)
 
         chunk_id = stable_element_id(
             document.doc_id,
             "chunk",
             unit_indices[0],
             order_index=chunk_index,
-            discriminator=f"{CHUNKER_VERSION}:{config_hash}",
+            discriminator=f"{CHUNKER_VERSION}:{config_hash}:{revision_context.document_revision_id}",
             extra={
                 "source_element_ids": source_element_ids,
                 "annotation_ids": annotation_ids,
@@ -377,18 +432,27 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
         chunks.append(CanonicalChunk(
             chunk_id=chunk_id,
             doc_id=document.doc_id,
+            logical_document_id=revision_context.logical_document_id,
+            document_revision_id=revision_context.document_revision_id,
+            source_document_sha256=revision_context.source_document_sha256,
+            version_label=revision_context.version_label,
+            revision_number=revision_context.revision_number,
             chunk_index=chunk_index,
             chunk_type=chunk_type,
             unit_indices=unit_indices,
             heading_path=heading_path,
+            heading_source_element_ids=heading_source_element_ids,
+            heading_source_refs=heading_source_refs,
             source_element_ids=source_element_ids,
             annotation_ids=annotation_ids,
             source_refs=source_refs,
+            asset_refs=asset_refs,
             source_text=source_text,
             model_derived_text=model_derived_text,
             retrieval_text=retrieval_text,
             contains_model_derived=model_derived_text is not None,
             content_sha256=content_sha256,
+            embedding_input_sha256=embedding_input_sha256,
             chunker_version=CHUNKER_VERSION,
             chunking_config_hash=config_hash,
         ))
@@ -412,13 +476,19 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
         model_derived_parts = [element.model_derived_text for element in buffer if element.model_derived_text]
         model_derived_text = "\n".join(model_derived_parts) if model_derived_parts else None
         source_element_ids = [eid for element in buffer for eid in element.element_ids]
-        annotation_ids = [aid for element in buffer for aid in element.annotation_ids]
+        own_annotation_ids = [aid for element in buffer for aid in element.annotation_ids]
         source_refs = [ref for element in buffer for ref in element.source_refs]
+        asset_refs = [ref for element in buffer for ref in element.asset_refs]
         unit_indices = sorted(buffer_unit_indices)
+
+        heading_ids, heading_refs, heading_ann_ids = active_heading_context()
+        annotation_ids = list(dict.fromkeys(own_annotation_ids + heading_ann_ids))
 
         emit_chunk(
             chunk_type, unit_indices, current_heading_path(),
-            source_element_ids, annotation_ids, source_refs, source_text, model_derived_text,
+            heading_ids, heading_refs,
+            source_element_ids, annotation_ids, source_refs, asset_refs,
+            source_text, model_derived_text,
         )
         buffer.clear()
         buffer_unit_indices.clear()
@@ -427,9 +497,15 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
         while heading_stack and heading_stack[-1].level >= min_level_inclusive:
             frame = heading_stack.pop()
             if not frame.has_content:
+                ancestor_ids = [f.element_id for f in heading_stack]
+                ancestor_refs = [f.source_ref for f in heading_stack]
+                ancestor_ann_ids = [aid for f in heading_stack for aid in f.annotation_ids]
+                merged_annotation_ids = list(dict.fromkeys(frame.annotation_ids + ancestor_ann_ids))
                 emit_chunk(
-                    "text", [frame.unit_index], [f.text for f in heading_stack],
-                    [frame.element_id], [], [frame.source_ref], frame.text, None,
+                    "text", [frame.unit_index], [f.heading_text for f in heading_stack],
+                    ancestor_ids, ancestor_refs,
+                    [frame.element_id], merged_annotation_ids, [frame.source_ref], [],
+                    frame.standalone_source_text, frame.model_derived_text,
                 )
 
     for element in elements:
@@ -437,9 +513,11 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
             flush_buffer()
             pop_headings_to_level(element.heading_level)
             heading_stack.append(_HeadingFrame(
-                level=element.heading_level, text=element.source_text,
+                level=element.heading_level, heading_text=element.raw_text or "",
+                standalone_source_text=element.source_text,
                 element_id=element.element_ids[0], unit_index=element.unit_index,
                 source_ref=element.source_refs[0],
+                annotation_ids=list(element.annotation_ids), model_derived_text=element.model_derived_text,
             ))
             continue
 
@@ -458,13 +536,15 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
                     fragments = split_oversized_text(element.source_text, config.max_chars)
                 else:
                     fragments = [element.source_text]
+                heading_ids, heading_refs, heading_ann_ids = active_heading_context()
                 for fragment_index, fragment in enumerate(fragments):
+                    own_ann = list(element.annotation_ids) if fragment_index == 0 else []
+                    fragment_ann = list(dict.fromkeys(own_ann + (heading_ann_ids if fragment_index == 0 else [])))
                     emit_chunk(
                         "text", [element.unit_index], current_heading_path(),
-                        list(element.element_ids),
-                        list(element.annotation_ids) if fragment_index == 0 else [],
-                        list(element.source_refs), fragment,
-                        element.model_derived_text if fragment_index == 0 else None,
+                        heading_ids, heading_refs,
+                        list(element.element_ids), fragment_ann, list(element.source_refs), [],
+                        fragment, element.model_derived_text if fragment_index == 0 else None,
                     )
                 continue
 
@@ -485,10 +565,14 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
             # Standalone tables/pictures never merge with surrounding text,
             # in either direction -- flush whatever text preceded it first.
             flush_buffer()
+            heading_ids, heading_refs, heading_ann_ids = active_heading_context()
+            annotation_ids = list(dict.fromkeys(list(element.annotation_ids) + heading_ann_ids))
             emit_chunk(
                 element.kind, [element.unit_index], current_heading_path(),
-                list(element.element_ids), list(element.annotation_ids),
-                list(element.source_refs), element.source_text, element.model_derived_text,
+                heading_ids, heading_refs,
+                list(element.element_ids), annotation_ids,
+                list(element.source_refs), list(element.asset_refs),
+                element.source_text, element.model_derived_text,
             )
         else:
             # Not standalone: merge into the current buffer like a packable
@@ -504,5 +588,23 @@ def chunk_document(document: CanonicalDocument, config: ChunkingConfig | None = 
 
     flush_buffer()
     pop_headings_to_level(0)
+
+    # Reject accidental duplicate chunk occurrences within this single
+    # revision (chunking rule 10, Stage 4.1): same ordered source element
+    # ids, same source references, and same content_sha256 would mean the
+    # same underlying content was chunked twice by this call.
+    seen_occurrences: set[tuple] = set()
+    for chunk in chunks:
+        occurrence_key = (
+            tuple(chunk.source_element_ids),
+            tuple(ref.model_dump_json() for ref in chunk.source_refs),
+            chunk.content_sha256,
+        )
+        if occurrence_key in seen_occurrences:
+            raise ValueError(
+                "duplicate chunk occurrence detected within document_revision_id="
+                f"{revision_context.document_revision_id!r}: source_element_ids={chunk.source_element_ids!r}"
+            )
+        seen_occurrences.add(occurrence_key)
 
     return chunks

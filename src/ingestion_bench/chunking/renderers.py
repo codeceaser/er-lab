@@ -30,23 +30,32 @@ def render_list_item(item: CanonicalListItem) -> str:
 
 
 def render_table_text(table: CanonicalTable) -> str:
-    """Readable, deterministic, information-preserving table rendering.
-    Plain Markdown pipe tables cannot express row/col spans, so header
-    status and any span > 1 are noted explicitly per cell rather than
-    silently dropped."""
+    """Readable, deterministic, fully structural table rendering.
+
+    Every declared cell explicitly states its own row/col (and, when
+    relevant, header/span status) inline -- coordinates are never left to be
+    inferred from a cell's visual position in the rendered pipe table, which
+    would silently misattribute column identity for a sparse table (missing
+    cells caused by a row/col span elsewhere shift what a purely positional
+    reading implies). Rendering is independent of table.cells' input order:
+    cells are always grouped/sorted by (row, col) first."""
     lines = [f"Table ({table.n_rows}x{table.n_cols}):"]
     cells_by_row: dict[int, list] = defaultdict(list)
-    for cell in table.cells:
+    for cell in sorted(table.cells, key=lambda c: (c.row, c.col)):
         cells_by_row[cell.row].append(cell)
 
     for row_index in sorted(cells_by_row):
-        row_cells = sorted(cells_by_row[row_index], key=lambda c: c.col)
         rendered_cells = []
-        for cell in row_cells:
+        for cell in cells_by_row[row_index]:
             text = f"**{cell.text}**" if cell.is_header else cell.text
-            if cell.row_span > 1 or cell.col_span > 1:
-                text = f"{text} [rowspan={cell.row_span},colspan={cell.col_span}]"
-            rendered_cells.append(text)
+            meta = [f"row={cell.row}", f"col={cell.col}"]
+            if cell.is_header:
+                meta.append("header")
+            if cell.row_span > 1:
+                meta.append(f"rowspan={cell.row_span}")
+            if cell.col_span > 1:
+                meta.append(f"colspan={cell.col_span}")
+            rendered_cells.append(f"{text} [{','.join(meta)}]")
         lines.append("| " + " | ".join(rendered_cells) + " |")
 
     return "\n".join(lines)

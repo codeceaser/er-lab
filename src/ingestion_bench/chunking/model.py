@@ -1,7 +1,8 @@
 """Pydantic models for the canonical chunking layer.
 
 Depends only on ingestion_bench.canonical (CanonicalDocument's own types,
-e.g. BoundingBox) -- never on Docling, OpenAI, or any DOCX/PDF/PPTX library.
+e.g. BoundingBox, and its validate_sha256_hex helper) -- never on Docling,
+OpenAI, or any DOCX/PDF/PPTX library.
 """
 
 from __future__ import annotations
@@ -10,9 +11,10 @@ import hashlib
 import json
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ingestion_bench.canonical import BoundingBox
+from ingestion_bench.canonical.model import validate_sha256_hex
 
 
 def _canonical_json_bytes(data: dict[str, Any]) -> bytes:
@@ -26,19 +28,133 @@ def _canonical_json_bytes(data: dict[str, Any]) -> bytes:
 
 def canonical_sha256(data: dict[str, Any]) -> str:
     """SHA-256 hex digest of a dict's canonical JSON serialization. Used for
-    both CanonicalChunk.content_sha256 and ChunkingConfig hashing -- never
-    uuid4() or Python's built-in hash()."""
+    CanonicalChunk.content_sha256, ChunkingConfig hashing, and
+    document_revision_id -- never uuid4() or Python's built-in hash()."""
     return hashlib.sha256(_canonical_json_bytes(data)).hexdigest()
+
+
+def text_sha256(text: str) -> str:
+    """SHA-256 hex digest of raw text, used for
+    CanonicalChunk.embedding_input_sha256. Deliberately NOT routed through
+    canonical_sha256's dict-oriented JSON wrapping -- the input here is
+    already a single normalized string, not a structured payload."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+ChunkSourceElementType = Literal["heading", "paragraph", "list_item", "table", "picture", "caption"]
 
 
 class ChunkSourceRef(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     element_id: str
-    unit_index: int
-    order_index: int | None = None
+    unit_index: int = Field(ge=0)
+    order_index: int | None = Field(default=None, ge=0)
     bbox: BoundingBox | None = None
-    element_type: str
+    element_type: ChunkSourceElementType
+
+
+class ChunkAssetRef(BaseModel):
+    """A picture's stored-artifact identity, retained on its chunk even when
+    the picture carries no caption, OCR, or model-derived annotation text
+    (chunking rule 4, Stage 4.1) -- so an asset-only picture is never
+    silently dropped from the chunked corpus."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    picture_id: str
+    artifact_ref: str
+    content_sha256: str
+    unit_index: int = Field(ge=0)
+    bbox: BoundingBox | None = None
+
+    @field_validator("content_sha256")
+    @classmethod
+    def _content_sha256_is_valid(cls, v: str) -> str:
+        return validate_sha256_hex(v, "content_sha256")
+
+
+def compute_document_revision_id(
+    logical_document_id: str,
+    source_document_sha256: str,
+    version_label: str | None = None,
+    revision_number: int | None = None,
+) -> str:
+    """Deterministic document_revision_id: SHA-256 over stable identity
+    components only -- never a random UUID. logical_document_id is never a
+    filename (the caller derives it from a stable, non-filename document
+    identity); version_label is normalized (stripped, lower-cased) before
+    hashing so equivalent labels never disagree on revision identity."""
+    normalized_version_label = version_label.strip().lower() if version_label else None
+    payload = {
+        "logical_document_id": logical_document_id,
+        "source_document_sha256": source_document_sha256,
+        "version_label": normalized_version_label,
+        "revision_number": revision_number,
+    }
+    return canonical_sha256(payload)
+
+
+class DocumentRevisionContext(BaseModel):
+    """Identity of one revision of one logical document, supplied explicitly
+    by the caller of chunk_document(). A future document-revision registry
+    (not implemented in this stage) is expected to be the authoritative
+    source of these values for Stage 5 adapters.
+
+    Deliberately excludes mutable retrieval/index state -- is_latest,
+    is_current, publication_status, superseded_by_revision_id, ingestion
+    timestamps. None of that participates in a stable chunk's identity or
+    content hash (see CanonicalChunk); it belongs to that future registry /
+    a ChunkIndexRecord, managed later.
+
+    Intended default retrieval policy (to be enforced by that future
+    registry, not by this chunking layer, which only carries the lineage
+    fields needed to support it later):
+      - retrieve the currently effective authoritative revision;
+      - do not merely boost the most recently uploaded revision;
+      - drafts and future-effective revisions must not supersede the
+        current active revision;
+      - historical revisions are included only for explicit historical or
+        comparison queries.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    logical_document_id: str
+    document_revision_id: str
+    source_document_sha256: str
+    version_label: str | None = None
+    revision_number: int | None = Field(default=None, ge=0)
+
+    @field_validator("source_document_sha256")
+    @classmethod
+    def _source_document_sha256_is_valid(cls, v: str) -> str:
+        return validate_sha256_hex(v, "source_document_sha256")
+
+    @field_validator("document_revision_id")
+    @classmethod
+    def _document_revision_id_is_valid_sha256(cls, v: str) -> str:
+        return validate_sha256_hex(v, "document_revision_id")
+
+    @model_validator(mode="after")
+    def _validate_document_revision_id_is_deterministic(self) -> DocumentRevisionContext:
+        """document_revision_id is never freely chosen -- it must always
+        equal compute_document_revision_id() over this context's own stable
+        fields, so two contexts with identical identity components always
+        agree and one with a mismatched id is rejected at construction."""
+        expected = compute_document_revision_id(
+            logical_document_id=self.logical_document_id,
+            source_document_sha256=self.source_document_sha256,
+            version_label=self.version_label,
+            revision_number=self.revision_number,
+        )
+        if self.document_revision_id != expected:
+            raise ValueError(
+                "document_revision_id must equal compute_document_revision_id(logical_document_id, "
+                f"source_document_sha256, version_label, revision_number); got {self.document_revision_id!r}, "
+                f"expected {expected!r}"
+            )
+        return self
 
 
 class CanonicalChunk(BaseModel):
@@ -46,13 +162,35 @@ class CanonicalChunk(BaseModel):
 
     chunk_id: str
     doc_id: str
+
+    # Document-revision lineage (Stage 4.1) -- copied verbatim from the
+    # DocumentRevisionContext supplied to chunk_document(). Stable identity
+    # only; see DocumentRevisionContext's docstring for what is deliberately
+    # excluded and why.
+    logical_document_id: str
+    document_revision_id: str
+    source_document_sha256: str
+    version_label: str | None = None
+    revision_number: int | None = None
+
     chunk_index: int = Field(ge=0)
     chunk_type: Literal["text", "table", "picture", "mixed"]
     unit_indices: list[int]
     heading_path: list[str] = Field(default_factory=list)
+
+    # Active heading context at the point this chunk was emitted, outermost
+    # to innermost (Stage 4.1 chunking rule: heading context must be
+    # auditable, not just a flattened heading_path string).
+    heading_source_element_ids: list[str] = Field(default_factory=list)
+    heading_source_refs: list[ChunkSourceRef] = Field(default_factory=list)
+
     source_element_ids: list[str]
     annotation_ids: list[str] = Field(default_factory=list)
     source_refs: list[ChunkSourceRef]
+
+    # Retained picture-artifact identities for this chunk, populated even
+    # when the picture has no textual annotation (Stage 4.1 chunking rule).
+    asset_refs: list[ChunkAssetRef] = Field(default_factory=list)
 
     # Source-derived content: directly extracted text (paragraph/list/table
     # text, OCR, captions, ...). Never includes model-derived statements.
@@ -74,14 +212,89 @@ class CanonicalChunk(BaseModel):
 
     contains_model_derived: bool
 
+    # Integrity hash of the full auditable chunk content, including
+    # provenance (source_refs, heading_source_refs, asset_refs) -- changing
+    # bbox/source order/asset identity changes this even when rendered text
+    # is unchanged.
     content_sha256: str
+
+    # SHA-256 of retrieval_text -- the exact normalized text passed to the
+    # embedding model for Stage 4. Used for embedding reuse/deduplication;
+    # deliberately independent of document_revision_id and of provenance, so
+    # identical retrieval_text across chunks/revisions can share one
+    # embedding even when content_sha256 differs.
+    embedding_input_sha256: str
+
     chunker_version: str
     chunking_config_hash: str
+
+    @field_validator("content_sha256")
+    @classmethod
+    def _content_sha256_is_valid(cls, v: str) -> str:
+        return validate_sha256_hex(v, "content_sha256")
+
+    @field_validator("chunking_config_hash")
+    @classmethod
+    def _chunking_config_hash_is_valid(cls, v: str) -> str:
+        return validate_sha256_hex(v, "chunking_config_hash")
+
+    @field_validator("source_document_sha256")
+    @classmethod
+    def _source_document_sha256_is_valid(cls, v: str) -> str:
+        return validate_sha256_hex(v, "source_document_sha256")
+
+    @field_validator("embedding_input_sha256")
+    @classmethod
+    def _embedding_input_sha256_is_valid(cls, v: str) -> str:
+        return validate_sha256_hex(v, "embedding_input_sha256")
+
+    @model_validator(mode="after")
+    def _validate_unit_indices(self) -> CanonicalChunk:
+        if not self.unit_indices:
+            raise ValueError("unit_indices must not be empty")
+        for value in self.unit_indices:
+            if value < 0:
+                raise ValueError(f"unit_indices must be nonnegative: {value!r}")
+        if list(self.unit_indices) != sorted(self.unit_indices):
+            raise ValueError(f"unit_indices must be sorted ascending: {self.unit_indices!r}")
+        if len(set(self.unit_indices)) != len(self.unit_indices):
+            raise ValueError(f"unit_indices must not contain duplicates: {self.unit_indices!r}")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_unique_id_lists(self) -> CanonicalChunk:
+        def check_unique(values: list[str], name: str) -> None:
+            seen: set[str] = set()
+            for value in values:
+                if value in seen:
+                    raise ValueError(f"duplicate {name}: {value!r}")
+                seen.add(value)
+
+        check_unique(self.source_element_ids, "source_element_ids entry")
+        check_unique(self.annotation_ids, "annotation_ids entry")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_contains_model_derived_consistency(self) -> CanonicalChunk:
+        expected = self.model_derived_text is not None
+        if self.contains_model_derived != expected:
+            raise ValueError(
+                f"contains_model_derived={self.contains_model_derived!r} is inconsistent with "
+                f"model_derived_text is not None ({expected!r})"
+            )
+        return self
 
 
 class ChunkingConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    # Limits SOURCE-TEXT packing while elements (paragraphs/list items/
+    # non-standalone tables & pictures) are accumulated into a buffer --
+    # NOT the final retrieval_text, which may exceed max_chars once the
+    # heading-path prefix and/or the labeled model-derived section are
+    # appended on top of a source_text that was itself packed up to this
+    # limit. This has been the packing target since Stage 4; documented
+    # explicitly here per the Stage 4.1 hardening review.
     max_chars: int = Field(default=1200, gt=0)
     include_heading_context: bool = True
     include_model_derived_annotations: bool = True
