@@ -10,3 +10,5 @@ python-docx
 python-pptx
 reportlab
 pillow
+docling==2.114.0
+onnxruntime

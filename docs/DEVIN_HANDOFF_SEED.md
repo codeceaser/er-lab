@@ -9,7 +9,8 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at commit `47fad5f`.
+and the repository at Stage 5A (see `git log` for the exact commit once
+made).
 
 ---
 
@@ -17,7 +18,7 @@ and the repository at commit `47fad5f`.
 
 ```
 Source documents (DOCX/PDF/PPTX)
-  -> Parser Adapter (path A/B/C/D)      [not implemented — build this next]
+  -> Parser Adapter (path A DONE; B/C/D not implemented — build next)
   -> CanonicalDocument                  [implemented — do not redesign]
   -> DocumentRevisionContext            [implemented — supplied by caller]
   -> chunk_document(...)                [implemented — do not redesign]
@@ -25,7 +26,7 @@ Source documents (DOCX/PDF/PPTX)
   -> Embedding / Knowledge Projections  [not implemented]
   -> Retrieval                          [not implemented, for this pipeline]
   -> Agent                              [out of scope]
-  -> Evaluation vs. reference_manifest.json  [not implemented — build after Stage 5]
+  -> Evaluation vs. reference_manifest.json  [not implemented — build after Stage 6/7]
 ```
 
 Final module boundaries:
@@ -37,10 +38,11 @@ Final module boundaries:
   extracted content and manifest identity; stays outside `canonical/`.
 - `src/ingestion_bench/chunking/` — `model.py`, `chunker.py`,
   `renderers.py`. Depends only on `ingestion_bench.canonical`.
-- `src/ingestion_bench/adapters/` — **does not exist yet.** Expected shape
-  per `fixtures/BENCHMARK_CONTRACT.md`: a `ParserAdapter` protocol,
-  `docling_adapter.py` (path A, zero `VisionEnricher` dependency),
-  `openai_adapter.py` (path C).
+- `src/ingestion_bench/adapters/` — **path A implemented.** `base.py`
+  (`DocumentParserAdapter` protocol, `AdapterConversionResult`,
+  `AdapterDiagnostic`); `docling_standard/` (`config.py`, `diagnostics.py`,
+  `mapper.py`, `adapter.py`) — the only package that may import Docling/
+  docling-core. `openai_adapter.py` (path C) does not exist yet.
 - `src/ingestion_bench/vision/` — **does not exist yet.** Expected shape:
   a `VisionEnricher` protocol, `NoOpVisionEnricher`, `OpenAIVisionEnricher`
   (path B), optionally `GraniteVisionEnricher` (path D, deferred).
@@ -68,6 +70,11 @@ Final module boundaries:
 - **Artifact contract**: `fixtures/generated/generation_report.json`'s
   shape (per-file SHA-256 + size, `manifest_sha256`, `manifest_version`,
   excludes itself). Fixture generation must remain byte-deterministic.
+- **Adapter contract** (new, Stage 5A): `src/ingestion_bench/adapters/base.py`'s
+  `DocumentParserAdapter` protocol and `AdapterConversionResult` model —
+  every future adapter (path B/C/D) must return this same shape. Docling/
+  docling-core types must never appear outside
+  `src/ingestion_bench/adapters/docling_standard/`.
 
 ## Implementation order (validated stage sequence)
 
@@ -75,9 +82,11 @@ Final module boundaries:
 2. Stage 2 (+2.1) — canonical model + hashing. **Done.**
 3. Stage 3 (+3.1) — deterministic fixture generation. **Done.**
 4. Stage 4 (+4.1, 4.2, 4.2a) — canonical chunking. **Done.**
-5. Stage 5 — Docling `DOCLING_STANDARD_LOCAL` adapter (path A). **Next.**
-   No `VisionEnricher` dependency of any kind.
-6. Stage 6 — `VisionEnricher` framework + `OpenAIVisionEnricher` (path B).
+5. Stage 5A — Docling `DOCLING_STANDARD_LOCAL` adapter (path A). **Done.**
+   `docling==2.114.0` installed and pinned; zero `VisionEnricher`
+   dependency; all 9 generated fixtures convert successfully and chunk
+   through the unmodified frozen chunker.
+6. Stage 6 — `VisionEnricher` framework + `OpenAIVisionEnricher` (path B). **Next.**
 7. Stage 7 — OpenAI vendor-native adapter (path C).
 8. Stage 8 — evaluator, scoring `CanonicalDocument`/`CanonicalChunk`
    output against `reference_manifest.json` only (never LLM-grades-LLM).
@@ -89,13 +98,17 @@ Final module boundaries:
 At minimum, the full existing suite must continue to pass unmodified:
 `tests/test_canonical_schema.py` (87), `tests/test_canonical_hashing.py`
 (21), `tests/test_fixture_generation.py` (38), `tests/test_chunking.py`
-(110) — 256 total. A new adapter/evaluator implementation must add its own
-test files following the same pattern (one file per concern, `pytest`,
-`pythonpath = src fixtures` per `pytest.ini`) rather than modifying the
-existing four.
+(110), `tests/test_docling_standard_mapper.py` (28),
+`tests/test_docling_standard_adapter.py` (8),
+`tests/test_docling_standard_integration.py` (30) — 322 total. A new
+adapter/evaluator implementation must add its own test files following
+the same pattern (one file per concern, `pytest`, `pythonpath = src
+fixtures` per `pytest.ini`) rather than modifying the existing ones.
 
-Specific invariants a Stage 5 adapter must satisfy, verifiable by
-constructing its output and running it through existing validators:
+Specific invariants a parser adapter must satisfy, verifiable by
+constructing its output and running it through existing validators —
+**already proven true for the Stage 5A Docling adapter**, and required of
+any future adapter (path B/C/D) too:
 
 - Every id it produces (`block_id`, `table_id`, `picture_id`,
   `annotation_id`, diagram `node_id`) must come from
@@ -112,6 +125,12 @@ constructing its output and running it through existing validators:
   i.e. it must pass every validator in `canonical/model.py` unmodified.
 - Passing the adapter's `CanonicalDocument` through the existing,
   unmodified `chunk_document()` must succeed.
+- A missing/unrepresentable value is never fabricated — recorded as a
+  diagnostic and either skipped or represented through the least-
+  speculative valid canonical field, never invented (the Docling adapter's
+  DOCX page-geometry fallback is the one deliberate, explicitly-diagnosed
+  exception: a real value read from the source file itself via
+  `python-docx`, never a fake Letter/A4 default).
 
 ## Enterprise constraints
 
@@ -201,7 +220,12 @@ engineering), D-027 (dependency-free fixture verification), D-028
 (fragment-level split provenance), D-029 (`version_label` canonicalization
 at storage), D-030 (fully explicit table metadata), D-031 (splitting must
 run against the canonical element's own text, never combined rendered
-text).
+text), D-032 (Docling confined to the adapter boundary), D-033 (explicit
+`RapidOcrOptions`, never Docling's OCR auto-selection), D-034 (DOCX page
+geometry read from `python-docx` as a documented fallback, never
+fabricated), D-035 (OCR-origin detected structurally via picture-child
+nesting, never inferred from which fixture is being processed), D-036
+(artifact file-path keys format-qualified, distinct from `doc_id`).
 
 D-009 (Granite Vision optional/deferred), D-022 (effective-revision
 retrieval policy), D-023 (upstream duplicate-upload rejection policy) are

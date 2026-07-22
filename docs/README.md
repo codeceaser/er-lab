@@ -12,11 +12,15 @@ the two are not wired together.
 
 ## Current stage
 
-**Stage 4.2a complete** (commit `47fad5f` on `main`): canonical document
-model, deterministic benchmark fixtures, and deterministic canonical
-chunking are implemented and tested (256 tests passing). **Stage 5 (the
-first parser adapter) has not started.** See `POC_STATUS_AND_EVIDENCE.md`
-for the authoritative, up-to-date status.
+**Stage 5A complete** (uncommitted at time of writing — see `git log` for
+the actual commit once made): canonical document model, deterministic
+benchmark fixtures, deterministic canonical chunking, and the Docling
+`DOCLING_STANDARD_LOCAL` parser adapter (path A) are implemented and
+tested (322 tests passing). All 9 generated fixtures convert successfully
+through real Docling and chunk through the unmodified frozen chunker.
+**Stage 6 (`VisionEnricher` framework + OpenAI vision enrichment, path B)
+has not started.** See `POC_STATUS_AND_EVIDENCE.md` for the authoritative,
+up-to-date status.
 
 ## Repository root
 
@@ -28,10 +32,17 @@ assume this path on another machine.
 
 Python 3.13 in a local virtualenv (`.venv`). Dependencies: see
 `requirements.txt` (loose pins) and `constraints.txt` (exact `pip freeze`
-snapshot). `pytest.ini` sets `pythonpath = src fixtures`, so `pytest` runs
-from the repository root need no extra path setup; running a one-off
-script outside `pytest` requires `PYTHONPATH` to include both `src` and
-`fixtures` (Windows path separator is `;`, not `:`).
+snapshot) — includes `docling==2.114.0` and `onnxruntime` as of Stage 5A.
+`pytest.ini` sets `pythonpath = src fixtures`, so `pytest` runs from the
+repository root need no extra path setup; running a one-off script outside
+`pytest` requires `PYTHONPATH` to include both `src` and `fixtures`
+(Windows path separator is `;`, not `:`).
+
+Stage 5A's tests run real (small, CPU-only) Docling conversions. If disk
+space on the system drive is tight, set `HF_HOME`/`HF_HUB_CACHE` to a
+different drive before the first run to redirect Docling's one-time
+~505MB model download (this repository used `D:\ai-models\huggingface`)
+— see `reports/stage5a_docling_standard_baseline.md` section 1.
 
 ## How to run the complete test suite
 
@@ -48,11 +59,19 @@ stage reports):
 .venv/Scripts/python.exe -m pytest -v
 ```
 
-This runs all four test files (`test_canonical_schema.py`,
+This runs all seven test files (`test_canonical_schema.py`,
 `test_canonical_hashing.py`, `test_fixture_generation.py`,
-`test_chunking.py`) — 256 tests as of Stage 4.2a. It does **not** exercise
-any parser adapter, embedding, retrieval, or evaluator code, because none
-of that exists yet.
+`test_chunking.py`, `test_docling_standard_mapper.py`,
+`test_docling_standard_adapter.py`, `test_docling_standard_integration.py`)
+— 322 tests as of Stage 5A. The three `test_docling_standard_*` files run
+the real Docling adapter (not mocked) against the generated fixtures. It
+does **not** exercise embedding, retrieval, or evaluator code, because
+none of that exists yet.
+
+To reproduce the Stage 5A baseline conversion of every fixture (not just
+run the test suite): `python scripts/run_docling_standard.py` — writes
+`artifacts/stage5a/` (gitignored, regenerable) and
+`reports/stage5a_docling_standard_results.json`.
 
 Regenerating the benchmark fixtures (`fixtures/generated/` is gitignored,
 not committed) requires running the generator directly, e.g.:

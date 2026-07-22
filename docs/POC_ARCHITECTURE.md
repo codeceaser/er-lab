@@ -23,11 +23,11 @@ Source documents (DOCX / PDF / PPTX)
         |
         v
 +-------------------------------------------------------------+
-| Parser Adapter                                    [PLANNED] |
-|   Path A  DOCLING_STANDARD_LOCAL                             |
+| Parser Adapter                                                |
+|   Path A  DOCLING_STANDARD_LOCAL          [IMPLEMENTED]      |
 |   Path B  DOCLING_STANDARD_LOCAL + selective OpenAI vision   |
-|           enrichment (VisionEnricher)                        |
-|   Path C  OpenAI vendor-native whole-document input          |
+|           enrichment (VisionEnricher)        [PLANNED]       |
+|   Path C  OpenAI vendor-native whole-document input [PLANNED]|
 |   Path D  DOCLING_STANDARD_LOCAL + local Granite Vision       |
 |           enrichment            [OPTIONAL / DEFERRED]        |
 +-------------------------------------------------------------+
@@ -96,14 +96,18 @@ without any change in meaning.
 ## A. Parser adapters
 
 Four parser lanes are architecturally defined (`fixtures/BENCHMARK_CONTRACT.md`
-section 1). **None of the four has an implementation in this repository.**
-There is no `src/ingestion_bench/adapters/` package, no `vision/` package,
-and no `VisionEnricher` implementation on disk — only the protocol shape
+section 1). **Path A (`DOCLING_STANDARD_LOCAL`) is implemented as of
+Stage 5A** — `src/ingestion_bench/adapters/base.py` (parser-neutral
+`DocumentParserAdapter` protocol, `AdapterConversionResult`) and
+`src/ingestion_bench/adapters/docling_standard/` (`config.py`,
+`diagnostics.py`, `mapper.py`, `adapter.py`). Paths B/C have no
+implementation; there is still no `vision/` package and no
+`VisionEnricher` implementation on disk — only the protocol shape
 documented in the contract.
 
 | Lane | Description | Status |
 |---|---|---|
-| A — `DOCLING_STANDARD_LOCAL` | Docling's standard local pipeline: text/layout/reading-order, native DOCX/PPTX tables, PDF TableFormer tables, picture extraction, OCR (RapidOCR), picture classification, captions, provenance. No VLM, no vision enrichment. | Architecturally decided, **not implemented**. `docling` is not present in `requirements.txt` or `constraints.txt`. |
+| A — `DOCLING_STANDARD_LOCAL` | Docling's standard local pipeline: text/layout/reading-order, native DOCX/PPTX tables, PDF TableFormer tables, picture extraction, OCR (RapidOCR), captions, provenance. No VLM, no picture classification/description, no vision enrichment (`do_picture_classification`/`do_picture_description`/`do_chart_extraction` all explicitly `False`). | **Implemented** (Stage 5A). `docling==2.114.0` pinned in `requirements.txt`/`constraints.txt`. All 9 generated fixtures convert successfully — see `reports/stage5a_docling_standard_baseline.md` for real counts, timings, and discovered Docling limitations. |
 | B — A + selective OpenAI vision enrichment | Path A's output, then a separate `OpenAIVisionEnricher` pass over already-extracted `CanonicalPicture`s only (never whole pages, never tables). | Architecturally decided, **not implemented**. |
 | C — OpenAI vendor-native | The original file goes to OpenAI directly, mapped to the canonical model. | Architecturally decided, **not implemented**. |
 | D — local Granite Vision enrichment | Same `VisionEnricher` protocol as B, run locally (`GraniteVisionEnricher`). | **Optional and explicitly deferred** — not required for the initial POC (`fixtures/BENCHMARK_CONTRACT.md` section 1). |

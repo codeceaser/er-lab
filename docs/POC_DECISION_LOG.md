@@ -1334,3 +1334,260 @@ None open — this closes the scope limit noted in D-028.
 `test_fragment_spans_reconstruct_original_list_item_text_exactly`,
 `test_oversized_list_item_identifier_routed_to_later_fragment_despite_prefix`,
 `test_oversized_paragraph_with_extracted_annotation_splits_correctly`.
+
+---
+
+## D-032 — Confine Docling to the adapter boundary
+
+**Status:** Accepted
+**Stage:** Stage 5A
+**Date/commit:** Needs confirmation (assigned at Stage 5A implementation time; see `git log` for the actual Stage 5A commit once made)
+
+### Problem
+Once a real Docling adapter exists, how far should `DoclingDocument` (and
+any other Docling/docling-core type) be allowed to travel through the
+rest of the system?
+
+### Alternatives considered
+(a) Let `DoclingDocument` (or fragments of it) flow into the chunking
+layer, a future indexing/retrieval layer, or a future agent layer, where
+convenient. (b) Confine every Docling/docling-core import and type to
+`src/ingestion_bench/adapters/docling_standard/` (specifically
+`mapper.py` and `adapter.py`); everything downstream ever sees only
+`CanonicalDocument`/`CanonicalChunk`.
+
+### Decision
+(b). `DoclingDocument` is never propagated into `canonical/`, `chunking/`,
+or any future indexing/retrieval/agent layer.
+
+### Rationale
+This is the entire point of D-001/D-002 (parser-neutral canonical model;
+Docling as an adapter, not a domain dependency) actually being exercised
+by a real parser for the first time. If `DoclingDocument` leaked past the
+adapter boundary even once, every downstream consumer would need to know
+about Docling's types, defeating the reason the canonical model exists.
+
+### Trade-offs and consequences
+Every Docling-derived value the mapper cannot faithfully carry through
+`CanonicalDocument`'s frozen fields is either dropped (with a diagnostic)
+or represented through the least-speculative valid canonical field
+available (e.g. `ProvenanceEntry.source_locator` for Docling's own label
+string) — never smuggled through as an opaque blob "just in case."
+
+### Deferred questions or reconsideration trigger
+None — this is intended as a permanent boundary, re-verified by every
+future adapter (OpenAI vendor-native, path C; any future path).
+
+### Implementation and evidence
+`tests/test_docling_standard_mapper.py::test_canonical_and_chunking_packages_have_no_docling_imports`
+(greps `canonical/` and `chunking/` source for actual `import docling`/
+`import docling_core` statements); `src/ingestion_bench/adapters/docling_standard/mapper.py`
+and `adapter.py` docstrings ("This is the ONLY module... that imports
+Docling/docling-core types").
+
+---
+
+## D-033 — Use explicit RapidOcrOptions, never Docling's default OCR auto-selection
+
+**Status:** Accepted
+**Stage:** Stage 5A
+**Date/commit:** Needs confirmation
+
+### Problem
+Docling 2.114.0's own `PdfPipelineOptions()` default (`OcrAutoOptions`)
+resolves to whichever OCR engine happens to be importable in the current
+environment at pipeline-construction time.
+
+### Alternatives considered
+(a) Leave the default `OcrAutoOptions` in place. (b) Set `RapidOcrOptions`
+explicitly.
+
+### Decision
+(b).
+
+### Rationale
+Environment-dependent engine selection is exactly the kind of
+nondeterminism this project avoids everywhere else (D-010: deterministic
+IDs/hashes; D-026: deterministic fixture generation) — the *conversion
+algorithm itself* (which OCR engine ran) should not silently vary by
+which optional packages happen to be installed. RapidOCR was chosen
+because it is what `docling[standard]`'s own dependency set actually
+installs (`easyocr`/`tesseract` are not installed dependencies of this
+project).
+
+### Trade-offs and consequences
+`onnxruntime` (RapidOCR's inference backend) is not pulled in
+automatically by `docling[standard]` and had to be installed as an
+explicit additional dependency (`requirements.txt`) — discovered directly
+during the Stage 5A compatibility spike (first conversion attempt raised
+`ImportError: onnxruntime is not installed.`).
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/adapters/docling_standard/config.py::build_pdf_pipeline_options`;
+`tests/test_docling_standard_adapter.py::test_effective_configuration_disables_every_remote_and_vlm_option`;
+`reports/stage5a_docling_standard_baseline.md` section 1 (environment).
+
+---
+
+## D-034 — Read DOCX page geometry from python-docx as a documented fallback, never fabricate it
+
+**Status:** Accepted
+**Stage:** Stage 5A
+**Date/commit:** Needs confirmation
+
+### Problem
+Docling's standard pipeline exposes no page geometry for DOCX at all
+(`DoclingDocument.pages` is empty; every item's `.prov` is `[]`) —
+discovered empirically during the Stage 5A API-inspection spike, not
+assumed from memory. `CanonicalUnit.width`/`height` are required (`> 0`,
+frozen canonical contract) and the Stage 5A instructions explicitly
+forbid silently inserting a fake Letter/A4 default when geometry is
+unavailable.
+
+### Alternatives considered
+(a) Fail every DOCX conversion outright, since Docling itself provides no
+geometry. (b) Read the source `.docx` file's own declared section
+`page_width`/`page_height` via `python-docx` (already a repository
+dependency, used elsewhere only for fixture generation) as a narrow,
+explicitly-diagnosed structural fallback — never touching document
+content, only the one missing structural field.
+
+### Decision
+(b).
+
+### Rationale
+(a) would have made Stage 5A's DOCX lane useless for exactly the fixtures
+(`docs_nested_structure` etc.) the benchmark most wants to exercise, over
+a single structural field that has a real, non-fabricated answer sitting
+in the file itself. This is not "inventing a fake Letter/A4 size" — it is
+reading the file's own true declared page size through a different (non-
+Docling) accessor, and recording a `docling_page_geometry_unavailable`
+diagnostic every time it happens so the fallback is never silent.
+
+### Trade-offs and consequences
+Every canonical element extracted from a DOCX source has `bbox=None`
+(Docling never provides one) even though the *unit* itself has real
+geometry — DOCX-sourced `CanonicalDocument`s are therefore always
+provenance-poorer at the element level than PDF/PPTX-sourced ones. This
+is documented, not hidden (see
+`reports/stage5a_docling_standard_baseline.md` section 6.1).
+
+### Deferred questions or reconsideration trigger
+Revisit only if a future Docling release exposes DOCX page/section
+geometry through its own public API, at which point this fallback should
+be removed in favor of the real source.
+
+### Implementation and evidence
+`src/ingestion_bench/adapters/docling_standard/mapper.py::DocxPageFallback`,
+`DoclingToCanonicalMapper.build_units`; `adapter.py::_docx_page_fallback`;
+`tests/test_docling_standard_mapper.py::test_docx_page_fallback_produces_valid_unit_with_diagnostic`,
+`test_docx_missing_page_geometry_without_fallback_fails_cleanly`.
+
+---
+
+## D-035 — Detect OCR-origin text structurally (nested under a picture), never by which fixture is being processed
+
+**Status:** Accepted
+**Stage:** Stage 5A
+**Date/commit:** Needs confirmation
+
+### Problem
+Docling 2.114.0's public API gives no per-item OCR-origin signal
+(`TextItem.source` is `[]` for every text item observed, OCR or not) —
+so how should the adapter ever justify creating an `OcrAnnotation` rather
+than a plain `CanonicalParagraph`?
+
+### Alternatives considered
+(a) Create an `OcrAnnotation` whenever converting a fixture known (from
+its filename or the benchmark's own framing) to be OCR-derived, e.g. the
+scanned-PDF stress fixture. (b) Use only a real, general structural
+signal available on every document regardless of which fixture it is:
+whether a `TextItem`'s parent in the Docling document tree is a
+`PictureItem`. (c) Never create `OcrAnnotation` at all in Stage 5A.
+
+### Decision
+(b).
+
+### Rationale
+(a) is exactly the kind of fixture-specific inference the Stage 5A
+instructions explicitly forbid ("Do not infer an OcrAnnotation solely
+because the input file is the scanned fixture"). (b) is real, general
+evidence: native page text is never a child of a picture in any fixture
+observed; only OCR-detected text-within-an-image-region is. (c) would
+silently lose exactly the kind of evidence
+(`expected_ocr_tokens` in the manifest) the benchmark most wants
+extracted.
+
+### Trade-offs and consequences
+Body-level OCR text with no picture wrapper (the scanned-PDF stress
+fixture, where the whole page is one OCR pass) has no signal under (b)
+either, and is mapped as an ordinary `CanonicalParagraph` — a real,
+documented gap in OCR-origin granularity, not silently smoothed over
+(`reports/stage5a_docling_standard_baseline.md` section 6.6).
+
+### Deferred questions or reconsideration trigger
+Revisit if a future Docling release exposes real per-item OCR provenance
+(e.g. a `source`/confidence field actually populated).
+
+### Implementation and evidence
+`src/ingestion_bench/adapters/docling_standard/mapper.py::map_picture_ocr_child`
+docstring; `tests/test_docling_standard_mapper.py::test_ocr_annotation_only_for_picture_nested_text_not_body_text`;
+`tests/test_docling_standard_integration.py::test_scanned_pdf_produces_no_model_derived_annotation`.
+
+---
+
+## D-036 — Artifact file-path keys must be format-qualified, distinct from doc_id
+
+**Status:** Accepted
+**Stage:** Stage 5A
+**Date/commit:** Needs confirmation
+
+### Problem
+`reference_manifest.json`'s parity suite deliberately gives
+`PARITY_001.pdf`/`.docx`/`.pptx` the SAME `doc_id` ("PARITY_001"), since
+the manifest treats them as one logical benchmark unit compared across
+formats. An early runner implementation used `doc_id` alone as the
+on-disk artifact directory name for `artifacts/stage5a/<key>/` and
+`artifacts/stage5a/assets/<key>/`, so the three format conversions
+silently overwrote each other's `canonical_document.json`/picture PNGs —
+caught only by inspecting the actual artifact directory after a batch
+run, not by any test (none of the unit/integration tests happened to
+run all three formats in the same process against the same output
+directory).
+
+### Alternatives considered
+(a) Give `PARITY_001.pdf`/`.docx`/`.pptx` different `doc_id`s so file
+paths never collide. (b) Keep `doc_id` shared (matching the manifest's
+own intent), and derive a separate, format-qualified `artifact_key`
+(`f"{doc_id}_{source_format}"`) used only for on-disk paths, never for
+canonical identity.
+
+### Decision
+(b).
+
+### Rationale
+`doc_id` is meant to answer "which document is this," which for the
+parity suite is genuinely "the same one, in three renderings" — changing
+it to disambiguate would misrepresent the benchmark's own structure.
+File-path collision is a distinct, purely mechanical concern that
+`artifact_key` solves without touching identity semantics.
+
+### Trade-offs and consequences
+Two different keys must be kept straight throughout the adapter/runner
+(`doc_id` for `CanonicalDocument.doc_id` and revision context;
+`artifact_key` for every on-disk path) — a small but real discipline
+cost, worth it to avoid silent data loss.
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/adapters/docling_standard/adapter.py::convert`
+(`artifact_key` computed once, threaded through `_save_picture`/
+`_write_raw_debug_snapshot`); `scripts/run_docling_standard.py::process_fixture`;
+verified directly by inspecting `artifacts/stage5a/` after a full batch
+run (`PARITY_001_pdf/`, `PARITY_001_docx/`, `PARITY_001_pptx/` all
+present and distinct).

@@ -443,35 +443,184 @@ unaffected here because this example has no oversized element to split.
 
 ---
 
-## Future walkthrough (Stage 5+) — `[PLANNED, none of this exists yet]`
+## Stage 5A — Docling `DOCLING_STANDARD_LOCAL` adapter (path A) `[IMPLEMENTED]`
+
+**Files:** `src/ingestion_bench/adapters/base.py`,
+`src/ingestion_bench/adapters/docling_standard/{__init__.py,config.py,diagnostics.py,mapper.py,adapter.py}`,
+`scripts/run_docling_standard.py`;
+`tests/test_docling_standard_{mapper,adapter,integration}.py` (66 tests)
+
+Dependencies added: `docling==2.114.0` and `onnxruntime` (RapidOCR's
+inference backend — not pulled in automatically by `docling[standard]`,
+discovered during the compatibility spike and pinned explicitly), both in
+`requirements.txt`/`constraints.txt`.
 
 ```
 Source fixture (e.g. fixtures/generated/parity/PARITY_001.pdf)
         |
         v
-Docling adapter                                          [PLANNED]
-   src/ingestion_bench/adapters/docling_adapter.py — does not exist
+Docling standard-local conversion                          [IMPLEMENTED]
+   config.py::build_converter() -- one DocumentConverter, PDF/DOCX/PPTX
+   only, do_ocr=True (RapidOcrOptions explicit), do_table_structure=True
+   (ACCURATE), generate_picture_images=True, every VLM/remote/chart/
+   picture-description option explicitly False, AcceleratorDevice.CPU
         |
         v
-CanonicalDocument                                         [would reuse
-                                                             the Stage 2
-                                                             model above]
+DoclingDocument (docling-core)                              [parser-
+                                                              specific,
+                                                              never leaves
+                                                              this package]
         |
         v
-CanonicalChunk[]  (via the existing chunk_document())      [would reuse
-                                                             the Stage 4
-                                                             chunker above,
-                                                             unmodified]
+Docling-to-CEDM mapping                                     [IMPLEMENTED]
+   mapper.py::DoclingToCanonicalMapper.map_document() -- single pass over
+   iterate_items() in Docling's own reading order; see the mapping table
+   below
         |
         v
-Evaluation against reference_manifest.json                [PLANNED —
-                                                             no evaluator
-                                                             exists]
+CanonicalDocument                                            [reuses the
+                                                               Stage 2
+                                                               model,
+                                                               unmodified]
+        |
+        v
+CanonicalChunk[]  (via the existing chunk_document())         [reuses the
+                                                                Stage 4
+                                                                chunker,
+                                                                unmodified]
+        |
+        v
+Evaluation against reference_manifest.json                   [PLANNED --
+                                                                Stage 8,
+                                                                no
+                                                                evaluator
+                                                                exists]
 ```
 
-Every step above is planned, not implemented. In particular: no
-`adapters/` package exists; no code has ever parsed
-`fixtures/generated/*.{docx,pdf,pptx}` into a `CanonicalDocument`; no
-evaluator compares extracted output to `reference_manifest.json`. Treat
-any claim to the contrary — in this document or elsewhere — as
-inaccurate.
+### Adapter interface (`adapters/base.py`)
+
+`AdapterConversionResult` — the parser-neutral result every adapter (this
+one, and any future one) returns: `canonical_document`,
+`extraction_run` (reuses `ingestion_bench.canonical.ExtractionRun` for
+run identity/timing/warnings/`canonical_document_hash` — `None` exactly
+when `conversion_status == "failed"`), `conversion_status` (`"success" |
+"partial" | "failed"`), `diagnostics: list[AdapterDiagnostic]`,
+`warnings`, `errors`, plus fields that must survive even a failed
+conversion (`elapsed_ms`, `docling_version`, `docling_core_version`,
+`input_format`, `source_relative_path`, `source_sha256`,
+`raw_docling_debug_artifact`). `DocumentParserAdapter` is the `Protocol`
+every adapter implements: `convert(source_path, *, source_root) ->
+AdapterConversionResult`.
+
+### Docling → Canonical mapping table
+
+| Docling | Canonical | Notes |
+|---|---|---|
+| `DoclingDocument.pages[page_no]` | `CanonicalUnit` | PDF/PPTX only. `page_no` confirmed 1-based empirically; `unit_index = page_no - 1`. **DOCX: Docling exposes no page geometry at all** — see the DOCX fallback note below. |
+| `TitleItem` / `SectionHeaderItem` | `CanonicalHeading` | `level` preserved when Docling provides one (defaults to 1 otherwise — see the "known limitations" list, PDF did not distinguish heading levels for the parity fixture). |
+| `TextItem` (label `TEXT`/`PARAGRAPH`) | `CanonicalParagraph` | Text preserved exactly — no bullets/Markdown/OCR labels added (those are the frozen renderer's job, per chunking rule). |
+| `TextItem` (label `FORMULA`/`CODE`) | `CanonicalParagraph` | Reduced-fidelity mapping (no dedicated canonical type); `reduced_fidelity_mapping` diagnostic recorded. |
+| `TextItem` (label `PAGE_HEADER`/`PAGE_FOOTER`/`FOOTNOTE`) | *(skipped)* | Treated as furniture; `skipped_furniture` diagnostic. |
+| `ListItem` | `CanonicalListItem` | `indent_level`/`list_id`/`parent_block_id` computed by walking the real Docling group-ancestry chain (`_walk_list_ancestry`) — never guessed. |
+| `TextItem` referenced by `PictureItem.captions` | `CanonicalCaption` | Linked to its picture, never duplicated as a body paragraph. Confirmed working for PDF; **not** populated by Docling for DOCX/PPTX in this version (caption text becomes a plain paragraph instead — see limitations). |
+| `TableItem.data.table_cells` | `CanonicalTable`/`CanonicalTableCell` | Read from the structural grid directly (`start_row_offset_idx`/`start_col_offset_idx`/`row_span`/`col_span`/`column_header`/`row_header`) — never from exported Markdown/pandas. Out-of-bounds cells are dropped with a `malformed_table_cell` diagnostic, never silently included. |
+| `PictureItem` (with retrievable image bytes) | `CanonicalPicture` | Image obtained via the public `PictureItem.get_image(doc)`; saved as PNG; `content_sha256` computed from the saved bytes. No image bytes available → the picture (and any caption/OCR text pointed at it) is skipped with a `missing_picture_bytes` diagnostic, never invented. |
+| `TextItem` whose parent is a `PictureItem` (and not that picture's caption) | `OcrAnnotation` (`derivation="extracted"`) | The *only* annotation type Stage 5A ever produces. See "OCR-origin detection" below for exactly what evidence this relies on. |
+| Any other `DocItemLabel` (`DOCUMENT_INDEX`, `CHECKBOX_*`, `FORM`, `KEY_VALUE_REGION`, `GRADING_SCALE`, `HANDWRITTEN_TEXT`, `EMPTY_VALUE`, `REFERENCE`, `FIELD_*`, `MARKER`) | *(skipped)* | `unsupported_label` diagnostic. |
+
+No `ImageDescriptionAnnotation`, `VisualFactAnnotation`,
+`SemanticClaimAnnotation`, or model-derived `DiagramNode`/`EdgeAnnotation`
+is ever produced — enforced by
+`tests/test_docling_standard_mapper.py::test_no_model_derived_annotations_are_ever_produced`
+and the integration-level
+`test_chart_fixture_never_produces_a_visual_fact_annotation`.
+
+### Key design points (see `docs/POC_DECISION_LOG.md` D-032–D-036 for full rationale)
+
+- **Bounding-box coordinate conversion** — Docling's PDF/PPTX bboxes use a
+  bottom-left origin (`CoordOrigin.BOTTOMLEFT`); `mapper.py::_convert_bbox`
+  normalizes every one into the canonical model's top-left origin
+  (`y0 = page_height - top`, `y1 = page_height - bottom`) before
+  construction — never copied as-is.
+- **DOCX page-geometry fallback** — Docling exposes none; the adapter
+  reads the real declared section size from the source file itself via
+  `python-docx` (`adapter.py::_docx_page_fallback`), records a
+  `docling_page_geometry_unavailable` diagnostic every time, and never
+  fabricates a Letter/A4 default.
+- **OCR-origin detection** — no per-item OCR confidence/source field
+  exists in this Docling version; the mapper uses the one real structural
+  signal available (a `TextItem` nested under a `PictureItem`) rather than
+  inferring OCR-origin from which fixture is being processed.
+- **Reading order is assigned in exactly one pass** — every element type
+  (headings, paragraphs, list items, tables, pictures, captions) gets its
+  `order_index` from a single walk over `iterate_items()`, never from a
+  separate pre/post pass, so provenance ordering can never be scrambled
+  relative to Docling's own traversal order.
+- **`doc_id` vs. artifact file paths** — `PARITY_001.pdf`/`.docx`/`.pptx`
+  intentionally share `doc_id="PARITY_001"` (matching the manifest's own
+  shared identity for that suite); on-disk artifact paths use a separate,
+  format-qualified `artifact_key` so the three conversions' output files
+  never collide.
+
+### Failure/partial handling
+
+`ConversionStatus` is `"success"` (fully valid document, nothing skipped
+for cause), `"partial"` (valid document, but diagnostics exist — an
+unsupported item, a missing-provenance element, etc.), or `"failed"` (no
+`CanonicalDocument` at all — Docling itself raised, Docling reported
+`FAILURE`, no usable unit geometry could be established, or the assembled
+document failed a frozen canonical invariant). A failed conversion never
+produces a fake or empty `CanonicalDocument` —
+`mapper.py::DoclingToCanonicalMapper.build()` catches the
+`pydantic.ValidationError` from final construction, records a
+`canonical_document_construction_failed` diagnostic, and returns `None`;
+`adapter.py` propagates that as `conversion_status="failed"`.
+
+### Runner (`scripts/run_docling_standard.py`)
+
+Discovers every `.pdf`/`.docx`/`.pptx` under `fixtures/generated/{parity,stress}/`
+by filesystem glob — **never** reads `reference_manifest.json`. For each:
+converts via the adapter, writes `canonical_document.json`, builds an
+explicit `DocumentRevisionContext` (logical_document_id = the file's own
+stem — this is the runner's job, not the adapter's, per the Stage 5A
+scope boundary), chunks via the unmodified `chunk_document()`, writes
+`canonical_chunks.jsonl`, and writes a per-fixture `conversion_report.json`
+plus an aggregate `reports/stage5a_docling_standard_results.json`.
+
+### Real baseline results
+
+All 9 generated fixtures converted with `conversion_status="success"`;
+determinism verified for all three parity formats (identical
+`stable_canonical_hash()` and chunk `content_sha256`/`chunk_id` across two
+runs). Full counts, timings, and every discovered Docling limitation:
+`reports/stage5a_docling_standard_baseline.md`. This is real, measured
+output — not aspirational.
+
+---
+
+## Future walkthrough (Stage 6+) — `[PLANNED, none of this exists yet]`
+
+```
+CanonicalPicture (already extracted, path A)
+        |
+        v
+VisionEnricher.enrich(picture, caption, surrounding_text)     [PLANNED]
+   src/ingestion_bench/vision/ -- does not exist; protocol shape only
+   documented in fixtures/BENCHMARK_CONTRACT.md section 2
+        |
+        v
+list[Annotation]  (model_derived: ImageDescriptionAnnotation,           [PLANNED]
+   VisualFactAnnotation, DiagramNode/EdgeAnnotation, ...)
+        |
+        v
+Merged back into the SAME CanonicalDocument the path-A adapter produced  [PLANNED]
+        |
+        v
+Evaluation against reference_manifest.json, comparing path A vs. path B  [PLANNED --
+                                                                            Stage 8]
+```
+
+Every step above is planned, not implemented. No `vision/` package
+exists; no `OpenAIVisionEnricher`, no OpenAI vendor-native adapter (path
+C), no evaluator. Treat any claim to the contrary — in this document or
+elsewhere — as inaccurate.
