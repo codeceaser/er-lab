@@ -1486,6 +1486,16 @@ be removed in favor of the real source.
 `tests/test_docling_standard_mapper.py::test_docx_page_fallback_produces_valid_unit_with_diagnostic`,
 `test_docx_missing_page_geometry_without_fallback_fails_cleanly`.
 
+**Addendum (Stage 5A.1):** the diagnostic category this fallback records
+was renamed `docling_page_geometry_unavailable` -> `docx_pagination_unavailable`
+and now carries `affects_fidelity=True` (see D-037) — every DOCX
+conversion's `conversion_status` is therefore `"partial"`, never
+`"success"`, because collapsing all DOCX content onto one
+`CanonicalUnit` is a real, unrecoverable loss of source pagination
+structure, not merely an informational note. This is a rename/severity
+correction only; the underlying fallback mechanism (read section geometry
+via `python-docx`, never fabricate Letter/A4) is unchanged.
+
 ---
 
 ## D-035 — Detect OCR-origin text structurally (nested under a picture), never by which fixture is being processed
@@ -1591,3 +1601,126 @@ None.
 verified directly by inspecting `artifacts/stage5a/` after a full batch
 run (`PARITY_001_pdf/`, `PARITY_001_docx/`, `PARITY_001_pptx/` all
 present and distinct).
+
+---
+
+## D-037 — Derive conversion_status from a dedicated affects_fidelity axis, never from diagnostic severity alone
+
+**Status:** Accepted
+**Stage:** Stage 5A.1
+**Date/commit:** Needs confirmation (assigned at Stage 5A.1 implementation time)
+
+### Problem
+Stage 5A's original `AdapterDiagnostic` had only one axis, `severity`
+(`info`/`warning`/`error`), and `DoclingStandardAdapter.convert()` derived
+`conversion_status="partial"` from `mapper.diagnostics.has_errors() or
+bool(adapter_warnings)`. This conflated two genuinely different questions:
+"how alarming is this to an operator" (severity) and "was source content,
+structure, provenance, or a relationship actually lost or degraded"
+(fidelity impact). It also meant every DOCX conversion was reported
+`"success"` even though the DOCX pagination fallback (D-034) is a real,
+guaranteed loss of page-boundary information on every single DOCX
+conversion — its diagnostic was `severity="info"`, so the old rule never
+flagged it as partial.
+
+### Alternatives considered
+(a) Keep one `severity` axis and redefine `"partial"` as `severity in
+("warning", "error")` present. (b) Add a second, independent boolean field
+`affects_fidelity` on `AdapterDiagnostic`, and derive `conversion_status`
+from `affects_fidelity` exclusively (plus Docling's own
+`PARTIAL_SUCCESS` status), never from `severity`.
+
+### Decision
+(b).
+
+### Rationale
+Severity and fidelity impact are not correlated in practice: the DOCX
+pagination fallback is low-alarm (`info`) but always fidelity-affecting;
+by contrast a `missing_provenance` `warning` on one stray element does
+affect fidelity for that element specifically, while `skipped_furniture`
+(`info`) never does (a page header/footer is intentionally excluded, not
+lost). Collapsing these onto one axis made `conversion_status` either
+over-report `"success"` (Stage 5A's actual bug, for DOCX) or would have
+forced treating every routine informational diagnostic as fidelity-
+affecting if severity had been widened instead.
+
+### Trade-offs and consequences
+Every diagnostic call site in `mapper.py` (~15 of them) needed an explicit
+`affects_fidelity=` decision, not just a default — reviewed one by one
+rather than inferred from severity. `DiagnosticCollector.has_errors()` is
+now unused by `conversion_status` derivation (still available for callers
+that specifically want severity-based filtering) — `has_fidelity_impact()`
+is what `adapter.py` actually reads.
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/adapters/base.py::AdapterDiagnostic.affects_fidelity`,
+`ConversionStatus` docstring; `docling_standard/diagnostics.py::DiagnosticCollector.has_fidelity_impact`;
+`docling_standard/adapter.py::convert` (`is_partial` derivation);
+`tests/test_adapters_base.py::test_diagnostic_severity_and_affects_fidelity_are_independent_axes`;
+`tests/test_docling_standard_integration.py::test_parity_docx_is_a_valid_but_partial_document_with_one_explicit_unit`.
+
+---
+
+## D-038 — Attach a ProvenanceEntry to every OcrAnnotation Docling actually evidences
+
+**Status:** Accepted
+**Stage:** Stage 5A.1
+**Date/commit:** Needs confirmation (assigned at Stage 5A.1 implementation time)
+
+### Problem
+Stage 5A's `map_picture_ocr_child` created an `OcrAnnotation` for every
+picture-child OCR `TextItem` (D-035) but never a matching
+`ProvenanceEntry` — every other canonical element (headings, paragraphs,
+tables, pictures, captions) gets one, so OCR annotations were the one
+extracted-content type with no auditable source-evidence record at all,
+even though Docling's own `TextItem.prov` bbox and `self_ref` were
+available and simply not being carried through.
+
+### Alternatives considered
+(a) Leave `OcrAnnotation` without provenance, as in Stage 5A. (b) Add a
+`ProvenanceEntry` per `OcrAnnotation`, with `element_id` set to the
+annotation's own `annotation_id` — `ProvenanceEntry.element_id` already
+supports resolving to an annotation id, not just a block/table/picture id
+(`canonical/model.py::_validate_provenance_element_ids`), so this needed
+no canonical-model change at all.
+
+### Decision
+(b).
+
+### Rationale
+Withholding provenance from exactly the annotation type most likely to be
+scored for OCR-token recall by a future evaluator (Stage 8) would leave
+that scoring unauditable — a reader couldn't verify which bbox/element on
+the source page an `OcrAnnotation`'s text actually came from. Since the
+frozen canonical contract already anticipates annotation-id-valued
+provenance, this is additive population of an existing, underused
+capability rather than new modeling.
+
+### Trade-offs and consequences
+`OcrAnnotation` has no `order_index` field of its own (frozen contract),
+so its `ProvenanceEntry.order_index` is always `None` — this is
+intentional, not a bug: the chunker's picture-order fallback logic
+(`chunking/chunker.py`) only reads provenance entries with a non-`None`
+`order_index`, so OCR-annotation provenance entries are correctly ignored
+by that lookup and never collide with a picture's own provenance entry.
+An `ocr_sequence` field was added to `source_locator` to disambiguate
+multiple OCR lines under one picture, but it reflects `doc.texts` scan
+order, not necessarily true visual reading order within the picture
+region — documented as a continuing Stage 5A/5A.1 limitation, not
+resolved by this decision.
+
+### Deferred questions or reconsideration trigger
+True in-picture OCR reading order would require geometry-based sorting
+(e.g. by bbox top-to-bottom/left-to-right) that Stage 5A.1 does not
+attempt — revisit if a future stage needs ordered OCR text within one
+picture.
+
+### Implementation and evidence
+`src/ingestion_bench/adapters/docling_standard/mapper.py::map_picture_ocr_child`
+(`ProvenanceEntry` construction, `ocr_sequence` parameter);
+`map_document` (`ocr_sequence_by_picture` counter);
+`tests/test_docling_standard_integration.py::test_parity_pdf_picture_ocr_annotations_resolve_to_provenance_entries`,
+`test_chart_fixture_ocr_annotations_resolve_to_provenance_entries`.

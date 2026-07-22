@@ -12,15 +12,17 @@ the two are not wired together.
 
 ## Current stage
 
-**Stage 5A complete** (uncommitted at time of writing — see `git log` for
-the actual commit once made): canonical document model, deterministic
+**Stage 5A.1 complete** (uncommitted at time of writing — see `git log`
+for the actual commit once made): canonical document model, deterministic
 benchmark fixtures, deterministic canonical chunking, and the Docling
-`DOCLING_STANDARD_LOCAL` parser adapter (path A) are implemented and
-tested (322 tests passing). All 9 generated fixtures convert successfully
-through real Docling and chunk through the unmodified frozen chunker.
-**Stage 6 (`VisionEnricher` framework + OpenAI vision enrichment, path B)
-has not started.** See `POC_STATUS_AND_EVIDENCE.md` for the authoritative,
-up-to-date status.
+`DOCLING_STANDARD_LOCAL` parser adapter (path A) are implemented,
+hardened, and tested (343 tests passing). All 9 generated fixtures
+convert to a valid `CanonicalDocument` through real Docling (7 `success`,
+2 `partial` — the two DOCX fixtures, since Docling exposes no DOCX
+pagination geometry) and chunk through the unmodified frozen chunker.
+Stage 5A.1 is now frozen. **Stage 6 (`VisionEnricher` framework + OpenAI
+vision enrichment, path B) has not started.** See
+`POC_STATUS_AND_EVIDENCE.md` for the authoritative, up-to-date status.
 
 ## Repository root
 
@@ -59,14 +61,15 @@ stage reports):
 .venv/Scripts/python.exe -m pytest -v
 ```
 
-This runs all seven test files (`test_canonical_schema.py`,
+This runs all nine test files (`test_canonical_schema.py`,
 `test_canonical_hashing.py`, `test_fixture_generation.py`,
 `test_chunking.py`, `test_docling_standard_mapper.py`,
-`test_docling_standard_adapter.py`, `test_docling_standard_integration.py`)
-— 322 tests as of Stage 5A. The three `test_docling_standard_*` files run
-the real Docling adapter (not mocked) against the generated fixtures. It
-does **not** exercise embedding, retrieval, or evaluator code, because
-none of that exists yet.
+`test_docling_standard_adapter.py`, `test_docling_standard_integration.py`,
+`test_adapters_base.py`, `test_run_docling_standard_report.py`) — 343
+tests as of Stage 5A.1. The three `test_docling_standard_*` files run the
+real Docling adapter (not mocked) against the generated fixtures. It does
+**not** exercise embedding, retrieval, or evaluator code, because none of
+that exists yet.
 
 To reproduce the Stage 5A baseline conversion of every fixture (not just
 run the test suite): `python scripts/run_docling_standard.py` — writes

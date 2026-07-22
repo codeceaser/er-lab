@@ -146,8 +146,7 @@ class DoclingStandardAdapter:
         all_warnings = docling_warnings + adapter_warnings
         is_partial = (
             docling_result.status == DoclingConversionStatus.PARTIAL_SUCCESS
-            or mapper.diagnostics.has_errors()
-            or bool(adapter_warnings)
+            or mapper.diagnostics.has_fidelity_impact()
         )
 
         extraction_run = ExtractionRun(
@@ -209,7 +208,10 @@ class DoclingStandardAdapter:
         self._raw_debug_dir.mkdir(parents=True, exist_ok=True)
         target = self._raw_debug_dir / f"{artifact_key}.json"
         target.write_text(json.dumps(docling_doc.export_to_dict(), ensure_ascii=False), encoding="utf-8")
-        return str(target)
+        # Persisted/returned reference must be portable (Stage 5A.1 item 6):
+        # never an absolute, machine-local filesystem path. Uses the same
+        # "stage5a/<subdir>/..." convention as _save_picture's relative_ref.
+        return f"stage5a/docling_raw/{artifact_key}.json"
 
 
 def _canonical_document_hash(canonical_document) -> str:

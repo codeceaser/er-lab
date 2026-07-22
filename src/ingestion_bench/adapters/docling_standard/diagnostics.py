@@ -28,10 +28,12 @@ class DiagnosticCollector:
         severity: Literal["info", "warning", "error"] = "warning",
         docling_self_ref: str | None = None,
         unit_index: int | None = None,
+        affects_fidelity: bool = False,
     ) -> None:
         self._diagnostics.append(AdapterDiagnostic(
             category=category, severity=severity, message=message,
             docling_self_ref=docling_self_ref, unit_index=unit_index,
+            affects_fidelity=affects_fidelity,
         ))
 
     @property
@@ -46,3 +48,14 @@ class DiagnosticCollector:
 
     def has_errors(self) -> bool:
         return any(d.severity == "error" for d in self._diagnostics)
+
+    def has_fidelity_impact(self) -> bool:
+        """conversion_status derivation (Stage 5A.1) reads this, never
+        severity -- a fidelity-affecting diagnostic can be "info" severity
+        (e.g. DOCX pagination collapsing to one unit), and a high-severity
+        diagnostic need not affect fidelity."""
+        return any(d.affects_fidelity for d in self._diagnostics)
+
+    def count_by_affects_fidelity(self) -> dict[str, int]:
+        counts = Counter("fidelity_affecting" if d.affects_fidelity else "non_fidelity_affecting" for d in self._diagnostics)
+        return dict(counts)

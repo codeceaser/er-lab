@@ -9,7 +9,7 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at Stage 5A (see `git log` for the exact commit once
+and the repository at Stage 5A.1 (see `git log` for the exact commit once
 made).
 
 ---
@@ -70,10 +70,17 @@ Final module boundaries:
 - **Artifact contract**: `fixtures/generated/generation_report.json`'s
   shape (per-file SHA-256 + size, `manifest_sha256`, `manifest_version`,
   excludes itself). Fixture generation must remain byte-deterministic.
-- **Adapter contract** (new, Stage 5A): `src/ingestion_bench/adapters/base.py`'s
+- **Adapter contract** (Stage 5A, hardened Stage 5A.1): `src/ingestion_bench/adapters/base.py`'s
   `DocumentParserAdapter` protocol and `AdapterConversionResult` model —
-  every future adapter (path B/C/D) must return this same shape. Docling/
-  docling-core types must never appear outside
+  every future adapter (path B/C/D) must return this same shape,
+  including its Stage 5A.1 invariants (`elapsed_ms >= 0`; `source_sha256`
+  lowercase-hex-64; `source_relative_path` portable/relative;
+  `conversion_status` ↔ `canonical_document`/`extraction_run` presence,
+  all enforced by Pydantic validators, not just convention). Every
+  `AdapterDiagnostic` a future adapter records must set `affects_fidelity`
+  correctly (severity and fidelity impact are independent axes — see
+  `docs/POC_DECISION_LOG.md` D-037) since `conversion_status` derivation
+  depends on it. Docling/docling-core types must never appear outside
   `src/ingestion_bench/adapters/docling_standard/`.
 
 ## Implementation order (validated stage sequence)
@@ -82,10 +89,13 @@ Final module boundaries:
 2. Stage 2 (+2.1) — canonical model + hashing. **Done.**
 3. Stage 3 (+3.1) — deterministic fixture generation. **Done.**
 4. Stage 4 (+4.1, 4.2, 4.2a) — canonical chunking. **Done.**
-5. Stage 5A — Docling `DOCLING_STANDARD_LOCAL` adapter (path A). **Done.**
+5. Stage 5A (+5A.1 evidence/provenance hardening) — Docling
+   `DOCLING_STANDARD_LOCAL` adapter (path A). **Done, frozen.**
    `docling==2.114.0` installed and pinned; zero `VisionEnricher`
-   dependency; all 9 generated fixtures convert successfully and chunk
-   through the unmodified frozen chunker.
+   dependency; all 9 generated fixtures produce a valid `CanonicalDocument`
+   (7 `success`, 2 `partial` — DOCX, since Docling exposes no DOCX
+   pagination geometry, D-037) and chunk through the unmodified frozen
+   chunker.
 6. Stage 6 — `VisionEnricher` framework + `OpenAIVisionEnricher` (path B). **Next.**
 7. Stage 7 — OpenAI vendor-native adapter (path C).
 8. Stage 8 — evaluator, scoring `CanonicalDocument`/`CanonicalChunk`
@@ -100,15 +110,17 @@ At minimum, the full existing suite must continue to pass unmodified:
 (21), `tests/test_fixture_generation.py` (38), `tests/test_chunking.py`
 (110), `tests/test_docling_standard_mapper.py` (28),
 `tests/test_docling_standard_adapter.py` (8),
-`tests/test_docling_standard_integration.py` (30) — 322 total. A new
+`tests/test_docling_standard_integration.py` (34),
+`tests/test_adapters_base.py` (15),
+`tests/test_run_docling_standard_report.py` (2) — 343 total. A new
 adapter/evaluator implementation must add its own test files following
 the same pattern (one file per concern, `pytest`, `pythonpath = src
 fixtures` per `pytest.ini`) rather than modifying the existing ones.
 
 Specific invariants a parser adapter must satisfy, verifiable by
 constructing its output and running it through existing validators —
-**already proven true for the Stage 5A Docling adapter**, and required of
-any future adapter (path B/C/D) too:
+**already proven true for the Stage 5A/5A.1 Docling adapter**, and
+required of any future adapter (path B/C/D) too:
 
 - Every id it produces (`block_id`, `table_id`, `picture_id`,
   `annotation_id`, diagram `node_id`) must come from
@@ -131,6 +143,14 @@ any future adapter (path B/C/D) too:
   DOCX page-geometry fallback is the one deliberate, explicitly-diagnosed
   exception: a real value read from the source file itself via
   `python-docx`, never a fake Letter/A4 default).
+- Every `AdapterDiagnostic` sets `affects_fidelity` on its own merits, not
+  copied from `severity` — `conversion_status` must be derived from
+  `affects_fidelity` (plus the parser's own partial-success signal, if
+  any), never from severity or warning/error counts alone (D-037).
+- Every extracted-derivation annotation gets a matching `ProvenanceEntry`
+  (`element_id` may resolve to the annotation's own `annotation_id`)
+  whenever the parser actually supplies evidence for it — never a
+  fabricated bbox/source reference when it doesn't (D-038).
 
 ## Enterprise constraints
 

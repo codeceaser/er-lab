@@ -1,19 +1,21 @@
 # POC Status and Evidence — Enterprise Document-Ingestion Benchmark
 
-Snapshot as of Stage 5A (uncommitted at time of writing — see `git log`
+Snapshot as of Stage 5A.1 (uncommitted at time of writing — see `git log`
 for the actual commit once made) on branch `main`. Update this document
 at the end of every subsequent stage — see the maintenance rules in
 `docs/README.md`.
 
 ## Current test totals
 
-**322 tests passed, 0 failed** — full suite, all files
+**343 tests passed, 0 failed** — full suite, all files
 (`test_canonical_schema.py` 87, `test_canonical_hashing.py` 21,
 `test_fixture_generation.py` 38, `test_chunking.py` 110,
 `test_docling_standard_mapper.py` 28, `test_docling_standard_adapter.py`
-8, `test_docling_standard_integration.py` 30). Full verbose output:
-`reports/stage5a_pytest_output.txt`. The three new Stage 5A test files run
-real (small, CPU) Docling conversions — they are not mocked.
+8, `test_docling_standard_integration.py` 34, `test_adapters_base.py` 15,
+`test_run_docling_standard_report.py` 2). Full verbose output:
+`reports/stage5a_pytest_output.txt` (this file is regenerated in place at
+each Stage 5A/5A.1 sub-stage, not renamed per sub-stage). The Docling test
+files run real (small, CPU) Docling conversions — they are not mocked.
 Progression across stages (each report file is a real, committed snapshot):
 
 | Report | Pass count |
@@ -25,7 +27,8 @@ Progression across stages (each report file is a real, committed snapshot):
 | `reports/stage4_1_pytest_output.txt` | 220 |
 | `reports/stage4_2_pytest_output.txt` | 244 |
 | `reports/stage4_2a_pytest_output.txt` | 256 |
-| `reports/stage5a_pytest_output.txt` | 322 |
+| `reports/stage5a_pytest_output.txt` (Stage 5A) | 322 |
+| `reports/stage5a_pytest_output.txt` (Stage 5A.1, current) | 343 |
 
 ## Stage status table
 
@@ -40,7 +43,8 @@ Progression across stages (each report file is a real, committed snapshot):
 | 4.1 | Chunking hardening (heading audit trail, structural tables, revision lineage) | **Completed with follow-up** (further hardened in 4.2/4.2a) | Same files as Stage 4 | `reports/stage4_1_pytest_output.txt` | Superseded by 4.2/4.2a fixes below |
 | 4.2 | Chunking correctness patch (fragment provenance, heading content propagation, revision-id normalization) | **Completed with follow-up** (fragment coordinate-space bug fixed in 4.2a) | Same files as Stage 4 | `reports/stage4_2_pytest_output.txt` | Superseded by 4.2a fix below |
 | 4.2a | Fragment-provenance correction (split against canonical element text, not combined rendered text) | **Completed** | Same files as Stage 4 | `reports/stage4_2a_pytest_output.txt` | None known |
-| 5A | Docling `DOCLING_STANDARD_LOCAL` adapter (path A) | **Completed** | `src/ingestion_bench/adapters/{base.py,docling_standard/}`, `scripts/run_docling_standard.py` | `tests/test_docling_standard_{mapper,adapter,integration}.py` (66 tests); `reports/stage5a_pytest_output.txt`, `reports/stage5a_docling_standard_baseline.md`, `reports/stage5a_docling_standard_results.json` | See "Current limitations" below — these are genuine Docling baseline findings, not open adapter defects |
+| 5A | Docling `DOCLING_STANDARD_LOCAL` adapter (path A) | **Completed, frozen** (hardened by 5A.1) | `src/ingestion_bench/adapters/{base.py,docling_standard/}`, `scripts/run_docling_standard.py` | `tests/test_docling_standard_{mapper,adapter,integration}.py`; `reports/stage5a_pytest_output.txt`, `reports/stage5a_docling_standard_baseline.md`, `reports/stage5a_docling_standard_results.json` | See "Current limitations" below — these are genuine Docling baseline findings, not open adapter defects |
+| 5A.1 | Evidence/provenance hardening patch (diagnostic severity vs. fidelity impact, DOCX partial status, OCR annotation provenance, AdapterConversionResult validation, portable reports, single-execution dual report generation) | **Completed** | Same files as Stage 5A, patched — no new package | `tests/test_adapters_base.py` (15, new), `tests/test_run_docling_standard_report.py` (2, new), 4 new tests added to `test_docling_standard_integration.py`, 1 test updated in `test_docling_standard_mapper.py`; `reports/stage5a_pytest_output.txt` (regenerated in place) | None known — see decisions D-037, D-038 |
 | 6 | `VisionEnricher` framework + `OpenAIVisionEnricher` (path B) | **Not started** | — | — | No `vision/` package |
 | 7 | OpenAI vendor-native adapter (path C) | **Not started** | — | — | — |
 | 8 | Evaluator (scores extraction against `reference_manifest.json`) | **Not started** | — | — | Depends on Stages 5–7 producing real `CanonicalDocument`/`CanonicalChunk` output |
@@ -91,10 +95,15 @@ input); `assets/<doc_id>_<format>/<picture_id>.png`.
   annotation text under many descendant chunks.
 - **Genuine Docling 2.114.0/docling-core 2.87.1 baseline findings**
   (not adapter defects — see `reports/stage5a_docling_standard_baseline.md`
-  section 6 and decisions D-033–D-035 for full detail):
+  section 6 and decisions D-033–D-035, D-037, D-038 for full detail):
   - DOCX exposes no page geometry via Docling's public API at all; the
     adapter falls back to reading it from the source file directly via
     `python-docx` (a real, non-fabricated value, but not Docling's own).
+    As of Stage 5A.1, this is recorded as a `docx_pagination_unavailable`
+    diagnostic with `affects_fidelity=True`, so **every DOCX conversion's
+    `conversion_status` is `"partial"`, never `"success"`** (D-037) — this
+    is a status correction, not a new limitation; the underlying fallback
+    mechanism is unchanged from Stage 5A.
   - PDF heading-level classification did not distinguish nesting depth
     for the parity fixture (all headings got `level=1`); PPTX
     title/section-header shapes were not classified as headings at all
@@ -106,7 +115,13 @@ input); `assets/<doc_id>_<format>/<picture_id>.png`.
     of one nested list).
   - OCR-origin detection is possible only via structural nesting under a
     `PictureItem` — body-level OCR text (the scanned-PDF fixture) has no
-    distinguishing signal and is mapped as plain paragraph text.
+    distinguishing signal and is mapped as plain paragraph text. As of
+    Stage 5A.1, every `OcrAnnotation` that IS produced now also carries a
+    matching `ProvenanceEntry` (bbox, `self_ref`, an `ocr_sequence`
+    disambiguating multiple OCR lines under one picture) whenever Docling
+    supplies evidence (D-038) — OCR text *ordering* within one picture
+    remains a documented limitation (`ocr_sequence` reflects scan order,
+    not verified visual reading order).
 
 ## Known non-goals (see also "Explicitly deferred scope" below)
 
@@ -131,11 +146,12 @@ canonical element's own text) has a corresponding fix and test — see
 
 Per the working plan referenced throughout this project's history, the
 next step is **Stage 6 — the `VisionEnricher` framework and
-`OpenAIVisionEnricher` (path B)**, building on the now-complete Stage 5A
-Docling adapter. Stage 5A itself is complete: `docling==2.114.0` is
-installed and pinned, the adapter converts all 9 generated fixtures
-successfully, and its output chunks through the existing frozen
-`chunk_document()` unmodified.
+`OpenAIVisionEnricher` (path B)**, building on the now-complete, now-frozen
+Stage 5A/5A.1 Docling adapter. Stage 5A/5A.1 is complete: `docling==2.114.0`
+is installed and pinned, the adapter converts all 9 generated fixtures to
+a valid `CanonicalDocument` (7 `success`, 2 `partial` — DOCX, per D-037),
+and its output chunks through the existing frozen `chunk_document()`
+unmodified.
 
 ---
 
@@ -183,14 +199,36 @@ successfully, and its output chunks through the existing frozen
   `CanonicalDocument` and `DocumentRevisionContext` is rejected; no mutable
   retrieval-state field participates in a chunk's hash or id.
 - **Docling produces real, structurally valid `CanonicalDocument`s** —
-  `tests/test_docling_standard_integration.py` (30 tests, real Docling
-  conversions, not mocked): all 9 generated fixtures convert successfully
-  and validate against every frozen canonical invariant; native table
-  cells, at least one picture, and the target identifiers/paragraph text
-  are present in the mapped output for every parity format; the resulting
-  `CanonicalDocument`s chunk successfully through the unmodified frozen
-  `chunk_document()` with nonempty `retrieval_text` on every textual
-  chunk.
+  `tests/test_docling_standard_integration.py` (34 tests, real Docling
+  conversions, not mocked): all 9 generated fixtures convert to a valid
+  `CanonicalDocument` (7 `"success"`, 2 `"partial"` — the two DOCX
+  fixtures, per D-037) and validate against every frozen canonical
+  invariant; native table cells, at least one picture, and the target
+  identifiers/paragraph text are present in the mapped output for every
+  parity format; the resulting `CanonicalDocument`s chunk successfully
+  through the unmodified frozen `chunk_document()` with nonempty
+  `retrieval_text` on every textual chunk.
+- **AdapterConversionResult validation is enforced, not just documented**
+  — `tests/test_adapters_base.py` (15 tests, no Docling/real conversion
+  needed): `conversion_status="failed"` rejects a present
+  `canonical_document`/`extraction_run`; `"success"`/`"partial"` reject a
+  missing one; `elapsed_ms` rejects negative values; `source_sha256`
+  rejects anything that isn't lowercase 64-hex; `source_relative_path`
+  rejects absolute paths, backslashes, and `..` traversal.
+- **OCR annotations carry real provenance, never fabricated** —
+  `test_parity_pdf_picture_ocr_annotations_resolve_to_provenance_entries`,
+  `test_chart_fixture_ocr_annotations_resolve_to_provenance_entries`: every
+  `OcrAnnotation` produced from a picture-child `TextItem` has a matching
+  `ProvenanceEntry` keyed by `annotation_id`, with a real
+  `docling_rapidocr` `source_locator` and a distinguishing `ocr_sequence`;
+  `test_scanned_pdf_whole_page_ocr_stays_a_paragraph_not_an_annotation`
+  confirms body-level OCR text with no picture wrapper still produces zero
+  annotations, never a fabricated one.
+- **The two persisted Stage 5A reports come from one execution** —
+  `tests/test_run_docling_standard_report.py` (2 tests): given a
+  synthetic `results` dict, `render_baseline_markdown()` reproduces every
+  count/status/timing figure from that same dict verbatim, and the
+  rendered Markdown never contains an absolute Windows path.
 - **Docling conversion is deterministic** — converting the same file
   twice produces byte-identical `CanonicalDocument`/`CanonicalChunk`
   serialization and identical `stable_canonical_hash()`/`chunk_id`/
@@ -236,8 +274,8 @@ Using the repository's actual state (not aspirational), the path is:
 
 ```
 chunk contract frozen (Stage 4.2a, done)
-        -> Docling Standard Local adapter (Stage 5A, DONE)
-        -> process the controlled Stage 3 fixtures (DONE -- all 9, success)
+        -> Docling Standard Local adapter (Stage 5A, DONE; hardened by Stage 5A.1, DONE)
+        -> process the controlled Stage 3 fixtures (DONE -- all 9 produce a valid CanonicalDocument; 7 success, 2 partial)
         -> produce valid CanonicalDocuments (DONE)
         -> produce deterministic CanonicalChunks (DONE -- existing chunker, unmodified)
         -> compare output against reference_manifest.json ground truth (NOT STARTED -- Stage 8)

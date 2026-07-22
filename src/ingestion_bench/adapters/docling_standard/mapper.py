@@ -179,7 +179,7 @@ class DoclingToCanonicalMapper:
                     self._record(
                         "missing_geometry",
                         f"page_no={page_no} has no usable size; unit skipped",
-                        severity="error", unit_index=page_no - 1,
+                        severity="error", unit_index=page_no - 1, affects_fidelity=True,
                     )
                     continue
                 unit_index = page_no - 1  # Docling page_no is 1-based; canonical unit_index is 0-based
@@ -190,7 +190,7 @@ class DoclingToCanonicalMapper:
                 )
                 self._page_height_by_unit[unit_index] = page.size.height
             if not self._units:
-                self._record("missing_geometry", "no page reported usable geometry", severity="error")
+                self._record("missing_geometry", "no page reported usable geometry", severity="error", affects_fidelity=True)
                 return False
             return True
 
@@ -199,15 +199,18 @@ class DoclingToCanonicalMapper:
             self._record(
                 "missing_geometry",
                 "DOCX has no Docling page geometry and no docx_page_fallback was supplied",
-                severity="error",
+                severity="error", affects_fidelity=True,
             )
             return False
         self._record(
-            "docling_page_geometry_unavailable",
-            "Docling's standard pipeline exposes no page geometry for DOCX; "
-            "unit width/height were read from the source file's own section "
-            "properties via python-docx, not from Docling",
-            severity="info", unit_index=0,
+            "docx_pagination_unavailable",
+            "Docling's standard pipeline exposes no page/pagination geometry for "
+            "DOCX; the whole document is mapped as a single CanonicalUnit whose "
+            "width/height were read from the source file's own section "
+            "properties via python-docx (not from Docling), and true page-break "
+            "positions are unrecoverable -- this is a real loss of source "
+            "pagination structure, not merely an informational note",
+            severity="info", unit_index=0, affects_fidelity=True,
         )
         self._units[0] = CanonicalUnit(
             unit_index=0, unit_type="page",
@@ -224,12 +227,12 @@ class DoclingToCanonicalMapper:
         if prov:
             unit_index = prov[0].page_no - 1
             if unit_index not in self._units:
-                self._record("missing_provenance", f"{where}: page_no {prov[0].page_no} has no matching unit", severity="warning", docling_self_ref=item.self_ref)
+                self._record("missing_provenance", f"{where}: page_no {prov[0].page_no} has no matching unit", severity="warning", docling_self_ref=item.self_ref, affects_fidelity=True)
                 return None
             return unit_index
         if self.source_format == "docx" and 0 in self._units:
             return 0
-        self._record("missing_provenance", f"{where}: no provenance available", severity="warning", docling_self_ref=item.self_ref)
+        self._record("missing_provenance", f"{where}: no provenance available", severity="warning", docling_self_ref=item.self_ref, affects_fidelity=True)
         return None
 
     def _bbox_for(self, item, unit_index: int):
@@ -239,7 +242,7 @@ class DoclingToCanonicalMapper:
         try:
             return _convert_bbox(prov[0].bbox, self._page_height_by_unit[unit_index], self._coordinate_unit)
         except Exception as exc:  # malformed geometry -- degrade, never crash the whole conversion
-            self._record("malformed_geometry", f"bbox conversion failed: {exc}", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index)
+            self._record("malformed_geometry", f"bbox conversion failed: {exc}", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index, affects_fidelity=True)
             return None
 
     # --- headings / paragraphs / list items ------------------------------
@@ -270,7 +273,7 @@ class DoclingToCanonicalMapper:
         self.provenance.append(ProvenanceEntry(element_id=block_id, unit_index=unit_index, order_index=order_index, bbox=bbox, source_element_ref=item.self_ref, source_locator={"docling_label": str(item.label)}))
         self._bump_mapped("paragraph")
         if reduced_fidelity:
-            self._record("reduced_fidelity_mapping", f"label={item.label} has no dedicated canonical type; mapped as CanonicalParagraph", severity="info", docling_self_ref=item.self_ref, unit_index=unit_index)
+            self._record("reduced_fidelity_mapping", f"label={item.label} has no dedicated canonical type; mapped as CanonicalParagraph", severity="info", docling_self_ref=item.self_ref, unit_index=unit_index, affects_fidelity=True)
         return block_id
 
     def map_list_item(self, item, docling_doc: DoclingDocument, block_id_by_self_ref: dict) -> None:
@@ -286,7 +289,7 @@ class DoclingToCanonicalMapper:
         list_id = stable_element_id(self.doc_id, "list", unit_index, discriminator=list_group_ref or item.self_ref)
         parent_block_id = block_id_by_self_ref.get(parent_group_owner_ref) if parent_group_owner_ref else None
         if indent_level == 0 and list_group_ref is None:
-            self._record("missing_provenance", "list item has no enclosing list group; indent_level defaulted to 0", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index)
+            self._record("missing_provenance", "list item has no enclosing list group; indent_level defaulted to 0", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index, affects_fidelity=True)
 
         self.list_items.append(CanonicalListItem(
             block_id=block_id, unit_index=unit_index, order_index=order_index, text=item.text, bbox=bbox,
@@ -311,10 +314,10 @@ class DoclingToCanonicalMapper:
         cells: list[CanonicalTableCell] = []
         for cell in item.data.table_cells:
             if not (0 <= cell.start_row_offset_idx < n_rows) or not (0 <= cell.start_col_offset_idx < n_cols):
-                self._record("malformed_table_cell", f"cell row={cell.start_row_offset_idx} col={cell.start_col_offset_idx} out of bounds for {n_rows}x{n_cols}", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index)
+                self._record("malformed_table_cell", f"cell row={cell.start_row_offset_idx} col={cell.start_col_offset_idx} out of bounds for {n_rows}x{n_cols}", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index, affects_fidelity=True)
                 continue
             if cell.start_row_offset_idx + cell.row_span > n_rows or cell.start_col_offset_idx + cell.col_span > n_cols:
-                self._record("malformed_table_cell", f"cell row={cell.start_row_offset_idx} col={cell.start_col_offset_idx} span exceeds {n_rows}x{n_cols}", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index)
+                self._record("malformed_table_cell", f"cell row={cell.start_row_offset_idx} col={cell.start_col_offset_idx} span exceeds {n_rows}x{n_cols}", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index, affects_fidelity=True)
                 continue
             cells.append(CanonicalTableCell(
                 row=cell.start_row_offset_idx, col=cell.start_col_offset_idx,
@@ -341,10 +344,10 @@ class DoclingToCanonicalMapper:
             pil_image = item.get_image(docling_doc)
         except Exception as exc:
             pil_image = None
-            self._record("missing_picture_bytes", f"get_image() raised: {exc}", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index)
+            self._record("missing_picture_bytes", f"get_image() raised: {exc}", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index, affects_fidelity=True)
 
         if pil_image is None:
-            self._record("missing_picture_bytes", "Docling identified a picture but provided no retrievable image bytes; CanonicalPicture.content_sha256 is required, so this picture (and any caption/OCR text pointed at it) is skipped rather than invented", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index)
+            self._record("missing_picture_bytes", "Docling identified a picture but provided no retrievable image bytes; CanonicalPicture.content_sha256 is required, so this picture (and any caption/OCR text pointed at it) is skipped rather than invented", severity="warning", docling_self_ref=item.self_ref, unit_index=unit_index, affects_fidelity=True)
             self._bump_skipped("missing_picture_bytes")
             return None
 
@@ -380,7 +383,7 @@ class DoclingToCanonicalMapper:
         self.provenance.append(ProvenanceEntry(element_id=block_id, unit_index=unit_index, order_index=order_index, bbox=bbox, source_element_ref=text_item.self_ref, source_locator={"docling_label": str(text_item.label)}))
         self._bump_mapped("caption")
 
-    def map_picture_ocr_child(self, text_item, picture_id: str, unit_index: int) -> None:
+    def map_picture_ocr_child(self, text_item, picture_id: str, unit_index: int, *, ocr_sequence: int) -> None:
         """A TextItem nested directly under a PictureItem (and not that
         picture's caption) is the only OCR-origin signal Docling's public
         API exposes in this version: individual items carry no
@@ -392,12 +395,31 @@ class DoclingToCanonicalMapper:
         places at body level (e.g. the scanned-PDF fixture, where the
         whole page is one OCR pass with no picture wrapper) has NO such
         signal and is mapped as plain CanonicalParagraph instead -- see
-        map_paragraph and the "ocr_origin_unavailable" diagnostic emitted
-        by the caller for that case."""
+        map_paragraph for that case; no diagnostic is emitted for it since
+        that text is not lost, only not distinguished as OCR-origin.
+
+        Every OcrAnnotation gets a matching ProvenanceEntry whenever
+        Docling actually supplies evidence for it (bbox via text_item.prov,
+        self_ref, an ocr_sequence disambiguating multiple OCR lines under
+        the same picture) -- ProvenanceEntry.element_id may legitimately
+        resolve to an annotation_id (see
+        canonical/model.py::_validate_provenance_element_ids), so this adds
+        no new canonical concept. No bbox or provenance is fabricated when
+        Docling provides none (bbox stays None in that case)."""
         annotation_id = stable_element_id(self.doc_id, "annotation:ocr", unit_index, discriminator=f"{picture_id}:{text_item.self_ref}")
         self.annotations.append(OcrAnnotation(
             annotation_id=annotation_id, target_ref=picture_id, unit_index=unit_index,
             extraction_method="docling_rapidocr", text=text_item.text,
+        ))
+        bbox = self._bbox_for(text_item, unit_index)
+        self.provenance.append(ProvenanceEntry(
+            element_id=annotation_id, unit_index=unit_index, order_index=None, bbox=bbox,
+            source_element_ref=text_item.self_ref,
+            source_locator={
+                "docling_label": str(text_item.label),
+                "extraction_method": "docling_rapidocr",
+                "ocr_sequence": ocr_sequence,
+            },
         ))
         self._bump_mapped("ocr_annotation")
 
@@ -443,6 +465,7 @@ class DoclingToCanonicalMapper:
         # not the main traversal below. OcrAnnotation has no order_index
         # field, so this pass does not need to run in reading order.
         ocr_child_self_refs: set[str] = set()
+        ocr_sequence_by_picture: dict[str, int] = {}
         for text_item in docling_doc.texts:
             parent_ref = text_item.parent.cref if text_item.parent else None
             if parent_ref not in pictures_by_self_ref:
@@ -453,10 +476,11 @@ class DoclingToCanonicalMapper:
             unit_index = self._resolve_unit_index(pictures_by_self_ref[parent_ref], where="picture-ocr-child") if picture_id else None
             ocr_child_self_refs.add(text_item.self_ref)
             if picture_id is None or unit_index is None:
-                self._record("skipped_item", "OCR-child text targets a picture that was skipped", severity="warning", docling_self_ref=text_item.self_ref)
+                self._record("skipped_item", "OCR-child text targets a picture that was skipped", severity="warning", docling_self_ref=text_item.self_ref, affects_fidelity=True)
                 self._bump_skipped("ocr_target_picture_unavailable")
                 continue
-            self.map_picture_ocr_child(text_item, picture_id, unit_index)
+            ocr_sequence_by_picture[parent_ref] = ocr_sequence_by_picture.get(parent_ref, 0) + 1
+            self.map_picture_ocr_child(text_item, picture_id, unit_index, ocr_sequence=ocr_sequence_by_picture[parent_ref])
 
         block_id_by_self_ref: dict[str, str] = {}
         for item, _level in docling_doc.iterate_items():
@@ -481,7 +505,7 @@ class DoclingToCanonicalMapper:
                 picture_id = picture_id_by_self_ref.get(picture.self_ref)
                 unit_index = self._resolve_unit_index(picture, where="picture-caption")
                 if picture_id is None or unit_index is None:
-                    self._record("ambiguous_caption_relationship", "caption target picture was skipped; caption dropped", severity="warning", docling_self_ref=self_ref)
+                    self._record("ambiguous_caption_relationship", "caption target picture was skipped; caption dropped", severity="warning", docling_self_ref=self_ref, affects_fidelity=True)
                     self._bump_skipped("ambiguous_caption_relationship")
                 else:
                     self.map_caption(item, picture_id, unit_index)
@@ -489,7 +513,7 @@ class DoclingToCanonicalMapper:
 
             if self_ref in table_caption_refs:
                 self.map_paragraph(item, reduced_fidelity=True)
-                self._record("reduced_fidelity_mapping", "table caption has no dedicated canonical representation; mapped as CanonicalParagraph", severity="info", docling_self_ref=self_ref)
+                self._record("reduced_fidelity_mapping", "table caption has no dedicated canonical representation; mapped as CanonicalParagraph", severity="info", docling_self_ref=self_ref, affects_fidelity=True)
                 continue
 
             if parent_ref in pictures_by_self_ref:
@@ -515,10 +539,10 @@ class DoclingToCanonicalMapper:
                 self._record("skipped_furniture", f"label={label} treated as furniture, not body content", severity="info", docling_self_ref=self_ref)
                 self._bump_skipped("furniture")
             elif label == DocItemLabel.CAPTION:
-                self._record("ambiguous_caption_relationship", "caption-labeled text has no picture/table owner", severity="warning", docling_self_ref=self_ref)
+                self._record("ambiguous_caption_relationship", "caption-labeled text has no picture/table owner", severity="warning", docling_self_ref=self_ref, affects_fidelity=True)
                 self._bump_skipped("ambiguous_caption_relationship")
             else:
-                self._record("unsupported_label", f"label={label} type={type(item).__name__} has no canonical mapping", severity="info", docling_self_ref=self_ref)
+                self._record("unsupported_label", f"label={label} type={type(item).__name__} has no canonical mapping", severity="info", docling_self_ref=self_ref, affects_fidelity=True)
                 self._bump_skipped("unsupported_label")
 
     # --- final assembly --------------------------------------------------

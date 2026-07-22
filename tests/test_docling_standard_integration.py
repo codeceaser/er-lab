@@ -92,6 +92,25 @@ def test_parity_at_least_one_picture_retained(adapter, relative_path):
     assert picture.artifact_ref
 
 
+def test_parity_pdf_picture_ocr_annotations_resolve_to_provenance_entries(adapter):
+    """Stage 5A.1 item 4: every OcrAnnotation produced from a picture-child
+    TextItem must have a matching ProvenanceEntry whose element_id equals
+    the annotation_id -- never a fabricated bbox/provenance, only what
+    Docling actually evidenced."""
+    result = _convert(adapter, "parity/PARITY_001.pdf")
+    document = result.canonical_document
+    ocr_annotations = [a for a in document.annotations if a.annotation_type == "ocr"]
+    assert ocr_annotations, "PARITY_001.pdf is expected to have diagram OCR annotations"
+    provenance_by_element_id = {p.element_id: p for p in document.provenance}
+    for annotation in ocr_annotations:
+        assert annotation.annotation_id in provenance_by_element_id, f"no ProvenanceEntry for {annotation.annotation_id}"
+        entry = provenance_by_element_id[annotation.annotation_id]
+        assert entry.source_element_ref is not None
+        assert entry.source_locator is not None
+        assert entry.source_locator.get("extraction_method") == "docling_rapidocr"
+        assert isinstance(entry.source_locator.get("ocr_sequence"), int)
+
+
 def test_parity_pdf_caption_is_linked_to_its_picture(adapter):
     """Caption-to-picture linking is proven to work via Docling's PDF
     layout backend (verified against the real DoclingDocument during
@@ -116,6 +135,23 @@ def test_parity_canonical_chunks_validate_with_nonempty_retrieval_text(adapter, 
     assert textual_chunks
     for chunk in textual_chunks:
         assert chunk.retrieval_text.strip() != ""
+
+
+def test_parity_docx_is_a_valid_but_partial_document_with_one_explicit_unit(adapter):
+    """Stage 5A.1 item 2: DOCX conversions must remain a fully valid
+    CanonicalDocument with exactly one CanonicalUnit (Docling exposes no
+    real page geometry for DOCX -- see DocxPageFallback), but
+    conversion_status must be "partial" (never "success"), because the
+    single-unit collapse is a genuine, diagnosed loss of source pagination
+    structure -- and no second/fake page may ever be invented to hide it."""
+    result = _convert(adapter, "parity/PARITY_001.docx")
+    assert result.canonical_document is not None
+    document = result.canonical_document
+    assert len(document.units) == 1, "no fabricated second page may ever be created for DOCX"
+    assert result.conversion_status == "partial"
+    pagination_diagnostics = [d for d in result.diagnostics if d.category == "docx_pagination_unavailable"]
+    assert len(pagination_diagnostics) == 1
+    assert pagination_diagnostics[0].affects_fidelity is True
 
 
 # --- B. scanned PDF ------------------------------------------------------------
@@ -146,6 +182,17 @@ def test_scanned_pdf_produces_no_model_derived_annotation(adapter):
     assert all(a.derivation == "extracted" for a in result.canonical_document.annotations)
 
 
+def test_scanned_pdf_whole_page_ocr_stays_a_paragraph_not_an_annotation(adapter):
+    """Stage 5A.1 item 4: when Docling gives no trustworthy OCR-origin
+    signal (no picture wrapper -- the whole page is one OCR pass, not a
+    picture-child TextItem), the text must remain an ordinary
+    CanonicalParagraph, never an invented OcrAnnotation."""
+    result = _convert(adapter, "stress/STRESS_SCANNED_001.pdf")
+    document = result.canonical_document
+    assert document.annotations == []
+    assert any(p.text.strip() for p in document.paragraphs)
+
+
 # --- C. chart fixture ----------------------------------------------------------
 
 
@@ -156,6 +203,24 @@ def test_chart_fixture_picture_retained_with_provenance(adapter):
     picture = document.pictures[0]
     provenance_for_picture = [p for p in document.provenance if p.element_id == picture.picture_id]
     assert provenance_for_picture, "picture must have a ProvenanceEntry"
+
+
+def test_chart_fixture_ocr_annotations_resolve_to_provenance_entries(adapter):
+    """Stage 5A.1 item 4, chart-picture case: same invariant as the parity
+    diagram OCR annotations -- every chart-label OcrAnnotation must have a
+    real, matching ProvenanceEntry."""
+    result = _convert(adapter, "stress/STRESS_CHART_001.pdf")
+    document = result.canonical_document
+    ocr_annotations = [a for a in document.annotations if a.annotation_type == "ocr"]
+    assert ocr_annotations, "STRESS_CHART_001.pdf is expected to have chart-label OCR annotations"
+    provenance_by_element_id = {p.element_id: p for p in document.provenance}
+    sequences = set()
+    for annotation in ocr_annotations:
+        assert annotation.annotation_id in provenance_by_element_id
+        entry = provenance_by_element_id[annotation.annotation_id]
+        assert entry.source_locator.get("extraction_method") == "docling_rapidocr"
+        sequences.add(entry.source_locator.get("ocr_sequence"))
+    assert len(sequences) == len(ocr_annotations), "ocr_sequence must disambiguate multiple OCR lines under one picture"
 
 
 def test_chart_fixture_never_produces_a_visual_fact_annotation(adapter):

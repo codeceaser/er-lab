@@ -448,7 +448,11 @@ unaffected here because this example has no oversized element to split.
 **Files:** `src/ingestion_bench/adapters/base.py`,
 `src/ingestion_bench/adapters/docling_standard/{__init__.py,config.py,diagnostics.py,mapper.py,adapter.py}`,
 `scripts/run_docling_standard.py`;
-`tests/test_docling_standard_{mapper,adapter,integration}.py` (66 tests)
+`tests/test_docling_standard_{mapper,adapter,integration}.py`
+
+This section describes Stage 5A as hardened by the Stage 5A.1 patch (see
+the dedicated Stage 5A.1 section immediately below for exactly what
+changed and why) — it is not a Stage-5A-only snapshot.
 
 Dependencies added: `docling==2.114.0` and `onnxruntime` (RapidOCR's
 inference backend — not pulled in automatically by `docling[standard]`,
@@ -525,7 +529,7 @@ AdapterConversionResult`.
 | `TextItem` referenced by `PictureItem.captions` | `CanonicalCaption` | Linked to its picture, never duplicated as a body paragraph. Confirmed working for PDF; **not** populated by Docling for DOCX/PPTX in this version (caption text becomes a plain paragraph instead — see limitations). |
 | `TableItem.data.table_cells` | `CanonicalTable`/`CanonicalTableCell` | Read from the structural grid directly (`start_row_offset_idx`/`start_col_offset_idx`/`row_span`/`col_span`/`column_header`/`row_header`) — never from exported Markdown/pandas. Out-of-bounds cells are dropped with a `malformed_table_cell` diagnostic, never silently included. |
 | `PictureItem` (with retrievable image bytes) | `CanonicalPicture` | Image obtained via the public `PictureItem.get_image(doc)`; saved as PNG; `content_sha256` computed from the saved bytes. No image bytes available → the picture (and any caption/OCR text pointed at it) is skipped with a `missing_picture_bytes` diagnostic, never invented. |
-| `TextItem` whose parent is a `PictureItem` (and not that picture's caption) | `OcrAnnotation` (`derivation="extracted"`) | The *only* annotation type Stage 5A ever produces. See "OCR-origin detection" below for exactly what evidence this relies on. |
+| `TextItem` whose parent is a `PictureItem` (and not that picture's caption) | `OcrAnnotation` (`derivation="extracted"`) + a matching `ProvenanceEntry` | The *only* annotation type Stage 5A ever produces. Since Stage 5A.1, every such `OcrAnnotation` also gets a `ProvenanceEntry` (`element_id` = the annotation's own `annotation_id`) whenever Docling supplies evidence — see "OCR-origin detection" below. |
 | Any other `DocItemLabel` (`DOCUMENT_INDEX`, `CHECKBOX_*`, `FORM`, `KEY_VALUE_REGION`, `GRADING_SCALE`, `HANDWRITTEN_TEXT`, `EMPTY_VALUE`, `REFERENCE`, `FIELD_*`, `MARKER`) | *(skipped)* | `unsupported_label` diagnostic. |
 
 No `ImageDescriptionAnnotation`, `VisualFactAnnotation`,
@@ -545,12 +549,19 @@ and the integration-level
 - **DOCX page-geometry fallback** — Docling exposes none; the adapter
   reads the real declared section size from the source file itself via
   `python-docx` (`adapter.py::_docx_page_fallback`), records a
-  `docling_page_geometry_unavailable` diagnostic every time, and never
-  fabricates a Letter/A4 default.
+  `docx_pagination_unavailable` diagnostic (`affects_fidelity=True`, see
+  D-037) every time, and never fabricates a Letter/A4 default. Every DOCX
+  conversion's `conversion_status` is therefore `"partial"`, never
+  `"success"` (Stage 5A.1).
 - **OCR-origin detection** — no per-item OCR confidence/source field
   exists in this Docling version; the mapper uses the one real structural
   signal available (a `TextItem` nested under a `PictureItem`) rather than
-  inferring OCR-origin from which fixture is being processed.
+  inferring OCR-origin from which fixture is being processed. Since Stage
+  5A.1, each resulting `OcrAnnotation` also gets a `ProvenanceEntry`
+  (bbox via `.prov` when available, `self_ref`, an `ocr_sequence`
+  disambiguating multiple OCR lines under one picture) — see D-038. OCR
+  text *ordering* within one picture remains unresolved: `ocr_sequence`
+  reflects `doc.texts` scan order, not verified visual reading order.
 - **Reading order is assigned in exactly one pass** — every element type
   (headings, paragraphs, list items, tables, pictures, captions) gets its
   `order_index` from a single walk over `iterate_items()`, never from a
@@ -564,17 +575,30 @@ and the integration-level
 
 ### Failure/partial handling
 
-`ConversionStatus` is `"success"` (fully valid document, nothing skipped
-for cause), `"partial"` (valid document, but diagnostics exist — an
-unsupported item, a missing-provenance element, etc.), or `"failed"` (no
-`CanonicalDocument` at all — Docling itself raised, Docling reported
-`FAILURE`, no usable unit geometry could be established, or the assembled
-document failed a frozen canonical invariant). A failed conversion never
-produces a fake or empty `CanonicalDocument` —
-`mapper.py::DoclingToCanonicalMapper.build()` catches the
-`pydantic.ValidationError` from final construction, records a
+`ConversionStatus` is `"success"` (fully valid document, no
+fidelity-affecting diagnostic), `"partial"` (valid document, but Docling
+reported `PARTIAL_SUCCESS` or at least one diagnostic has
+`affects_fidelity=True` — **never derived from diagnostic severity alone**,
+see D-037), or `"failed"` (no `CanonicalDocument` at all — Docling itself
+raised, Docling reported `FAILURE`, no usable unit geometry could be
+established, or the assembled document failed a frozen canonical
+invariant). A failed conversion never produces a fake or empty
+`CanonicalDocument` — `mapper.py::DoclingToCanonicalMapper.build()`
+catches the `pydantic.ValidationError` from final construction, records a
 `canonical_document_construction_failed` diagnostic, and returns `None`;
 `adapter.py` propagates that as `conversion_status="failed"`.
+`AdapterConversionResult` itself enforces the success/partial/failed ↔
+`canonical_document`/`extraction_run` presence invariant as a Pydantic
+`model_validator` (Stage 5A.1) — it is not just an adapter-code
+convention, a mismatched construction raises `ValidationError` directly.
+
+`AdapterDiagnostic.severity` (operational alarm level) and
+`AdapterDiagnostic.affects_fidelity` (whether source content/structure/
+provenance was actually lost or degraded) are deliberately independent
+axes — `DiagnosticCollector.has_fidelity_impact()` is what
+`conversion_status` derivation reads, never `has_errors()`/severity. See
+D-037 for the full rationale (the DOCX pagination diagnostic is the
+motivating example: `severity="info"`, but always `affects_fidelity=True`).
 
 ### Runner (`scripts/run_docling_standard.py`)
 
@@ -585,16 +609,86 @@ explicit `DocumentRevisionContext` (logical_document_id = the file's own
 stem — this is the runner's job, not the adapter's, per the Stage 5A
 scope boundary), chunks via the unmodified `chunk_document()`, writes
 `canonical_chunks.jsonl`, and writes a per-fixture `conversion_report.json`
-plus an aggregate `reports/stage5a_docling_standard_results.json`.
+(now including the full serialized `diagnostics` array and
+category/severity/`affects_fidelity` summary counts, Stage 5A.1) plus one
+in-memory `results` object from which `main()` writes **both**
+`reports/stage5a_docling_standard_results.json` **and**
+`reports/stage5a_docling_standard_baseline.md`
+(`render_baseline_markdown(results)`) — the same execution, never two
+separate runs, so the two files can never silently disagree (Stage 5A.1
+item 7). `_write_raw_debug_snapshot` returns a portable
+`"stage5a/docling_raw/<artifact_key>.json"` reference, never the absolute
+filesystem path it actually writes to — no absolute Windows path is ever
+persisted into a report.
 
 ### Real baseline results
 
-All 9 generated fixtures converted with `conversion_status="success"`;
+All 9 generated fixtures produce a valid `CanonicalDocument` — 7
+`conversion_status="success"`, 2 `conversion_status="partial"` (the two
+DOCX fixtures, per D-037's `docx_pagination_unavailable` diagnostic);
 determinism verified for all three parity formats (identical
 `stable_canonical_hash()` and chunk `content_sha256`/`chunk_id` across two
 runs). Full counts, timings, and every discovered Docling limitation:
 `reports/stage5a_docling_standard_baseline.md`. This is real, measured
 output — not aspirational.
+
+---
+
+## Stage 5A.1 — Evidence/provenance hardening patch `[IMPLEMENTED]`
+
+Same files as Stage 5A, patched in place — no new package, no new
+adapter, no Stage 5B/6 functionality. Adds `tests/test_adapters_base.py`
+and `tests/test_run_docling_standard_report.py`.
+
+1. **`affects_fidelity` axis** — `adapters/base.py::AdapterDiagnostic`
+   gained `affects_fidelity: bool = False`, independent of `severity`.
+   `conversion_status` derivation moved from
+   `has_errors() or bool(adapter_warnings)` to
+   `mapper.diagnostics.has_fidelity_impact()` (plus Docling's own
+   `PARTIAL_SUCCESS`) — see D-037.
+2. **DOCX category rename + partial status** — `mapper.py`'s
+   `docling_page_geometry_unavailable` diagnostic (recorded once per DOCX
+   conversion in `build_units`) is now `docx_pagination_unavailable`,
+   `affects_fidelity=True`. Every DOCX conversion is therefore `partial`.
+   No fake second page/unit is ever created — still exactly one
+   `CanonicalUnit` per DOCX document, per the frozen D-034 fallback.
+3. **Fidelity-accurate diagnostics throughout the mapper** — roughly a
+   dozen other call sites in `mapper.py` (missing geometry, missing
+   provenance, malformed bbox/table cell, missing picture bytes, reduced-
+   fidelity mapping, ambiguous caption relationship, unsupported label)
+   now pass `affects_fidelity=True`; `skipped_furniture` deliberately
+   stays `affects_fidelity=False` (furniture exclusion is intentional, not
+   a loss).
+4. **OCR annotation provenance** — `mapper.py::map_picture_ocr_child` now
+   also appends a `ProvenanceEntry` per `OcrAnnotation` (see D-038);
+   `map_document` tracks an `ocr_sequence_by_picture` counter so multiple
+   OCR lines under one picture get a distinguishing `ocr_sequence` in
+   `source_locator`.
+5. **`AdapterConversionResult` validation hardening** — `elapsed_ms`
+   constrained `>= 0`; `source_sha256` validated via the shared
+   `validate_sha256_hex` helper (`canonical/model.py`, imported, not
+   duplicated); `source_relative_path` validated by a locally-reimplemented
+   portable-path check (`adapters/base.py::_validate_portable_relative_path`
+   — reimplemented rather than reaching into `canonical.model`'s private
+   helper, since `canonical` is frozen and this package must not depend on
+   its non-public surface); a `model_validator` enforces
+   `conversion_status` ↔ `canonical_document`/`extraction_run` presence.
+6. **Portable, complete reports** — every `conversion_report.json` and the
+   aggregate JSON now include the full `diagnostics` array (not just
+   counts) and a `diagnostics_by_affects_fidelity` summary;
+   `_write_raw_debug_snapshot` returns a portable `"stage5a/docling_raw/..."`
+   reference instead of an absolute path.
+7. **Single-execution dual report generation** — `run_docling_standard.py::main()`
+   builds one `results` dict and passes it to both the JSON writer and
+   `render_baseline_markdown(results)`.
+8. **Tests** — `tests/test_adapters_base.py` (15, validation hardening);
+   `tests/test_run_docling_standard_report.py` (2, report consistency);
+   4 new tests in `test_docling_standard_integration.py` (DOCX partial
+   status with exactly one unit; parity-picture and chart OCR-annotation
+   provenance; scanned-PDF whole-page OCR stays a paragraph); 1 updated
+   test in `test_docling_standard_mapper.py` for the category rename.
+
+343 tests pass (up from 322 at Stage 5A) — see `reports/stage5a_pytest_output.txt`.
 
 ---
 

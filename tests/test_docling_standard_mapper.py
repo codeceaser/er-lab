@@ -389,7 +389,10 @@ def test_docx_page_fallback_produces_valid_unit_with_diagnostic():
     ok = mapper.build_units(doc)
     assert ok is True
     assert mapper._units[0].width == 612.0
-    assert any(d.category == "docling_page_geometry_unavailable" for d in mapper.diagnostics.diagnostics)
+    fallback_diagnostics = [d for d in mapper.diagnostics.diagnostics if d.category == "docx_pagination_unavailable"]
+    assert len(fallback_diagnostics) == 1
+    assert fallback_diagnostics[0].affects_fidelity is True
+    assert mapper.diagnostics.has_fidelity_impact() is True
 
 
 def test_no_usable_geometry_at_all_fails_without_fabricating_a_unit():
