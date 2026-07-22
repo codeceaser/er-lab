@@ -21,8 +21,27 @@
     "enable_remote_services": false,
     "accelerator_device": "cpu"
   },
+  "environment_evidence": {
+    "python_version": "3.13.9",
+    "os_platform": "Windows-11-10.0.26200-SP0",
+    "docling_version": "2.114.0",
+    "docling_core_version": "2.87.1",
+    "torch_version": "2.13.0",
+    "torchvision_version": "0.28.0",
+    "onnxruntime_version": "1.27.0",
+    "rapidocr_version": "3.9.2",
+    "cuda_available": false,
+    "effective_accelerator_device": "cpu",
+    "external_hf_cache_configured": false,
+    "redacted_hf_cache_location": null,
+    "downloaded_model_families": [
+      "docling-project/docling-layout-heron",
+      "docling-project/docling-models"
+    ],
+    "approx_model_storage_footprint_mb": 505
+  },
   "total_fixtures": 9,
-  "total_elapsed_seconds": 27.71,
+  "total_elapsed_seconds": 27.16,
   "status_counts": {
     "partial": 2,
     "success": 7
@@ -38,9 +57,30 @@
     "non_fidelity_affecting": 0
   },
   "determinism_results": {
-    "parity/PARITY_001.docx": true,
-    "parity/PARITY_001.pdf": true,
-    "parity/PARITY_001.pptx": true
+    "parity/PARITY_001.docx": {
+      "canonical_json_equal": true,
+      "canonical_hash_equal": true,
+      "chunk_json_equal": true,
+      "chunk_ids_equal": true,
+      "chunk_content_hashes_equal": true,
+      "all_equal": true
+    },
+    "parity/PARITY_001.pdf": {
+      "canonical_json_equal": true,
+      "canonical_hash_equal": true,
+      "chunk_json_equal": true,
+      "chunk_ids_equal": true,
+      "chunk_content_hashes_equal": true,
+      "all_equal": true
+    },
+    "parity/PARITY_001.pptx": {
+      "canonical_json_equal": true,
+      "canonical_hash_equal": true,
+      "chunk_json_equal": true,
+      "chunk_ids_equal": true,
+      "chunk_content_hashes_equal": true,
+      "all_equal": true
+    }
   },
   "fixtures": [
     {
@@ -50,7 +90,7 @@
       "source_byte_size": 41435,
       "source_sha256": "80cc4eed35d88b2436469ceca4aa876104a1a31eb8ea5e283c3659db1c2305ee",
       "conversion_status": "partial",
-      "elapsed_ms": 236.9,
+      "elapsed_ms": 416.7,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],
@@ -98,7 +138,7 @@
       "source_byte_size": 9669,
       "source_sha256": "cd3c7994aacc452a685f0a0c136469fc422c13af4e948c01eff65e45cc38062c",
       "conversion_status": "success",
-      "elapsed_ms": 12091.8,
+      "elapsed_ms": 11320.8,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],
@@ -137,7 +177,7 @@
       "source_byte_size": 34134,
       "source_sha256": "7c6cbe02d2bfbff9c3b6812c0c0899a10fa8ba714453d132bb4050265905f891",
       "conversion_status": "success",
-      "elapsed_ms": 68.5,
+      "elapsed_ms": 59.8,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],
@@ -172,7 +212,7 @@
       "source_byte_size": 11054,
       "source_sha256": "3d0ac472e69b0d682d28d5753af02fd34b8fe47b8ce8566deaf0780d8e2dd227",
       "conversion_status": "success",
-      "elapsed_ms": 3828.1,
+      "elapsed_ms": 4052.5,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],
@@ -211,7 +251,7 @@
       "source_byte_size": 36754,
       "source_sha256": "49463e90a492ceb7a436da2659beea33e7c050b82390e1e11fa691c2f0deecca",
       "conversion_status": "partial",
-      "elapsed_ms": 125.2,
+      "elapsed_ms": 113.8,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],
@@ -259,7 +299,7 @@
       "source_byte_size": 2370,
       "source_sha256": "edc3b7fb33713e15d8b77f7744e662ad4dfabc3aed8ce28d5d02aa4101aac0e1",
       "conversion_status": "success",
-      "elapsed_ms": 4040.3,
+      "elapsed_ms": 4345.8,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],
@@ -294,7 +334,7 @@
       "source_byte_size": 28650,
       "source_sha256": "e07e6144b0eccc9f053297d924fcc5ce8256806deaba9d346b8fee71a51f4c4b",
       "conversion_status": "success",
-      "elapsed_ms": 22.0,
+      "elapsed_ms": 27.9,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],
@@ -329,7 +369,7 @@
       "source_byte_size": 28557,
       "source_sha256": "50e43e03c5cdb15ee710f88e9cfccc8c9844e6d02575930e00a68c28fb42166b",
       "conversion_status": "success",
-      "elapsed_ms": 24.1,
+      "elapsed_ms": 19.4,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],
@@ -364,7 +404,7 @@
       "source_byte_size": 10980,
       "source_sha256": "48870eb987fe9157cfb92c72de102e34425360226999ad7fc4a45d99c07d1c26",
       "conversion_status": "success",
-      "elapsed_ms": 7154.0,
+      "elapsed_ms": 6684.1,
       "docling_version": "2.114.0",
       "docling_core_version": "2.87.1",
       "errors": [],

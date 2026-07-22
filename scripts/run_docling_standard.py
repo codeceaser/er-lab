@@ -27,7 +27,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "fixtures"))
 
-from ingestion_bench.adapters.docling_standard import DoclingStandardAdapter, config  # noqa: E402
+from ingestion_bench.adapters.docling_standard import DoclingStandardAdapter, config, environment  # noqa: E402
 from ingestion_bench.chunking import ChunkingConfig, DocumentRevisionContext, chunk_document, compute_document_revision_id  # noqa: E402
 
 FIXTURES_ROOT = REPO_ROOT / "fixtures" / "generated"
@@ -43,6 +43,19 @@ def discover_fixtures() -> list[Path]:
         paths.extend(sorted((FIXTURES_ROOT / "parity").glob(pattern)))
         paths.extend(sorted((FIXTURES_ROOT / "stress").glob(pattern)))
     return sorted(paths)
+
+
+def _chunk_document(document, doc_id: str) -> list:
+    """Shared by process_fixture (report/artifact generation) and
+    run_determinism_check (Stage 5A.2) so both build chunks the exact same
+    way -- a real revision context, the unmodified frozen chunk_document(),
+    never two different code paths that could silently diverge."""
+    revision_context = DocumentRevisionContext(
+        logical_document_id=doc_id,
+        document_revision_id=compute_document_revision_id(doc_id, document.source_sha256),
+        source_document_sha256=document.source_sha256,
+    )
+    return chunk_document(document, ChunkingConfig(), revision_context=revision_context)
 
 
 def _annotation_counts(document) -> dict:
@@ -122,12 +135,7 @@ def process_fixture(adapter: DoclingStandardAdapter, source_path: Path) -> dict:
     chunks = []
     chunk_error = None
     try:
-        revision_context = DocumentRevisionContext(
-            logical_document_id=doc_id,
-            document_revision_id=compute_document_revision_id(doc_id, document.source_sha256),
-            source_document_sha256=document.source_sha256,
-        )
-        chunks = chunk_document(document, ChunkingConfig(), revision_context=revision_context)
+        chunks = _chunk_document(document, doc_id)
     except Exception as exc:  # a chunking failure is itself a reportable Stage 5A result, never silently swallowed
         chunk_error = repr(exc)
 
@@ -179,14 +187,55 @@ def _count_by_affects_fidelity_dicts(diagnostics: list[dict]) -> dict[str, int]:
     return counts
 
 
-def run_determinism_check(adapter: DoclingStandardAdapter, source_path: Path) -> bool:
+def run_determinism_check(adapter: DoclingStandardAdapter, source_path: Path) -> dict:
+    """Stage 5A.2 item 2: "conversion is deterministic" is a claim about
+    the FULL output, not just one hash -- converts the same file twice and
+    compares everything the claim implies: the full serialized
+    CanonicalDocument, the stable canonical hash, the full serialized
+    CanonicalChunk list, the ordered chunk_ids, and the ordered
+    content_sha256 values. Returns a structured dict (never a collapsed
+    single boolean) so a report reader can see exactly which comparison,
+    if any, actually failed -- never claims a comparison was performed
+    that this function did not actually run."""
     from ingestion_bench.canonical.hashing import stable_canonical_hash
 
+    doc_id = source_path.stem
     result_a = adapter.convert(source_path, source_root=FIXTURES_ROOT)
     result_b = adapter.convert(source_path, source_root=FIXTURES_ROOT)
-    if result_a.canonical_document is None or result_b.canonical_document is None:
-        return False
-    return stable_canonical_hash(result_a.canonical_document) == stable_canonical_hash(result_b.canonical_document)
+
+    document_a, document_b = result_a.canonical_document, result_b.canonical_document
+    if document_a is None or document_b is None:
+        return {
+            "canonical_json_equal": False,
+            "canonical_hash_equal": False,
+            "chunk_json_equal": False,
+            "chunk_ids_equal": False,
+            "chunk_content_hashes_equal": False,
+            "all_equal": False,
+        }
+
+    canonical_json_equal = document_a.model_dump_json() == document_b.model_dump_json()
+    canonical_hash_equal = stable_canonical_hash(document_a) == stable_canonical_hash(document_b)
+
+    chunks_a = _chunk_document(document_a, doc_id)
+    chunks_b = _chunk_document(document_b, doc_id)
+    chunk_json_equal = [c.model_dump_json() for c in chunks_a] == [c.model_dump_json() for c in chunks_b]
+    chunk_ids_equal = [c.chunk_id for c in chunks_a] == [c.chunk_id for c in chunks_b]
+    chunk_content_hashes_equal = [c.content_sha256 for c in chunks_a] == [c.content_sha256 for c in chunks_b]
+
+    all_equal = all([
+        canonical_json_equal, canonical_hash_equal,
+        chunk_json_equal, chunk_ids_equal, chunk_content_hashes_equal,
+    ])
+
+    return {
+        "canonical_json_equal": canonical_json_equal,
+        "canonical_hash_equal": canonical_hash_equal,
+        "chunk_json_equal": chunk_json_equal,
+        "chunk_ids_equal": chunk_ids_equal,
+        "chunk_content_hashes_equal": chunk_content_hashes_equal,
+        "all_equal": all_equal,
+    }
 
 
 def render_baseline_markdown(results: dict) -> str:
@@ -213,7 +262,23 @@ def render_baseline_markdown(results: dict) -> str:
     category_lines = "\n".join(f"| `{cat}` | {count} |" for cat, count in sorted(results["diagnostics_by_category"].items())) or "| (none) | 0 |"
     severity_lines = "\n".join(f"| `{sev}` | {count} |" for sev, count in sorted(results["diagnostics_by_severity"].items())) or "| (none) | 0 |"
     fidelity = results["diagnostics_by_affects_fidelity"]
-    determinism_lines = "\n".join(f"| {fixture} | {'**Yes**' if ok else '**NO**'} |" for fixture, ok in results["determinism_results"].items())
+
+    def _mark(value: bool) -> str:
+        return "**Yes**" if value else "**NO**"
+
+    determinism_rows = []
+    for fixture, d in results["determinism_results"].items():
+        determinism_rows.append(
+            f"| {fixture} | {_mark(d['canonical_json_equal'])} | {_mark(d['canonical_hash_equal'])} | "
+            f"{_mark(d['chunk_json_equal'])} | {_mark(d['chunk_ids_equal'])} | "
+            f"{_mark(d['chunk_content_hashes_equal'])} | {_mark(d['all_equal'])} |"
+        )
+    determinism_lines = "\n".join(determinism_rows)
+
+    env = results["environment_evidence"]
+    model_families_line = ", ".join(f"`{r}`" for r in env["downloaded_model_families"]) or "(none discovered)"
+    footprint_line = f"~{env['approx_model_storage_footprint_mb']} MB" if env["approx_model_storage_footprint_mb"] is not None else "unknown (no cache discovered)"
+    cache_location_line = env["redacted_hf_cache_location"] or "(default cache location, not redirected)"
 
     return f"""# Stage 5A — DOCLING_STANDARD_LOCAL Baseline Report
 
@@ -246,11 +311,25 @@ documented loss of source pagination structure, not a bug.
 
 ## 1. Environment
 
+Collected by `environment.py::collect_environment_evidence()` on this run
+-- never an absolute filesystem path (Stage 5A.2 item 3).
+
 | Item | Value |
 |---|---|
-| `docling` | {results["docling_version"]} |
-| `docling-core` | {results["docling_core_version"]} |
-| Accelerator device used | `{results["effective_configuration"]["accelerator_device"]}` |
+| Python | {env["python_version"]} |
+| OS/platform | {env["os_platform"]} |
+| `docling` | {env["docling_version"]} |
+| `docling-core` | {env["docling_core_version"]} |
+| `torch` | {env["torch_version"]} |
+| `torchvision` | {env["torchvision_version"]} |
+| `onnxruntime` | {env["onnxruntime_version"]} |
+| `rapidocr` | {env["rapidocr_version"]} |
+| CUDA available | {env["cuda_available"]} |
+| Effective accelerator | `{env["effective_accelerator_device"]}` |
+| External Hugging Face cache configured | {env["external_hf_cache_configured"]} |
+| Redacted cache location | {cache_location_line} |
+| Downloaded Docling model families | {model_families_line} |
+| Approximate model storage footprint | {footprint_line} |
 | All document conversion | 100% local -- `enable_remote_services={results["effective_configuration"]["enable_remote_services"]}` |
 
 ## 2. Effective pipeline configuration
@@ -281,12 +360,12 @@ run (one shared `DocumentConverter`, models loaded once):
 
 ## 4. Determinism results
 
-Each parity format was converted twice; canonical document hash, full
-serialized `CanonicalDocument`, and every `CanonicalChunk`'s
-`chunk_id`/`content_sha256` were compared:
+Each parity format was converted twice; five independent comparisons are
+run and reported separately (Stage 5A.2 item 2 -- never collapsed into one
+claim unless every comparison actually passed):
 
-| Fixture | Identical across two runs |
-|---|---|
+| Fixture | Canonical JSON equal | Canonical hash equal | Chunk JSON equal | Chunk IDs equal | Chunk content hashes equal | All equal |
+|---|---|---|---|---|---|---|
 {determinism_lines}
 
 No nondeterministic Docling parser metadata (timings, etc.) leaked into
@@ -409,6 +488,7 @@ def main() -> None:
         "docling_version": fixture_reports[0]["docling_version"] if fixture_reports else None,
         "docling_core_version": fixture_reports[0]["docling_core_version"] if fixture_reports else None,
         "effective_configuration": config.effective_configuration_summary(),
+        "environment_evidence": environment.collect_environment_evidence(),
         "total_fixtures": len(fixture_reports),
         "total_elapsed_seconds": round(total_elapsed_s, 2),
         "status_counts": _count_values(fixture_reports, "conversion_status"),

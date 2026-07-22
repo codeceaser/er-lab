@@ -80,6 +80,49 @@ def test_partial_status_accepts_both_present():
     assert result.conversion_status == "partial"
 
 
+def test_success_status_rejects_a_fidelity_affecting_diagnostic():
+    """Stage 5A.2 item 1: "success" is a claim that nothing was lost or
+    degraded -- a diagnostic with affects_fidelity=True directly
+    contradicts that claim and must be rejected at construction, not left
+    for a caller to notice."""
+    fidelity_affecting = AdapterDiagnostic(category="docx_pagination_unavailable", severity="info", message="m", affects_fidelity=True)
+    with pytest.raises(ValidationError):
+        AdapterConversionResult(**_base_kwargs(
+            conversion_status="success", canonical_document=_valid_document(), extraction_run=_valid_extraction_run(),
+            diagnostics=[fidelity_affecting],
+        ))
+
+
+def test_success_status_accepts_a_non_fidelity_affecting_diagnostic():
+    non_fidelity_affecting = AdapterDiagnostic(category="skipped_furniture", severity="info", message="m", affects_fidelity=False)
+    result = AdapterConversionResult(**_base_kwargs(
+        conversion_status="success", canonical_document=_valid_document(), extraction_run=_valid_extraction_run(),
+        diagnostics=[non_fidelity_affecting],
+    ))
+    assert result.conversion_status == "success"
+
+
+def test_partial_status_valid_with_no_diagnostics_at_all():
+    """A parser can independently report PARTIAL_SUCCESS with no
+    adapter-level diagnostic recorded at all -- "partial" must remain
+    valid in that case, not require at least one diagnostic."""
+    result = AdapterConversionResult(**_base_kwargs(
+        conversion_status="partial", canonical_document=_valid_document(), extraction_run=_valid_extraction_run(),
+        diagnostics=[],
+    ))
+    assert result.conversion_status == "partial"
+    assert result.diagnostics == []
+
+
+def test_partial_status_valid_with_a_fidelity_affecting_diagnostic():
+    fidelity_affecting = AdapterDiagnostic(category="docx_pagination_unavailable", severity="info", message="m", affects_fidelity=True)
+    result = AdapterConversionResult(**_base_kwargs(
+        conversion_status="partial", canonical_document=_valid_document(), extraction_run=_valid_extraction_run(),
+        diagnostics=[fidelity_affecting],
+    ))
+    assert result.conversion_status == "partial"
+
+
 def test_elapsed_ms_must_be_nonnegative():
     with pytest.raises(ValidationError):
         AdapterConversionResult(**_base_kwargs(elapsed_ms=-0.1))

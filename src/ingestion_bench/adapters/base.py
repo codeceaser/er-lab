@@ -130,6 +130,25 @@ class AdapterConversionResult(BaseModel):
                 )
         return self
 
+    @model_validator(mode="after")
+    def _validate_success_has_no_fidelity_affecting_diagnostic(self) -> AdapterConversionResult:
+        """Stage 5A.2: conversion_status="success" is a claim that nothing
+        was lost or degraded -- it must be contradicted by construction if
+        any diagnostic disagrees. "partial" carries no such requirement in
+        either direction: it may have zero fidelity-affecting diagnostics
+        (the underlying parser can independently report PARTIAL_SUCCESS
+        with no adapter-level diagnostic at all) and it may have one or
+        more."""
+        if self.conversion_status == "success":
+            fidelity_affecting = [d for d in self.diagnostics if d.affects_fidelity]
+            if fidelity_affecting:
+                raise ValueError(
+                    "conversion_status='success' is inconsistent with "
+                    f"{len(fidelity_affecting)} diagnostic(s) having affects_fidelity=True: "
+                    f"{[d.category for d in fidelity_affecting]!r}"
+                )
+        return self
+
 
 class DocumentParserAdapter(Protocol):
     """Every parser adapter implements exactly this. source_root is used

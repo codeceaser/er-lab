@@ -110,3 +110,31 @@ def test_deterministic_conversion_same_canonical_document_hash(adapter, parity_p
     path = FIXTURES_ROOT / "parity" / "PARITY_001.pdf"
     result_b = adapter.convert(path, source_root=FIXTURES_ROOT)
     assert stable_canonical_hash(parity_pdf_result.canonical_document) == stable_canonical_hash(result_b.canonical_document)
+
+
+def test_environment_evidence_never_contains_an_absolute_path():
+    """Stage 5A.2 item 3: environment.collect_environment_evidence() must
+    restore version/footprint evidence without ever exposing the user's
+    absolute filesystem paths."""
+    from ingestion_bench.adapters.docling_standard import environment
+
+    evidence = environment.collect_environment_evidence()
+    serialized = str(evidence)
+    assert "C:\\" not in serialized
+    assert str(Path.home()) not in serialized
+
+
+def test_environment_evidence_has_expected_shape():
+    from ingestion_bench.adapters.docling_standard import environment
+
+    evidence = environment.collect_environment_evidence()
+    assert evidence["docling_version"]
+    assert evidence["docling_core_version"]
+    assert evidence["python_version"]
+    assert evidence["os_platform"]
+    assert isinstance(evidence["cuda_available"], bool)
+    assert isinstance(evidence["external_hf_cache_configured"], bool)
+    assert isinstance(evidence["downloaded_model_families"], list)
+    if evidence["redacted_hf_cache_location"] is not None:
+        assert "(redirected, path redacted)" in evidence["redacted_hf_cache_location"]
+        assert evidence["redacted_hf_cache_location"].count("\\") <= 1

@@ -29,11 +29,25 @@ documented loss of source pagination structure, not a bug.
 
 ## 1. Environment
 
+Collected by `environment.py::collect_environment_evidence()` on this run
+-- never an absolute filesystem path (Stage 5A.2 item 3).
+
 | Item | Value |
 |---|---|
+| Python | 3.13.9 |
+| OS/platform | Windows-11-10.0.26200-SP0 |
 | `docling` | 2.114.0 |
 | `docling-core` | 2.87.1 |
-| Accelerator device used | `AcceleratorDevice.CPU` |
+| `torch` | 2.13.0 |
+| `torchvision` | 0.28.0 |
+| `onnxruntime` | 1.27.0 |
+| `rapidocr` | 3.9.2 |
+| CUDA available | False |
+| Effective accelerator | `cpu` |
+| External Hugging Face cache configured | False |
+| Redacted cache location | (default cache location, not redirected) |
+| Downloaded Docling model families | `docling-project/docling-layout-heron`, `docling-project/docling-models` |
+| Approximate model storage footprint | ~505 MB |
 | All document conversion | 100% local -- `enable_remote_services=False` |
 
 ## 2. Effective pipeline configuration
@@ -72,15 +86,15 @@ All counts below are read directly from this run's `results["fixtures"]`
 
 | Fixture | Status | Elapsed | Units | Headings | Paragraphs | List items | Tables | Table cells | Pictures | Captions | Annotations | Provenance | Chunks | Textual chunks | Asset-only chunks |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| parity/PARITY_001.docx | partial | 236.9ms | 1 | 3 | 11 | 0 | 1 | 8 | 1 | 0 | 0 | 16 | 5 | 3 | 1 |
-| parity/PARITY_001.pdf | success | 12091.8ms | 2 | 3 | 7 | 0 | 1 | 8 | 1 | 1 | 3 | 16 | 3 | 1 | 0 |
-| parity/PARITY_001.pptx | success | 68.5ms | 2 | 0 | 11 | 0 | 1 | 8 | 1 | 0 | 0 | 13 | 5 | 3 | 1 |
-| stress/STRESS_CHART_001.pdf | success | 3828.1ms | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 9 | 10 | 1 | 0 | 0 |
-| stress/STRESS_DOCX_001.docx | partial | 125.2ms | 1 | 3 | 0 | 5 | 0 | 0 | 0 | 0 | 0 | 8 | 1 | 1 | 0 |
-| stress/STRESS_PDF_001.pdf | success | 4040.3ms | 1 | 0 | 2 | 0 | 1 | 7 | 0 | 0 | 0 | 3 | 2 | 1 | 0 |
-| stress/STRESS_PPTX_001.pptx | success | 22.0ms | 1 | 0 | 2 | 0 | 1 | 4 | 0 | 0 | 0 | 3 | 2 | 1 | 0 |
-| stress/STRESS_PPTX_002.pptx | success | 24.1ms | 1 | 0 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 1 | 1 | 0 |
-| stress/STRESS_SCANNED_001.pdf | success | 7154.0ms | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 0 |
+| parity/PARITY_001.docx | partial | 416.7ms | 1 | 3 | 11 | 0 | 1 | 8 | 1 | 0 | 0 | 16 | 5 | 3 | 1 |
+| parity/PARITY_001.pdf | success | 11320.8ms | 2 | 3 | 7 | 0 | 1 | 8 | 1 | 1 | 3 | 16 | 3 | 1 | 0 |
+| parity/PARITY_001.pptx | success | 59.8ms | 2 | 0 | 11 | 0 | 1 | 8 | 1 | 0 | 0 | 13 | 5 | 3 | 1 |
+| stress/STRESS_CHART_001.pdf | success | 4052.5ms | 1 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 9 | 10 | 1 | 0 | 0 |
+| stress/STRESS_DOCX_001.docx | partial | 113.8ms | 1 | 3 | 0 | 5 | 0 | 0 | 0 | 0 | 0 | 8 | 1 | 1 | 0 |
+| stress/STRESS_PDF_001.pdf | success | 4345.8ms | 1 | 0 | 2 | 0 | 1 | 7 | 0 | 0 | 0 | 3 | 2 | 1 | 0 |
+| stress/STRESS_PPTX_001.pptx | success | 27.9ms | 1 | 0 | 2 | 0 | 1 | 4 | 0 | 0 | 0 | 3 | 2 | 1 | 0 |
+| stress/STRESS_PPTX_002.pptx | success | 19.4ms | 1 | 0 | 3 | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 1 | 1 | 0 |
+| stress/STRESS_SCANNED_001.pdf | success | 6684.1ms | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 0 |
 
 Status totals across all 9 fixtures this run:
 - `partial`: 2
@@ -88,19 +102,19 @@ Status totals across all 9 fixtures this run:
 
 Total wall-clock for all 9 fixtures in one batch
 run (one shared `DocumentConverter`, models loaded once):
-**27.71 seconds.**
+**27.16 seconds.**
 
 ## 4. Determinism results
 
-Each parity format was converted twice; canonical document hash, full
-serialized `CanonicalDocument`, and every `CanonicalChunk`'s
-`chunk_id`/`content_sha256` were compared:
+Each parity format was converted twice; five independent comparisons are
+run and reported separately (Stage 5A.2 item 2 -- never collapsed into one
+claim unless every comparison actually passed):
 
-| Fixture | Identical across two runs |
-|---|---|
-| parity/PARITY_001.docx | **Yes** |
-| parity/PARITY_001.pdf | **Yes** |
-| parity/PARITY_001.pptx | **Yes** |
+| Fixture | Canonical JSON equal | Canonical hash equal | Chunk JSON equal | Chunk IDs equal | Chunk content hashes equal | All equal |
+|---|---|---|---|---|---|---|
+| parity/PARITY_001.docx | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| parity/PARITY_001.pdf | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| parity/PARITY_001.pptx | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
 
 No nondeterministic Docling parser metadata (timings, etc.) leaked into
 canonical identity -- `ExtractionRun.elapsed_seconds`/`generated_at` are
