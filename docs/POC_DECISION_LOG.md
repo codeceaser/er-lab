@@ -1179,6 +1179,11 @@ Identifier-offset routing is exact only when the split element has no
 *other* extracted-derivation annotation text appended ahead of it —
 documented as a known scope limit, not yet exercised by any fixture.
 
+**Resolved by D-031 (Stage 4.2a):** this scope limit is closed —
+`split_oversized_text` no longer runs against text that could have
+anything appended ahead of it, because it now runs against the canonical
+element's own text exclusively.
+
 ### Implementation and evidence
 `chunking/model.py::TextFragment`, `ChunkSourceRef.fragment_index`/
 `start_char`/`end_char`; `chunking/chunker.py::split_oversized_text`,
@@ -1266,3 +1271,66 @@ None.
 `chunking/renderers.py::render_table_text`;
 `tests/test_chunking.py::test_sparse_table_renders_explicit_row_col_for_missing_cells`,
 `test_table_rendering_always_includes_header_and_span_defaults`.
+
+---
+
+## D-031 — Split against the canonical element's own text, never combined rendered text
+
+**Status:** Accepted
+**Stage:** Stage 4.2a
+**Date/commit:** `47fad5f`
+
+### Problem
+Stage 4.2's `split_oversized_text()` operated on
+`_RenderedElement.source_text`, which combines the canonical element's own
+text with a list item's display prefix (`"  - "`) and any extracted-
+annotation rendering appended via `"\n"`. This put fragment
+`start_char`/`end_char` in a different coordinate space than
+`IdentifierAnnotation.start_char`/`end_char`, which
+`fixtures/BENCHMARK_CONTRACT.md` section 6 defines as offsets "within the
+source block's text" — i.e. the canonical `paragraph.text`/`list_item.text`
+itself. This was flagged as a known scope limit when D-028 was accepted.
+
+### Alternatives considered
+(a) Leave splitting against the combined `source_text` and document the
+coordinate-space mismatch as a permanent limitation. (b) Split against the
+canonical element's own raw text only, decoupling the list-item display
+prefix and the element's own extracted-annotation rendering so both are
+applied strictly after splitting, never before it.
+
+### Decision
+(b).
+
+### Rationale
+Identifier-offset semantics are only meaningful if fragment spans and
+annotation offsets share one coordinate space. (a) would have left a
+permanent, silent misattribution risk for exactly the combination of
+features (an oversized list item, or an oversized paragraph carrying an
+extracted annotation) that D-028's fragment-level provenance was meant to
+support correctly.
+
+### Trade-offs and consequences
+Display-only concerns (list indentation/`"- "`, the element's own
+extracted-annotation text) are now applied *after* splitting via a new
+`_RenderedElement.fragment_display_prefix` field and by reusing
+`extra_source_text` at emission time — a small amount of additional
+plumbing in `chunker.py`'s oversized-split branch.
+`ChunkSourceRef`/`TextFragment` both gained stricter validation (three-way
+all-or-nothing fragment provenance; text/span length equality) as a direct
+consequence of making span semantics load-bearing. `CHUNKER_VERSION`
+bumped `1.1.0 -> 1.2.0` (a splitting/rendering rule change), which changes
+every `chunk_id` in a corpus on the next run, split or not — see the
+worked example note in `docs/IMPLEMENTATION_WALKTHROUGH.md`.
+
+### Deferred questions or reconsideration trigger
+None open — this closes the scope limit noted in D-028.
+
+### Implementation and evidence
+`chunking/chunker.py` (oversized-split branch; `_RenderedElement.raw_text`/
+`fragment_display_prefix`); `chunking/renderers.py::render_list_item_prefix`;
+`chunking/model.py::ChunkSourceRef._validate_fragment_provenance`,
+`TextFragment._validate_span`;
+`tests/test_chunking.py::test_annotation_rendering_does_not_affect_fragment_spans`,
+`test_fragment_spans_reconstruct_original_list_item_text_exactly`,
+`test_oversized_list_item_identifier_routed_to_later_fragment_despite_prefix`,
+`test_oversized_paragraph_with_extracted_annotation_splits_correctly`.

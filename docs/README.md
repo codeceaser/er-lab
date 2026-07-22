@@ -12,9 +12,9 @@ the two are not wired together.
 
 ## Current stage
 
-**Stage 4.2 complete** (commit `c0cf2c3` on `main`): canonical document
+**Stage 4.2a complete** (commit `47fad5f` on `main`): canonical document
 model, deterministic benchmark fixtures, and deterministic canonical
-chunking are implemented and tested (244 tests passing). **Stage 5 (the
+chunking are implemented and tested (256 tests passing). **Stage 5 (the
 first parser adapter) has not started.** See `POC_STATUS_AND_EVIDENCE.md`
 for the authoritative, up-to-date status.
 
@@ -50,7 +50,7 @@ stage reports):
 
 This runs all four test files (`test_canonical_schema.py`,
 `test_canonical_hashing.py`, `test_fixture_generation.py`,
-`test_chunking.py`) — 244 tests as of Stage 4.2. It does **not** exercise
+`test_chunking.py`) — 256 tests as of Stage 4.2a. It does **not** exercise
 any parser adapter, embedding, retrieval, or evaluator code, because none
 of that exists yet.
 

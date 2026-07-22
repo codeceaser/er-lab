@@ -211,17 +211,17 @@ rendering of the manifest, nothing about extraction quality.
 
 ---
 
-## Stage 4 / 4.1 / 4.2 — Canonical chunking `[IMPLEMENTED]`
+## Stage 4 / 4.1 / 4.2 / 4.2a — Canonical chunking `[IMPLEMENTED]`
 
 **Files:** `src/ingestion_bench/chunking/model.py`, `chunker.py`,
-`renderers.py`, `__init__.py`; `tests/test_chunking.py` (98 tests)
+`renderers.py`, `__init__.py`; `tests/test_chunking.py` (110 tests)
 
 ### `chunking/model.py`
 
 | Symbol | Purpose | Key invariants |
 |---|---|---|
-| `TextFragment` | One exact, lossless slice of a split oversized element's text: `text`, `fragment_index`, `start_char`, `end_char`. | `start_char <= end_char`; concatenating fragments in order reproduces the source text exactly. |
-| `ChunkSourceRef` | Points at exactly one contributing canonical element (or one fragment of one). | `unit_index >= 0`; `order_index` `None` or `>= 0`; `element_type` is a closed `Literal`; `fragment_index`/`start_char`/`end_char` all-or-nothing-populated, span valid. |
+| `TextFragment` | One exact, lossless slice of a split oversized element's *canonical* text (`CanonicalParagraph.text`/`CanonicalListItem.text` — never a rendered/prefixed/annotation-appended form, Stage 4.2a): `text`, `fragment_index`, `start_char`, `end_char`. | `start_char <= end_char`; `len(text) == end_char - start_char` (Stage 4.2a); concatenating fragments in order reproduces the source text exactly. |
+| `ChunkSourceRef` | Points at exactly one contributing canonical element (or one fragment of one). | `unit_index >= 0`; `order_index` `None` or `>= 0`; `element_type` is a closed `Literal`; `fragment_index`/`start_char`/`end_char` must be all `None` or all populated together (three-way check, strengthened Stage 4.2a — previously only `start_char`/`end_char` were paired), span valid. |
 | `ChunkAssetRef` | Retains a picture's stored-artifact identity on its chunk even with no textual annotation. | `content_sha256` validated as lowercase 64-char hex. |
 | `compute_document_revision_id(...)` | Deterministic SHA-256 over `logical_document_id` + `source_document_sha256` + normalized `version_label` + `revision_number`. | Pure function; normalization shared with the stored field via `_normalize_version_label`. |
 | `DocumentRevisionContext` | Explicit revision identity supplied to `chunk_document()`. | `document_revision_id` re-derived and checked equal at construction (never freely chosen); `version_label` stored in normalized form, rejected if empty-after-strip; `logical_document_id` rejected if empty-after-strip. |
@@ -242,7 +242,7 @@ construction — there is no partially-valid `CanonicalChunk`.
 
 | Function | Purpose | Input → Output |
 |---|---|---|
-| `split_oversized_text(text, max_chars)` | Deterministic, lossless split of one oversized element's text: sentence boundaries first, falling back to word boundaries within an oversized sentence, never mid-word. | `(str, int) -> list[TextFragment]` |
+| `split_oversized_text(text, max_chars)` | Deterministic, lossless split of one oversized element's own canonical text: sentence boundaries first, falling back to word boundaries within an oversized sentence, never mid-word. Callers must pass the canonical element's own text (`raw_text`) — never a rendered/prefixed/annotation-appended string (Stage 4.2a). | `(str, int) -> list[TextFragment]` |
 | `_pack_boundary_spans(text, start, end, boundary_re, max_chars)` | Greedy span packer shared by the sentence and word passes; returns contiguous, non-overlapping `[start, end)` spans. | Internal helper. |
 | `_build_ordered_elements(document)` | Produces the single reading-order sequence of headings/paragraphs/list items/tables/pictures, sorted by `(unit_index, order_index, type-rank, stable id)` — captions are deliberately excluded (pulled in only via their target picture). | `CanonicalDocument -> list[_RenderedElement]` |
 | `_render_annotations_for_element(annotations_by_target, element_id)` | Routes an element's annotations into extracted text / model-derived text / annotation-id list, by each annotation's own `derivation` field. `IdentifierAnnotation` is never rendered as text. | Internal helper. |
@@ -278,13 +278,25 @@ a chunk with empty `source_text`, empty `model_derived_text`, and empty
    `max_chars`, flushed on a unit-boundary crossing (unless
    `cross_unit_boundaries=True`) or when the next element would exceed
    `max_chars`.
-4. **Oversized-element splitting** — `split_oversized_text` produces
+4. **Oversized-element splitting** — `split_oversized_text` runs against
+   `_RenderedElement.raw_text` — the canonical `paragraph.text`/
+   `item.text` alone, never the combined `source_text` that includes a
+   list item's `"  - "` display prefix or the element's own extracted-
+   annotation rendering (Stage 4.2a; previously Stage 4/4.1/4.2 split
+   against `source_text`, which put fragment offsets in the wrong
+   coordinate space whenever either of those was present). It produces
    `TextFragment`s; each becomes its own chunk carrying a `ChunkSourceRef`
    stamped with that fragment's own `fragment_index`/`start_char`/
    `end_char` (via `ChunkSourceRef.model_copy(update=...)`). A positioned
-   `IdentifierAnnotation` is routed to every fragment whose span contains
-   or overlaps it; other (unpositioned) annotations on the element default
-   to fragment 0 only.
+   `IdentifierAnnotation` — whose offsets are defined against the
+   canonical element's own text — is routed to every fragment whose span
+   contains or overlaps it; other (unpositioned) annotations on the
+   element default to fragment 0 only. The list-item display prefix
+   (`renderers.py::render_list_item_prefix`) and the element's own
+   extracted-annotation text (`extra_source_text`, fragment 0 only) are
+   both applied strictly *after* the split, when building each fragment's
+   `source_text` — never before it, so neither can shift a character
+   offset.
 5. **Table rendering** — `renderers.py::render_table_text` (below).
 6. **Picture/caption handling** — a picture's caption(s) and any
    OCR/model-derived annotation text are folded into one chunk together;
@@ -311,12 +323,16 @@ a chunk with empty `source_text`, empty `model_derived_text`, and empty
 
 ### `chunking/renderers.py`
 
-`render_list_item` (2-space indent per level), `render_table_text`
-(every cell states `row`, `col`, `header=true|false`, `rowspan`, `colspan`
-explicitly, sorted by `(row, col)` — never inferred from pipe-table
-position), `render_visual_fact`, `render_diagram_node`,
-`render_diagram_edge`, `render_model_derived_annotation`/
-`render_extracted_annotation` (dispatch by concrete annotation type).
+`render_list_item_prefix` (the indentation + `"- "` marker alone, 2 spaces
+per level — Stage 4.2a, factored out specifically so a split list item's
+display prefix can be applied to every fragment independently of where
+splitting occurs), `render_list_item` (`render_list_item_prefix(item)` +
+`item.text`), `render_table_text` (every cell states `row`, `col`,
+`header=true|false`, `rowspan`, `colspan` explicitly, sorted by
+`(row, col)` — never inferred from pipe-table position), `render_visual_fact`,
+`render_diagram_node`, `render_diagram_edge`,
+`render_model_derived_annotation`/`render_extracted_annotation` (dispatch
+by concrete annotation type).
 
 ### `chunking/__init__.py`
 
@@ -371,7 +387,7 @@ exactly one `CanonicalChunk`:**
 
 ```json
 {
-  "chunk_id": "ab913778926002978f411a919947d7c20f6cebabd09c403aecb37406993a6095",
+  "chunk_id": "95983fe37edda3fd039777ea06075ea3123dcb300f9471c80ebf670351b78272",
   "doc_id": "PARITY_001",
   "logical_document_id": "PARITY_001",
   "document_revision_id": "4ebeff21f9e16b7a598cc8d4d0799fa49b2c1b3bc537b24de926539aa6755761",
@@ -400,7 +416,7 @@ exactly one `CanonicalChunk`:**
   "contains_model_derived": false,
   "content_sha256": "cb6cca2b87a7a4c4b244070bb3a699cb66f8b0fd5e2f4b9b0dbb4df7ad2043d7",
   "embedding_input_sha256": "237d6aa9224cd40363762bf92c93fd932f1fdddc9e9958530ef293140e3b7e87",
-  "chunker_version": "1.1.0",
+  "chunker_version": "1.2.0",
   "chunking_config_hash": "217ae232d0d5b859613f45e73df3cf690e30c9894bab782892881e398cf2bf07"
 }
 ```
@@ -415,6 +431,15 @@ it would share this same `embedding_input_sha256` while still getting its
 own `chunk_id` (because `document_revision_id` differs), per decision
 D-020. `IdentifierAnnotation a1` is tracked in `annotation_ids` for audit
 but — per decision D-006 — never duplicated into `source_text` itself.
+
+Note: `chunker_version` and `chunk_id` are the only two values in this
+example that changed between Stage 4.2 and Stage 4.2a, even though this
+particular document is never split — `CHUNKER_VERSION` is folded into
+`chunk_id`'s discriminator for *every* chunk, split or not, so bumping it
+(`1.1.0 -> 1.2.0`, reflecting the Stage 4.2a splitting/rendering rule
+change) changes every `chunk_id` in the corpus on the next run, by design.
+`content_sha256`, `embedding_input_sha256`, and `chunking_config_hash` are
+unaffected here because this example has no oversized element to split.
 
 ---
 

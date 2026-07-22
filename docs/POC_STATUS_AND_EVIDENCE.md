@@ -1,14 +1,14 @@
 # POC Status and Evidence — Enterprise Document-Ingestion Benchmark
 
-Snapshot as of commit `c0cf2c3` (Stage 4.2) on branch `main`. Update this
+Snapshot as of commit `47fad5f` (Stage 4.2a) on branch `main`. Update this
 document at the end of every subsequent stage — see the maintenance rules
 in `docs/README.md`.
 
 ## Current test totals
 
-**244 tests passed, 0 failed** — full suite, all files (`test_canonical_schema.py`
+**256 tests passed, 0 failed** — full suite, all files (`test_canonical_schema.py`
 87, `test_canonical_hashing.py` 21, `test_fixture_generation.py` 38,
-`test_chunking.py` 98). Full verbose output: `reports/stage4_2_pytest_output.txt`.
+`test_chunking.py` 110). Full verbose output: `reports/stage4_2a_pytest_output.txt`.
 Progression across stages (each report file is a real, committed snapshot):
 
 | Report | Pass count |
@@ -19,6 +19,7 @@ Progression across stages (each report file is a real, committed snapshot):
 | `reports/stage4_pytest_output.txt` | 185 |
 | `reports/stage4_1_pytest_output.txt` | 220 |
 | `reports/stage4_2_pytest_output.txt` | 244 |
+| `reports/stage4_2a_pytest_output.txt` | 256 |
 
 ## Stage status table
 
@@ -29,9 +30,10 @@ Progression across stages (each report file is a real, committed snapshot):
 | 2.1 | Validation hardening | **Completed** | Same files as Stage 2 (patch, not new files) | Folded into the same 108 tests above | None known |
 | 3 | Deterministic fixture generation | **Completed** | `fixtures/manifest_schema.py`, `diagram_image.py`, `generate_fixtures.py`, `fixtures/generated/*` (gitignored, regenerable) | `tests/test_fixture_generation.py`; `reports/stage3_pytest_output.txt` | None known |
 | 3.1 | Fixture layout/geometry fixes | **Completed** | Same files as Stage 3 | `reports/stage3_1_pytest_output.txt` | None known |
-| 4 | Canonical chunking layer | **Completed with follow-up** (hardened in 4.1/4.2) | `chunking/model.py`, `chunker.py`, `renderers.py`, `__init__.py` | `reports/stage4_pytest_output.txt` | Superseded by 4.1/4.2 fixes below |
-| 4.1 | Chunking hardening (heading audit trail, structural tables, revision lineage) | **Completed with follow-up** (further hardened in 4.2) | Same files as Stage 4 | `reports/stage4_1_pytest_output.txt` | Superseded by 4.2 fixes below |
-| 4.2 | Chunking correctness patch (fragment provenance, heading content propagation, revision-id normalization) | **Completed** | Same files as Stage 4 | `reports/stage4_2_pytest_output.txt` | See "Known limitations" below |
+| 4 | Canonical chunking layer | **Completed with follow-up** (hardened in 4.1/4.2/4.2a) | `chunking/model.py`, `chunker.py`, `renderers.py`, `__init__.py` | `reports/stage4_pytest_output.txt` | Superseded by 4.1/4.2/4.2a fixes below |
+| 4.1 | Chunking hardening (heading audit trail, structural tables, revision lineage) | **Completed with follow-up** (further hardened in 4.2/4.2a) | Same files as Stage 4 | `reports/stage4_1_pytest_output.txt` | Superseded by 4.2/4.2a fixes below |
+| 4.2 | Chunking correctness patch (fragment provenance, heading content propagation, revision-id normalization) | **Completed with follow-up** (fragment coordinate-space bug fixed in 4.2a) | Same files as Stage 4 | `reports/stage4_2_pytest_output.txt` | Superseded by 4.2a fix below |
+| 4.2a | Fragment-provenance correction (split against canonical element text, not combined rendered text) | **Completed** | Same files as Stage 4 | `reports/stage4_2a_pytest_output.txt` | None known |
 | 5 | Docling `DOCLING_STANDARD_LOCAL` adapter (path A) | **Not started** | — | — | No `adapters/` package; `docling` not in `requirements.txt`/`constraints.txt` |
 | 6 | `VisionEnricher` framework + `OpenAIVisionEnricher` (path B) | **Not started** | — | — | No `vision/` package |
 | 7 | OpenAI vendor-native adapter (path C) | **Not started** | — | — | — |
@@ -63,10 +65,6 @@ rendering during Stage 3.1 review) are committed at
   separate proof of concept — see `docs/POC_ARCHITECTURE.md` section G).
 - `ExtractionRun`/`ModelArtifact`/`RemoteInferenceCall` are implemented
   models with no code that constructs a real instance.
-- The identifier-offset-to-fragment routing added in Stage 4.2 is exact
-  only when a split element has no *other* extracted-derivation annotation
-  text appended ahead of it — a documented, not-yet-exercised scope limit
-  (decision D-028).
 - Heading annotation content is merged into **every** chunk beneath an
   active heading (every buffer flush, every split fragment) — flagged in
   the Stage 4.2 report as worth revisiting if a heading carries very long
@@ -81,13 +79,15 @@ measure them yet.
 
 ## Pending Stage 4.x corrections
 
-None open. Stage 4 → 4.1 → 4.2 is a closed, three-part sequence; every
-issue identified during that sequence (heading annotation loss, missing
-provenance in hashing, asset-only picture loss, table rendering
+None open. Stage 4 → 4.1 → 4.2 → 4.2a is a closed, four-part sequence;
+every issue identified during that sequence (heading annotation loss,
+missing provenance in hashing, asset-only picture loss, table rendering
 ambiguity, duplicate-occurrence false positives, `embedding_input_sha256`
-collision risk, `version_label` normalization inconsistency) has a
-corresponding fix and test — see `docs/POC_DECISION_LOG.md` D-017 through
-D-030.
+collision risk, `version_label` normalization inconsistency, and finally
+the Stage 4.2a fragment coordinate-space bug — fragment `start_char`/
+`end_char` were computed against combined rendered text instead of the
+canonical element's own text) has a corresponding fix and test — see
+`docs/POC_DECISION_LOG.md` D-017 through D-031.
 
 ## Next critical implementation step
 
@@ -123,12 +123,19 @@ fixture.
   counting actual glyph-showing content-stream operators, not a substring
   heuristic.
 - **Deterministic, parser-independent chunking** — `tests/test_chunking.py`
-  (98 tests): identical input always produces byte-identical serialized
+  (110 tests): identical input always produces byte-identical serialized
   chunks; changing config changes chunk boundaries and hashes; ordering is
   independent of input list order.
 - **Source/model-derived separation** — OCR vs. multimodal "visible text"
   reading are never conflated; `IdentifierAnnotation` is tracked but never
   duplicated into rendered text.
+- **Fragment provenance is exact** — an oversized paragraph's or list
+  item's split fragments carry `start_char`/`end_char` spans that
+  reconstruct the canonical element's own text exactly
+  (`original_text[start_char:end_char]`, concatenated across fragments);
+  an `IdentifierAnnotation` is routed to the correct later fragment
+  regardless of a list item's display prefix or another annotation's
+  rendered text (Stage 4.2a).
 - **Revision-lineage behavior** — two revisions of one logical document
   share `logical_document_id` but get different `document_revision_id`s
   and `chunk_id`s even with identical text, while sharing
@@ -159,7 +166,7 @@ fixture.
 Using the repository's actual state (not aspirational), the path is:
 
 ```
-chunk contract frozen (Stage 4.2, done)
+chunk contract frozen (Stage 4.2a, done)
         -> Docling Standard Local adapter (Stage 5, not started)
         -> process the controlled Stage 3 fixtures
         -> produce valid CanonicalDocuments

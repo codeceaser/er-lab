@@ -9,7 +9,7 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at commit `c0cf2c3`.
+and the repository at commit `47fad5f`.
 
 ---
 
@@ -74,7 +74,7 @@ Final module boundaries:
 1. Stage 1 — benchmark contract + frozen manifest. **Done.**
 2. Stage 2 (+2.1) — canonical model + hashing. **Done.**
 3. Stage 3 (+3.1) — deterministic fixture generation. **Done.**
-4. Stage 4 (+4.1, 4.2) — canonical chunking. **Done.**
+4. Stage 4 (+4.1, 4.2, 4.2a) — canonical chunking. **Done.**
 5. Stage 5 — Docling `DOCLING_STANDARD_LOCAL` adapter (path A). **Next.**
    No `VisionEnricher` dependency of any kind.
 6. Stage 6 — `VisionEnricher` framework + `OpenAIVisionEnricher` (path B).
@@ -89,7 +89,7 @@ Final module boundaries:
 At minimum, the full existing suite must continue to pass unmodified:
 `tests/test_canonical_schema.py` (87), `tests/test_canonical_hashing.py`
 (21), `tests/test_fixture_generation.py` (38), `tests/test_chunking.py`
-(98) — 244 total. A new adapter/evaluator implementation must add its own
+(110) — 256 total. A new adapter/evaluator implementation must add its own
 test files following the same pattern (one file per concern, `pytest`,
 `pythonpath = src fixtures` per `pytest.ini`) rather than modifying the
 existing four.
@@ -199,7 +199,9 @@ pictures preserved), D-018 (provenance included in chunk hashing), D-019
 projections derived, not authoritative), D-026 (deterministic fixture
 engineering), D-027 (dependency-free fixture verification), D-028
 (fragment-level split provenance), D-029 (`version_label` canonicalization
-at storage), D-030 (fully explicit table metadata).
+at storage), D-030 (fully explicit table metadata), D-031 (splitting must
+run against the canonical element's own text, never combined rendered
+text).
 
 D-009 (Granite Vision optional/deferred), D-022 (effective-revision
 retrieval policy), D-023 (upstream duplicate-upload rejection policy) are
