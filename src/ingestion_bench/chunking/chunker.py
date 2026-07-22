@@ -34,12 +34,18 @@ from .model import (
     compute_chunking_config_hash,
     text_sha256,
 )
-from .renderers import render_extracted_annotation, render_list_item, render_model_derived_annotation, render_table_text
+from .renderers import (
+    render_extracted_annotation,
+    render_list_item,
+    render_list_item_prefix,
+    render_model_derived_annotation,
+    render_table_text,
+)
 
 # Bumped whenever the CHUNKING ALGORITHM changes (ordering, packing, or
 # rendering rules) -- not when ChunkingConfig's *values* change, which is
 # what chunking_config_hash is for.
-CHUNKER_VERSION = "1.1.0"
+CHUNKER_VERSION = "1.2.0"
 
 _TYPE_RANK = {"heading": 0, "paragraph": 1, "list_item": 2, "table": 3, "picture": 4}
 
@@ -139,24 +145,37 @@ class _RenderedElement:
     source_text: str
     model_derived_text: str | None
     heading_level: int | None = None
-    # Plain, undecorated element text (heading.text only, with no extracted-
-    # annotation text merged in) -- used for heading_path / heading_source_*,
-    # kept separate from source_text so a heading's own extracted-annotation
-    # rendering never leaks into every downstream chunk's heading breadcrumb.
+    # Plain, undecorated CANONICAL element text -- heading.text,
+    # paragraph.text, or list_item.text. Never includes extracted-
+    # annotation text, and never includes a list item's display prefix
+    # (indentation/"- "). For headings this feeds heading_path/
+    # heading_source_* (unaffected by Stage 4.2a -- headings are never
+    # split). For paragraphs/list_items this is the ONLY text ever passed
+    # to split_oversized_text (Stage 4.2a): fragment start_char/end_char
+    # must refer to the canonical element's own text, matching how
+    # IdentifierAnnotation.start_char/end_char are defined, never to
+    # source_text's rendered/prefixed/annotation-appended form.
     raw_text: str | None = None
-    # This element's own extracted-annotation text, unmerged (headings
-    # only -- other kinds leave this ""; their extra_src is already folded
-    # into source_text directly since they never need a "raw" breadcrumb
-    # form). Kept so a heading's own extracted-annotation content can be
-    # deterministically re-surfaced on every chunk beneath it (Stage 4.2).
+    # This element's own extracted-annotation text, unmerged. Kept
+    # separate from raw_text so it can still be attached to a chunk
+    # (fragment 0, by existing convention -- see chunk_document) WITHOUT
+    # ever influencing where a paragraph/list-item gets split, and so a
+    # heading's own extracted-annotation content can be deterministically
+    # re-surfaced on every chunk beneath it (Stage 4.2).
     extra_source_text: str = ""
+    # Prepended to EVERY fragment's text when rendering it into a chunk's
+    # source_text (Stage 4.2a) -- "" for everything except list items,
+    # which get their indentation + "- " marker (render_list_item_prefix).
+    # Purely a display concern: never part of raw_text, never affects
+    # fragment start_char/end_char.
+    fragment_display_prefix: str = ""
     asset_refs: list[ChunkAssetRef] = field(default_factory=list)
     # (annotation_id, start_char, end_char) for every IdentifierAnnotation
     # targeting this element with concrete character offsets -- paragraphs/
     # list_items only, used solely when the element gets split (Stage 4.2
     # chunking rule: route identifiers to the fragment whose span
     # contains/overlaps them, instead of defaulting every identifier onto
-    # fragment 0).
+    # fragment 0). Offsets are always relative to raw_text (Stage 4.2a).
     positioned_identifier_spans: list[tuple[str, int, int]] = field(default_factory=list)
 
 
@@ -313,12 +332,14 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
                 order_index=paragraph.order_index, bbox=paragraph.bbox, element_type="paragraph",
             )],
             source_text=source_text, model_derived_text=model_text,
+            raw_text=paragraph.text, extra_source_text=extra_src,
             positioned_identifier_spans=_positioned_identifier_spans(annotations_by_target, paragraph.block_id),
         )
         keyed.append(((paragraph.unit_index, paragraph.order_index, _TYPE_RANK["paragraph"], paragraph.block_id), element))
 
     for item in document.list_items:
         extra_src, model_text, annotation_ids = _render_annotations_for_element(annotations_by_target, item.block_id)
+        prefix = render_list_item_prefix(item)
         rendered = render_list_item(item)
         source_text = rendered + (f"\n{extra_src}" if extra_src else "")
         element = _RenderedElement(
@@ -332,6 +353,7 @@ def _build_ordered_elements(document: CanonicalDocument) -> list[_RenderedElemen
                 order_index=item.order_index, bbox=item.bbox, element_type="list_item",
             )],
             source_text=source_text, model_derived_text=model_text,
+            raw_text=item.text, extra_source_text=extra_src, fragment_display_prefix=prefix,
             positioned_identifier_spans=_positioned_identifier_spans(annotations_by_target, item.block_id),
         )
         keyed.append(((item.unit_index, item.order_index, _TYPE_RANK["list_item"], item.block_id), element))
@@ -606,12 +628,19 @@ def chunk_document(
             if buffer and not config.cross_unit_boundaries and element.unit_index not in buffer_unit_indices:
                 flush_buffer()
 
-            if len(element.source_text) > config.max_chars:
+            if len(element.raw_text) > config.max_chars:
                 flush_buffer()
+                # Split is always computed over the CANONICAL element text
+                # (raw_text) -- never source_text, which may include a list
+                # item's display prefix or the element's own extracted-
+                # annotation rendering (Stage 4.2a). This is what keeps
+                # fragment start_char/end_char aligned with
+                # IdentifierAnnotation.start_char/end_char, which are
+                # defined against the canonical element's own text.
                 if config.oversized_element_policy == "split":
-                    fragments = split_oversized_text(element.source_text, config.max_chars)
+                    fragments = split_oversized_text(element.raw_text, config.max_chars)
                 else:
-                    fragments = [TextFragment(text=element.source_text, fragment_index=0, start_char=0, end_char=len(element.source_text))]
+                    fragments = [TextFragment(text=element.raw_text, fragment_index=0, start_char=0, end_char=len(element.raw_text))]
 
                 heading_ids, heading_refs, heading_ann_ids, heading_extracted_text, heading_model_derived_text = active_heading_context()
                 base_ref = element.source_refs[0]
@@ -626,9 +655,10 @@ def chunk_document(
                     })
                     # Identifiers with concrete offsets are routed to every
                     # fragment whose span contains or overlaps them (half-
-                    # open interval overlap test); everything else (the
-                    # element's own non-positioned annotations) still
-                    # defaults to fragment 0 only, as in Stage 4.
+                    # open interval overlap test, in raw_text's coordinate
+                    # space); everything else (the element's own non-
+                    # positioned annotations) still defaults to fragment 0
+                    # only, as in Stage 4.
                     routed_ids = [
                         aid for aid, id_start, id_end in element.positioned_identifier_spans
                         if id_start < fragment.end_char and id_end > fragment.start_char
@@ -636,9 +666,19 @@ def chunk_document(
                     own_ids = routed_ids + (default_bucket_ann if fragment.fragment_index == 0 else [])
                     fragment_ann = list(dict.fromkeys(own_ids + heading_ann_ids))
                     fragment_model_derived_own = element.model_derived_text if fragment.fragment_index == 0 else None
-                    fragment_source_text = _join_source_texts([fragment.text, heading_extracted_text])
                     fragment_model_derived_parts = [p for p in (fragment_model_derived_own, heading_model_derived_text) if p]
                     fragment_model_derived = "\n".join(fragment_model_derived_parts) if fragment_model_derived_parts else None
+
+                    # Display prefix (list indentation/"- ") and the
+                    # element's own extracted-annotation text (fragment 0
+                    # only, matching the non-split merge convention of
+                    # raw_text + "\n" + extra_source_text) are applied here,
+                    # AFTER the split -- never before it, so neither can
+                    # shift a fragment's character offsets (Stage 4.2a).
+                    fragment_primary_text = f"{element.fragment_display_prefix}{fragment.text}"
+                    if fragment.fragment_index == 0 and element.extra_source_text:
+                        fragment_primary_text = f"{fragment_primary_text}\n{element.extra_source_text}"
+                    fragment_source_text = _join_source_texts([fragment_primary_text, heading_extracted_text])
 
                     emit_chunk(
                         "text", [element.unit_index], current_heading_path(),

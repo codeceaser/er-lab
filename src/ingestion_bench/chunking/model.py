@@ -44,20 +44,16 @@ def text_sha256(text: str) -> str:
 ChunkSourceElementType = Literal["heading", "paragraph", "list_item", "table", "picture", "caption"]
 
 
-def _validate_char_span(start_char: int | None, end_char: int | None, where: str) -> None:
-    if (start_char is None) != (end_char is None):
-        raise ValueError(f"{where}: start_char and end_char must either both be None or both be populated")
-    if start_char is not None and end_char is not None:
-        if not (0 <= start_char <= end_char):
-            raise ValueError(f"{where}: start_char ({start_char}) must satisfy 0 <= start_char <= end_char ({end_char})")
-
-
 class TextFragment(BaseModel):
     """One deterministic, lossless fragment of a split oversized element
     (Stage 4.2 chunking rule): text is always the exact verbatim slice
     original_text[start_char:end_char] -- never a whitespace-normalized
     reconstruction -- so concatenating every fragment's text in
-    fragment_index order always reproduces the original text exactly."""
+    fragment_index order always reproduces the original text exactly.
+    original_text here is always the canonical element's OWN text
+    (CanonicalParagraph.text / CanonicalListItem.text) -- never text with
+    a display prefix (list indentation/"- ") or extracted-annotation
+    rendering merged in (Stage 4.2a)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -70,6 +66,11 @@ class TextFragment(BaseModel):
     def _validate_span(self) -> TextFragment:
         if self.start_char > self.end_char:
             raise ValueError(f"start_char ({self.start_char}) must be <= end_char ({self.end_char})")
+        if len(self.text) != self.end_char - self.start_char:
+            raise ValueError(
+                f"len(text)={len(self.text)!r} must equal end_char-start_char="
+                f"{self.end_char - self.start_char!r}"
+            )
         return self
 
 
@@ -92,8 +93,24 @@ class ChunkSourceRef(BaseModel):
     end_char: int | None = None
 
     @model_validator(mode="after")
-    def _validate_char_span(self) -> ChunkSourceRef:
-        _validate_char_span(self.start_char, self.end_char, "ChunkSourceRef")
+    def _validate_fragment_provenance(self) -> ChunkSourceRef:
+        """fragment_index, start_char, and end_char must be either ALL
+        None (this ref doesn't point at a fragment) or ALL populated
+        together (Stage 4.2a) -- a partial combination (e.g. start_char
+        set but fragment_index None) is always a bug, never a legitimate
+        state."""
+        populated = (self.fragment_index is not None, self.start_char is not None, self.end_char is not None)
+        if len(set(populated)) != 1:
+            raise ValueError(
+                "fragment_index, start_char, and end_char must be either all None or all populated together "
+                f"(got fragment_index={self.fragment_index!r}, start_char={self.start_char!r}, "
+                f"end_char={self.end_char!r})"
+            )
+        if self.start_char is not None and self.end_char is not None:
+            if not (0 <= self.start_char <= self.end_char):
+                raise ValueError(
+                    f"start_char ({self.start_char}) must satisfy 0 <= start_char <= end_char ({self.end_char})"
+                )
         return self
 
 

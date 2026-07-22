@@ -1313,3 +1313,147 @@ def test_table_rendering_always_includes_header_and_span_defaults():
     # a plain, non-header, non-spanning cell still states header=false and
     # rowspan=1/colspan=1 explicitly -- never omitted as an implied default.
     assert "Plain [row=0,col=0,header=false,rowspan=1,colspan=1]" in chunk.source_text
+
+
+# =====================================================================
+# Stage 4.2a fragment-provenance correction
+# =====================================================================
+
+# --- 34. splitting operates on canonical element text, not rendered text ----
+
+
+def _long_sentences(n: int, label: str = "Sentence number") -> str:
+    return " ".join(f"{label} {i} in a long passage." for i in range(n))
+
+
+def test_oversized_paragraph_with_extracted_annotation_splits_correctly():
+    paragraph_text = _long_sentences(15)
+    ocr = OcrAnnotation(annotation_id="a1", target_ref="p1", unit_index=0, extraction_method="rapidocr", text="Extracted note")
+    document = _doc(
+        paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text=paragraph_text)],
+        annotations=[ocr],
+    )
+    chunks = _chunk(document, ChunkingConfig(max_chars=100))
+    assert len(chunks) > 1
+    # the extracted annotation's rendered content appears exactly once,
+    # attached to fragment 0 only (existing fragment-0-default convention)
+    matches = [c for c in chunks if "Extracted note" in c.source_text]
+    assert len(matches) == 1
+    assert matches[0].source_refs[0].fragment_index == 0
+    assert "a1" in matches[0].annotation_ids
+
+
+def test_annotation_rendering_does_not_affect_fragment_spans():
+    paragraph_text = _long_sentences(15)
+    doc_without = _doc(paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text=paragraph_text)])
+    ocr = OcrAnnotation(annotation_id="a1", target_ref="p1", unit_index=0, extraction_method="rapidocr", text="Extracted note")
+    doc_with = _doc(
+        paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text=paragraph_text)],
+        annotations=[ocr],
+    )
+
+    chunks_without = _chunk(doc_without, ChunkingConfig(max_chars=100))
+    chunks_with = _chunk(doc_with, ChunkingConfig(max_chars=100))
+
+    spans_without = [(c.source_refs[0].start_char, c.source_refs[0].end_char) for c in chunks_without]
+    spans_with = [(c.source_refs[0].start_char, c.source_refs[0].end_char) for c in chunks_with]
+    assert spans_without == spans_with  # identical split points regardless of the annotation
+
+
+def test_fragment_spans_reconstruct_original_paragraph_text_exactly():
+    paragraph_text = _long_sentences(15)
+    document = _doc(paragraphs=[CanonicalParagraph(block_id="p1", unit_index=0, order_index=0, text=paragraph_text)])
+    chunks = _chunk(document, ChunkingConfig(max_chars=100))
+    assert len(chunks) > 1
+    reconstructed = "".join(paragraph_text[c.source_refs[0].start_char:c.source_refs[0].end_char] for c in chunks)
+    assert reconstructed == paragraph_text
+
+
+def test_fragment_spans_reconstruct_original_list_item_text_exactly():
+    item_text = _long_sentences(15, label="Item sentence number")
+    item = CanonicalListItem(block_id="l1", unit_index=0, order_index=0, text=item_text, list_id="l", indent_level=1)
+    document = _doc(list_items=[item])
+    chunks = _chunk(document, ChunkingConfig(max_chars=100))
+    assert len(chunks) > 1
+    reconstructed = "".join(item_text[c.source_refs[0].start_char:c.source_refs[0].end_char] for c in chunks)
+    assert reconstructed == item_text  # spans are against item.text, never the "  - "-prefixed rendering
+    # the display prefix appears on every fragment's rendered source_text,
+    # even though it is never part of the canonical span above
+    assert all(c.source_text.startswith("  - ") for c in chunks)
+
+
+def test_oversized_list_item_identifier_routed_to_later_fragment_despite_prefix():
+    identifier_text = "APP-334455"
+    item_text = (
+        _long_sentences(6, label="Filler sentence")
+        + f" A reference to {identifier_text} is noted here. "
+        + _long_sentences(4, label="Trailing sentence")
+    )
+    start_char = item_text.index(identifier_text)
+    end_char = start_char + len(identifier_text)
+
+    item = CanonicalListItem(block_id="l1", unit_index=0, order_index=0, text=item_text, list_id="l", indent_level=2)
+    identifier = IdentifierAnnotation(
+        annotation_id="a1", target_ref="l1", unit_index=0,
+        derivation="extracted", extraction_method="text_scan",
+        raw_text=identifier_text, normalized_value=identifier_text,
+        start_char=start_char, end_char=end_char,
+    )
+    document = _doc(list_items=[item], annotations=[identifier])
+    chunks = _chunk(document, ChunkingConfig(max_chars=80))
+    assert len(chunks) > 1
+
+    fragment0_chunk = next(c for c in chunks if c.source_refs[0].fragment_index == 0)
+    assert "a1" not in fragment0_chunk.annotation_ids  # identifier is well past fragment 0
+
+    matching = [c for c in chunks if "a1" in c.annotation_ids]
+    assert matching  # routed to at least one later fragment
+    for c in matching:
+        ref = c.source_refs[0]
+        assert ref.fragment_index > 0
+        # overlap test in item.text's own coordinate space -- unaffected
+        # by the "    - " display prefix rendered onto c.source_text
+        assert ref.start_char < end_char and ref.end_char > start_char
+        assert c.source_text.startswith("    - ")  # indent_level=2 -> 4 spaces + "- "
+
+
+# --- 35. strengthened ChunkSourceRef / TextFragment validation --------------
+
+
+def test_chunk_source_ref_rejects_fragment_index_without_char_span():
+    with pytest.raises(ValidationError):
+        ChunkSourceRef(element_id="x", unit_index=0, element_type="paragraph", fragment_index=0)
+
+
+def test_chunk_source_ref_rejects_char_span_without_fragment_index():
+    with pytest.raises(ValidationError):
+        ChunkSourceRef(element_id="x", unit_index=0, element_type="paragraph", start_char=0, end_char=5)
+
+
+def test_chunk_source_ref_rejects_start_char_without_end_char_or_fragment_index():
+    with pytest.raises(ValidationError):
+        ChunkSourceRef(element_id="x", unit_index=0, element_type="paragraph", start_char=0)
+
+
+def test_chunk_source_ref_accepts_all_three_fragment_fields_together():
+    ref = ChunkSourceRef(element_id="x", unit_index=0, element_type="paragraph", fragment_index=0, start_char=0, end_char=5)
+    assert ref.fragment_index == 0
+    assert ref.start_char == 0
+    assert ref.end_char == 5
+
+
+def test_chunk_source_ref_accepts_all_three_fragment_fields_absent():
+    ref = ChunkSourceRef(element_id="x", unit_index=0, element_type="paragraph")
+    assert ref.fragment_index is None
+    assert ref.start_char is None
+    assert ref.end_char is None
+
+
+def test_text_fragment_rejects_text_length_span_mismatch():
+    with pytest.raises(ValidationError):
+        TextFragment(text="hello", fragment_index=0, start_char=0, end_char=10)
+
+
+def test_text_fragment_accepts_matching_text_length_and_span():
+    fragment = TextFragment(text="hello", fragment_index=0, start_char=3, end_char=8)
+    assert len(fragment.text) == fragment.end_char - fragment.start_char

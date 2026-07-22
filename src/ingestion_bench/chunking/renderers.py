@@ -22,11 +22,20 @@ from ingestion_bench.canonical import (
 )
 
 
+def render_list_item_prefix(item: CanonicalListItem) -> str:
+    """The display-only indentation + "- " marker for a list item, kept
+    separate from item.text (Stage 4.2a): when an oversized list item gets
+    split, this prefix is prepended to EACH fragment's text purely for
+    display, and must never be included in the text used to compute
+    fragment character offsets -- those always refer to item.text alone."""
+    return f"{'  ' * item.indent_level}- "
+
+
 def render_list_item(item: CanonicalListItem) -> str:
     """Deterministic textual rendering that preserves indent level: two
     spaces per level, a leading "- " marker, e.g. indent_level=2 ->
     "    - text"."""
-    return f"{'  ' * item.indent_level}- {item.text}"
+    return f"{render_list_item_prefix(item)}{item.text}"
 
 
 def render_table_text(table: CanonicalTable) -> str:
