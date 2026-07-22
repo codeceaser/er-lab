@@ -1,22 +1,25 @@
 # POC Status and Evidence — Enterprise Document-Ingestion Benchmark
 
-Snapshot as of Stage 5A.1 (uncommitted at time of writing — see `git log`
+Snapshot as of Stage 5A.2 (uncommitted at time of writing — see `git log`
 for the actual commit once made) on branch `main`. Update this document
 at the end of every subsequent stage — see the maintenance rules in
 `docs/README.md`.
 
 ## Current test totals
 
-**343 tests passed, 0 failed** — full suite, all files
+**350 tests passed, 0 failed, 3 warnings** — full suite, all files
 (`test_canonical_schema.py` 87, `test_canonical_hashing.py` 21,
 `test_fixture_generation.py` 38, `test_chunking.py` 110,
 `test_docling_standard_mapper.py` 28, `test_docling_standard_adapter.py`
-8, `test_docling_standard_integration.py` 34, `test_adapters_base.py` 15,
-`test_run_docling_standard_report.py` 2). Full verbose output:
+10, `test_docling_standard_integration.py` 34, `test_adapters_base.py`
+19, `test_run_docling_standard_report.py` 3). Full verbose output:
 `reports/stage5a_pytest_output.txt` (this file is regenerated in place at
-each Stage 5A/5A.1 sub-stage, not renamed per sub-stage). The Docling test
-files run real (small, CPU) Docling conversions — they are not mocked.
-Progression across stages (each report file is a real, committed snapshot):
+each Stage 5A/5A.1/5A.2 sub-stage, not renamed per sub-stage). The 3
+warnings are pre-existing, unrelated deprecation warnings from Docling's
+own dependencies (RapidOCR, docling-core's `ListItem` auto-grouping), not
+from this project's own code. The Docling test files run real (small,
+CPU) Docling conversions — they are not mocked. Progression across stages
+(each report file is a real, committed snapshot):
 
 | Report | Pass count |
 |---|---|
@@ -28,7 +31,8 @@ Progression across stages (each report file is a real, committed snapshot):
 | `reports/stage4_2_pytest_output.txt` | 244 |
 | `reports/stage4_2a_pytest_output.txt` | 256 |
 | `reports/stage5a_pytest_output.txt` (Stage 5A) | 322 |
-| `reports/stage5a_pytest_output.txt` (Stage 5A.1, current) | 343 |
+| `reports/stage5a_pytest_output.txt` (Stage 5A.1) | 343 |
+| `reports/stage5a_pytest_output.txt` (Stage 5A.2, current) | 350 |
 
 ## Stage status table
 
@@ -43,11 +47,17 @@ Progression across stages (each report file is a real, committed snapshot):
 | 4.1 | Chunking hardening (heading audit trail, structural tables, revision lineage) | **Completed with follow-up** (further hardened in 4.2/4.2a) | Same files as Stage 4 | `reports/stage4_1_pytest_output.txt` | Superseded by 4.2/4.2a fixes below |
 | 4.2 | Chunking correctness patch (fragment provenance, heading content propagation, revision-id normalization) | **Completed with follow-up** (fragment coordinate-space bug fixed in 4.2a) | Same files as Stage 4 | `reports/stage4_2_pytest_output.txt` | Superseded by 4.2a fix below |
 | 4.2a | Fragment-provenance correction (split against canonical element text, not combined rendered text) | **Completed** | Same files as Stage 4 | `reports/stage4_2a_pytest_output.txt` | None known |
-| 5A | Docling `DOCLING_STANDARD_LOCAL` adapter (path A) | **Completed, frozen** (hardened by 5A.1) | `src/ingestion_bench/adapters/{base.py,docling_standard/}`, `scripts/run_docling_standard.py` | `tests/test_docling_standard_{mapper,adapter,integration}.py`; `reports/stage5a_pytest_output.txt`, `reports/stage5a_docling_standard_baseline.md`, `reports/stage5a_docling_standard_results.json` | See "Current limitations" below — these are genuine Docling baseline findings, not open adapter defects |
+| 5A | Docling `DOCLING_STANDARD_LOCAL` adapter (path A) | **Completed, frozen** (hardened by 5A.1/5A.2) | `src/ingestion_bench/adapters/{base.py,docling_standard/}`, `scripts/run_docling_standard.py` | `tests/test_docling_standard_{mapper,adapter,integration}.py`; `reports/stage5a_pytest_output.txt`, `reports/stage5a_docling_standard_baseline.md`, `reports/stage5a_docling_standard_results.json` | See "Current limitations" below — these are genuine Docling baseline findings, not open adapter defects |
 | 5A.1 | Evidence/provenance hardening patch (diagnostic severity vs. fidelity impact, DOCX partial status, OCR annotation provenance, AdapterConversionResult validation, portable reports, single-execution dual report generation) | **Completed** | Same files as Stage 5A, patched — no new package | `tests/test_adapters_base.py` (15, new), `tests/test_run_docling_standard_report.py` (2, new), 4 new tests added to `test_docling_standard_integration.py`, 1 test updated in `test_docling_standard_mapper.py`; `reports/stage5a_pytest_output.txt` (regenerated in place) | None known — see decisions D-037, D-038 |
-| 6 | `VisionEnricher` framework + `OpenAIVisionEnricher` (path B) | **Not started** | — | — | No `vision/` package |
-| 7 | OpenAI vendor-native adapter (path C) | **Not started** | — | — | — |
-| 8 | Evaluator (scores extraction against `reference_manifest.json`) | **Not started** | — | — | Depends on Stages 5–7 producing real `CanonicalDocument`/`CanonicalChunk` output |
+| 5A.2 | Evidence-contract correction (truthful conversion-status validation, component-level determinism evidence, restored environment/model-footprint evidence) | **Completed, frozen** | Same files as Stage 5A, patched, plus `src/ingestion_bench/adapters/docling_standard/environment.py` (new) | `tests/test_adapters_base.py` (+4), `tests/test_docling_standard_adapter.py` (+2), `tests/test_run_docling_standard_report.py` (+1, extended); `reports/stage5a_pytest_output.txt` (regenerated in place), `reports/stage5a_docling_standard_baseline.md`/`results.json` (regenerated from one execution) | None known — see decisions D-039, D-040 |
+| 6A | Deterministic ingestion-fidelity evaluator (scores Stage 5A output against `reference_manifest.json`) | **Not started** | — | — | Produces the gold fact-to-chunk evidence-alignment catalog reused by Stage 6B+ (D-040) |
+| 6B | Retrieval benchmark contract + gold evidence set (built on the Stage 6A alignment catalog) | **Not started** | — | — | — |
+| 7A | Regular vector RAG projection + retrieval baseline | **Not started** | — | — | — |
+| 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
+| 7C | Wiki page/link projection | **Not started** | — | — | — |
+| 8A | Selective OpenAI vision enrichment (`VisionEnricher` framework + `OpenAIVisionEnricher`, path B) | **Not started** | — | — | No `vision/` package. Corrected roadmap position — no longer "Stage 6"; see D-040 and "Corrected roadmap" below |
+| 8B | OpenAI vendor-native ingestion (path C) | **Not started** | — | — | — |
+| 9 | Cross-lane quality, cost, latency, and ROI comparison | **Not started** | — | — | Depends on Stages 6A–8B |
 | D | Local Granite Vision enrichment (path D) | **Deferred** (decision D-009) | — | — | Revisit only on a concrete local-only-deployment requirement |
 
 ## Generated fixture inventory
@@ -70,12 +80,72 @@ Stage 5A additionally produced, per fixture, under `artifacts/stage5a/`
 own lossless `export_to_dict()`, debug evidence only, never canonical
 input); `assets/<doc_id>_<format>/<picture_id>.png`.
 
+## Determinism contract (Stage 5A.2)
+
+`scripts/run_docling_standard.py::run_determinism_check` converts each
+parity fixture twice and reports five independent comparisons, never one
+collapsed boolean (D-039):
+
+- `canonical_json_equal` — full serialized `CanonicalDocument` JSON,
+  byte-for-byte.
+- `canonical_hash_equal` — `stable_canonical_hash()`.
+- `chunk_json_equal` — full serialized `CanonicalChunk` list JSON,
+  byte-for-byte.
+- `chunk_ids_equal` — ordered `chunk_id` values.
+- `chunk_content_hashes_equal` — ordered `content_sha256` values.
+- `all_equal` — true only when every comparison above is true; a summary
+  field, never the only reported figure.
+
+Both `reports/stage5a_docling_standard_results.json` and
+`reports/stage5a_docling_standard_baseline.md` section 4 report all five
+comparisons per parity fixture, generated from the same execution. Any
+future adapter (path B/C/D) must provide equivalent structured
+determinism evidence — a single collapsed hash comparison is no longer
+sufficient evidence for a "deterministic output" claim in this project.
+
+## Benchmark dimensions (corrected roadmap)
+
+This benchmark has two independent dimensions, and it must eventually
+evaluate combinations of both — no stage before Stage 9 attempts that
+combination yet:
+
+**Dimension 1 — ingestion approach:**
+- Docling Standard Local (path A — **implemented, frozen**)
+- Docling plus selective OpenAI vision enrichment (path B — Stage 8A, not started)
+- OpenAI vendor-native document processing (path C — Stage 8B, not started)
+- Optional local vision lane (path D — deferred, D-009)
+
+**Dimension 2 — retrieval projection:**
+- Regular vector RAG (Stage 7A, not started)
+- Graph-enriched RAG (Stage 7B, not started)
+- Wiki page/link retrieval (Stage 7C, not started)
+
+Per D-040, every retrieval projection is independently derived from the
+same `CanonicalDocument`/`CanonicalChunk` corpus and the same Stage 6A
+gold fact-to-chunk evidence-alignment catalog — no projection is
+authoritative over another, and none of vector-, graph-, or wiki-specific
+state may enter `CanonicalDocument`/`CanonicalChunk`.
+
+**Corrected roadmap** (supersedes any earlier "Stage 6 = VisionEnricher"
+framing in this project's history — vision enrichment moved to Stage 8A):
+
+```
+Stage 6A  Deterministic ingestion-fidelity evaluator          <- NEXT
+Stage 6B  Retrieval benchmark contract + gold evidence set
+Stage 7A  Regular vector RAG projection + retrieval baseline
+Stage 7B  Graph-enriched RAG projection
+Stage 7C  Wiki page/link projection
+Stage 8A  Selective OpenAI vision enrichment (path B)
+Stage 8B  OpenAI vendor-native ingestion (path C)
+Stage 9   Cross-lane quality, cost, latency, and ROI comparison
+```
+
 ## Current limitations
 
 - No evaluator exists — extraction quality has never been measured against
-  `reference_manifest.json` (Stage 8, not started). Stage 5A produces
-  counts and structural observations only — see
-  `reports/stage5a_docling_standard_baseline.md`.
+  `reference_manifest.json` (Stage 6A, not started — see "Corrected
+  roadmap" above). Stage 5A produces counts and structural observations
+  only — see `reports/stage5a_docling_standard_baseline.md`.
 - Paths B, C, D (OpenAI vision enrichment, OpenAI vendor-native, local
   Granite Vision) are not implemented — only path A
   (`DOCLING_STANDARD_LOCAL`) exists.
@@ -144,14 +214,21 @@ canonical element's own text) has a corresponding fix and test — see
 
 ## Next critical implementation step
 
-Per the working plan referenced throughout this project's history, the
-next step is **Stage 6 — the `VisionEnricher` framework and
-`OpenAIVisionEnricher` (path B)**, building on the now-complete, now-frozen
-Stage 5A/5A.1 Docling adapter. Stage 5A/5A.1 is complete: `docling==2.114.0`
-is installed and pinned, the adapter converts all 9 generated fixtures to
-a valid `CanonicalDocument` (7 `success`, 2 `partial` — DOCX, per D-037),
-and its output chunks through the existing frozen `chunk_document()`
-unmodified.
+Per the corrected roadmap above, the next step is **Stage 6A — the
+deterministic ingestion-fidelity evaluator**, building on the now-complete,
+now-frozen Stage 5A/5A.1/5A.2 Docling adapter. Vision enrichment
+(previously described as "Stage 6" earlier in this project's history) is
+now Stage 8A — see D-040 and "Benchmark dimensions" above for why the
+evaluator and the retrieval-projection work come first: the Stage 6A
+evaluator's gold fact-to-chunk evidence-alignment catalog is the shared
+evidence set every later retrieval projection (Stage 7A/7B/7C) will be
+scored against, so it must exist before those projections are worth
+comparing. Stage 5A/5A.1/5A.2 is complete: `docling==2.114.0` is installed
+and pinned, the adapter converts all 9 generated fixtures to a valid
+`CanonicalDocument` (7 `success`, 2 `partial` — DOCX, per D-037), its
+output chunks through the existing frozen `chunk_document()` unmodified,
+and conversion determinism is now backed by five independent
+component-level comparisons (D-039), not one collapsed hash.
 
 ---
 
@@ -225,14 +302,34 @@ unmodified.
   confirms body-level OCR text with no picture wrapper still produces zero
   annotations, never a fabricated one.
 - **The two persisted Stage 5A reports come from one execution** —
-  `tests/test_run_docling_standard_report.py` (2 tests): given a
+  `tests/test_run_docling_standard_report.py` (3 tests): given a
   synthetic `results` dict, `render_baseline_markdown()` reproduces every
-  count/status/timing figure from that same dict verbatim, and the
-  rendered Markdown never contains an absolute Windows path.
-- **Docling conversion is deterministic** — converting the same file
-  twice produces byte-identical `CanonicalDocument`/`CanonicalChunk`
-  serialization and identical `stable_canonical_hash()`/`chunk_id`/
-  `content_sha256` values, for all three parity formats.
+  count/status/timing figure from that same dict verbatim, the rendered
+  Markdown never contains an absolute Windows path, and a deliberate
+  partial determinism mismatch in the synthetic data renders as a visible
+  `**NO**`, never hidden behind a passing aggregate.
+- **`conversion_status="success"` cannot coexist with a fidelity-affecting
+  diagnostic** (Stage 5A.2, D-037 continued) —
+  `tests/test_adapters_base.py::test_success_status_rejects_a_fidelity_affecting_diagnostic`:
+  `AdapterConversionResult` itself raises `ValidationError` if a diagnostic
+  with `affects_fidelity=True` is attached to a `"success"` result;
+  `"partial"` remains valid both with and without one (a parser may
+  independently report `PARTIAL_SUCCESS` with zero adapter diagnostics).
+- **Docling conversion is deterministic at every level independently, not
+  just by hash** (Stage 5A.2, D-039) — `run_determinism_check` compares
+  full `CanonicalDocument` JSON, `stable_canonical_hash()`, full
+  `CanonicalChunk` list JSON, ordered `chunk_id`s, and ordered
+  `content_sha256` values as five separate results, for all three parity
+  formats; all five are `true` for every parity fixture in the current
+  baseline run.
+- **Environment and model-footprint evidence is restored and regenerated
+  live** (Stage 5A.2) — `tests/test_docling_standard_adapter.py::test_environment_evidence_never_contains_an_absolute_path`,
+  `test_environment_evidence_has_expected_shape`: Python/OS/package
+  versions, CUDA availability, effective accelerator, whether an external
+  Hugging Face cache is configured, a redacted (drive/mount-only) cache
+  location, downloaded Docling model families, and an approximate storage
+  footprint are collected fresh on every run — never hand-typed, never an
+  absolute filesystem path.
 - **Docling is confined to the adapter boundary** — `canonical/` and
   `chunking/` source contain zero `import docling`/`import docling_core`
   statements, verified the same way (real import-statement grepping, not
@@ -246,9 +343,10 @@ unmodified.
 ## What the existing tests do not prove
 
 - Whether Docling's extraction is *correct* against
-  `reference_manifest.json` — no evaluator exists (Stage 8). Stage 5A
-  tests check structural presence (a table exists, an identifier substring
-  is present, a picture was retained) never accuracy/recall/precision.
+  `reference_manifest.json` — no evaluator exists (Stage 6A, corrected
+  roadmap). Stage 5A tests check structural presence (a table exists, an
+  identifier substring is present, a picture was retained) never
+  accuracy/recall/precision.
 - OCR *accuracy* — Stage 5A confirms OCR-derived text is extracted at all
   (e.g. the scanned PDF's OCR text is nonempty, the diagram's 3 OCR tokens
   and the chart's 9 OCR tokens are captured as `OcrAnnotation`s) but never
@@ -274,20 +372,23 @@ Using the repository's actual state (not aspirational), the path is:
 
 ```
 chunk contract frozen (Stage 4.2a, done)
-        -> Docling Standard Local adapter (Stage 5A, DONE; hardened by Stage 5A.1, DONE)
+        -> Docling Standard Local adapter (Stage 5A, DONE; hardened by Stage 5A.1/5A.2, DONE)
         -> process the controlled Stage 3 fixtures (DONE -- all 9 produce a valid CanonicalDocument; 7 success, 2 partial)
         -> produce valid CanonicalDocuments (DONE)
-        -> produce deterministic CanonicalChunks (DONE -- existing chunker, unmodified)
-        -> compare output against reference_manifest.json ground truth (NOT STARTED -- Stage 8)
-        -> report extraction metrics (per BENCHMARK_CONTRACT.md section 9) (NOT STARTED)
-        -> add selective vision/vendor-native comparison (paths B/C) as time permits (NOT STARTED -- Stages 6-7)
+        -> produce deterministic CanonicalChunks (DONE -- existing chunker, unmodified; determinism now backed by 5 independent component comparisons, D-039)
+        -> compare output against reference_manifest.json ground truth (NOT STARTED -- Stage 6A)
+        -> report extraction metrics + gold fact-to-chunk evidence alignment (per BENCHMARK_CONTRACT.md section 9) (NOT STARTED -- Stage 6A)
+        -> retrieval benchmark contract + vector/graph/wiki projections (NOT STARTED -- Stages 6B/7A/7B/7C)
+        -> add selective vision/vendor-native comparison (paths B/C) as time permits (NOT STARTED -- Stages 8A/8B)
+        -> cross-lane quality/cost/latency/ROI comparison (NOT STARTED -- Stage 9)
 ```
 
 The remaining gap to a first *measurable* result (accuracy/recall against
 the manifest, not just "did conversion succeed") is the evaluator
-(Stage 8) — Stage 5A intentionally stops at producing baseline counts and
-structural observations (`reports/stage5a_docling_standard_baseline.md`),
-never manifest comparison.
+(Stage 6A, corrected roadmap — see "Benchmark dimensions" above) — Stage
+5A intentionally stops at producing baseline counts and structural
+observations (`reports/stage5a_docling_standard_baseline.md`), never
+manifest comparison.
 
 ## Explicitly deferred scope
 

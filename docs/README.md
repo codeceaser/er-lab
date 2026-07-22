@@ -12,17 +12,30 @@ the two are not wired together.
 
 ## Current stage
 
-**Stage 5A.1 complete** (uncommitted at time of writing — see `git log`
-for the actual commit once made): canonical document model, deterministic
-benchmark fixtures, deterministic canonical chunking, and the Docling
+**Stage 5A.2 complete and frozen** (committed — see `git log` for the
+exact commit): canonical document model, deterministic benchmark
+fixtures, deterministic canonical chunking, and the Docling
 `DOCLING_STANDARD_LOCAL` parser adapter (path A) are implemented,
-hardened, and tested (343 tests passing). All 9 generated fixtures
-convert to a valid `CanonicalDocument` through real Docling (7 `success`,
-2 `partial` — the two DOCX fixtures, since Docling exposes no DOCX
-pagination geometry) and chunk through the unmodified frozen chunker.
-Stage 5A.1 is now frozen. **Stage 6 (`VisionEnricher` framework + OpenAI
-vision enrichment, path B) has not started.** See
-`POC_STATUS_AND_EVIDENCE.md` for the authoritative, up-to-date status.
+hardened, and tested (350 tests passing, 3 pre-existing warnings from
+Docling's own dependencies). All 9 generated fixtures convert to a valid
+`CanonicalDocument` through real Docling (7 `success`, 2 `partial` — the
+two DOCX fixtures, since Docling exposes no DOCX pagination geometry) and
+chunk through the unmodified frozen chunker. The frozen baseline now
+includes: truthful `conversion_status` validation (a `"success"` result
+cannot carry a fidelity-affecting diagnostic), fidelity-impact diagnostics
+independent of severity, DOCX valid-but-`partial` status, OCR annotation
+provenance, complete portable diagnostics, component-level determinism
+evidence (five independent comparisons, not one collapsed hash), and
+generated (not hand-typed) environment/model-footprint evidence — all
+baseline Markdown/JSON generated from one execution.
+
+**Next: Stage 6A — the deterministic ingestion-fidelity evaluator**, not
+vision enrichment. See `POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions
+(corrected roadmap)" for the full corrected stage sequence (Stage 6A
+evaluator → Stage 6B retrieval benchmark contract → Stages 7A/7B/7C
+vector/graph/wiki projections → Stages 8A/8B vision enrichment/OpenAI
+vendor-native → Stage 9 cross-lane comparison) and why vision enrichment
+moved later (decision D-040).
 
 ## Repository root
 
@@ -65,11 +78,12 @@ This runs all nine test files (`test_canonical_schema.py`,
 `test_canonical_hashing.py`, `test_fixture_generation.py`,
 `test_chunking.py`, `test_docling_standard_mapper.py`,
 `test_docling_standard_adapter.py`, `test_docling_standard_integration.py`,
-`test_adapters_base.py`, `test_run_docling_standard_report.py`) — 343
-tests as of Stage 5A.1. The three `test_docling_standard_*` files run the
-real Docling adapter (not mocked) against the generated fixtures. It does
-**not** exercise embedding, retrieval, or evaluator code, because none of
-that exists yet.
+`test_adapters_base.py`, `test_run_docling_standard_report.py`) — 350
+tests as of Stage 5A.2 (3 pre-existing warnings from Docling's own
+dependencies, not this project's code). The three `test_docling_standard_*`
+files run the real Docling adapter (not mocked) against the generated
+fixtures. It does **not** exercise embedding, retrieval, or evaluator
+code, because none of that exists yet (the evaluator is Stage 6A, next).
 
 To reproduce the Stage 5A baseline conversion of every fixture (not just
 run the test suite): `python scripts/run_docling_standard.py` — writes

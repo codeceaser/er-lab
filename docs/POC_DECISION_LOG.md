@@ -1724,3 +1724,138 @@ picture.
 `map_document` (`ocr_sequence_by_picture` counter);
 `tests/test_docling_standard_integration.py::test_parity_pdf_picture_ocr_annotations_resolve_to_provenance_entries`,
 `test_chart_fixture_ocr_annotations_resolve_to_provenance_entries`.
+
+---
+
+## D-039 — Report determinism component by component, never as one collapsed hash comparison
+
+**Status:** Accepted
+**Stage:** Stage 5A.2
+**Date/commit:** Needs confirmation (assigned at Stage 5A.2 implementation time)
+
+### Problem
+Stage 5A/5A.1's `run_determinism_check` converted a fixture twice and
+compared only `stable_canonical_hash()`, returning one collapsed boolean.
+A single canonical hash comparison was insufficient evidence for the
+broader claim this project actually makes in its reports — that "the
+complete canonical and chunk outputs are deterministic" — since a hash
+match does not by itself demonstrate that the full serialized
+`CanonicalDocument`, the full serialized `CanonicalChunk` list, chunk
+identity, and chunk content hashing are *all* independently stable.
+
+### Alternatives considered
+(a) Keep the single collapsed `stable_canonical_hash()` comparison and
+continue describing it as proof of full-output determinism. (b) Compare
+every claim independently — full serialized `CanonicalDocument` JSON,
+`stable_canonical_hash()`, full serialized `CanonicalChunk` list JSON,
+ordered `chunk_id`s, and ordered `content_sha256` values — and report
+each result separately, with one `all_equal` field as a summary only.
+
+### Decision
+(b).
+
+### Rationale
+Report each comparison independently and retain an aggregate `all_equal`
+field only as a summary, never as the sole reported figure. A hash
+collision (astronomically unlikely but not the point) or a hash function
+that happened not to be sensitive to some field would previously have
+been invisible; independent component comparisons make each specific
+claim ("chunk ids are stable," "chunk content hashes are stable")
+separately falsifiable and separately auditable.
+
+### Trade-offs and consequences
+- A partial mismatch can no longer be concealed by one passing hash —
+  `run_determinism_check` now returns a structured dict
+  (`canonical_json_equal`, `canonical_hash_equal`, `chunk_json_equal`,
+  `chunk_ids_equal`, `chunk_content_hashes_equal`, `all_equal`) instead of
+  a single `bool`, and `all_equal` is true only when every component
+  comparison is true.
+- Reports state only comparisons that were actually executed — the
+  Markdown table (`reports/stage5a_docling_standard_baseline.md` section
+  4) now has one column per comparison rather than one "Identical across
+  two runs" column, so a reader never has to trust an unstated aggregation
+  rule.
+- Future adapters (path B/C/D) must provide equivalent determinism
+  evidence in this same structured shape — a future adapter's own runner
+  may not regress to a single collapsed boolean.
+- Chunking is now invoked twice as often during the determinism check
+  (once per conversion) — negligible cost at this fixture count, accepted.
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`scripts/run_docling_standard.py::run_determinism_check` (returns the
+structured dict), `_chunk_document` (shared helper so `process_fixture`
+and `run_determinism_check` build chunks identically),
+`render_baseline_markdown` (section 4 rendering, one column per
+comparison); `tests/test_run_docling_standard_report.py::test_baseline_markdown_reflects_structured_determinism_results`
+(asserts a deliberate partial mismatch is visible as `**NO**`, never
+hidden behind a passing aggregate).
+
+---
+
+## D-040 — Canonical chunks are the common evidence substrate for multiple knowledge projections
+
+**Status:** Accepted
+**Stage:** Stage 5A.2 (recorded alongside the roadmap correction that follows from it)
+**Date/commit:** Needs confirmation (assigned at Stage 5A.2 implementation time)
+
+### Problem
+The original working plan implicitly treated "path A/B/C/D ingestion" and
+"retrieval" as one linear pipeline, without stating explicitly how
+multiple different retrieval *projections* (a regular vector index, a
+graph-enriched index, a wiki page/link structure) should relate to the
+same underlying extracted content, or to each other.
+
+### Decision
+Regular vector indexes, graph structures, and wiki pages will be
+independently derived from the same `CanonicalDocument` and
+`CanonicalChunk` corpus. No projection is authoritative over another;
+`CanonicalDocument`/`CanonicalChunk` (Stage 2/Stage 4, frozen) remain the
+one shared, hashed, provenance-carrying evidence layer every projection
+reads from.
+
+### Rationale
+This preserves a common authoritative evidence layer and allows retrieval
+approaches to be compared without changing the underlying extracted
+knowledge — exactly the same principle D-025 already established for
+Graph RAG/wiki projections in general, now stated as a concrete
+consequence for how the ingestion-fidelity evaluator's gold evidence set
+(Stage 6A) is meant to be reused: the same expected-fact-to-chunk
+alignment that scores Docling's ingestion fidelity is also the gold
+evidence set later used to score vector RAG, Graph RAG, and wiki
+retrieval, so all three retrieval projections are compared on identical
+grounds rather than each inventing its own notion of "the right answer."
+
+### Trade-offs and consequences
+- Vector-, graph-, and wiki-specific fields do not enter
+  `CanonicalDocument` or `CanonicalChunk` — those models stay parser-
+  neutral and projection-neutral, per D-001/D-002/D-025; a graph edge
+  weight or a wiki page slug is projection state, not extracted content.
+- Every graph edge and wiki claim must retain supporting chunk IDs, so a
+  projection's assertions remain traceable back to the same auditable
+  `CanonicalChunk` evidence the ingestion evaluator already scored.
+- All projections use the same revision lineage
+  (`DocumentRevisionContext`/`document_revision_id`) and the same
+  provenance (`ProvenanceEntry`/`ChunkSourceRef`) — no projection may
+  invent its own document-identity or provenance scheme.
+- All retrieval approaches must eventually be evaluated through one
+  common benchmark query contract (not yet designed — a Stage 6B
+  deliverable), so scores are comparable across projections.
+- Vector, graph, and wiki representations remain derived projections,
+  never authoritative source records — rebuilding any of them from
+  `CanonicalDocument`/`CanonicalChunk` alone must always be possible.
+
+### Deferred questions or reconsideration trigger
+The common benchmark query contract itself (Stage 6B) and the concrete
+storage/index design for each projection (Stages 7A/7B/7C) are not yet
+built — this decision fixes the relationship between them and the shared
+evidence layer, not their implementation.
+
+### Implementation and evidence
+No projection code exists yet. This decision governs the design of the
+Stage 6A gold evidence-alignment catalog (`artifacts/stage6a/evidence_alignment.json`,
+once Stage 6A is implemented) and constrains Stages 6B/7A/7B/7C when they
+are built — see the corrected roadmap in `docs/POC_STATUS_AND_EVIDENCE.md`
+and `docs/DEVIN_HANDOFF_SEED.md`.

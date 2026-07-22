@@ -692,14 +692,97 @@ and `tests/test_run_docling_standard_report.py`.
 
 ---
 
-## Future walkthrough (Stage 6+) — `[PLANNED, none of this exists yet]`
+## Stage 5A.2 — Evidence-contract correction `[IMPLEMENTED]`
+
+Same files as Stage 5A/5A.1, patched in place, plus one new module
+(`environment.py`) — no new adapter, no Stage 6+ functionality.
+
+1. **`conversion_status="success"` cannot coexist with a fidelity-affecting
+   diagnostic.** `adapters/base.py::AdapterConversionResult` gained a
+   second `model_validator`: if `conversion_status == "success"` and any
+   `AdapterDiagnostic` has `affects_fidelity=True`, construction raises
+   `ValidationError`. `"partial"` is unaffected — it remains valid with
+   zero fidelity-affecting diagnostics (a parser may independently report
+   `PARTIAL_SUCCESS`) or with one or more.
+2. **Component-level determinism evidence.**
+   `scripts/run_docling_standard.py::run_determinism_check` no longer
+   returns one collapsed `bool` — it now returns a structured dict with
+   five independent comparisons (`canonical_json_equal`,
+   `canonical_hash_equal`, `chunk_json_equal`, `chunk_ids_equal`,
+   `chunk_content_hashes_equal`) plus a summary `all_equal` — see D-039.
+   A new `_chunk_document(document, doc_id)` helper is shared between
+   `process_fixture` and `run_determinism_check` so both build chunks
+   identically.
+3. **Restored environment/model-footprint evidence.** New module
+   `adapters/docling_standard/environment.py::collect_environment_evidence()`
+   — read-only, never imports Docling document types (only
+   `importlib.metadata`/`platform`/`torch.cuda.is_available()` and
+   `config.py`'s existing version helpers) — collects Python version,
+   OS/platform, docling/docling-core/torch/torchvision/onnxruntime/
+   rapidocr versions, CUDA availability, effective accelerator, whether an
+   external Hugging Face cache is configured, a **redacted** cache
+   location (drive letter/mount point only, e.g. `"D: (redirected, path
+   redacted)"` — never the full path), the downloaded Docling model
+   families (filtered to repo ids containing `"docling"`, so an unrelated
+   cached model like the separate GraphRAG POC's
+   `sentence-transformers/all-MiniLM-L6-v2` is never misreported as a
+   Docling download), and an approximate storage footprint in MB (summed
+   from each repo's `blobs/` directory only — summing `snapshots/` too
+   would double-count the same physical bytes on this filesystem, a real
+   bug caught and fixed during implementation).
+4. **Report rendering updated.** `render_baseline_markdown` section 1
+   (Environment) now reads from `results["environment_evidence"]` instead
+   of hand-typed prose; section 4 (Determinism results) now renders one
+   column per comparison instead of one "Identical across two runs"
+   column.
+5. **Tests** — 4 new tests in `test_adapters_base.py` (success/fidelity
+   consistency); 2 new tests in `test_docling_standard_adapter.py`
+   (environment evidence has no absolute path, has the expected shape); 1
+   new test plus extended synthetic fixture data in
+   `test_run_docling_standard_report.py` (structured determinism
+   rendering, including a deliberate partial-mismatch case that must
+   render as a visible failure).
+
+350 tests pass (up from 343 at Stage 5A.1) — see
+`reports/stage5a_pytest_output.txt`. 3 warnings, all pre-existing
+deprecation warnings from Docling's own dependencies, not this project's
+code.
+
+---
+
+## Corrected roadmap (Stage 5A.2)
+
+Vision enrichment is **not** the next stage. An earlier framing of this
+project's plan (visible in older commit history and in decision D-009)
+described the next step as "Stage 6 — `VisionEnricher` framework." That
+sequencing is superseded — see D-040 for the rationale (the ingestion
+evaluator's gold fact-to-chunk evidence-alignment catalog must exist
+before retrieval projections are worth comparing, and vision enrichment
+is one more *ingestion* lane, not a retrieval concern):
+
+```
+Stage 6A  Deterministic ingestion-fidelity evaluator          <- NEXT
+Stage 6B  Retrieval benchmark contract + gold evidence set
+Stage 7A  Regular vector RAG projection + retrieval baseline
+Stage 7B  Graph-enriched RAG projection
+Stage 7C  Wiki page/link projection
+Stage 8A  Selective OpenAI vision enrichment (path B)
+Stage 8B  OpenAI vendor-native ingestion (path C)
+Stage 9   Cross-lane quality, cost, latency, and ROI comparison
+```
+
+See `docs/POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions (corrected
+roadmap)" for the full two-dimension framing (ingestion approach ×
+retrieval projection) this sequence is derived from.
+
+## Future walkthrough (Stage 6A+) — `[PLANNED, none of this exists yet]`
 
 ```
 CanonicalPicture (already extracted, path A)
         |
         v
-VisionEnricher.enrich(picture, caption, surrounding_text)     [PLANNED]
-   src/ingestion_bench/vision/ -- does not exist; protocol shape only
+VisionEnricher.enrich(picture, caption, surrounding_text)     [PLANNED --
+   src/ingestion_bench/vision/ -- does not exist; protocol shape only      Stage 8A]
    documented in fixtures/BENCHMARK_CONTRACT.md section 2
         |
         v
@@ -711,7 +794,9 @@ Merged back into the SAME CanonicalDocument the path-A adapter produced  [PLANNE
         |
         v
 Evaluation against reference_manifest.json, comparing path A vs. path B  [PLANNED --
-                                                                            Stage 8]
+                                                                            Stage 6A
+                                                                            evaluator
+                                                                            reused]
 ```
 
 Every step above is planned, not implemented. No `vision/` package

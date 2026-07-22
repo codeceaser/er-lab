@@ -9,7 +9,7 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at Stage 5A.1 (see `git log` for the exact commit once
+and the repository at Stage 5A.2 (see `git log` for the exact commit once
 made).
 
 ---
@@ -18,16 +18,27 @@ made).
 
 ```
 Source documents (DOCX/PDF/PPTX)
-  -> Parser Adapter (path A DONE; B/C/D not implemented — build next)
+  -> Parser Adapter (path A DONE, frozen; B/C/D not implemented — Stage 8A/8B/D)
   -> CanonicalDocument                  [implemented — do not redesign]
   -> DocumentRevisionContext            [implemented — supplied by caller]
   -> chunk_document(...)                [implemented — do not redesign]
-  -> CanonicalChunk[]
-  -> Embedding / Knowledge Projections  [not implemented]
-  -> Retrieval                          [not implemented, for this pipeline]
+  -> CanonicalChunk[]                   [common evidence substrate — D-040]
+  -> Ingestion-fidelity evaluator vs. reference_manifest.json  [not implemented — Stage 6A, NEXT]
+  -> Gold fact-to-chunk evidence-alignment catalog              [not implemented — Stage 6A output]
+  -> Retrieval benchmark contract + gold evidence set            [not implemented — Stage 6B]
+  -> Knowledge Projections (vector / graph / wiki), independently
+     derived from the SAME CanonicalDocument/CanonicalChunk corpus
+     and the SAME Stage 6A evidence-alignment catalog (D-040)      [not implemented — Stage 7A/7B/7C]
   -> Agent                              [out of scope]
-  -> Evaluation vs. reference_manifest.json  [not implemented — build after Stage 6/7]
+  -> Cross-lane quality/cost/latency/ROI comparison               [not implemented — Stage 9]
 ```
+
+Two independent benchmark dimensions (see D-040 and
+`docs/POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions"): **ingestion
+approach** (Docling Standard Local / Docling + OpenAI vision enrichment /
+OpenAI vendor-native / optional local vision) × **retrieval projection**
+(vector RAG / Graph RAG / wiki retrieval). No stage before Stage 9
+attempts to evaluate a combination of both dimensions at once.
 
 Final module boundaries:
 
@@ -70,38 +81,78 @@ Final module boundaries:
 - **Artifact contract**: `fixtures/generated/generation_report.json`'s
   shape (per-file SHA-256 + size, `manifest_sha256`, `manifest_version`,
   excludes itself). Fixture generation must remain byte-deterministic.
-- **Adapter contract** (Stage 5A, hardened Stage 5A.1): `src/ingestion_bench/adapters/base.py`'s
+- **Adapter contract** (Stage 5A, hardened Stage 5A.1/5A.2): `src/ingestion_bench/adapters/base.py`'s
   `DocumentParserAdapter` protocol and `AdapterConversionResult` model —
   every future adapter (path B/C/D) must return this same shape,
-  including its Stage 5A.1 invariants (`elapsed_ms >= 0`; `source_sha256`
-  lowercase-hex-64; `source_relative_path` portable/relative;
-  `conversion_status` ↔ `canonical_document`/`extraction_run` presence,
-  all enforced by Pydantic validators, not just convention). Every
-  `AdapterDiagnostic` a future adapter records must set `affects_fidelity`
-  correctly (severity and fidelity impact are independent axes — see
-  `docs/POC_DECISION_LOG.md` D-037) since `conversion_status` derivation
-  depends on it. Docling/docling-core types must never appear outside
-  `src/ingestion_bench/adapters/docling_standard/`.
+  including its Stage 5A.1/5A.2 invariants (`elapsed_ms >= 0`;
+  `source_sha256` lowercase-hex-64; `source_relative_path`
+  portable/relative; `conversion_status` ↔ `canonical_document`/
+  `extraction_run` presence; `conversion_status="success"` ↔ no
+  fidelity-affecting diagnostic; all enforced by Pydantic validators, not
+  just convention). Every `AdapterDiagnostic` a future adapter records
+  must set `affects_fidelity` correctly (severity and fidelity impact are
+  independent axes — see `docs/POC_DECISION_LOG.md` D-037) since
+  `conversion_status` derivation depends on it. Docling/docling-core types
+  must never appear outside `src/ingestion_bench/adapters/docling_standard/`.
+- **Determinism-evidence contract** (Stage 5A.2, D-039): any runner that
+  claims deterministic output must report the claim component by
+  component — full serialized `CanonicalDocument` JSON, the stable
+  canonical hash, full serialized `CanonicalChunk` list JSON, ordered
+  `chunk_id`s, and ordered `content_sha256` values, each as its own
+  boolean result — never one collapsed hash comparison presented as proof
+  of full-output determinism. An aggregate `all_equal`-style field may
+  exist only as a summary derived from the individual results, never as
+  the sole reported figure.
+- **Shared-evidence-substrate contract** (D-040): `CanonicalDocument` and
+  `CanonicalChunk` are the one common, authoritative evidence layer every
+  future knowledge projection (vector index, graph, wiki) is derived
+  from. No projection-specific field (a graph edge weight, a wiki page
+  slug, a vector-index id) may ever be added to `CanonicalDocument` or
+  `CanonicalChunk`. Every projection must remain independently
+  rebuildable from `CanonicalDocument`/`CanonicalChunk` alone, and every
+  graph edge or wiki claim a future projection produces must retain
+  supporting `CanonicalChunk` ids so it stays traceable back to this same
+  evidence layer.
 
-## Implementation order (validated stage sequence)
+## Implementation order (validated stage sequence — corrected, Stage 5A.2)
+
+**This sequence supersedes any earlier "Stage 6 = VisionEnricher" framing
+found elsewhere in this project's history** (see D-040): the ingestion
+evaluator and its gold evidence-alignment catalog must exist before
+retrieval projections are worth comparing, and vision enrichment is one
+more *ingestion* lane, not a prerequisite for retrieval work.
 
 1. Stage 1 — benchmark contract + frozen manifest. **Done.**
 2. Stage 2 (+2.1) — canonical model + hashing. **Done.**
 3. Stage 3 (+3.1) — deterministic fixture generation. **Done.**
 4. Stage 4 (+4.1, 4.2, 4.2a) — canonical chunking. **Done.**
-5. Stage 5A (+5A.1 evidence/provenance hardening) — Docling
-   `DOCLING_STANDARD_LOCAL` adapter (path A). **Done, frozen.**
-   `docling==2.114.0` installed and pinned; zero `VisionEnricher`
-   dependency; all 9 generated fixtures produce a valid `CanonicalDocument`
-   (7 `success`, 2 `partial` — DOCX, since Docling exposes no DOCX
-   pagination geometry, D-037) and chunk through the unmodified frozen
-   chunker.
-6. Stage 6 — `VisionEnricher` framework + `OpenAIVisionEnricher` (path B). **Next.**
-7. Stage 7 — OpenAI vendor-native adapter (path C).
-8. Stage 8 — evaluator, scoring `CanonicalDocument`/`CanonicalChunk`
-   output against `reference_manifest.json` only (never LLM-grades-LLM).
-9. Optional/deferred — local Granite Vision (path D), revisit only on a
-   concrete local-only-deployment requirement.
+5. Stage 5A (+5A.1 evidence/provenance hardening, +5A.2 evidence-contract
+   correction) — Docling `DOCLING_STANDARD_LOCAL` adapter (path A).
+   **Done, frozen.** `docling==2.114.0` installed and pinned; zero
+   `VisionEnricher` dependency; all 9 generated fixtures produce a valid
+   `CanonicalDocument` (7 `success`, 2 `partial` — DOCX, since Docling
+   exposes no DOCX pagination geometry, D-037) and chunk through the
+   unmodified frozen chunker; conversion determinism is backed by five
+   independent component-level comparisons (D-039); `success` status
+   cannot coexist with a fidelity-affecting diagnostic; environment/
+   model-footprint evidence is collected live, never hand-typed.
+6. Stage 6A — deterministic ingestion-fidelity evaluator, scoring
+   `CanonicalDocument`/`CanonicalChunk` output against
+   `reference_manifest.json` only (never LLM-grades-LLM). Produces the
+   gold fact-to-chunk evidence-alignment catalog reused by every later
+   retrieval projection (D-040). **Next.**
+7. Stage 6B — retrieval benchmark contract + gold evidence set, built on
+   the Stage 6A alignment catalog.
+8. Stage 7A — regular vector RAG projection + retrieval baseline.
+9. Stage 7B — graph-enriched RAG projection.
+10. Stage 7C — wiki page/link projection.
+11. Stage 8A — selective OpenAI vision enrichment, `VisionEnricher`
+    framework + `OpenAIVisionEnricher` (path B).
+12. Stage 8B — OpenAI vendor-native adapter (path C).
+13. Stage 9 — cross-lane quality, cost, latency, and ROI comparison across
+    every ingestion-approach × retrieval-projection combination.
+14. Optional/deferred — local Granite Vision (path D), revisit only on a
+    concrete local-only-deployment requirement.
 
 ## Acceptance tests another implementation must satisfy
 
@@ -109,17 +160,19 @@ At minimum, the full existing suite must continue to pass unmodified:
 `tests/test_canonical_schema.py` (87), `tests/test_canonical_hashing.py`
 (21), `tests/test_fixture_generation.py` (38), `tests/test_chunking.py`
 (110), `tests/test_docling_standard_mapper.py` (28),
-`tests/test_docling_standard_adapter.py` (8),
+`tests/test_docling_standard_adapter.py` (10),
 `tests/test_docling_standard_integration.py` (34),
-`tests/test_adapters_base.py` (15),
-`tests/test_run_docling_standard_report.py` (2) — 343 total. A new
-adapter/evaluator implementation must add its own test files following
-the same pattern (one file per concern, `pytest`, `pythonpath = src
-fixtures` per `pytest.ini`) rather than modifying the existing ones.
+`tests/test_adapters_base.py` (19),
+`tests/test_run_docling_standard_report.py` (3) — 350 total, 3 warnings
+(pre-existing Docling-dependency deprecation warnings, not this project's
+own code). A new adapter/evaluator implementation must add its own test
+files following the same pattern (one file per concern, `pytest`,
+`pythonpath = src fixtures` per `pytest.ini`) rather than modifying the
+existing ones.
 
 Specific invariants a parser adapter must satisfy, verifiable by
 constructing its output and running it through existing validators —
-**already proven true for the Stage 5A/5A.1 Docling adapter**, and
+**already proven true for the Stage 5A/5A.1/5A.2 Docling adapter**, and
 required of any future adapter (path B/C/D) too:
 
 - Every id it produces (`block_id`, `table_id`, `picture_id`,
@@ -151,6 +204,14 @@ required of any future adapter (path B/C/D) too:
   (`element_id` may resolve to the annotation's own `annotation_id`)
   whenever the parser actually supplies evidence for it — never a
   fabricated bbox/source reference when it doesn't (D-038).
+- `conversion_status="success"` must never be constructible alongside a
+  diagnostic with `affects_fidelity=True` — enforced by a Pydantic
+  `model_validator` on `AdapterConversionResult`, not left to adapter-code
+  discipline alone (D-037 continued, Stage 5A.2).
+- Any claim of deterministic output must be backed by component-level
+  evidence (full document JSON, stable hash, full chunk-list JSON,
+  ordered chunk ids, ordered chunk content hashes — each reported
+  separately), never a single collapsed comparison (D-039).
 
 ## Enterprise constraints
 
@@ -182,6 +243,18 @@ required of any future adapter (path B/C/D) too:
 - **No unapproved model/data egress** — only synthetic fixtures may ever
   be sent to a remote model (OpenAI paths B/C); no organizational document
   may be sent to any external API from this codebase.
+- **Canonical chunks as the common evidence substrate** (D-040) —
+  `CanonicalDocument`/`CanonicalChunk` are the one shared, authoritative
+  evidence layer for every future knowledge projection; no vector-,
+  graph-, or wiki-specific field or metadata may ever enter either model.
+- **Knowledge projections remain independently rebuildable** (D-040) —
+  a future vector index, graph, or wiki must always be reconstructible
+  from `CanonicalDocument`/`CanonicalChunk` alone; none of them is
+  authoritative over another or over the canonical corpus.
+- **Component-level determinism evidence** (D-039) — any future runner
+  claiming deterministic output must report each comparison (document
+  JSON, canonical hash, chunk-list JSON, chunk ids, chunk content hashes)
+  independently, never as one collapsed pass/fail.
 
 ## Explicit non-goals (for the first reproduction)
 
@@ -245,7 +318,15 @@ text), D-032 (Docling confined to the adapter boundary), D-033 (explicit
 geometry read from `python-docx` as a documented fallback, never
 fabricated), D-035 (OCR-origin detected structurally via picture-child
 nesting, never inferred from which fixture is being processed), D-036
-(artifact file-path keys format-qualified, distinct from `doc_id`).
+(artifact file-path keys format-qualified, distinct from `doc_id`), D-037
+(`conversion_status` derived from a dedicated `affects_fidelity` axis,
+never from diagnostic severity alone — and, since Stage 5A.2, `"success"`
+is provably inconsistent with any fidelity-affecting diagnostic), D-038
+(every `OcrAnnotation` Docling actually evidences gets a matching
+`ProvenanceEntry`), D-039 (determinism reported component by component,
+never as one collapsed hash comparison), D-040 (canonical chunks are the
+common evidence substrate for every future knowledge projection; vector/
+graph/wiki representations remain derived, never authoritative).
 
 D-009 (Granite Vision optional/deferred), D-022 (effective-revision
 retrieval policy), D-023 (upstream duplicate-upload rejection policy) are
