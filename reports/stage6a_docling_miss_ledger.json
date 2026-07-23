@@ -1,13 +1,14 @@
 {
-  "run_id": "9e943cae4410d1a1a6e98ae60a0e7e3c38a772b5bc92781fc5078b4c4af6bb77",
-  "generated_at": "2026-07-23T03:09:51.052619+00:00",
-  "total_misses": 24,
+  "run_id": "38beed91dc9deced3c9df216eb611ab8f230aaddbd5a6df03d007918955ff71b",
+  "generated_at": "2026-07-23T17:01:59.937653+00:00",
+  "total_misses": 56,
   "miss_count_by_classification": {
     "parser_classification_loss": 5,
-    "parser_content_loss": 8,
+    "parser_structure_loss": 8,
+    "parser_relationship_loss": 6,
     "mapper_loss": 2,
-    "parser_structure_loss": 4,
-    "parser_relationship_loss": 4,
+    "parser_content_loss": 6,
+    "parser_provenance_loss": 28,
     "evaluation_contract_insufficient": 1
   },
   "entries": [
@@ -53,20 +54,39 @@
     },
     {
       "fixture": "parity/PARITY_001.docx",
-      "fact_id": "ID_004",
-      "metric": "identifier_occurrence_recall",
+      "fact_id": "H_003",
+      "metric": "heading_unit_location_accuracy",
       "expected_value": {
-        "expected_occurrences": 3
+        "unit_index": 1
       },
       "observed_value": {
-        "observed_occurrences": 2
+        "unit_index": 0
       },
       "result": "partial",
-      "failure_class": "parser_content_loss",
-      "explanation": "identifier 'P-205' found in only 2 of 3 expected occurrences",
+      "failure_class": "parser_structure_loss",
+      "explanation": "heading 'H_003' matched text but at the wrong unit_index",
       "supporting_canonical_element_ids": [
-        "1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5",
-        "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42"
+        "977c0332161b960ebb3f109a61dfa0a1225d9d0e38fbbcf443f3c4f6ab1758d9"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "PIC_001",
+      "metric": "picture_unit_location_accuracy",
+      "expected_value": {
+        "unit_index": 1
+      },
+      "observed_value": {
+        "unit_index": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_structure_loss",
+      "explanation": "picture 'PIC_001' at wrong unit_index",
+      "supporting_canonical_element_ids": [
+        "7cbaac5efc1568264312d4d86aee00bc9b96d422989379a9aea828ce8930a1d1"
       ],
       "supporting_chunk_ids": [],
       "raw_docling_references": [],
@@ -84,28 +104,86 @@
         "as": "paragraph"
       },
       "result": "partial",
-      "failure_class": "mapper_loss",
+      "failure_class": "parser_relationship_loss",
       "explanation": "caption text for 'CAP_001' present as a plain CanonicalParagraph, not linked to its picture -- caption text present, caption relationship missed",
       "supporting_canonical_element_ids": [
         "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42"
       ],
       "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "CAP_001",
+      "metric": "caption_unit_location_accuracy",
+      "expected_value": {
+        "unit_index": 1
+      },
+      "observed_value": {
+        "unit_index": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_structure_loss",
+      "explanation": "caption 'CAP_001' (present as paragraph) at wrong unit_index",
+      "supporting_canonical_element_ids": [
+        "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "ID_004_occ_1",
+      "metric": "identifier_occurrence_location_accuracy",
+      "expected_value": {
+        "unit_index": 1
+      },
+      "observed_value": {
+        "unit_index": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_structure_loss",
+      "explanation": "identifier occurrence 'ID_004_occ_1' matched but at unit_index=0, expected 1 (via source_fact 'CAP_001')",
+      "supporting_canonical_element_ids": [
+        "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "ID_004_occ_2",
+      "metric": "identifier_occurrence_recall",
+      "expected_value": {
+        "normalized_value": "P-205",
+        "source_fact": "VF_NODE_003"
+      },
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "mapper_loss",
+      "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
       "raw_docling_references": [
+        "#/texts/4",
         "#/texts/13"
       ],
-      "confidence": "supported"
+      "confidence": "certain"
     },
     {
       "fixture": "parity/PARITY_001.docx",
       "fact_id": "PIC_001_ocr_0",
-      "metric": "ocr_token_recall",
+      "metric": "picture_ocr_token_recall",
       "expected_value": {
         "text": "Incident Detected"
       },
       "observed_value": null,
       "result": "miss",
       "failure_class": "parser_content_loss",
-      "explanation": "expected OCR token 'Incident Detected' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "explanation": "expected OCR phrase 'Incident Detected' not recovered (single-line or adjacent-fragment containment) among extracted OcrAnnotation text",
       "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
       "raw_docling_references": [],
@@ -114,14 +192,14 @@
     {
       "fixture": "parity/PARITY_001.docx",
       "fact_id": "PIC_001_ocr_1",
-      "metric": "ocr_token_recall",
+      "metric": "picture_ocr_token_recall",
       "expected_value": {
         "text": "Escalate to Resilience Team"
       },
       "observed_value": null,
       "result": "miss",
       "failure_class": "parser_content_loss",
-      "explanation": "expected OCR token 'Escalate to Resilience Team' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "explanation": "expected OCR phrase 'Escalate to Resilience Team' not recovered (single-line or adjacent-fragment containment) among extracted OcrAnnotation text",
       "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
       "raw_docling_references": [],
@@ -130,36 +208,321 @@
     {
       "fixture": "parity/PARITY_001.docx",
       "fact_id": "PIC_001_ocr_2",
-      "metric": "ocr_token_recall",
+      "metric": "picture_ocr_token_recall",
       "expected_value": {
         "text": "Activate Procedure P-205"
       },
       "observed_value": null,
       "result": "miss",
       "failure_class": "parser_content_loss",
-      "explanation": "expected OCR token 'Activate Procedure P-205' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "explanation": "expected OCR phrase 'Activate Procedure P-205' not recovered (single-line or adjacent-fragment containment) among extracted OcrAnnotation text",
       "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
       "raw_docling_references": [],
       "confidence": "supported"
     },
     {
-      "fixture": "parity/PARITY_001.pptx",
-      "fact_id": "ID_004",
-      "metric": "identifier_occurrence_recall",
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed",
+      "metric": "provenance_bbox_coverage_heading",
       "expected_value": {
-        "expected_occurrences": 3
+        "has_bbox": true
       },
       "observed_value": {
-        "observed_occurrences": 2
+        "has_bbox": false
       },
       "result": "partial",
-      "failure_class": "parser_content_loss",
-      "explanation": "identifier 'P-205' found in only 2 of 3 expected occurrences",
-      "supporting_canonical_element_ids": [
-        "1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5",
-        "b2d0e421bc27661d4f63a0b36fb949114fc9573d3aeaa22049e8361f34da3b74"
-      ],
+      "failure_class": "parser_provenance_loss",
+      "explanation": "heading '5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "2de7ccf9053ce3c5747fedec53d6f0b187fa8c36e03c7164d043ddeb2d176833",
+      "metric": "provenance_bbox_coverage_heading",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "heading '2de7ccf9053ce3c5747fedec53d6f0b187fa8c36e03c7164d043ddeb2d176833' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "977c0332161b960ebb3f109a61dfa0a1225d9d0e38fbbcf443f3c4f6ab1758d9",
+      "metric": "provenance_bbox_coverage_heading",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "heading '977c0332161b960ebb3f109a61dfa0a1225d9d0e38fbbcf443f3c4f6ab1758d9' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph '59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph '0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph 'a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph '1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph '970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph 'e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph '9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "20e6f7c6087d207e0cd700b8e79364d5f1fd0e48adc7041fb6fe32ad8b55626f",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph '20e6f7c6087d207e0cd700b8e79364d5f1fd0e48adc7041fb6fe32ad8b55626f' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "bbdc136a5ff00dd6f1f35732e671c2ce979006c7f130252c182a744c845f2f5f",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph 'bbdc136a5ff00dd6f1f35732e671c2ce979006c7f130252c182a744c845f2f5f' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "8469e59969393ce34379d070bc95b0ef944287d891ba36ea882e3252f936c284",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph '8469e59969393ce34379d070bc95b0ef944287d891ba36ea882e3252f936c284' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42",
+      "metric": "provenance_bbox_coverage_paragraph",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "paragraph 'fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "d970148620b5a24de203347fd3cfa317d04c5709d3affee270ae84607ff8c664",
+      "metric": "provenance_bbox_coverage_table",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "table 'd970148620b5a24de203347fd3cfa317d04c5709d3affee270ae84607ff8c664' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "7cbaac5efc1568264312d4d86aee00bc9b96d422989379a9aea828ce8930a1d1",
+      "metric": "provenance_bbox_coverage_picture",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "picture '7cbaac5efc1568264312d4d86aee00bc9b96d422989379a9aea828ce8930a1d1' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "provenance_bbox_coverage_overall",
+      "metric": "provenance_bbox_coverage_overall",
+      "expected_value": {
+        "covered": 16
+      },
+      "observed_value": {
+        "covered": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "16 of 16 canonical elements have no bbox-carrying ProvenanceEntry, across every category",
+      "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
       "raw_docling_references": [],
       "confidence": "certain"
@@ -236,28 +599,46 @@
         "as": "paragraph"
       },
       "result": "partial",
-      "failure_class": "mapper_loss",
+      "failure_class": "parser_relationship_loss",
       "explanation": "caption text for 'CAP_001' present as a plain CanonicalParagraph, not linked to its picture -- caption text present, caption relationship missed",
       "supporting_canonical_element_ids": [
         "b2d0e421bc27661d4f63a0b36fb949114fc9573d3aeaa22049e8361f34da3b74"
       ],
       "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "ID_004_occ_2",
+      "metric": "identifier_occurrence_recall",
+      "expected_value": {
+        "normalized_value": "P-205",
+        "source_fact": "VF_NODE_003"
+      },
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "mapper_loss",
+      "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
       "raw_docling_references": [
+        "#/texts/4",
         "#/texts/10"
       ],
-      "confidence": "supported"
+      "confidence": "certain"
     },
     {
       "fixture": "parity/PARITY_001.pptx",
       "fact_id": "PIC_001_ocr_0",
-      "metric": "ocr_token_recall",
+      "metric": "picture_ocr_token_recall",
       "expected_value": {
         "text": "Incident Detected"
       },
       "observed_value": null,
       "result": "miss",
       "failure_class": "parser_content_loss",
-      "explanation": "expected OCR token 'Incident Detected' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "explanation": "expected OCR phrase 'Incident Detected' not recovered (single-line or adjacent-fragment containment) among extracted OcrAnnotation text",
       "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
       "raw_docling_references": [],
@@ -266,14 +647,14 @@
     {
       "fixture": "parity/PARITY_001.pptx",
       "fact_id": "PIC_001_ocr_1",
-      "metric": "ocr_token_recall",
+      "metric": "picture_ocr_token_recall",
       "expected_value": {
         "text": "Escalate to Resilience Team"
       },
       "observed_value": null,
       "result": "miss",
       "failure_class": "parser_content_loss",
-      "explanation": "expected OCR token 'Escalate to Resilience Team' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "explanation": "expected OCR phrase 'Escalate to Resilience Team' not recovered (single-line or adjacent-fragment containment) among extracted OcrAnnotation text",
       "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
       "raw_docling_references": [],
@@ -282,14 +663,14 @@
     {
       "fixture": "parity/PARITY_001.pptx",
       "fact_id": "PIC_001_ocr_2",
-      "metric": "ocr_token_recall",
+      "metric": "picture_ocr_token_recall",
       "expected_value": {
         "text": "Activate Procedure P-205"
       },
       "observed_value": null,
       "result": "miss",
       "failure_class": "parser_content_loss",
-      "explanation": "expected OCR token 'Activate Procedure P-205' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "explanation": "expected OCR phrase 'Activate Procedure P-205' not recovered (single-line or adjacent-fragment containment) among extracted OcrAnnotation text",
       "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
       "raw_docling_references": [],
@@ -448,9 +829,211 @@
       "confidence": "certain"
     },
     {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "45223fa70c7003ce9f52bdd84c42b8959b8f6ed66f139403b1b9dd4cd265cdc9",
+      "metric": "provenance_bbox_coverage_heading",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "heading '45223fa70c7003ce9f52bdd84c42b8959b8f6ed66f139403b1b9dd4cd265cdc9' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "509868a0cc33a1eff6436ca859f7dd51425c51a611519ca61589097f9c57d796",
+      "metric": "provenance_bbox_coverage_heading",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "heading '509868a0cc33a1eff6436ca859f7dd51425c51a611519ca61589097f9c57d796' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "1d567461a7cedc66066dda76128732ef301125c9eb0c8a5353bc4a4a72963e66",
+      "metric": "provenance_bbox_coverage_heading",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "heading '1d567461a7cedc66066dda76128732ef301125c9eb0c8a5353bc4a4a72963e66' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "792a524688451b14c3900cc5423251e20231926a5f8cc5ca1948e0940788d611",
+      "metric": "provenance_bbox_coverage_list_item",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "list_item '792a524688451b14c3900cc5423251e20231926a5f8cc5ca1948e0940788d611' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "6dd0da2a4a9f968261f5a24340bd31b77b8de779b1daa24869ec5c58326e701a",
+      "metric": "provenance_bbox_coverage_list_item",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "list_item '6dd0da2a4a9f968261f5a24340bd31b77b8de779b1daa24869ec5c58326e701a' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "10dd1d4c5df3613746b3b8eb8aa1098799d7aa1f20e22e26ae92e09452354599",
+      "metric": "provenance_bbox_coverage_list_item",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "list_item '10dd1d4c5df3613746b3b8eb8aa1098799d7aa1f20e22e26ae92e09452354599' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "1ae9c0426f81157de20d7870017a95094f6e98bfed3412902c8f19fc5fd335e9",
+      "metric": "provenance_bbox_coverage_list_item",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "list_item '1ae9c0426f81157de20d7870017a95094f6e98bfed3412902c8f19fc5fd335e9' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "0bb184f8cdd35d9a7bb25ddfae7d1e1ea66fc47009b492c372c4f3c1901afe95",
+      "metric": "provenance_bbox_coverage_list_item",
+      "expected_value": {
+        "has_bbox": true
+      },
+      "observed_value": {
+        "has_bbox": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "list_item '0bb184f8cdd35d9a7bb25ddfae7d1e1ea66fc47009b492c372c4f3c1901afe95' has a ProvenanceEntry but no bbox",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "provenance_bbox_coverage_overall",
+      "metric": "provenance_bbox_coverage_overall",
+      "expected_value": {
+        "covered": 8
+      },
+      "observed_value": {
+        "covered": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "8 of 8 canonical elements have no bbox-carrying ProvenanceEntry, across every category",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_PPTX_001.pptx",
+      "fact_id": "SB_001",
+      "metric": "overlap_z_order_recorded",
+      "expected_value": {
+        "has_z_order": true
+      },
+      "observed_value": {
+        "has_z_order": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "text box 'SB_001' matched but its ProvenanceEntry carries no z_order",
+      "supporting_canonical_element_ids": [
+        "ef82311834b63959c84de35f4f03f3013e517ca3e08e8e922865bcf4c88f03c4"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_PPTX_001.pptx",
+      "fact_id": "SB_002",
+      "metric": "overlap_z_order_recorded",
+      "expected_value": {
+        "has_z_order": true
+      },
+      "observed_value": {
+        "has_z_order": false
+      },
+      "result": "partial",
+      "failure_class": "parser_provenance_loss",
+      "explanation": "text box 'SB_002' matched but its ProvenanceEntry carries no z_order",
+      "supporting_canonical_element_ids": [
+        "50c6854a4b4e88d5e6e9a3b27dbb20910ded9cdfbf4b53bca3fc9cc4512bddd1"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
       "fixture": "stress/STRESS_CHART_001.pdf",
       "fact_id": "STRESS_CHART_001_ocr_tokens_undeclared",
-      "metric": "ocr_token_recall",
+      "metric": "picture_ocr_token_recall",
       "expected_value": null,
       "observed_value": null,
       "result": "miss",

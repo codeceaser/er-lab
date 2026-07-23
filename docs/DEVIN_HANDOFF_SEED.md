@@ -9,7 +9,7 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at Stage 6A (see `git log` for the exact commit once
+and the repository at Stage 6A.1 (see `git log` for the exact commit once
 made).
 
 ---
@@ -58,12 +58,15 @@ Final module boundaries:
 - `src/ingestion_bench/vision/` — **does not exist yet.** Expected shape:
   a `VisionEnricher` protocol, `NoOpVisionEnricher`, `OpenAIVisionEnricher`
   (path B), optionally `GraniteVisionEnricher` (path D, deferred).
-- `src/ingestion_bench/evaluation/` — **Stage 6A implemented.** `model.py`
-  (strict Pydantic result models), `normalization.py` (deterministic text/
-  identifier rules), `matcher.py` (exact-match primitives),
-  `classification.py` (miss-attribution against raw Docling debug JSON
-  only), `evaluator.py` (per-fixture scoring, the manifest fact catalog
-  builder), `aggregation.py` (per-format/overall aggregation, report
+- `src/ingestion_bench/evaluation/` — **Stage 6A implemented, hardened by
+  6A.1.** `model.py` (strict Pydantic result models), `normalization.py`
+  (deterministic text/identifier/OCR-phrase rules), `matcher.py`
+  (exact-match primitives), `classification.py` (miss-attribution against
+  raw Docling debug JSON only, incl. `classify_relationship_absence` for
+  relationship/structure loss attribution, D-045), `evaluator.py`
+  (per-fixture scoring, the manifest fact catalog builder,
+  occurrence-aware identifier resolution, D-044), `aggregation.py`
+  (per-format/overall aggregation, input-bundle hashing, report
   rendering). **The only package in the repository allowed to read
   `reference_manifest.json`** — verified by
   `tests/test_stage6a_integration.py::test_evaluation_package_is_the_only_package_referencing_the_manifest`.
@@ -146,14 +149,22 @@ more *ingestion* lane, not a prerequisite for retrieval work.
    independent component-level comparisons (D-039); `success` status
    cannot coexist with a fidelity-affecting diagnostic; environment/
    model-footprint evidence is collected live, never hand-typed.
-6. Stage 6A — deterministic ingestion-fidelity evaluator, scoring
-   `CanonicalDocument`/`CanonicalChunk` output against
-   `reference_manifest.json` only (never LLM-grades-LLM). **Done.**
-   `src/ingestion_bench/evaluation/`; 9/9 fixtures scored; 24 total misses
-   (classified, never unclassified); 77 gold evidence-alignment entries
-   written to `artifacts/stage6a/evidence_alignment.json` (D-041, D-042).
-   One manifest-contract gap recorded, not invented around (chart OCR
-   tokens undeclared).
+6. Stage 6A (+6A.1 correctness/gold-evidence hardening) — deterministic
+   ingestion-fidelity evaluator, scoring `CanonicalDocument`/
+   `CanonicalChunk` output against `reference_manifest.json` only (never
+   LLM-grades-LLM). **Done, frozen.** `src/ingestion_bench/evaluation/`;
+   9/9 fixtures scored; 56 total misses (classified, never unclassified,
+   every deficit ledgered per D-044/item 5); 147 gold evidence-alignment
+   entries (matched/partial/missing/not_applicable, one per expected
+   manifest fact, never matched-only) written to
+   `artifacts/stage6a/evidence_alignment.json` (D-041, D-042, D-044).
+   Identifier occurrence recall is occurrence-level and one-to-one, never
+   globally counted-and-capped (D-044); parser-vs-mapper attribution for
+   relationship/structure gaps requires explicit raw Docling relationship
+   evidence, never inferred from mere text presence (D-045);
+   `expected_retrieval_difficulty` stays unclassified/`null` throughout
+   Stage 6A (D-046). One manifest-contract gap recorded, not invented
+   around (chart OCR tokens undeclared).
 7. Stage 6B — retrieval benchmark contract + gold evidence set, built on
    the Stage 6A alignment catalog. **Next.**
 8. Stage 7A — regular vector RAG projection + retrieval baseline.
@@ -178,11 +189,13 @@ At minimum, the full existing suite must continue to pass unmodified:
 `tests/test_adapters_base.py` (19),
 `tests/test_run_docling_standard_report.py` (3),
 `tests/test_evaluation_models.py` (18),
-`tests/test_evaluation_normalization.py` (16),
+`tests/test_evaluation_normalization.py` (23),
 `tests/test_evaluation_matcher.py` (7),
 `tests/test_evaluation_aggregation.py` (11),
-`tests/test_stage6a_integration.py` (18),
-`tests/test_stage6a_report_generation.py` (8) — 428 total, 3 warnings
+`tests/test_evaluation_identifier_occurrence.py` (3),
+`tests/test_evaluation_table_matching.py` (4),
+`tests/test_stage6a_integration.py` (25),
+`tests/test_stage6a_report_generation.py` (8) — 449 total, 3 warnings
 (pre-existing Docling-dependency deprecation warnings, not this project's
 own code). A new adapter/retrieval-projection implementation must add its
 own test files following the same pattern (one file per concern, `pytest`,
@@ -275,7 +288,7 @@ required of any future adapter (path B/C/D) too:
   JSON, canonical hash, chunk-list JSON, chunk ids, chunk content hashes)
   independently, never as one collapsed pass/fail.
 
-## Evaluator contract (Stage 6A — new, must be preserved by Stage 6B+)
+## Evaluator contract (Stage 6A, hardened 6A.1 — must be preserved by Stage 6B+)
 
 - Score primarily against `CanonicalDocument`; use `CanonicalChunk` only
   for downstream evidence/chunk-alignment availability; use raw Docling
@@ -284,6 +297,13 @@ required of any future adapter (path B/C/D) too:
   (D-041). `MissRecord.failure_class="mapper_loss"` must never be
   constructible without a real raw-Docling reference — a Pydantic
   invariant, not a convention.
+- A raw Docling `self_ref` proves TEXT existence only — it never by
+  itself proves Docling exposed a semantic type, hierarchy, caption
+  linkage, or other relationship (D-045). `mapper_loss` for a missing
+  RELATIONSHIP/STRUCTURE is only assignable via
+  `classification.py::classify_relationship_absence`, which inspects the
+  specific raw relation field directly (e.g. `pictures[i].captions`) --
+  never inferred from mere text presence elsewhere in the document.
 - Never invent an expected value not present in the frozen manifest — a
   gap (e.g. `STRESS_CHART_001` declaring no `expected_ocr_tokens`) is
   recorded as `failure_class="evaluation_contract_insufficient"` with a
@@ -293,20 +313,44 @@ required of any future adapter (path B/C/D) too:
   metric with zero applicable expectations must never be silently
   reported as 0%; `excluded_not_applicable` records deliberately-excluded
   expectations (e.g. `VisualFactAnnotation` recovery, structurally
-  not-applicable to path A) distinctly from a genuine miss.
-- Text/identifier matching is exact and documented
-  (`normalization.py`'s `TEXT_NORMALIZED_*_RULE`/`IDENTIFIER_MATCH_RULE`
-  constants) — never fuzzy or semantic. Identifier matching is boundary-
-  safe and case-sensitive (`C-88` must never match inside `C-88a`).
+  not-applicable to path A) distinctly from a genuine miss. Every
+  `MetricResult` is higher-is-better by convention (D-044 continued,
+  item 6) — a metric that reads as "count of problems" must be phrased as
+  its positive complement (e.g. `no_unexpected_text_duplication`, never
+  `unexpected_text_duplication`).
+- Every metric where `numerator < denominator` must have a corresponding
+  `MissRecord`, and `MetricResult.supporting_misses` must reference the
+  real fact/miss ids behind the deficit — never a bare number with no
+  ledger entry to back it up.
+- Identifier occurrence recall is occurrence-level and one-to-one — every
+  manifest-declared occurrence is its own expectation, resolved to a
+  SPECIFIC canonical element via its own `source_fact` metadata; one
+  observed occurrence can never satisfy two expected occurrences, and
+  occurrence recall must never be computed by counting appearances
+  globally and capping at the expected total (D-044).
+- Text/identifier/OCR-phrase matching is exact and documented
+  (`normalization.py`'s `TEXT_NORMALIZED_*_RULE`/`IDENTIFIER_MATCH_RULE`/
+  `OCR_PHRASE_MATCH_RULE` constants) — never fuzzy or semantic. Identifier
+  matching is boundary-safe and case-sensitive (`C-88` must never match
+  inside `C-88a`). OCR phrase matching never credits a short observed
+  fragment as full recovery of a longer expected phrase.
 - The gold fact-to-chunk evidence-alignment catalog
-  (`artifacts/stage6a/evidence_alignment.json`, D-042) is a first-class,
-  independently reusable output — Stage 6B must build directly on its
+  (`artifacts/stage6a/evidence_alignment.json`, D-042/D-044) is COMPLETE —
+  one entry per expected manifest fact, always, with `match_status` of
+  `matched`/`partial`/`missing`/`not_applicable` (missing/not_applicable
+  entries carry empty evidence-id lists but remain present) — never
+  matched-only. `EvidenceAlignment.expected_retrieval_difficulty` stays
+  `None`/unclassified throughout Stage 6A (D-046) — Stage 6B assigns real
+  difficulty to concrete benchmark questions, never inferred from
+  ingestion-side signals. Stage 6B must build directly on the catalog's
   `fact_id -> matched_chunk_ids` mapping, never re-derive fact-to-evidence
   matching from the manifest itself (retrieval-projection code stays
   manifest-independent, same as adapters/canonical/chunking).
 - The Markdown scorecard and JSON results must come from the SAME
   in-memory `EvaluationRun` object, same discipline as Stage 5A.1 item 7 /
-  D-039.
+  D-039. `EvaluationRun.run_id` is derived from `input_bundle_hash` (a
+  deterministic hash over every input file's actual bytes across all
+  fixtures), never computed independently of it.
 
 ## Explicit non-goals (for the first reproduction)
 
@@ -386,7 +430,15 @@ graph/wiki representations remain derived, never authoritative), D-041
 output only attributes an already-established miss, `mapper_loss` never
 assignable without raw evidence), D-042 (the Stage 6A gold fact-to-chunk
 evidence-alignment catalog is the reusable retrieval-evaluation asset,
-not a scorecard byproduct — Stage 6B builds directly on it).
+not a scorecard byproduct — Stage 6B builds directly on it), D-044 (the
+evidence-alignment catalog is complete — matched/partial/missing/
+not_applicable, one entry per expected fact — and identifier occurrence
+recall is one-to-one, never globally counted-and-capped), D-045
+(`mapper_loss` for a missing relationship/structure requires explicit raw
+Docling relationship evidence inspected directly, never inferred from
+text `self_ref` presence alone), D-046 (`expected_retrieval_difficulty`
+stays unclassified/`null` throughout Stage 6A — Stage 6B owns real
+difficulty assignment entirely).
 
 D-009 (Granite Vision optional/deferred), D-022 (effective-revision
 retrieval policy), D-023 (upstream duplicate-upload rejection policy) are

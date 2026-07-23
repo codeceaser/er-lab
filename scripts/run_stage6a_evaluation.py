@@ -45,8 +45,12 @@ def main() -> None:
     stage5a_results_path = REPORTS_DIR / "stage5a_docling_standard_results.json"
     stage5a_results_bytes = stage5a_results_path.read_bytes()
     stage5a_results_sha256 = hashlib.sha256(stage5a_results_bytes).hexdigest()
+    stage5a_results = json.loads(stage5a_results_bytes)
+    # Stage 6A.1 item 11: never leave operational.determinism silently
+    # null when Stage 5A actually supplied determinism evidence.
+    determinism_by_fixture = stage5a_results.get("determinism_results", {})
 
-    loaded_fixtures = load_fixture_artifacts(ARTIFACTS_ROOT)
+    loaded_fixtures = load_fixture_artifacts(ARTIFACTS_ROOT, determinism_by_fixture=determinism_by_fixture)
     fixture_results = [evaluate_fixture(loaded, manifest) for loaded in loaded_fixtures]
 
     run = build_evaluation_run(fixture_results, manifest, manifest_sha256, stage5a_results_sha256)
@@ -78,7 +82,9 @@ def main() -> None:
         print(f"  {result.fixture:35s} misses={len(result.miss_records):3d} evidence={len(result.evidence_alignments):3d}")
     print(f"Total misses: {sum(run.aggregate.miss_count_by_classification.values())}")
     print(f"Miss by classification: {run.aggregate.miss_count_by_classification}")
-    print(f"Evidence alignment entries: {run.aggregate.evidence_alignment_count}")
+    print(f"Evidence alignment entries: {run.aggregate.evidence_alignment_count} (by status: {run.aggregate.evidence_alignment_count_by_status})")
+    print(f"input_bundle_hash: {run.input_bundle_hash}")
+    print(f"run_id: {run.run_id}")
     print(f"Scorecard written to {REPORTS_DIR / 'stage6a_docling_baseline_scorecard.md'}")
     print(f"Results written to {REPORTS_DIR / 'stage6a_docling_baseline_results.json'}")
     print(f"Miss ledger written to {REPORTS_DIR / 'stage6a_docling_miss_ledger.json'}")

@@ -1,20 +1,36 @@
 """Miss-classification helpers (Stage 6A sections 5 and 15).
 
-Raw Docling debug JSON is read ONLY here, and ONLY to distinguish two
-failure classes once an expectation is already known to be absent from
-CanonicalDocument:
+Raw Docling debug JSON is read ONLY here, and ONLY to attribute an
+expectation already known to be unsatisfied by CanonicalDocument:
 
-  parser_content_loss -- the expected fact never reached Docling's own
-    output at all (absent from the raw debug export too).
-  mapper_loss          -- the expected fact IS present in Docling's raw
-    output, but the Stage 5A mapper did not carry it into
+  parser_content_loss     -- the expected TEXT never reached Docling's
+    own output at all (absent from the raw debug export too).
+  mapper_loss              -- the expected TEXT is present in Docling's
+    raw output, but the Stage 5A mapper did not carry it into
     CanonicalDocument.
+  parser_relationship_loss -- the expected content IS present in
+    CanonicalDocument (e.g. as a plain paragraph), but the specific
+    RELATIONSHIP/STRUCTURE/CLASSIFICATION it should also carry (e.g.
+    "this paragraph is a caption linked to picture X") is absent from
+    Docling's own raw output too -- Docling itself never exposed it.
+  mapper_loss (relationship variant) -- same missing relationship, but
+    Docling's raw output DOES explicitly expose it (e.g. the raw
+    picture object's own `captions` list references this exact text
+    item) and the Stage 5A mapper still failed to preserve it.
+
+Stage 6A.1 correction (item 4): a raw Docling `self_ref` proves TEXT
+existence only -- it never by itself proves Docling exposed a semantic
+type, hierarchy, caption linkage, or other relationship. `mapper_loss`
+for a relationship/structure gap is only ever returned by
+`classify_relationship_absence` when the specific relationship field
+(e.g. `pictures[i].captions`) is inspected directly and found to
+reference the element in question -- never inferred from mere text
+presence.
 
 Raw Docling output is never used as the scored representation -- scoring
 is always against CanonicalDocument/CanonicalChunk; this module is
 consulted only for attribution once a miss is already established.
-mapper_loss is never returned without the raw text/identifier that
-justifies it.
+mapper_loss is never returned without the raw evidence that justifies it.
 """
 
 from __future__ import annotations
@@ -69,3 +85,35 @@ def unresolved_classification(reason: str) -> tuple[str, str, list[str]]:
     """Used when no raw debug artifact was available at all to attribute
     a miss between parser and mapper -- never guesses."""
     return "unresolved", "unresolved", []
+
+
+def classify_relationship_absence(
+    raw_debug: dict[str, Any], *, parent_collection: str, parent_self_ref: str,
+    relation_field: str, child_self_ref: str | None,
+) -> tuple[str, str, list[str]]:
+    """Stage 6A.1 item 4: attributes a missing RELATIONSHIP (not missing
+    text) between `parent_self_ref` (e.g. a picture) and `child_self_ref`
+    (e.g. its caption text item) by inspecting Docling's own raw
+    `relation_field` list on the parent object directly -- never inferred
+    from the child text's mere presence/self_ref elsewhere in the
+    document. Returns:
+      ("mapper_loss", "certain", [parent_self_ref]) -- Docling's raw
+        relation_field explicitly references child_self_ref; the mapper
+        dropped a relationship Docling itself exposed.
+      ("parser_relationship_loss", "certain", []) -- the parent exists in
+        raw Docling but relation_field does not reference child_self_ref
+        (empty or referencing something else) -- Docling never exposed
+        this relationship for the mapper to preserve.
+      ("parser_relationship_loss", "unresolved", []) -- the parent object
+        itself could not be found in raw Docling at all; the relationship
+        question cannot be resolved, so this is recorded as an unresolved
+        parser-side gap, never guessed as mapper_loss.
+    """
+    for item in raw_debug.get(parent_collection, []) or []:
+        if item.get("self_ref") != parent_self_ref:
+            continue
+        refs = {ref.get("$ref") for ref in item.get(relation_field, []) or []}
+        if child_self_ref is not None and child_self_ref in refs:
+            return "mapper_loss", "certain", [parent_self_ref]
+        return "parser_relationship_loss", "certain", []
+    return "parser_relationship_loss", "unresolved", []

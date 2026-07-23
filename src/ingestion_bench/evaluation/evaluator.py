@@ -1,4 +1,6 @@
-"""Stage 6A deterministic ingestion-fidelity evaluator.
+"""Stage 6A deterministic ingestion-fidelity evaluator (hardened by Stage
+6A.1 -- see docs/POC_DECISION_LOG.md D-044 onward for the correction
+rationale).
 
 Compares reference_manifest.json (frozen ground truth) against Stage 5A
 DOCLING_STANDARD_LOCAL output (CanonicalDocument/CanonicalChunk/
@@ -11,11 +13,20 @@ Scores primarily against CanonicalDocument. Uses CanonicalChunk only to
 establish downstream evidence availability and fact-to-chunk alignment.
 Uses raw Docling debug JSON only to classify the ORIGIN of an already-
 established miss (classification.py) -- raw Docling output never replaces
-CanonicalDocument as the scored representation.
+CanonicalDocument as the scored representation. A raw self_ref proves
+TEXT existence only; classification.py::classify_relationship_absence is
+the only path that may assign mapper_loss for a missing RELATIONSHIP/
+STRUCTURE, and only when the specific raw relation field explicitly
+exposes it (Stage 6A.1 item 4).
+
+The gold evidence-alignment catalog this module builds is COMPLETE: one
+EvidenceAlignment per expected manifest fact -- matched, partial, missing,
+or not_applicable -- never only the matched ones (Stage 6A.1 item 2).
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field as dataclass_field
 from pathlib import Path
@@ -37,20 +48,17 @@ from .model import (
 )
 from .normalization import (
     IDENTIFIER_MATCH_RULE,
+    OCR_PHRASE_MATCH_RULE,
     TEXT_NORMALIZED_CASE_FOLD_RULE,
     find_identifier_occurrences,
     identifier_present,
     normalize_text_for_comparison,
+    ocr_phrase_recovered,
 )
 
-EVALUATOR_VERSION = "1.0.0"
+EVALUATOR_VERSION = "1.1.0"
 
 # --- fixture registry --------------------------------------------------
-# (fixture_relative_path, doc_id, artifact_key, source_format, suite_key)
-# artifact_key matches adapter.py/run_docling_standard.py's own
-# f"{doc_id}_{source_format}" convention -- never re-derived differently
-# here, so a Stage 5A artifact-path change would surface as a loud
-# FileNotFoundError, not a silent mismatch.
 FIXTURES: list[tuple[str, str, str, str, str]] = [
     ("parity/PARITY_001.pdf", "PARITY_001", "PARITY_001_pdf", "pdf", "parity"),
     ("parity/PARITY_001.docx", "PARITY_001", "PARITY_001_docx", "docx", "parity"),
@@ -68,6 +76,12 @@ def load_manifest(fixtures_root: Path) -> dict[str, Any]:
     return json.loads((fixtures_root / "reference_manifest.json").read_text(encoding="utf-8"))
 
 
+def _sha256_file(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 @dataclass
 class LoadedFixture:
     fixture: str
@@ -79,6 +93,12 @@ class LoadedFixture:
     chunks: list[CanonicalChunk]
     conversion_report: dict[str, Any]
     raw_debug_path: Path
+    canonical_document_file_sha256: str
+    canonical_chunks_file_sha256: str | None
+    conversion_report_file_sha256: str
+    raw_docling_debug_file_sha256: str | None
+    artifact_completeness: dict[str, bool]
+    determinism: dict[str, Any] | None
     _raw_debug: dict[str, Any] | None = dataclass_field(default=None, repr=False)
 
     def raw_debug(self) -> dict[str, Any]:
@@ -87,28 +107,48 @@ class LoadedFixture:
         return self._raw_debug
 
 
-def load_fixture_artifacts(artifacts_root: Path) -> list[LoadedFixture]:
+def load_fixture_artifacts(
+    artifacts_root: Path, *, determinism_by_fixture: dict[str, dict] | None = None,
+) -> list[LoadedFixture]:
     """Reads Stage 5A's own output verbatim -- never mutates, never
-    re-derives a value Stage 5A already computed."""
+    re-derives a value Stage 5A already computed. Stage 6A.1 item 11:
+    also computes a raw-bytes SHA-256 of every artifact file read and
+    records which expected artifacts were actually present."""
+    determinism_by_fixture = determinism_by_fixture or {}
     loaded = []
     for fixture, doc_id, artifact_key, source_format, suite_key in FIXTURES:
         fixture_dir = artifacts_root / artifact_key
-        document = CanonicalDocument.model_validate(
-            json.loads((fixture_dir / "canonical_document.json").read_text(encoding="utf-8"))
-        )
-        chunks = []
+        document_path = fixture_dir / "canonical_document.json"
         chunks_path = fixture_dir / "canonical_chunks.jsonl"
+        conversion_report_path = fixture_dir / "conversion_report.json"
+        raw_debug_path = artifacts_root / "docling_raw" / f"{artifact_key}.json"
+
+        document = CanonicalDocument.model_validate(json.loads(document_path.read_text(encoding="utf-8")))
+        chunks = []
         if chunks_path.exists():
             for line in chunks_path.read_text(encoding="utf-8").splitlines():
                 if line.strip():
                     chunks.append(CanonicalChunk.model_validate(json.loads(line)))
-        conversion_report = json.loads((fixture_dir / "conversion_report.json").read_text(encoding="utf-8"))
-        raw_debug_path = artifacts_root / "docling_raw" / f"{artifact_key}.json"
+        conversion_report = json.loads(conversion_report_path.read_text(encoding="utf-8"))
+
+        artifact_completeness = {
+            "canonical_document": document_path.exists(),
+            "canonical_chunks": chunks_path.exists(),
+            "conversion_report": conversion_report_path.exists(),
+            "raw_docling_debug": raw_debug_path.exists(),
+        }
+
         loaded.append(
             LoadedFixture(
                 fixture=fixture, doc_id=doc_id, artifact_key=artifact_key, source_format=source_format,
                 suite_key=suite_key, document=document, chunks=chunks, conversion_report=conversion_report,
                 raw_debug_path=raw_debug_path,
+                canonical_document_file_sha256=_sha256_file(document_path) or "",
+                canonical_chunks_file_sha256=_sha256_file(chunks_path),
+                conversion_report_file_sha256=_sha256_file(conversion_report_path) or "",
+                raw_docling_debug_file_sha256=_sha256_file(raw_debug_path),
+                artifact_completeness=artifact_completeness,
+                determinism=determinism_by_fixture.get(fixture),
             )
         )
     return loaded
@@ -150,7 +190,7 @@ def element_to_chunk_ids(chunks: list[CanonicalChunk]) -> dict[str, list[str]]:
     return mapping
 
 
-# --- generic metric-building helpers ------------------------------------
+# --- generic scoring bookkeeping ------------------------------------------
 
 
 def _metric(name: str, rule: str, numerator: int, denominator: int, *, excluded: int = 0,
@@ -163,25 +203,54 @@ def _metric(name: str, rule: str, numerator: int, denominator: int, *, excluded:
     )
 
 
-def _difficulty_for(fact_type: str, *, is_distractor: bool, occurrence_count: int = 1) -> str:
-    """Coarse, deterministic retrieval-difficulty heuristic (Stage 6A
-    section 16) -- NOT a retrieval question, just a reusable difficulty
-    tag for the gold evidence-alignment catalog. Documented here, not
-    invented per-fact: distractor facts are distractor_sensitive by
-    construction; multi-occurrence identifiers require connecting more
-    than one mention (multi_hop); structured table content requires
-    assembling a record (consolidation); a caption's meaning depends on
-    its linked picture (relational); everything else is a single direct
-    lookup."""
-    if is_distractor:
-        return "distractor_sensitive"
-    if fact_type in ("table", "table_cell"):
-        return "consolidation"
-    if fact_type == "identifier_target" and occurrence_count > 1:
-        return "multi_hop"
-    if fact_type == "caption":
-        return "relational"
-    return "direct"
+class _MetricAcc:
+    """Stage 6A.1 item 5: a single accumulator that keeps numerator/
+    denominator/excluded AND the exact fact_ids behind them in lockstep,
+    so `supporting_matches`/`supporting_misses` can never silently drift
+    out of sync with the counts (every metric built through this class is
+    exhaustively backed by real fact ids, not just numbers)."""
+
+    def __init__(self, name: str, rule: str) -> None:
+        self.name = name
+        self.rule = rule
+        self.numerator = 0
+        self.denominator = 0
+        self.excluded = 0
+        self.matches: list[str] = []
+        self.misses: list[str] = []
+
+    def record_match(self, fact_id: str) -> None:
+        self.numerator += 1
+        self.denominator += 1
+        self.matches.append(fact_id)
+
+    def record_partial(self, fact_id: str) -> None:
+        self.denominator += 1
+        self.misses.append(fact_id)
+
+    def record_miss(self, fact_id: str) -> None:
+        self.denominator += 1
+        self.misses.append(fact_id)
+
+    def record_excluded(self) -> None:
+        self.excluded += 1
+
+    def result(self) -> MetricResult:
+        return _metric(self.name, self.rule, self.numerator, self.denominator, excluded=self.excluded,
+                        matches=self.matches, misses=self.misses)
+
+
+def _alignment(
+    fact_id: str, fixture: str, fact_type: str, *, expected_value: dict, expected_location: dict | None = None,
+    matched_element_ids: list[str] | None = None, matched_annotation_ids: list[str] | None = None,
+    matched_chunk_ids: list[str] | None = None, match_status: str, derivation: str,
+) -> EvidenceAlignment:
+    return EvidenceAlignment(
+        fact_id=fact_id, fixture=fixture, fact_type=fact_type, expected_value=expected_value,
+        expected_location=expected_location or {}, matched_canonical_element_ids=matched_element_ids or [],
+        matched_annotation_ids=matched_annotation_ids or [], matched_chunk_ids=matched_chunk_ids or [],
+        match_status=match_status, derivation=derivation, expected_retrieval_difficulty=None,
+    )
 
 
 # --- manifest fact extraction, per suite ---------------------------------
@@ -257,12 +326,16 @@ def _stress_pptx_diagram_facts(section: dict) -> dict[str, list[dict]]:
 
 
 def _stress_chart_facts(section: dict) -> dict[str, list[dict]]:
-    facts: dict[str, list[dict]] = {"picture": [], "visual_fact": []}
+    """Stage 6A.1 item 7: visual_facts and unsupported_claims are kept as
+    SEPARATE fact-catalog keys -- never combined into one bucket -- so
+    they can be scored with different, correctly-named metrics
+    (visual_fact_recall vs. unsupported_visual_claim_absence)."""
+    facts: dict[str, list[dict]] = {"picture": [], "visual_fact": [], "unsupported_claim": []}
     facts["picture"].append({"fact_id": f"{section['doc_id']}_PICTURE", "expected_picture_class": section.get("expected_picture_class")})
     for vf in section.get("visual_facts", []):
-        facts["visual_fact"].append({"fact_id": vf["fact_id"]})
-    for vf in section.get("unsupported_claims", []):
-        facts["visual_fact"].append({"fact_id": vf["fact_id"]})
+        facts["visual_fact"].append({"fact_id": vf["fact_id"], "raw_text": vf.get("raw_text")})
+    for uc in section.get("unsupported_claims", []):
+        facts["unsupported_claim"].append({"fact_id": uc["fact_id"], "claim": uc.get("claim")})
     return facts
 
 
@@ -299,37 +372,43 @@ def build_fact_catalog(manifest: dict[str, Any], suite_key: str, doc_id: str) ->
 def _score_text_facts(
     fixture: str, text_facts: list[dict], elements: list[TextElement], chunk_map: dict[str, list[str]],
     raw_text_blob: list[tuple[str, str]] | None,
-) -> tuple[MetricResult, MetricResult, MetricResult, list[MissRecord], list[UnexpectedObservation], list[EvidenceAlignment]]:
-    """text_fact_recall, text_fact_location_accuracy, unexpected_text_duplication."""
-    matches: list[str] = []
-    misses: list[str] = []
-    location_num = 0
-    location_den = 0
+) -> tuple[dict[str, MetricResult], list[MissRecord], list[UnexpectedObservation], list[EvidenceAlignment], dict[str, TextElement]]:
+    """text_fact_recall, text_fact_location_accuracy, no_unexpected_text_duplication.
+    Returns a fact_id -> matched TextElement map too, reused by identifier
+    occurrence resolution (Stage 6A.1 item 1)."""
+    recall_acc = _MetricAcc("text_fact_recall", TEXT_NORMALIZED_CASE_FOLD_RULE)
+    location_acc = _MetricAcc("text_fact_location_accuracy", "unit_index of the matched element == expected_location.unit_index (only facts declaring one)")
     miss_records: list[MissRecord] = []
     alignments: list[EvidenceAlignment] = []
-    matched_element_ids: set[str] = set()
+    matched_by_fact_id: dict[str, TextElement] = {}
 
     for fact in text_facts:
+        fact_type = "distractor_paragraph" if fact.get("is_distractor") else "paragraph"
         found = find_exact_text_matches(fact["text"], elements)
         if found:
-            matches.append(fact["fact_id"])
             best = found[0]
-            matched_element_ids.add(best.element_id)
+            matched_by_fact_id[fact["fact_id"]] = best
+            recall_acc.record_match(fact["fact_id"])
             expected_unit = _location_unit_index(fact.get("expected_location", {}))
             if expected_unit is not None:
-                location_den += 1
                 if best.unit_index == expected_unit:
-                    location_num += 1
-            alignments.append(EvidenceAlignment(
-                fact_id=fact["fact_id"], fixture=fixture, fact_type="distractor_paragraph" if fact.get("is_distractor") else "paragraph",
-                expected_value={"text": fact["text"]}, expected_location=fact.get("expected_location", {}),
-                matched_canonical_element_ids=[e.element_id for e in found],
-                matched_chunk_ids=sorted({cid for e in found for cid in chunk_map.get(e.element_id, [])}),
+                    location_acc.record_match(fact["fact_id"])
+                else:
+                    location_acc.record_miss(fact["fact_id"])
+                    miss_records.append(MissRecord(
+                        fixture=fixture, fact_id=fact["fact_id"], metric="text_fact_location_accuracy",
+                        expected_value={"unit_index": expected_unit}, observed_value={"unit_index": best.unit_index}, result="partial",
+                        failure_class="parser_structure_loss", confidence="certain",
+                        explanation=f"{fact['fact_id']!r} matched text but at unit_index={best.unit_index}, expected {expected_unit}",
+                        supporting_canonical_element_ids=[best.element_id],
+                    ))
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, fact_type, expected_value={"text": fact["text"]}, expected_location=fact.get("expected_location", {}),
+                matched_element_ids=[e.element_id for e in found], matched_chunk_ids=sorted({cid for e in found for cid in chunk_map.get(e.element_id, [])}),
                 match_status="matched", derivation="source_derived",
-                expected_retrieval_difficulty=_difficulty_for("paragraph", is_distractor=fact.get("is_distractor", False)),
             ))
         else:
-            misses.append(fact["fact_id"])
+            recall_acc.record_miss(fact["fact_id"])
             if raw_text_blob is not None:
                 failure_class, confidence, raw_refs = classification.classify_text_absence(fact["text"], raw_text_blob)
             else:
@@ -341,166 +420,59 @@ def _score_text_facts(
                 explanation=f"expected text for {fact['fact_id']!r} not found as any canonical text element (heading/paragraph/list_item/caption)",
                 raw_docling_references=raw_refs,
             ))
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, fact_type, expected_value={"text": fact["text"]}, expected_location=fact.get("expected_location", {}),
+                match_status="missing", derivation="not_applicable",
+            ))
 
-    recall = _metric("text_fact_recall", TEXT_NORMALIZED_CASE_FOLD_RULE, len(matches), len(text_facts), matches=matches, misses=misses)
-    location = _metric("text_fact_location_accuracy", "unit_index of the matched element == expected_location.unit_index (only facts declaring one)", location_num, location_den)
-
-    # unexpected_text_duplication: canonical paragraph/heading/list_item/caption
-    # elements whose normalized text does not match ANY expected fact text --
-    # a duplicate is flagged when this text ALSO exactly equals another
-    # matched element's text (i.e. it's a real repeat of expected content,
-    # not merely unrelated furniture).
+    # Stage 6A.1 item 6: renamed to a higher-is-better metric -- numerator
+    # counts elements WITHOUT unexpected duplication.
     expected_norms = {normalize_text_for_comparison(f["text"]) for f in text_facts}
     matched_norms_seen: dict[str, int] = {}
     unexpected: list[UnexpectedObservation] = []
+    checked = 0
+    duplicated = 0
     for element in elements:
         if element.element_type == "ocr_annotation":
             continue
+        checked += 1
         norm = normalize_text_for_comparison(element.text)
         if not norm:
             continue
         if norm in expected_norms:
             matched_norms_seen[norm] = matched_norms_seen.get(norm, 0) + 1
             if matched_norms_seen[norm] > 1:
+                duplicated += 1
                 unexpected.append(UnexpectedObservation(
                     fixture=fixture, element_id=element.element_id, element_type=element.element_type,
                     text=element.text, reason="duplicate occurrence of an expected fact's exact text beyond the manifest's declared occurrence count",
                 ))
-    duplication = _metric(
-        "unexpected_text_duplication", "count of canonical text elements whose normalized text exactly repeats an already-matched expected fact",
-        len(unexpected), len(elements),
+    duplication_metric = _metric(
+        "no_unexpected_text_duplication",
+        "count of canonical text elements whose normalized text does NOT repeat an already-matched expected fact (higher is better)",
+        checked - duplicated, checked,
     )
-    return recall, location, duplication, miss_records, unexpected, alignments
-
-
-def _score_identifiers(
-    fixture: str, target_facts: list[dict], distractor_facts: list[dict], elements: list[TextElement],
-    chunk_map: dict[str, list[str]], occurrence_totals: dict | None, raw_text_blob: list[tuple[str, str]] | None,
-) -> tuple[MetricResult, MetricResult, MetricResult, list[MissRecord], list[EvidenceAlignment]]:
-    unique_matches: list[str] = []
-    unique_misses: list[str] = []
-    occ_num = 0
-    occ_den = 0
-    miss_records: list[MissRecord] = []
-    alignments: list[EvidenceAlignment] = []
-
-    for fact in target_facts:
-        identifier = fact["normalized_value"]
-        found = find_identifier_matches(identifier, elements)
-        occurrence_count = sum(count for _, count in found)
-        expected_occurrences = len(fact["occurrences"])
-        occ_den += expected_occurrences
-        occ_num += min(occurrence_count, expected_occurrences)
-        if found:
-            unique_matches.append(fact["fact_id"])
-            alignments.append(EvidenceAlignment(
-                fact_id=fact["fact_id"], fixture=fixture, fact_type="identifier_target",
-                expected_value={"normalized_value": identifier, "expected_occurrences": expected_occurrences},
-                matched_canonical_element_ids=[e.element_id for e, _ in found],
-                matched_chunk_ids=sorted({cid for e, _ in found for cid in chunk_map.get(e.element_id, [])}),
-                match_status="matched" if occurrence_count >= expected_occurrences else "partial",
-                derivation="source_derived",
-                expected_retrieval_difficulty=_difficulty_for("identifier_target", is_distractor=False, occurrence_count=expected_occurrences),
-            ))
-            if occurrence_count < expected_occurrences:
-                miss_records.append(MissRecord(
-                    fixture=fixture, fact_id=fact["fact_id"], metric="identifier_occurrence_recall",
-                    expected_value={"expected_occurrences": expected_occurrences}, observed_value={"observed_occurrences": occurrence_count},
-                    result="partial", failure_class="parser_content_loss", confidence="certain",
-                    explanation=f"identifier {identifier!r} found in only {occurrence_count} of {expected_occurrences} expected occurrences",
-                    supporting_canonical_element_ids=[e.element_id for e, _ in found],
-                ))
-        else:
-            unique_misses.append(fact["fact_id"])
-            if raw_text_blob is not None:
-                failure_class, confidence, raw_refs = classification.classify_identifier_absence(identifier, raw_text_blob)
-            else:
-                failure_class, confidence, raw_refs = classification.unresolved_classification("no raw debug artifact available")
-            miss_records.append(MissRecord(
-                fixture=fixture, fact_id=fact["fact_id"], metric="identifier_unique_recall",
-                expected_value={"normalized_value": identifier}, result="miss",
-                failure_class=failure_class, confidence=confidence,
-                explanation=f"identifier {identifier!r} not found (boundary-safe) in any canonical text element",
-                raw_docling_references=raw_refs,
-            ))
-
-    unique_metric = _metric("identifier_unique_recall", IDENTIFIER_MATCH_RULE, len(unique_matches), len(target_facts), matches=unique_matches, misses=unique_misses)
-    occurrence_metric = _metric("identifier_occurrence_recall", IDENTIFIER_MATCH_RULE, occ_num, occ_den)
-
-    # Distractor identifiers: must remain recognizable as themselves
-    # (boundary-safe) and must never inflate a target identifier's
-    # occurrence count -- since our own target search is already
-    # boundary-safe by construction, this metric is a real regression
-    # guard on that property using real extracted data, not a synthetic
-    # unit test.
-    no_false_merge_num = 0
-    no_false_merge_den = 0
-    for fact in distractor_facts:
-        distractor_value = fact["normalized_value"]
-        for occurrence in fact["occurrences"]:
-            no_false_merge_den += 1
-            found_as_distractor = any(identifier_present(e.text, distractor_value) for e in elements)
-            # Does ANY element matching the distractor ALSO register a
-            # boundary-safe hit for a *shorter* identifier value that is a
-            # literal substring of this distractor (the real stress case:
-            # "C-88a" containing "C-88")? If our matcher is correct, no.
-            false_merge_detected = False
-            for target in target_facts:
-                target_value = target["normalized_value"]
-                if target_value == distractor_value or target_value not in distractor_value:
-                    continue
-                for e in elements:
-                    distractor_spans = find_identifier_occurrences(e.text, distractor_value)
-                    target_spans = find_identifier_occurrences(e.text, target_value)
-                    for d_start, d_end in distractor_spans:
-                        for t_start, t_end in target_spans:
-                            if t_start >= d_start and t_end <= d_end:
-                                false_merge_detected = True
-            if found_as_distractor and not false_merge_detected:
-                no_false_merge_num += 1
-            elif not found_as_distractor:
-                # Distractor simply absent -- not a false-merge issue but
-                # still worth recording as a miss on this metric's own terms.
-                miss_records.append(MissRecord(
-                    fixture=fixture, fact_id=fact["fact_id"], metric="identifier_distractor_no_false_merge",
-                    expected_value={"normalized_value": distractor_value}, result="miss",
-                    failure_class="parser_content_loss", confidence="certain",
-                    explanation=f"distractor identifier {distractor_value!r} not found at all -- cannot verify it was not falsely merged",
-                ))
-            elif false_merge_detected:
-                miss_records.append(MissRecord(
-                    fixture=fixture, fact_id=fact["fact_id"], metric="identifier_distractor_no_false_merge",
-                    expected_value={"normalized_value": distractor_value}, result="unexpected",
-                    failure_class="distractor_false_positive", confidence="certain",
-                    explanation=f"distractor identifier {distractor_value!r} appears to have been falsely merged with a target identifier",
-                ))
-
-    no_false_merge_metric = _metric(
-        "identifier_distractor_no_false_merge",
-        IDENTIFIER_MATCH_RULE + " -- verifies a distractor identifier's occurrences are never counted toward a target identifier's occurrence tally",
-        no_false_merge_num, no_false_merge_den,
-    )
-    return unique_metric, occurrence_metric, no_false_merge_metric, miss_records, alignments
+    metrics = {"text_fact_recall": recall_acc.result(), "text_fact_location_accuracy": location_acc.result(), "no_unexpected_text_duplication": duplication_metric}
+    return metrics, miss_records, unexpected, alignments, matched_by_fact_id
 
 
 def _score_headings(
     fixture: str, heading_facts: list[dict], document: CanonicalDocument, elements: list[TextElement],
     chunk_map: dict[str, list[str]], raw_text_blob: list[tuple[str, str]] | None,
-) -> tuple[MetricResult, MetricResult, MetricResult, list[MissRecord], list[EvidenceAlignment]]:
-    text_matches: list[str] = []
-    text_misses: list[str] = []
-    level_num = 0
-    level_den = 0
-    classification_num = 0
-    classification_den = 0
+) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment], dict[str, TextElement]]:
+    text_acc = _MetricAcc("heading_text_recall", TEXT_NORMALIZED_CASE_FOLD_RULE)
+    level_acc = _MetricAcc("heading_level_accuracy", "of headings correctly classified as CanonicalHeading, exact level match")
+    classification_acc = _MetricAcc("heading_classification_accuracy", "of headings whose text matched, fraction represented as CanonicalHeading (not degraded to CanonicalParagraph)")
+    location_acc = _MetricAcc("heading_unit_location_accuracy", "unit_index of the matched element == expected_location.unit_index")
     miss_records: list[MissRecord] = []
     alignments: list[EvidenceAlignment] = []
+    matched_by_fact_id: dict[str, TextElement] = {}
     canonical_headings_by_id = {h.block_id: h for h in document.headings}
 
     for fact in heading_facts:
         found = find_exact_text_matches(fact["text"], elements)
         if not found:
-            text_misses.append(fact["fact_id"])
+            text_acc.record_miss(fact["fact_id"])
             if raw_text_blob is not None:
                 failure_class, confidence, raw_refs = classification.classify_text_absence(fact["text"], raw_text_blob)
             else:
@@ -510,19 +482,38 @@ def _score_headings(
                 expected_value={"text": fact["text"]}, result="miss", failure_class=failure_class, confidence=confidence,
                 explanation=f"expected heading text for {fact['fact_id']!r} not found in any canonical text element", raw_docling_references=raw_refs,
             ))
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "heading", expected_value={"text": fact["text"], "level": fact["level"]},
+                expected_location=fact.get("expected_location", {}), match_status="missing", derivation="not_applicable",
+            ))
             continue
 
-        text_matches.append(fact["fact_id"])
         best = found[0]
+        matched_by_fact_id[fact["fact_id"]] = best
+        text_acc.record_match(fact["fact_id"])
         is_real_heading = best.element_id in canonical_headings_by_id
-        classification_den += 1
+
+        expected_unit = _location_unit_index(fact.get("expected_location", {}))
+        if expected_unit is not None:
+            if best.unit_index == expected_unit:
+                location_acc.record_match(fact["fact_id"])
+            else:
+                location_acc.record_miss(fact["fact_id"])
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=fact["fact_id"], metric="heading_unit_location_accuracy",
+                    expected_value={"unit_index": expected_unit}, observed_value={"unit_index": best.unit_index}, result="partial",
+                    failure_class="parser_structure_loss", confidence="certain",
+                    explanation=f"heading {fact['fact_id']!r} matched text but at the wrong unit_index",
+                    supporting_canonical_element_ids=[best.element_id],
+                ))
+
         if is_real_heading:
-            classification_num += 1
-            level_den += 1
+            classification_acc.record_match(fact["fact_id"])
             actual_level = canonical_headings_by_id[best.element_id].level
             if actual_level == fact["level"]:
-                level_num += 1
+                level_acc.record_match(fact["fact_id"])
             else:
+                level_acc.record_miss(fact["fact_id"])
                 miss_records.append(MissRecord(
                     fixture=fixture, fact_id=fact["fact_id"], metric="heading_level_accuracy",
                     expected_value={"level": fact["level"]}, observed_value={"level": actual_level}, result="partial",
@@ -531,6 +522,7 @@ def _score_headings(
                     supporting_canonical_element_ids=[best.element_id],
                 ))
         else:
+            classification_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="heading_classification_accuracy",
                 expected_value={"as": "heading"}, observed_value={"as": best.element_type}, result="partial",
@@ -538,63 +530,81 @@ def _score_headings(
                 explanation=f"heading text for {fact['fact_id']!r} present but represented as {best.element_type}, not CanonicalHeading -- text present, heading classification missed",
                 supporting_canonical_element_ids=[best.element_id],
             ))
-        alignments.append(EvidenceAlignment(
-            fact_id=fact["fact_id"], fixture=fixture, fact_type="heading", expected_value={"text": fact["text"], "level": fact["level"]},
-            expected_location=fact.get("expected_location", {}), matched_canonical_element_ids=[best.element_id],
+        alignments.append(_alignment(
+            fact["fact_id"], fixture, "heading", expected_value={"text": fact["text"], "level": fact["level"]},
+            expected_location=fact.get("expected_location", {}), matched_element_ids=[best.element_id],
             matched_chunk_ids=sorted(chunk_map.get(best.element_id, [])), match_status="matched" if is_real_heading else "partial",
-            derivation="source_derived", expected_retrieval_difficulty=_difficulty_for("heading", is_distractor=False),
+            derivation="source_derived",
         ))
 
-    text_recall = _metric("heading_text_recall", TEXT_NORMALIZED_CASE_FOLD_RULE, len(text_matches), len(heading_facts), matches=text_matches, misses=text_misses)
-    level_accuracy = _metric("heading_level_accuracy", "of headings correctly classified as CanonicalHeading, exact level match", level_num, level_den)
-    classification_accuracy = _metric("heading_classification_accuracy", "of headings whose text matched, fraction represented as CanonicalHeading (not degraded to CanonicalParagraph)", classification_num, classification_den)
-    return text_recall, level_accuracy, classification_accuracy, miss_records, alignments
+    metrics = {
+        "heading_text_recall": text_acc.result(), "heading_level_accuracy": level_acc.result(),
+        "heading_classification_accuracy": classification_acc.result(), "heading_unit_location_accuracy": location_acc.result(),
+    }
+    return metrics, miss_records, alignments, matched_by_fact_id
 
 
-def _cells_key(cells: list[dict]) -> dict[tuple[int, int], dict]:
-    return {(c["row"], c["col"]): c for c in cells}
+def _select_best_table(expected_cells: dict[tuple[int, int], dict], document: CanonicalDocument):
+    """Stage 6A.1 item 10: selects the table with MAXIMUM cell-text
+    overlap across ALL candidate tables, never the first one exceeding a
+    threshold -- deterministic tie-break by document order (table_id
+    sorted, since tables are already emitted in reading order)."""
+    expected_texts_norm = {normalize_text_for_comparison(c["text"]) for c in expected_cells.values()}
+    best_table = None
+    best_overlap = -1
+    for table in document.tables:
+        observed_texts_norm = {normalize_text_for_comparison(c.text) for c in table.cells}
+        overlap = len(expected_texts_norm & observed_texts_norm)
+        if overlap > best_overlap:
+            best_overlap = overlap
+            best_table = table
+    if best_table is None or best_overlap <= 0:
+        return None
+    return best_table
 
 
 def _score_tables(
     fixture: str, table_facts: list[dict], document: CanonicalDocument, chunk_map: dict[str, list[str]],
 ) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment]]:
-    presence_num = presence_den = 0
-    structure_num = structure_den = 0
-    cell_text_num = cell_text_den = 0
-    coord_num = coord_den = 0
-    header_num = header_den = 0
-    span_num = span_den = 0
+    presence_acc = _MetricAcc("table_presence", "best deterministic cell-text-overlap table identification (max overlap across all candidates)")
+    structure_acc = _MetricAcc("table_structure_accuracy", "exact n_rows/n_cols match, of tables identified")
+    cell_text_acc = _MetricAcc("table_cell_text_recall", TEXT_NORMALIZED_CASE_FOLD_RULE)
+    coord_acc = _MetricAcc("table_cell_coordinate_accuracy", "exact (row, col) match, of cells whose text was found")
+    header_acc = _MetricAcc("table_header_status_accuracy", "is_header match, of cells whose text was found")
+    span_acc = _MetricAcc("table_span_accuracy", "row_span/col_span exact match, of cells whose text was found")
     miss_records: list[MissRecord] = []
     alignments: list[EvidenceAlignment] = []
 
     for fact in table_facts:
-        presence_den += 1
-        expected_cells = _cells_key(fact["cells"])
-        expected_texts_norm = {normalize_text_for_comparison(c["text"]): key for key, c in expected_cells.items()}
-
-        candidate_table = None
-        for table in document.tables:
-            observed_texts_norm = {normalize_text_for_comparison(c.text) for c in table.cells}
-            overlap = len(expected_texts_norm.keys() & observed_texts_norm)
-            if overlap >= max(1, len(expected_texts_norm) // 2):
-                candidate_table = table
-                break
+        expected_cells = {(c["row"], c["col"]): c for c in fact["cells"]}
+        candidate_table = _select_best_table(expected_cells, document)
 
         if candidate_table is None:
+            presence_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="table_presence",
                 expected_value={"n_rows": fact["n_rows"], "n_cols": fact["n_cols"]}, result="miss",
                 failure_class="parser_structure_loss", confidence="supported",
                 explanation=f"no CanonicalTable in this document has meaningful cell-text overlap with expected table {fact['fact_id']!r}",
             ))
-            cell_text_den += len(fact["cells"])
+            for (row, col), expected_cell in expected_cells.items():
+                cell_fact_id = f"{fact['fact_id']}_r{row}c{col}"
+                cell_text_acc.record_miss(cell_fact_id)
+                alignments.append(_alignment(
+                    cell_fact_id, fixture, "table_cell", expected_value={"row": row, "col": col, "text": expected_cell["text"]},
+                    match_status="missing", derivation="not_applicable",
+                ))
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "table", expected_value={"n_rows": fact["n_rows"], "n_cols": fact["n_cols"]},
+                expected_location=fact.get("expected_location", {}), match_status="missing", derivation="not_applicable",
+            ))
             continue
 
-        presence_num += 1
-        structure_den += 1
+        presence_acc.record_match(fact["fact_id"])
         if candidate_table.n_rows == fact["n_rows"] and candidate_table.n_cols == fact["n_cols"]:
-            structure_num += 1
+            structure_acc.record_match(fact["fact_id"])
         else:
+            structure_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="table_structure_accuracy",
                 expected_value={"n_rows": fact["n_rows"], "n_cols": fact["n_cols"]},
@@ -604,49 +614,58 @@ def _score_tables(
                 supporting_canonical_element_ids=[candidate_table.table_id],
             ))
 
+        # Stage 6A.1 item 10: one-to-one cell matching -- a consumed
+        # observed cell (by identity) can never satisfy a second expected
+        # cell, even if two expected cells share the same text value.
+        consumed_cell_ids: set[int] = set()
         observed_by_text: dict[str, list] = {}
         for cell in candidate_table.cells:
             observed_by_text.setdefault(normalize_text_for_comparison(cell.text), []).append(cell)
 
-        matched_cell_ids: list[str] = []
-        for (row, col), expected_cell in expected_cells.items():
-            cell_text_den += 1
+        for (row, col), expected_cell in sorted(expected_cells.items()):
+            cell_fact_id = f"{fact['fact_id']}_r{row}c{col}"
             norm = normalize_text_for_comparison(expected_cell["text"])
-            candidates = observed_by_text.get(norm, [])
+            candidates = [c for c in observed_by_text.get(norm, []) if id(c) not in consumed_cell_ids]
             if not candidates:
+                cell_text_acc.record_miss(cell_fact_id)
                 miss_records.append(MissRecord(
-                    fixture=fixture, fact_id=f"{fact['fact_id']}_r{row}c{col}", metric="table_cell_text_recall",
+                    fixture=fixture, fact_id=cell_fact_id, metric="table_cell_text_recall",
                     expected_value={"row": row, "col": col, "text": expected_cell["text"]}, result="miss",
                     failure_class="parser_content_loss", confidence="supported",
-                    explanation=f"table {fact['fact_id']!r} cell (row={row}, col={col}) text {expected_cell['text']!r} not found among extracted cells",
+                    explanation=f"table {fact['fact_id']!r} cell (row={row}, col={col}) text {expected_cell['text']!r} not found among unconsumed extracted cells",
                     supporting_canonical_element_ids=[candidate_table.table_id],
                 ))
+                alignments.append(_alignment(
+                    cell_fact_id, fixture, "table_cell", expected_value={"row": row, "col": col, "text": expected_cell["text"]},
+                    match_status="missing", derivation="not_applicable",
+                ))
                 continue
-            cell_text_num += 1
-            matched_cell_ids.append(candidate_table.table_id)
 
-            coord_den += 1
             exact = next((c for c in candidates if c.row == row and c.col == col), None)
-            if exact is not None:
-                coord_num += 1
-                observed_cell = exact
+            observed_cell = exact if exact is not None else candidates[0]
+            consumed_cell_ids.add(id(observed_cell))
+            cell_text_acc.record_match(cell_fact_id)
+
+            coordinate_ok = observed_cell.row == row and observed_cell.col == col
+            if coordinate_ok:
+                coord_acc.record_match(cell_fact_id)
             else:
-                observed_cell = candidates[0]
+                coord_acc.record_miss(cell_fact_id)
                 miss_records.append(MissRecord(
-                    fixture=fixture, fact_id=f"{fact['fact_id']}_r{row}c{col}", metric="table_cell_coordinate_accuracy",
+                    fixture=fixture, fact_id=cell_fact_id, metric="table_cell_coordinate_accuracy",
                     expected_value={"row": row, "col": col}, observed_value={"row": observed_cell.row, "col": observed_cell.col},
                     result="partial", failure_class="parser_structure_loss", confidence="certain",
                     explanation=f"table {fact['fact_id']!r}: cell text {expected_cell['text']!r} present but at the wrong row/col -- content match, coordinate miss",
                     supporting_canonical_element_ids=[candidate_table.table_id],
                 ))
 
-            header_den += 1
             expected_header = bool(expected_cell.get("is_header", False))
             if bool(observed_cell.is_header) == expected_header:
-                header_num += 1
+                header_acc.record_match(cell_fact_id)
             else:
+                header_acc.record_miss(cell_fact_id)
                 miss_records.append(MissRecord(
-                    fixture=fixture, fact_id=f"{fact['fact_id']}_r{row}c{col}", metric="table_header_status_accuracy",
+                    fixture=fixture, fact_id=cell_fact_id, metric="table_header_status_accuracy",
                     expected_value={"is_header": expected_header}, observed_value={"is_header": observed_cell.is_header},
                     result="partial", failure_class="parser_classification_loss", confidence="certain",
                     explanation=f"table {fact['fact_id']!r} cell (row={row}, col={col}) header-status mismatch",
@@ -654,101 +673,159 @@ def _score_tables(
 
             expected_row_span = int(expected_cell.get("row_span", 1))
             expected_col_span = int(expected_cell.get("col_span", 1))
-            span_den += 1
             if observed_cell.row_span == expected_row_span and observed_cell.col_span == expected_col_span:
-                span_num += 1
+                span_acc.record_match(cell_fact_id)
             else:
+                span_acc.record_miss(cell_fact_id)
                 miss_records.append(MissRecord(
-                    fixture=fixture, fact_id=f"{fact['fact_id']}_r{row}c{col}", metric="table_span_accuracy",
+                    fixture=fixture, fact_id=cell_fact_id, metric="table_span_accuracy",
                     expected_value={"row_span": expected_row_span, "col_span": expected_col_span},
                     observed_value={"row_span": observed_cell.row_span, "col_span": observed_cell.col_span},
                     result="partial", failure_class="parser_structure_loss", confidence="certain",
                     explanation=f"table {fact['fact_id']!r} cell (row={row}, col={col}) span mismatch",
                 ))
 
-        alignments.append(EvidenceAlignment(
-            fact_id=fact["fact_id"], fixture=fixture, fact_type="table",
-            expected_value={"n_rows": fact["n_rows"], "n_cols": fact["n_cols"]}, expected_location=fact.get("expected_location", {}),
-            matched_canonical_element_ids=[candidate_table.table_id], matched_chunk_ids=sorted(chunk_map.get(candidate_table.table_id, [])),
-            match_status="matched", derivation="source_derived", expected_retrieval_difficulty=_difficulty_for("table", is_distractor=False),
+            # Stage 6A.1 item 10: one EvidenceAlignment PER expected cell.
+            alignments.append(_alignment(
+                cell_fact_id, fixture, "table_cell", expected_value={"row": row, "col": col, "text": expected_cell["text"]},
+                matched_element_ids=[candidate_table.table_id], matched_chunk_ids=sorted(chunk_map.get(candidate_table.table_id, [])),
+                match_status="matched" if coordinate_ok else "partial", derivation="source_derived",
+            ))
+
+        alignments.append(_alignment(
+            fact["fact_id"], fixture, "table", expected_value={"n_rows": fact["n_rows"], "n_cols": fact["n_cols"]},
+            expected_location=fact.get("expected_location", {}), matched_element_ids=[candidate_table.table_id],
+            matched_chunk_ids=sorted(chunk_map.get(candidate_table.table_id, [])), match_status="matched", derivation="source_derived",
         ))
 
     metrics = {
-        "table_presence": _metric("table_presence", "cell-text-overlap table identification (>= half of expected cell texts present)", presence_num, presence_den),
-        "table_structure_accuracy": _metric("table_structure_accuracy", "exact n_rows/n_cols match, of tables identified", structure_num, structure_den),
-        "table_cell_text_recall": _metric("table_cell_text_recall", TEXT_NORMALIZED_CASE_FOLD_RULE, cell_text_num, cell_text_den),
-        "table_cell_coordinate_accuracy": _metric("table_cell_coordinate_accuracy", "exact (row, col) match, of cells whose text was found", coord_num, coord_den),
-        "table_header_status_accuracy": _metric("table_header_status_accuracy", "is_header match, of cells whose text was found", header_num, header_den),
-        "table_span_accuracy": _metric("table_span_accuracy", "row_span/col_span exact match, of cells whose text was found", span_num, span_den),
+        "table_presence": presence_acc.result(), "table_structure_accuracy": structure_acc.result(),
+        "table_cell_text_recall": cell_text_acc.result(), "table_cell_coordinate_accuracy": coord_acc.result(),
+        "table_header_status_accuracy": header_acc.result(), "table_span_accuracy": span_acc.result(),
     }
     return metrics, miss_records, alignments
 
 
 def _score_pictures_captions(
-    fixture: str, picture_facts: list[dict], caption_facts: list[dict], document: CanonicalDocument, chunk_map: dict[str, list[str]],
-) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment]]:
-    presence_num = presence_den = 0
-    provenance_num = provenance_den = 0
-    caption_text_num = caption_text_den = 0
-    caption_link_num = caption_link_den = 0
+    fixture: str, picture_facts: list[dict], caption_facts: list[dict], document: CanonicalDocument,
+    chunk_map: dict[str, list[str]], raw_debug: dict[str, Any] | None,
+) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment], dict[str, TextElement]]:
+    presence_acc = _MetricAcc("picture_presence", "at least one CanonicalPicture present per expected picture fact")
+    provenance_acc = _MetricAcc("picture_provenance_completeness", "matched picture has a ProvenanceEntry")
+    location_acc = _MetricAcc("picture_unit_location_accuracy", "unit_index of the matched picture == expected_location.unit_index")
+    artifact_acc = _MetricAcc("picture_artifact_completeness", "matched picture has a non-empty artifact_ref and a valid content_sha256")
+    caption_text_acc = _MetricAcc("caption_text_recall", TEXT_NORMALIZED_CASE_FOLD_RULE + " -- matched against CanonicalCaption OR CanonicalParagraph text (text recovery is scored independently of caption-picture linkage)")
+    caption_link_acc = _MetricAcc("caption_linkage_accuracy", "of captions whose text was found (as caption or paragraph), represented as a real CanonicalCaption with target_picture_id resolving to the expected picture")
+    caption_location_acc = _MetricAcc("caption_unit_location_accuracy", "unit_index of the matched caption element == expected_location.unit_index")
     miss_records: list[MissRecord] = []
     alignments: list[EvidenceAlignment] = []
+    matched_by_fact_id: dict[str, TextElement] = {}
     provenance_element_ids = {p.element_id for p in document.provenance}
+    provenance_ref_by_element_id = {p.element_id: p.source_element_ref for p in document.provenance if p.source_element_ref}
 
     matched_picture_ids: list[str] = []
     for index, fact in enumerate(picture_facts):
-        presence_den += 1
+        expected_unit = _location_unit_index(fact.get("expected_location", {}))
         if index < len(document.pictures):
-            presence_num += 1
             picture = document.pictures[index]
             matched_picture_ids.append(picture.picture_id)
-            provenance_den += 1
+            presence_acc.record_match(fact["fact_id"])
+
             has_provenance = picture.picture_id in provenance_element_ids
-            has_bbox = picture.bbox is not None
             if has_provenance:
-                provenance_num += 1
+                provenance_acc.record_match(fact["fact_id"])
             else:
+                provenance_acc.record_miss(fact["fact_id"])
                 miss_records.append(MissRecord(
                     fixture=fixture, fact_id=fact["fact_id"], metric="picture_provenance_completeness",
-                    expected_value={"has_provenance": True}, observed_value={"has_provenance": False, "has_bbox": has_bbox}, result="partial",
+                    expected_value={"has_provenance": True}, observed_value={"has_provenance": False}, result="partial",
                     failure_class="parser_provenance_loss", confidence="certain",
                     explanation=f"picture {fact['fact_id']!r} extracted but has no ProvenanceEntry",
                 ))
-            alignments.append(EvidenceAlignment(
-                fact_id=fact["fact_id"], fixture=fixture, fact_type="picture", expected_value={k: v for k, v in fact.items() if k != "fact_id"},
-                expected_location=fact.get("expected_location", {}), matched_canonical_element_ids=[picture.picture_id],
+
+            if expected_unit is not None:
+                if picture.unit_index == expected_unit:
+                    location_acc.record_match(fact["fact_id"])
+                else:
+                    location_acc.record_miss(fact["fact_id"])
+                    miss_records.append(MissRecord(
+                        fixture=fixture, fact_id=fact["fact_id"], metric="picture_unit_location_accuracy",
+                        expected_value={"unit_index": expected_unit}, observed_value={"unit_index": picture.unit_index}, result="partial",
+                        failure_class="parser_structure_loss", confidence="certain",
+                        explanation=f"picture {fact['fact_id']!r} at wrong unit_index",
+                        supporting_canonical_element_ids=[picture.picture_id],
+                    ))
+
+            artifact_ok = bool(picture.artifact_ref) and bool(picture.content_sha256)
+            if artifact_ok:
+                artifact_acc.record_match(fact["fact_id"])
+            else:
+                artifact_acc.record_miss(fact["fact_id"])
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=fact["fact_id"], metric="picture_artifact_completeness",
+                    expected_value={"artifact_ref_and_content_sha256": True}, observed_value={"artifact_ref": picture.artifact_ref, "content_sha256": picture.content_sha256},
+                    result="partial", failure_class="parser_provenance_loss", confidence="certain",
+                    explanation=f"picture {fact['fact_id']!r} missing artifact_ref or content_sha256",
+                    supporting_canonical_element_ids=[picture.picture_id],
+                ))
+
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "picture", expected_value={k: v for k, v in fact.items() if k != "fact_id"},
+                expected_location=fact.get("expected_location", {}), matched_element_ids=[picture.picture_id],
                 matched_chunk_ids=sorted(chunk_map.get(picture.picture_id, [])), match_status="matched", derivation="source_derived",
-                expected_retrieval_difficulty=_difficulty_for("picture", is_distractor=False),
             ))
         else:
+            presence_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="picture_presence",
                 expected_value={"expected": True}, result="miss", failure_class="parser_content_loss", confidence="certain",
                 explanation=f"expected picture {fact['fact_id']!r} not present in CanonicalDocument.pictures",
             ))
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "picture", expected_value={k: v for k, v in fact.items() if k != "fact_id"},
+                expected_location=fact.get("expected_location", {}), match_status="missing", derivation="not_applicable",
+            ))
 
-    provenance_ref_by_element_id = {p.element_id: p.source_element_ref for p in document.provenance if p.source_element_ref}
     for fact in caption_facts:
-        caption_text_den += 1
         target_text = normalize_text_for_comparison(fact["text"])
         caption_matches = [c for c in document.captions if normalize_text_for_comparison(c.text) == target_text]
         paragraph_matches = [] if caption_matches else [p for p in document.paragraphs if normalize_text_for_comparison(p.text) == target_text]
+        expected_unit = _location_unit_index(fact.get("expected_location", {}))
 
         if not caption_matches and not paragraph_matches:
+            caption_text_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="caption_text_recall",
                 expected_value={"text": fact["text"]}, result="miss", failure_class="parser_content_loss", confidence="supported",
                 explanation=f"caption text for {fact['fact_id']!r} not found as any CanonicalCaption or CanonicalParagraph",
             ))
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "caption", expected_value={"text": fact["text"]},
+                expected_location=fact.get("expected_location", {}), match_status="missing", derivation="not_applicable",
+            ))
             continue
 
-        caption_text_num += 1
-        caption_link_den += 1
+        caption_text_acc.record_match(fact["fact_id"])
+
         if caption_matches:
             caption = caption_matches[0]
+            matched_by_fact_id[fact["fact_id"]] = TextElement(caption.block_id, caption.text, "caption", caption.unit_index)
+            if expected_unit is not None:
+                if caption.unit_index == expected_unit:
+                    caption_location_acc.record_match(fact["fact_id"])
+                else:
+                    caption_location_acc.record_miss(fact["fact_id"])
+                    miss_records.append(MissRecord(
+                        fixture=fixture, fact_id=fact["fact_id"], metric="caption_unit_location_accuracy",
+                        expected_value={"unit_index": expected_unit}, observed_value={"unit_index": caption.unit_index}, result="partial",
+                        failure_class="parser_structure_loss", confidence="certain",
+                        explanation=f"caption {fact['fact_id']!r} at wrong unit_index", supporting_canonical_element_ids=[caption.block_id],
+                    ))
             if caption.target_picture_id in matched_picture_ids:
-                caption_link_num += 1
+                caption_link_acc.record_match(fact["fact_id"])
+                match_status = "matched"
             else:
+                caption_link_acc.record_miss(fact["fact_id"])
                 miss_records.append(MissRecord(
                     fixture=fixture, fact_id=fact["fact_id"], metric="caption_linkage_accuracy",
                     expected_value={"target_picture": fact.get("target_picture")}, observed_value={"target_picture_id": caption.target_picture_id}, result="partial",
@@ -756,116 +833,153 @@ def _score_pictures_captions(
                     explanation=f"caption {fact['fact_id']!r} is a real CanonicalCaption but target_picture_id does not resolve to the expected picture",
                     supporting_canonical_element_ids=[caption.block_id],
                 ))
-            alignments.append(EvidenceAlignment(
-                fact_id=fact["fact_id"], fixture=fixture, fact_type="caption", expected_value={"text": fact["text"]},
-                expected_location=fact.get("expected_location", {}), matched_canonical_element_ids=[caption.block_id],
-                matched_chunk_ids=sorted(chunk_map.get(caption.block_id, [])), match_status="matched", derivation="source_derived",
-                expected_retrieval_difficulty=_difficulty_for("caption", is_distractor=False),
+                match_status = "partial"
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "caption", expected_value={"text": fact["text"]}, expected_location=fact.get("expected_location", {}),
+                matched_element_ids=[caption.block_id], matched_chunk_ids=sorted(chunk_map.get(caption.block_id, [])),
+                match_status=match_status, derivation="source_derived",
             ))
         else:
-            # Caption text present as a plain paragraph, not linked to its
-            # picture (Stage 5A's known DOCX/PPTX limitation) -- text
-            # present, relationship missed, never total content loss.
+            # Stage 6A.1 item 4: caption text present as a plain paragraph
+            # -- attribute the missing RELATIONSHIP by inspecting raw
+            # Docling's own picture.captions list directly, never by mere
+            # text self_ref presence.
             paragraph = paragraph_matches[0]
-            raw_ref = provenance_ref_by_element_id.get(paragraph.block_id)
-            # mapper_loss is only assignable with real raw-Docling evidence
-            # (MissRecord's own invariant) -- this element was successfully
-            # mapped into CanonicalDocument, so it always has a
-            # ProvenanceEntry.source_element_ref in practice; fall back to
-            # "unresolved" rather than assert mapper_loss without it.
-            failure_class = "mapper_loss" if raw_ref else "unresolved"
-            confidence = "supported" if raw_ref else "unresolved"
+            matched_by_fact_id[fact["fact_id"]] = TextElement(paragraph.block_id, paragraph.text, "paragraph", paragraph.unit_index)
+            caption_link_acc.record_miss(fact["fact_id"])
+            failure_class, confidence, raw_refs = "parser_relationship_loss", "unresolved", []
+            picture_self_ref = None
+            paragraph_self_ref = provenance_ref_by_element_id.get(paragraph.block_id)
+            if matched_picture_ids:
+                picture_self_ref = provenance_ref_by_element_id.get(matched_picture_ids[0])
+            if raw_debug is not None and picture_self_ref is not None:
+                failure_class, confidence, raw_refs = classification.classify_relationship_absence(
+                    raw_debug, parent_collection="pictures", parent_self_ref=picture_self_ref,
+                    relation_field="captions", child_self_ref=paragraph_self_ref,
+                )
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="caption_linkage_accuracy",
                 expected_value={"text": fact["text"], "target_picture": fact.get("target_picture")}, observed_value={"as": "paragraph"}, result="partial",
                 failure_class=failure_class, confidence=confidence,
                 explanation=f"caption text for {fact['fact_id']!r} present as a plain CanonicalParagraph, not linked to its picture -- caption text present, caption relationship missed",
-                supporting_canonical_element_ids=[paragraph.block_id],
-                raw_docling_references=[raw_ref] if raw_ref else [],
+                supporting_canonical_element_ids=[paragraph.block_id], raw_docling_references=raw_refs,
             ))
-            alignments.append(EvidenceAlignment(
-                fact_id=fact["fact_id"], fixture=fixture, fact_type="caption", expected_value={"text": fact["text"]},
-                expected_location=fact.get("expected_location", {}), matched_canonical_element_ids=[paragraph.block_id],
-                matched_chunk_ids=sorted(chunk_map.get(paragraph.block_id, [])), match_status="partial", derivation="source_derived",
-                expected_retrieval_difficulty=_difficulty_for("caption", is_distractor=False),
+            if expected_unit is not None:
+                if paragraph.unit_index == expected_unit:
+                    caption_location_acc.record_match(fact["fact_id"])
+                else:
+                    caption_location_acc.record_miss(fact["fact_id"])
+                    miss_records.append(MissRecord(
+                        fixture=fixture, fact_id=fact["fact_id"], metric="caption_unit_location_accuracy",
+                        expected_value={"unit_index": expected_unit}, observed_value={"unit_index": paragraph.unit_index}, result="partial",
+                        failure_class="parser_structure_loss", confidence="certain",
+                        explanation=f"caption {fact['fact_id']!r} (present as paragraph) at wrong unit_index",
+                        supporting_canonical_element_ids=[paragraph.block_id],
+                    ))
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "caption", expected_value={"text": fact["text"]}, expected_location=fact.get("expected_location", {}),
+                matched_element_ids=[paragraph.block_id], matched_chunk_ids=sorted(chunk_map.get(paragraph.block_id, [])),
+                match_status="partial", derivation="source_derived",
             ))
 
     metrics = {
-        "picture_presence": _metric("picture_presence", "at least one CanonicalPicture present per expected picture fact", presence_num, presence_den),
-        "picture_provenance_completeness": _metric("picture_provenance_completeness", "matched picture has a ProvenanceEntry", provenance_num, provenance_den),
-        "caption_text_recall": _metric("caption_text_recall", TEXT_NORMALIZED_CASE_FOLD_RULE + " -- matched against CanonicalCaption OR CanonicalParagraph text (text recovery is scored independently of caption-picture linkage)", caption_text_num, caption_text_den),
-        "caption_linkage_accuracy": _metric("caption_linkage_accuracy", "of captions whose text was found (as caption or paragraph), represented as a real CanonicalCaption with target_picture_id resolving to the expected picture", caption_link_num, caption_link_den),
+        "picture_presence": presence_acc.result(), "picture_provenance_completeness": provenance_acc.result(),
+        "picture_unit_location_accuracy": location_acc.result(), "picture_artifact_completeness": artifact_acc.result(),
+        "caption_text_recall": caption_text_acc.result(), "caption_linkage_accuracy": caption_link_acc.result(),
+        "caption_unit_location_accuracy": caption_location_acc.result(),
     }
-    return metrics, miss_records, alignments
+    return metrics, miss_records, alignments, matched_by_fact_id
 
 
 def _score_ocr_tokens(
     fixture: str, ocr_token_facts: list[dict], document: CanonicalDocument, chunk_map: dict[str, list[str]],
-) -> tuple[MetricResult, MetricResult, list[MissRecord], list[EvidenceAlignment]]:
+) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment]]:
     ocr_annotations = [a for a in document.annotations if a.annotation_type == "ocr"]
-    provenance_element_ids = {p.element_id for p in document.provenance}
-    token_num = 0
+    provenance_by_id = {p.element_id: p for p in document.provenance}
+    token_acc = _MetricAcc("picture_ocr_token_recall", OCR_PHRASE_MATCH_RULE)
+    provenance_acc = _MetricAcc("ocr_provenance_completeness", "OcrAnnotation.annotation_id resolves to a ProvenanceEntry.element_id")
     miss_records: list[MissRecord] = []
     alignments: list[EvidenceAlignment] = []
+
+    ordered_lines: list[tuple[str, int | None]] = []
+    for a in ocr_annotations:
+        prov = provenance_by_id.get(a.annotation_id)
+        seq = (prov.source_locator or {}).get("ocr_sequence") if prov and prov.source_locator else None
+        ordered_lines.append((a.text, seq))
+
     for fact in ocr_token_facts:
-        norm_target = normalize_text_for_comparison(fact["text"])
-        found = [a for a in ocr_annotations if norm_target in normalize_text_for_comparison(a.text) or normalize_text_for_comparison(a.text) in norm_target]
-        if found:
-            token_num += 1
-            annotation = found[0]
-            alignments.append(EvidenceAlignment(
-                fact_id=fact["fact_id"], fixture=fixture, fact_type="ocr_token", expected_value={"text": fact["text"]},
-                matched_annotation_ids=[annotation.annotation_id], matched_chunk_ids=sorted(chunk_map.get(annotation.annotation_id, [])),
-                match_status="matched", derivation="source_derived", expected_retrieval_difficulty="direct",
+        if ocr_phrase_recovered(fact["text"], ordered_lines):
+            token_acc.record_match(fact["fact_id"])
+            matches_annotations = [a for a in ocr_annotations if normalize_text_for_comparison(fact["text"]) in normalize_text_for_comparison(a.text)]
+            annotation_ids = [a.annotation_id for a in matches_annotations] or [a.annotation_id for a in ocr_annotations]
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "ocr_token", expected_value={"text": fact["text"]},
+                matched_annotation_ids=annotation_ids, matched_chunk_ids=sorted({cid for aid in annotation_ids for cid in chunk_map.get(aid, [])}),
+                match_status="matched", derivation="source_derived",
             ))
         else:
+            token_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
-                fixture=fixture, fact_id=fact["fact_id"], metric="ocr_token_recall",
+                fixture=fixture, fact_id=fact["fact_id"], metric="picture_ocr_token_recall",
                 expected_value={"text": fact["text"]}, result="miss", failure_class="parser_content_loss", confidence="supported",
-                explanation=f"expected OCR token {fact['text']!r} not found (as substring, either direction) among extracted OcrAnnotation text",
+                explanation=f"expected OCR phrase {fact['text']!r} not recovered (single-line or adjacent-fragment containment) among extracted OcrAnnotation text",
             ))
-    token_metric = _metric("ocr_token_recall", "case-folded substring match (either direction) against OcrAnnotation.text -- OCR engines may merge/split tokens", token_num, len(ocr_token_facts))
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "ocr_token", expected_value={"text": fact["text"]}, match_status="missing", derivation="not_applicable",
+            ))
 
-    prov_den = len(ocr_annotations)
-    prov_num = sum(1 for a in ocr_annotations if a.annotation_id in provenance_element_ids)
-    provenance_metric = _metric("ocr_provenance_completeness", "OcrAnnotation.annotation_id resolves to a ProvenanceEntry.element_id", prov_num, prov_den)
-    return token_metric, provenance_metric, miss_records, alignments
+    for a in ocr_annotations:
+        if a.annotation_id in provenance_by_id:
+            provenance_acc.record_match(a.annotation_id)
+        else:
+            provenance_acc.record_miss(a.annotation_id)
+            miss_records.append(MissRecord(
+                fixture=fixture, fact_id=a.annotation_id, metric="ocr_provenance_completeness",
+                expected_value={"has_provenance": True}, observed_value={"has_provenance": False}, result="partial",
+                failure_class="parser_provenance_loss", confidence="certain",
+                explanation=f"OcrAnnotation {a.annotation_id!r} has no matching ProvenanceEntry",
+            ))
+
+    metrics = {"picture_ocr_token_recall": token_acc.result(), "ocr_provenance_completeness": provenance_acc.result()}
+    return metrics, miss_records, alignments
 
 
 def _score_whole_page_ocr(
     fixture: str, facts: list[dict], document: CanonicalDocument, chunk_map: dict[str, list[str]],
 ) -> tuple[MetricResult, list[MissRecord], list[EvidenceAlignment]]:
     elements = flatten_text_elements(document)
+    acc = _MetricAcc("whole_page_ocr_text_recall", TEXT_NORMALIZED_CASE_FOLD_RULE + " -- scored as text recovery, independent of OCR-origin classification (Stage 5A maps whole-page OCR as a plain paragraph, per D-035)")
     miss_records: list[MissRecord] = []
     alignments: list[EvidenceAlignment] = []
-    num = 0
     for fact in facts:
         found = find_exact_text_matches(fact["text"], elements)
         if found:
-            num += 1
-            alignments.append(EvidenceAlignment(
-                fact_id=fact["fact_id"], fixture=fixture, fact_type="whole_page_ocr_text", expected_value={"text": fact["text"]},
-                matched_canonical_element_ids=[found[0].element_id], matched_chunk_ids=sorted(chunk_map.get(found[0].element_id, [])),
-                match_status="matched", derivation="source_derived", expected_retrieval_difficulty="direct",
+            acc.record_match(fact["fact_id"])
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "whole_page_ocr_text", expected_value={"text": fact["text"]},
+                matched_element_ids=[found[0].element_id], matched_chunk_ids=sorted(chunk_map.get(found[0].element_id, [])),
+                match_status="matched", derivation="source_derived",
             ))
         else:
+            acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
-                fixture=fixture, fact_id=fact["fact_id"], metric="ocr_whole_page_text_recall",
+                fixture=fixture, fact_id=fact["fact_id"], metric="whole_page_ocr_text_recall",
                 expected_value={"text": fact["text"]}, result="miss", failure_class="parser_content_loss", confidence="supported",
                 explanation="expected whole-page OCR text not found as any canonical text element",
             ))
-    metric = _metric("ocr_whole_page_text_recall", TEXT_NORMALIZED_CASE_FOLD_RULE + " -- scored as text recovery, independent of OCR-origin classification (Stage 5A maps whole-page OCR as a plain paragraph, per D-035)", num, len(facts))
-    return metric, miss_records, alignments
+            alignments.append(_alignment(
+                fact["fact_id"], fixture, "whole_page_ocr_text", expected_value={"text": fact["text"]}, match_status="missing", derivation="not_applicable",
+            ))
+    return acc.result(), miss_records, alignments
 
 
 def _score_list_items(
     fixture: str, facts: list[dict], document: CanonicalDocument, chunk_map: dict[str, list[str]],
 ) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment]]:
-    elements = [TextElement(li.block_id, li.text, "list_item", li.unit_index) for li in document.list_items]
     by_text = {normalize_text_for_comparison(li.text): li for li in document.list_items}
-    recall_num = 0
-    indent_num = indent_den = 0
-    parent_num = parent_den = 0
+    recall_acc = _MetricAcc("list_item_recall", TEXT_NORMALIZED_CASE_FOLD_RULE)
+    indent_acc = _MetricAcc("list_indentation_accuracy", "exact indent_level match, of list items whose text matched")
+    parent_acc = _MetricAcc("list_parent_link_accuracy", "parent_block_id resolves to the expected parent list item, of items declaring a parent")
     miss_records: list[MissRecord] = []
     alignments: list[EvidenceAlignment] = []
     matched_block_id_by_fact_id: dict[str, str] = {}
@@ -874,18 +988,22 @@ def _score_list_items(
         norm = normalize_text_for_comparison(fact["text"])
         item = by_text.get(norm)
         if item is None:
+            recall_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="list_item_recall",
                 expected_value={"text": fact["text"]}, result="miss", failure_class="parser_content_loss", confidence="supported",
                 explanation=f"expected list item text for {fact['fact_id']!r} not found among CanonicalListItem",
             ))
+            alignments.append(_alignment(fact["fact_id"], fixture, "list_item", expected_value={"text": fact["text"]}, match_status="missing", derivation="not_applicable"))
             continue
-        recall_num += 1
+
+        recall_acc.record_match(fact["fact_id"])
         matched_block_id_by_fact_id[fact["fact_id"]] = item.block_id
-        indent_den += 1
-        if item.indent_level == fact["indent_level"]:
-            indent_num += 1
+        indent_ok = item.indent_level == fact["indent_level"]
+        if indent_ok:
+            indent_acc.record_match(fact["fact_id"])
         else:
+            indent_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="list_indentation_accuracy",
                 expected_value={"indent_level": fact["indent_level"]}, observed_value={"indent_level": item.indent_level}, result="partial",
@@ -893,23 +1011,23 @@ def _score_list_items(
                 explanation=f"list item {fact['fact_id']!r} text matched but indent_level {item.indent_level} != expected {fact['indent_level']}",
                 supporting_canonical_element_ids=[item.block_id],
             ))
-        alignments.append(EvidenceAlignment(
-            fact_id=fact["fact_id"], fixture=fixture, fact_type="list_item", expected_value={"text": fact["text"], "indent_level": fact["indent_level"]},
-            matched_canonical_element_ids=[item.block_id], matched_chunk_ids=sorted(chunk_map.get(item.block_id, [])),
-            match_status="matched", derivation="source_derived", expected_retrieval_difficulty=_difficulty_for("list_item", is_distractor=False),
+        alignments.append(_alignment(
+            fact["fact_id"], fixture, "list_item", expected_value={"text": fact["text"], "indent_level": fact["indent_level"]},
+            matched_element_ids=[item.block_id], matched_chunk_ids=sorted(chunk_map.get(item.block_id, [])),
+            match_status="matched" if indent_ok else "partial", derivation="source_derived",
         ))
 
     for fact in facts:
         expected_parent_fact_id = fact.get("parent")
         if expected_parent_fact_id is None:
             continue
-        parent_den += 1
         item_block_id = matched_block_id_by_fact_id.get(fact["fact_id"])
         expected_parent_block_id = matched_block_id_by_fact_id.get(expected_parent_fact_id)
         item = next((li for li in document.list_items if li.block_id == item_block_id), None)
         if item is not None and expected_parent_block_id is not None and item.parent_block_id == expected_parent_block_id:
-            parent_num += 1
+            parent_acc.record_match(fact["fact_id"])
         else:
+            parent_acc.record_miss(fact["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=fact["fact_id"], metric="list_parent_link_accuracy",
                 expected_value={"parent": expected_parent_fact_id}, observed_value={"parent_block_id": item.parent_block_id if item else None}, result="partial",
@@ -917,37 +1035,139 @@ def _score_list_items(
                 explanation=f"list item {fact['fact_id']!r} does not carry the expected parent_block_id linkage to {expected_parent_fact_id!r}",
             ))
 
-    metrics = {
-        "list_item_recall": _metric("list_item_recall", TEXT_NORMALIZED_CASE_FOLD_RULE, recall_num, len(facts)),
-        "list_indentation_accuracy": _metric("list_indentation_accuracy", "exact indent_level match, of list items whose text matched", indent_num, indent_den),
-        "list_parent_link_accuracy": _metric("list_parent_link_accuracy", "parent_block_id resolves to the expected parent list item, of items declaring a parent", parent_num, parent_den),
-    }
+    metrics = {"list_item_recall": recall_acc.result(), "list_indentation_accuracy": indent_acc.result(), "list_parent_link_accuracy": parent_acc.result()}
     return metrics, miss_records, alignments
 
 
-def _score_provenance(fixture: str, document: CanonicalDocument) -> dict[str, MetricResult]:
+def _score_visual_facts_and_unsupported_claims(
+    fixture: str, visual_facts: list[dict], unsupported_claims: list[dict], document: CanonicalDocument,
+) -> tuple[dict[str, MetricResult], list[EvidenceAlignment]]:
+    """Stage 6A.1 item 7: scored, and catalogued, SEPARATELY. Path A never
+    produces VisualFactAnnotation -- visual_fact_recall is structurally
+    not_applicable (excluded, never scored as 0%); the absence of any
+    unsupported claim being asserted IS scored (and trivially passes,
+    since Stage 5A produces zero VisualFactAnnotations of any kind,
+    supported or not)."""
+    alignments: list[EvidenceAlignment] = []
+    visual_fact_metric = _metric(
+        "visual_fact_recall", "VisualFactAnnotation recovery -- structurally not_applicable to path A (no VisionEnricher, Stage 5A never produces VisualFactAnnotation)",
+        0, 0, excluded=len(visual_facts),
+    )
+    for vf in visual_facts:
+        alignments.append(_alignment(vf["fact_id"], fixture, "visual_fact", expected_value={"raw_text": vf.get("raw_text")}, match_status="not_applicable", derivation="not_applicable"))
+
+    has_visual_fact_annotation = any(a.annotation_type == "visual_fact" for a in document.annotations)
+    unsupported_num = 0 if has_visual_fact_annotation else len(unsupported_claims)
+    unsupported_metric = _metric(
+        "unsupported_visual_claim_absence",
+        "fraction of manifest unsupported_claims that Stage 5A does NOT structurally assert (path A produces zero VisualFactAnnotations of any kind, so this is 100% by construction unless that invariant is ever violated)",
+        unsupported_num, len(unsupported_claims),
+    )
+    for uc in unsupported_claims:
+        # An "unsupported claim" fact is an ABSENCE check, not a presence
+        # check -- when Stage 5A correctly never asserts it, there is no
+        # canonical element to point evidence at (nothing was extracted,
+        # by design), so match_status="not_applicable" (never "matched",
+        # which would wrongly imply real supporting evidence exists and
+        # would trip the chunk-availability sweep, item 9, into demanding
+        # a chunk for a fact that was never meant to be ingested).
+        # "missing" is reserved for the genuine failure case: Stage 5A DID
+        # structurally assert this unsupported claim.
+        status = "not_applicable" if not has_visual_fact_annotation else "missing"
+        alignments.append(_alignment(uc["fact_id"], fixture, "unsupported_claim", expected_value={"claim": uc.get("claim")}, match_status=status, derivation="not_applicable" if not has_visual_fact_annotation else "model_derived"))
+
+    metrics = {}
+    if visual_facts:
+        metrics["visual_fact_recall"] = visual_fact_metric
+    if unsupported_claims:
+        metrics["unsupported_visual_claim_absence"] = unsupported_metric
+    return metrics, alignments
+
+
+def _score_provenance(fixture: str, document: CanonicalDocument) -> tuple[dict[str, MetricResult], list[MissRecord]]:
     provenance_by_id = {p.element_id: p for p in document.provenance}
-    categories: dict[str, list[tuple[str, bool]]] = {
-        "heading": [(h.block_id, h.bbox is not None) for h in document.headings],
-        "paragraph": [(p.block_id, p.bbox is not None) for p in document.paragraphs],
-        "list_item": [(li.block_id, li.bbox is not None) for li in document.list_items],
-        "table": [(t.table_id, t.bbox is not None) for t in document.tables],
-        "picture": [(p.picture_id, p.bbox is not None) for p in document.pictures],
-        "caption": [(c.block_id, c.bbox is not None) for c in document.captions],
-        "annotation": [(a.annotation_id, a.bbox is not None) for a in document.annotations],
+    categories: dict[str, list[str]] = {
+        "heading": [h.block_id for h in document.headings],
+        "paragraph": [p.block_id for p in document.paragraphs],
+        "list_item": [li.block_id for li in document.list_items],
+        "table": [t.table_id for t in document.tables],
+        "picture": [p.picture_id for p in document.pictures],
+        "caption": [c.block_id for c in document.captions],
+        "annotation": [a.annotation_id for a in document.annotations],
     }
     metrics: dict[str, MetricResult] = {}
+    miss_records: list[MissRecord] = []
     total_num = total_den = 0
-    for category, items in categories.items():
-        num = sum(1 for element_id, _ in items if element_id in provenance_by_id)
-        bbox_num = sum(1 for element_id, has_bbox in items if element_id in provenance_by_id and provenance_by_id[element_id].bbox is not None)
-        den = len(items)
-        metrics[f"provenance_coverage_{category}"] = _metric(f"provenance_coverage_{category}", "element_id present as a ProvenanceEntry.element_id", num, den)
-        metrics[f"provenance_bbox_coverage_{category}"] = _metric(f"provenance_bbox_coverage_{category}", "has a ProvenanceEntry AND that entry's bbox is not None (bbox absence is not treated as total provenance absence)", bbox_num, den)
-        total_num += num
-        total_den += den
-    metrics["provenance_coverage_overall"] = _metric("provenance_coverage_overall", "element_id present as a ProvenanceEntry.element_id, across every element category", total_num, total_den)
-    return metrics
+    bbox_total_num = bbox_total_den = 0
+    all_cov_matches: list[str] = []
+    all_cov_misses: list[str] = []
+    all_bbox_matches: list[str] = []
+    all_bbox_misses: list[str] = []
+    for category, element_ids in categories.items():
+        cov_acc = _MetricAcc(f"provenance_coverage_{category}", "element_id present as a ProvenanceEntry.element_id")
+        bbox_acc = _MetricAcc(f"provenance_bbox_coverage_{category}", "has a ProvenanceEntry AND that entry's bbox is not None (bbox absence is not treated as total provenance absence)")
+        for element_id in element_ids:
+            entry = provenance_by_id.get(element_id)
+            if entry is not None:
+                cov_acc.record_match(element_id)
+            else:
+                cov_acc.record_miss(element_id)
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=element_id, metric=f"provenance_coverage_{category}",
+                    expected_value={"has_provenance": True}, observed_value={"has_provenance": False}, result="partial",
+                    failure_class="parser_provenance_loss", confidence="certain",
+                    explanation=f"{category} {element_id!r} has no ProvenanceEntry at all",
+                ))
+            if entry is not None and entry.bbox is not None:
+                bbox_acc.record_match(element_id)
+            else:
+                bbox_acc.record_miss(element_id)
+                if entry is not None:
+                    miss_records.append(MissRecord(
+                        fixture=fixture, fact_id=element_id, metric=f"provenance_bbox_coverage_{category}",
+                        expected_value={"has_bbox": True}, observed_value={"has_bbox": False}, result="partial",
+                        failure_class="parser_provenance_loss", confidence="certain",
+                        explanation=f"{category} {element_id!r} has a ProvenanceEntry but no bbox",
+                    ))
+        metrics[f"provenance_coverage_{category}"] = cov_acc.result()
+        metrics[f"provenance_bbox_coverage_{category}"] = bbox_acc.result()
+        total_num += cov_acc.numerator
+        total_den += cov_acc.denominator
+        bbox_total_num += bbox_acc.numerator
+        bbox_total_den += bbox_acc.denominator
+        all_cov_matches += cov_acc.matches
+        all_cov_misses += cov_acc.misses
+        all_bbox_matches += bbox_acc.matches
+        all_bbox_misses += bbox_acc.misses
+    metrics["provenance_coverage_overall"] = _metric(
+        "provenance_coverage_overall", "element_id present as a ProvenanceEntry.element_id, across every element category",
+        total_num, total_den, matches=all_cov_matches, misses=all_cov_misses,
+    )
+    metrics["provenance_bbox_coverage_overall"] = _metric(
+        "provenance_bbox_coverage_overall", "has a ProvenanceEntry with a non-None bbox, across every element category",
+        bbox_total_num, bbox_total_den, matches=all_bbox_matches, misses=all_bbox_misses,
+    )
+    # Stage 6A.1 item 5: the "overall" rollups are sums of the per-category
+    # accumulators above (which already have their own per-element
+    # MissRecords) -- but the exhaustiveness contract is per METRIC NAME,
+    # so a deficit in the overall metric also gets its own single summary
+    # MissRecord, distinct from (and referencing) the constituent
+    # per-category ones, rather than requiring a reader to infer it.
+    if total_num < total_den:
+        miss_records.append(MissRecord(
+            fixture=fixture, fact_id="provenance_coverage_overall", metric="provenance_coverage_overall",
+            expected_value={"covered": total_den}, observed_value={"covered": total_num}, result="partial",
+            failure_class="parser_provenance_loss", confidence="certain",
+            explanation=f"{total_den - total_num} of {total_den} canonical elements have no ProvenanceEntry at all, across every category",
+        ))
+    if bbox_total_num < bbox_total_den:
+        miss_records.append(MissRecord(
+            fixture=fixture, fact_id="provenance_bbox_coverage_overall", metric="provenance_bbox_coverage_overall",
+            expected_value={"covered": bbox_total_den}, observed_value={"covered": bbox_total_num}, result="partial",
+            failure_class="parser_provenance_loss", confidence="certain",
+            explanation=f"{bbox_total_den - bbox_total_num} of {bbox_total_den} canonical elements have no bbox-carrying ProvenanceEntry, across every category",
+        ))
+    return metrics, miss_records
 
 
 def _score_structural_stress(
@@ -959,19 +1179,33 @@ def _score_structural_stress(
     elements = flatten_text_elements(document)
 
     if suite_key == "stress_pdf" and facts.get("paragraph"):
-        by_fact = {}
+        # NOTE: stress_pdf's "paragraph" facts (SP_001/SP_002) are already
+        # scored -- and already get an EvidenceAlignment each -- via the
+        # generic _score_text_facts pass (evaluate_fixture calls it
+        # whenever facts.get("paragraph") is truthy, which it is here).
+        # column_text_retention is a distinct, additionally-useful metric
+        # NAME over the same underlying matches, but must never emit a
+        # second EvidenceAlignment for the same fact_id (would violate the
+        # per-fixture fact_id uniqueness invariant).
+        retention_acc = _MetricAcc("column_text_retention", TEXT_NORMALIZED_CASE_FOLD_RULE)
+        by_fact: dict[str, TextElement] = {}
         for fact in facts["paragraph"]:
             found = find_exact_text_matches(fact["text"], elements)
             if found:
                 by_fact[fact["fact_id"]] = found[0]
-        retained_num = len(by_fact)
-        metrics["column_text_retention"] = _metric("column_text_retention", TEXT_NORMALIZED_CASE_FOLD_RULE, retained_num, len(facts["paragraph"]))
+                retention_acc.record_match(fact["fact_id"])
+            else:
+                retention_acc.record_miss(fact["fact_id"])
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=fact["fact_id"], metric="column_text_retention",
+                    expected_value={"text": fact["text"]}, result="miss", failure_class="parser_content_loss", confidence="supported",
+                    explanation="expected column text not retained",
+                ))
+        metrics["column_text_retention"] = retention_acc.result()
+
         ordered_ids = sorted(facts["paragraph"], key=lambda f: f["column"])
         if len(ordered_ids) == 2 and all(f["fact_id"] in by_fact for f in ordered_ids):
             first, second = ordered_ids
-            # Reading order within one unit isn't captured on TextElement
-            # (order_index lives on the canonical model, not the flattened
-            # dataclass) -- read it back from the document's own paragraphs.
             para_order = {p.block_id: p.order_index for p in document.paragraphs}
             first_order = para_order.get(by_fact[first["fact_id"]].element_id)
             second_order = para_order.get(by_fact[second["fact_id"]].element_id)
@@ -985,43 +1219,70 @@ def _score_structural_stress(
                 ))
 
     if suite_key == "stress_pptx_overlap" and facts.get("text_box"):
-        by_fact = {}
+        retention_acc = _MetricAcc("overlap_both_retained", TEXT_NORMALIZED_CASE_FOLD_RULE)
+        by_fact: dict[str, TextElement] = {}
         for fact in facts["text_box"]:
             found = find_exact_text_matches(fact["text"], elements)
             if found:
                 by_fact[fact["fact_id"]] = found[0]
-        metrics["overlap_both_retained"] = _metric("overlap_both_retained", TEXT_NORMALIZED_CASE_FOLD_RULE, len(by_fact), len(facts["text_box"]))
-        provenance_by_id = {p.element_id: p for p in document.provenance}
-        z_order_den = len(by_fact)
-        z_order_num = sum(1 for e in by_fact.values() if provenance_by_id.get(e.element_id) is not None and provenance_by_id[e.element_id].z_order is not None)
-        metrics["overlap_z_order_recorded"] = _metric("overlap_z_order_recorded", "matched text box has a non-None ProvenanceEntry.z_order (Stage 5A/Docling does not currently expose PPTX shape z-order)", z_order_num, z_order_den)
-        for fact in facts["text_box"]:
-            if fact["fact_id"] not in by_fact:
+                retention_acc.record_match(fact["fact_id"])
+                alignments.append(_alignment(
+                    fact["fact_id"], fixture, "text_box", expected_value={"text": fact["text"], "z_order": fact["z_order"]},
+                    matched_element_ids=[found[0].element_id], matched_chunk_ids=sorted(chunk_map.get(found[0].element_id, [])),
+                    match_status="matched", derivation="source_derived",
+                ))
+            else:
+                retention_acc.record_miss(fact["fact_id"])
                 miss_records.append(MissRecord(
                     fixture=fixture, fact_id=fact["fact_id"], metric="overlap_both_retained",
                     expected_value={"text": fact["text"]}, result="miss", failure_class="parser_content_loss", confidence="supported",
                     explanation="expected overlapping text box not retained",
                 ))
+                alignments.append(_alignment(
+                    fact["fact_id"], fixture, "text_box", expected_value={"text": fact["text"], "z_order": fact["z_order"]},
+                    match_status="missing", derivation="not_applicable",
+                ))
+        metrics["overlap_both_retained"] = retention_acc.result()
+
+        provenance_by_id = {p.element_id: p for p in document.provenance}
+        z_order_acc = _MetricAcc("overlap_z_order_recorded", "matched text box has a non-None ProvenanceEntry.z_order (Stage 5A/Docling does not currently expose PPTX shape z-order)")
+        for fact_id, element in by_fact.items():
+            entry = provenance_by_id.get(element.element_id)
+            if entry is not None and entry.z_order is not None:
+                z_order_acc.record_match(fact_id)
+            else:
+                z_order_acc.record_miss(fact_id)
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=fact_id, metric="overlap_z_order_recorded",
+                    expected_value={"has_z_order": True}, observed_value={"has_z_order": False}, result="partial",
+                    failure_class="parser_provenance_loss", confidence="certain",
+                    explanation=f"text box {fact_id!r} matched but its ProvenanceEntry carries no z_order",
+                    supporting_canonical_element_ids=[element.element_id],
+                ))
+        metrics["overlap_z_order_recorded"] = z_order_acc.result()
 
     if suite_key == "stress_pptx_diagram":
         node_facts = facts.get("diagram_node", [])
-        by_fact = {}
+        label_acc = _MetricAcc("diagram_label_recall", TEXT_NORMALIZED_CASE_FOLD_RULE)
         for fact in node_facts:
             found = find_exact_text_matches(fact["label"], elements)
             if found:
-                by_fact[fact["fact_id"]] = found[0]
-                alignments.append(EvidenceAlignment(
-                    fact_id=fact["fact_id"], fixture=fixture, fact_type="diagram_node_label", expected_value={"label": fact["label"]},
-                    matched_canonical_element_ids=[found[0].element_id], matched_chunk_ids=sorted(chunk_map.get(found[0].element_id, [])),
-                    match_status="matched", derivation="source_derived", expected_retrieval_difficulty="direct",
+                label_acc.record_match(fact["fact_id"])
+                alignments.append(_alignment(
+                    fact["fact_id"], fixture, "diagram_node_label", expected_value={"label": fact["label"]},
+                    matched_element_ids=[found[0].element_id], matched_chunk_ids=sorted(chunk_map.get(found[0].element_id, [])),
+                    match_status="matched", derivation="source_derived",
                 ))
             else:
+                label_acc.record_miss(fact["fact_id"])
                 miss_records.append(MissRecord(
                     fixture=fixture, fact_id=fact["fact_id"], metric="diagram_label_recall",
                     expected_value={"label": fact["label"]}, result="miss", failure_class="parser_content_loss", confidence="supported",
                     explanation="expected native-diagram node label not found as any canonical text element",
                 ))
-        metrics["diagram_label_recall"] = _metric("diagram_label_recall", TEXT_NORMALIZED_CASE_FOLD_RULE, len(by_fact), len(node_facts))
+                alignments.append(_alignment(fact["fact_id"], fixture, "diagram_node_label", expected_value={"label": fact["label"]}, match_status="missing", derivation="not_applicable"))
+        metrics["diagram_label_recall"] = label_acc.result()
+
         no_diagram_annotation = not any(a.annotation_type in ("diagram_node", "diagram_edge") for a in document.annotations)
         metrics["no_invented_diagram_relationships"] = _metric(
             "no_invented_diagram_relationships", "Stage 5A must never produce DiagramNode/EdgeAnnotation (no VisionEnricher exists) -- verifies zero such annotations exist",
@@ -1032,8 +1293,274 @@ def _score_structural_stress(
             "diagram_edge_recovery", "DiagramEdgeAnnotation recovery -- structurally not_applicable to path A (no VisionEnricher; Docling's native PPTX backend does not expose connector source/target linkage to this mapper)",
             0, 0, excluded=len(edge_facts),
         )
+        for fact in edge_facts:
+            alignments.append(_alignment(fact["fact_id"], fixture, "diagram_edge", expected_value={"source": fact["source"], "target": fact["target"]}, match_status="not_applicable", derivation="not_applicable"))
 
     return metrics, miss_records, alignments
+
+
+# --- identifier occurrence-aware scoring (Stage 6A.1 item 1) ---------------
+
+
+def _resolve_source_fact_element(
+    source_fact_id: str | None, matched_element_by_fact_id: dict[str, TextElement],
+) -> TextElement | None:
+    if source_fact_id is None:
+        return None
+    return matched_element_by_fact_id.get(source_fact_id)
+
+
+def _score_identifiers(
+    fixture: str, target_facts: list[dict], distractor_facts: list[dict], elements: list[TextElement],
+    chunk_map: dict[str, list[str]], matched_element_by_fact_id: dict[str, TextElement],
+    picture_ocr_annotations: list, raw_text_blob: list[tuple[str, str]] | None,
+    fact_expected_location_by_id: dict[str, dict] | None = None,
+) -> tuple[dict[str, MetricResult], list[MissRecord], list[UnexpectedObservation], list[EvidenceAlignment]]:
+    """Stage 6A.1 item 1: every manifest occurrence is its own expectation
+    (`<identifier_fact_id>_occ_<index>`), matched ONE-TO-ONE against the
+    specific canonical element its `source_fact` resolves to -- never a
+    globally-counted-then-capped total. One observed occurrence can never
+    satisfy two expected occurrences (spans are consumed once)."""
+    unique_acc = _MetricAcc("identifier_unique_recall", IDENTIFIER_MATCH_RULE)
+    occurrence_acc = _MetricAcc("identifier_occurrence_recall", IDENTIFIER_MATCH_RULE + " -- occurrence-level, one-to-one against the occurrence's own source_fact location, never globally counted-and-capped (Stage 6A.1 item 1)")
+    occ_location_acc = _MetricAcc("identifier_occurrence_location_accuracy", "the resolved source_fact element's unit_index matches that source fact's own expected_location.unit_index (only occurrences whose source resolves and declares a location)")
+    no_false_merge_acc = _MetricAcc("identifier_distractor_no_false_merge", IDENTIFIER_MATCH_RULE + " -- verifies a distractor identifier's occurrences are never counted toward a target identifier's occurrence tally")
+
+    miss_records: list[MissRecord] = []
+    alignments: list[EvidenceAlignment] = []
+    unexpected: list[UnexpectedObservation] = []
+    fact_expected_location_by_id = fact_expected_location_by_id or {}
+    # (element_id or "ocr:<annotation_id>") -> set of consumed span starts
+    consumed_spans: dict[str, set[int]] = {}
+
+    def _try_consume(identifier: str, element_id: str, text: str) -> tuple[bool, int | None]:
+        spans = find_identifier_occurrences(text, identifier)
+        consumed = consumed_spans.setdefault(element_id, set())
+        for start, _end in spans:
+            if start not in consumed:
+                consumed.add(start)
+                return True, start
+        return False, None
+
+    def _resolve_and_consume(identifier: str, source_fact_id: str | None) -> tuple[bool, str | None, list[str], int | None]:
+        resolved = _resolve_source_fact_element(source_fact_id, matched_element_by_fact_id)
+        if resolved is not None:
+            ok, _start = _try_consume(identifier, resolved.element_id, resolved.text)
+            if ok:
+                return True, resolved.element_id, chunk_map.get(resolved.element_id, []), resolved.unit_index
+            return False, None, [], None
+        if source_fact_id and (source_fact_id.startswith("VF_NODE") or source_fact_id.startswith("DN_")):
+            for ann in picture_ocr_annotations:
+                key = f"ocr:{ann.annotation_id}"
+                ok, _start = _try_consume(identifier, key, ann.text)
+                if ok:
+                    return True, ann.annotation_id, chunk_map.get(ann.annotation_id, []), None
+            return False, None, [], None
+        return False, None, [], None
+
+    for fact in target_facts:
+        identifier = fact["normalized_value"]
+        any_matched = False
+        for occ_index, occurrence in enumerate(fact["occurrences"]):
+            occ_fact_id = f"{fact['fact_id']}_occ_{occ_index}"
+            source_fact_id = occurrence.get("source_fact")
+            matched, element_id, occ_chunk_ids, resolved_unit = _resolve_and_consume(identifier, source_fact_id)
+
+            if matched:
+                occurrence_acc.record_match(occ_fact_id)
+                any_matched = True
+                is_ocr_match = element_id in {a.annotation_id for a in picture_ocr_annotations}
+                alignments.append(_alignment(
+                    occ_fact_id, fixture, "identifier_occurrence",
+                    expected_value={"normalized_value": identifier, "source_fact": source_fact_id, "raw_text": occurrence.get("raw_text")},
+                    matched_element_ids=[] if is_ocr_match else [element_id],
+                    matched_annotation_ids=[element_id] if is_ocr_match else [],
+                    matched_chunk_ids=sorted(occ_chunk_ids), match_status="matched", derivation="source_derived",
+                ))
+
+                # Stage 6A.1 item 9: occurrence location/context accuracy --
+                # reuses whatever expected_location the resolving
+                # source_fact itself declares (identifiers have no
+                # expected_location of their own in the manifest); OCR-
+                # resolved occurrences (source_fact is a diagram-node
+                # reference, never declares a location) are correctly
+                # excluded rather than compared against nothing.
+                expected_unit = _location_unit_index(fact_expected_location_by_id.get(source_fact_id, {}))
+                if expected_unit is not None and resolved_unit is not None:
+                    if resolved_unit == expected_unit:
+                        occ_location_acc.record_match(occ_fact_id)
+                    else:
+                        occ_location_acc.record_miss(occ_fact_id)
+                        miss_records.append(MissRecord(
+                            fixture=fixture, fact_id=occ_fact_id, metric="identifier_occurrence_location_accuracy",
+                            expected_value={"unit_index": expected_unit}, observed_value={"unit_index": resolved_unit}, result="partial",
+                            failure_class="parser_structure_loss", confidence="certain",
+                            explanation=f"identifier occurrence {occ_fact_id!r} matched but at unit_index={resolved_unit}, expected {expected_unit} (via source_fact {source_fact_id!r})",
+                            supporting_canonical_element_ids=[element_id] if not is_ocr_match else [],
+                        ))
+
+                if not occ_chunk_ids:
+                    miss_records.append(MissRecord(
+                        fixture=fixture, fact_id=occ_fact_id, metric="chunk_availability",
+                        expected_value={"has_chunk": True}, observed_value={"has_chunk": False}, result="partial",
+                        failure_class="chunk_projection_loss", confidence="certain",
+                        explanation=f"identifier occurrence {occ_fact_id!r} matched in CanonicalDocument but is not referenced by any CanonicalChunk",
+                        supporting_canonical_element_ids=[element_id],
+                    ))
+            else:
+                occurrence_acc.record_miss(occ_fact_id)
+                if raw_text_blob is not None:
+                    failure_class, confidence, raw_refs = classification.classify_identifier_absence(identifier, raw_text_blob)
+                else:
+                    failure_class, confidence, raw_refs = classification.unresolved_classification("no raw debug artifact")
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=occ_fact_id, metric="identifier_occurrence_recall",
+                    expected_value={"normalized_value": identifier, "source_fact": source_fact_id}, result="miss",
+                    failure_class=failure_class, confidence=confidence,
+                    explanation=f"expected occurrence of {identifier!r} tied to source_fact={source_fact_id!r} not found at that resolved location",
+                    raw_docling_references=raw_refs,
+                ))
+                alignments.append(_alignment(
+                    occ_fact_id, fixture, "identifier_occurrence",
+                    expected_value={"normalized_value": identifier, "source_fact": source_fact_id, "raw_text": occurrence.get("raw_text")},
+                    match_status="missing", derivation="not_applicable",
+                ))
+
+        if any_matched:
+            unique_acc.record_match(fact["fact_id"])
+        else:
+            unique_acc.record_miss(fact["fact_id"])
+            miss_records.append(MissRecord(
+                fixture=fixture, fact_id=fact["fact_id"], metric="identifier_unique_recall",
+                expected_value={"normalized_value": identifier}, result="miss", failure_class="parser_content_loss", confidence="supported",
+                explanation=f"identifier {identifier!r} matched zero of its expected occurrences",
+            ))
+
+    # Distractor identifiers -- occurrence-level too, one alignment per
+    # occurrence, plus the false-merge regression check.
+    for fact in distractor_facts:
+        distractor_value = fact["normalized_value"]
+        for occ_index, occurrence in enumerate(fact["occurrences"]):
+            occ_fact_id = f"{fact['fact_id']}_occ_{occ_index}"
+            source_fact_id = occurrence.get("source_fact")
+            matched, element_id, occ_chunk_ids, _unit = _resolve_and_consume(distractor_value, source_fact_id)
+
+            is_ocr_match = bool(element_id) and element_id in {a.annotation_id for a in picture_ocr_annotations}
+            false_merge_detected = False
+            if matched and element_id and not is_ocr_match:
+                resolved = matched_element_by_fact_id.get(source_fact_id)
+                if resolved is not None:
+                    for target in target_facts:
+                        target_value = target["normalized_value"]
+                        if target_value == distractor_value or target_value not in distractor_value:
+                            continue
+                        distractor_spans = find_identifier_occurrences(resolved.text, distractor_value)
+                        target_spans = find_identifier_occurrences(resolved.text, target_value)
+                        for d_start, d_end in distractor_spans:
+                            for t_start, t_end in target_spans:
+                                if t_start >= d_start and t_end <= d_end:
+                                    false_merge_detected = True
+
+            if matched and not false_merge_detected:
+                no_false_merge_acc.record_match(occ_fact_id)
+                alignments.append(_alignment(
+                    occ_fact_id, fixture, "identifier_distractor_occurrence", expected_value={"normalized_value": distractor_value, "source_fact": source_fact_id},
+                    matched_element_ids=[] if is_ocr_match else ([element_id] if element_id else []),
+                    matched_annotation_ids=[element_id] if is_ocr_match else [],
+                    matched_chunk_ids=sorted(occ_chunk_ids), match_status="matched", derivation="source_derived",
+                ))
+            elif false_merge_detected:
+                no_false_merge_acc.record_miss(occ_fact_id)
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=occ_fact_id, metric="identifier_distractor_no_false_merge",
+                    expected_value={"normalized_value": distractor_value}, result="unexpected",
+                    failure_class="distractor_false_positive", confidence="certain",
+                    explanation=f"distractor identifier {distractor_value!r} appears to have been falsely merged with a target identifier",
+                ))
+                alignments.append(_alignment(
+                    occ_fact_id, fixture, "identifier_distractor_occurrence", expected_value={"normalized_value": distractor_value, "source_fact": source_fact_id},
+                    match_status="missing", derivation="not_applicable",
+                ))
+            else:
+                no_false_merge_acc.record_miss(occ_fact_id)
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=occ_fact_id, metric="identifier_distractor_no_false_merge",
+                    expected_value={"normalized_value": distractor_value}, result="miss",
+                    failure_class="parser_content_loss", confidence="certain",
+                    explanation=f"distractor identifier {distractor_value!r} not found at its resolved source_fact location -- cannot verify it was not falsely merged",
+                ))
+                alignments.append(_alignment(
+                    occ_fact_id, fixture, "identifier_distractor_occurrence", expected_value={"normalized_value": distractor_value, "source_fact": source_fact_id},
+                    match_status="missing", derivation="not_applicable",
+                ))
+
+    # Stage 6A.1 item 1: extra observed occurrences beyond every expected
+    # occurrence's one-to-one consumption, recorded separately -- never
+    # used to silently satisfy a different missing expectation.
+    all_identifiers = {f["normalized_value"] for f in target_facts} | {f["normalized_value"] for f in distractor_facts}
+    for identifier in all_identifiers:
+        for element in elements:
+            consumed = consumed_spans.get(element.element_id, set())
+            for start, end in find_identifier_occurrences(element.text, identifier):
+                if start not in consumed:
+                    unexpected.append(UnexpectedObservation(
+                        fixture=fixture, element_id=element.element_id, element_type=element.element_type,
+                        text=element.text[max(0, start - 20):end + 20], reason=f"extra occurrence of {identifier!r} beyond every manifest-declared occurrence's one-to-one resolution",
+                    ))
+        for ann in picture_ocr_annotations:
+            key = f"ocr:{ann.annotation_id}"
+            consumed = consumed_spans.get(key, set())
+            for start, end in find_identifier_occurrences(ann.text, identifier):
+                if start not in consumed:
+                    unexpected.append(UnexpectedObservation(
+                        fixture=fixture, element_id=ann.annotation_id, element_type="ocr_annotation",
+                        text=ann.text, reason=f"extra occurrence of {identifier!r} beyond every manifest-declared occurrence's one-to-one resolution",
+                    ))
+
+    metrics = {
+        "identifier_unique_recall": unique_acc.result(), "identifier_occurrence_recall": occurrence_acc.result(),
+        "identifier_occurrence_location_accuracy": occ_location_acc.result(),
+        "identifier_distractor_no_false_merge": no_false_merge_acc.result(),
+    }
+    return metrics, miss_records, unexpected, alignments
+
+
+# --- global chunk-availability sweep (Stage 6A.1 item 9) --------------------
+
+
+def _sweep_chunk_availability(fixture: str, alignments: list[EvidenceAlignment]) -> tuple[MetricResult, list[MissRecord]]:
+    """A matched (or partial) canonical fact with no supporting chunk must
+    create a chunk_projection_loss MissRecord -- applied uniformly across
+    every fact type via one pass over the already-built alignment list,
+    rather than duplicated per category. Facts already flagged during
+    identifier scoring are not double-counted."""
+    acc = _MetricAcc("chunk_availability", "every matched/partial EvidenceAlignment must carry at least one matched_chunk_ids entry")
+    miss_records: list[MissRecord] = []
+    already_flagged = set()
+    for alignment in alignments:
+        if alignment.match_status not in ("matched", "partial"):
+            continue
+        if alignment.fact_type == "identifier_occurrence":
+            # already swept during _score_identifiers to avoid duplicate records
+            if alignment.matched_chunk_ids:
+                acc.record_match(alignment.fact_id)
+            else:
+                acc.record_miss(alignment.fact_id)
+            continue
+        if alignment.matched_chunk_ids:
+            acc.record_match(alignment.fact_id)
+        else:
+            acc.record_miss(alignment.fact_id)
+            if alignment.fact_id not in already_flagged:
+                already_flagged.add(alignment.fact_id)
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=alignment.fact_id, metric="chunk_availability",
+                    expected_value={"has_chunk": True}, observed_value={"has_chunk": False}, result="partial",
+                    failure_class="chunk_projection_loss", confidence="certain",
+                    explanation=f"{alignment.fact_type} {alignment.fact_id!r} matched in CanonicalDocument but is not referenced by any CanonicalChunk",
+                    supporting_canonical_element_ids=list(alignment.matched_canonical_element_ids),
+                ))
+    return acc.result(), miss_records
 
 
 # --- top-level per-fixture orchestration ------------------------------------
@@ -1046,51 +1573,33 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
     elements = flatten_text_elements(document)
     facts = build_fact_catalog(manifest, loaded.suite_key, loaded.doc_id)
 
+    raw_debug: dict[str, Any] | None = None
     raw_text_blob: list[tuple[str, str]] | None = None
     if loaded.raw_debug_path.exists():
-        raw_text_blob = classification.extract_raw_text_blob(loaded.raw_debug())
+        raw_debug = loaded.raw_debug()
+        raw_text_blob = classification.extract_raw_text_blob(raw_debug)
 
     metrics: dict[str, MetricResult] = {}
     miss_records: list[MissRecord] = []
     unexpected_observations: list[UnexpectedObservation] = []
     evidence_alignments: list[EvidenceAlignment] = []
+    matched_element_by_fact_id: dict[str, TextElement] = {}
 
     text_facts = facts.get("paragraph", [])
     if text_facts:
-        recall, location, duplication, misses, unexpected, alignments = _score_text_facts(
-            loaded.fixture, text_facts, elements, chunk_map, raw_text_blob
-        )
-        metrics.update({"text_fact_recall": recall, "text_fact_location_accuracy": location, "unexpected_text_duplication": duplication})
+        text_metrics, misses, unexpected, alignments, matched_map = _score_text_facts(loaded.fixture, text_facts, elements, chunk_map, raw_text_blob)
+        metrics.update(text_metrics)
         miss_records += misses
         unexpected_observations += unexpected
         evidence_alignments += alignments
-
-    if facts.get("identifier_target") or facts.get("identifier_distractor"):
-        unique_m, occ_m, no_merge_m, misses, alignments = _score_identifiers(
-            loaded.fixture, facts.get("identifier_target", []), facts.get("identifier_distractor", []),
-            elements, chunk_map, None, raw_text_blob,
-        )
-        metrics.update({
-            "identifier_unique_recall": unique_m, "identifier_occurrence_recall": occ_m,
-            "identifier_distractor_no_false_merge": no_merge_m,
-        })
-        miss_records += misses
-        evidence_alignments += alignments
-        for fact in facts.get("identifier_distractor", []):
-            evidence_alignments.append(EvidenceAlignment(
-                fact_id=fact["fact_id"], fixture=loaded.fixture, fact_type="identifier_distractor",
-                expected_value={"normalized_value": fact["normalized_value"]},
-                matched_canonical_element_ids=[e.element_id for e, _ in find_identifier_matches(fact["normalized_value"], elements)],
-                matched_chunk_ids=sorted({cid for e, _ in find_identifier_matches(fact["normalized_value"], elements) for cid in chunk_map.get(e.element_id, [])}),
-                match_status="matched" if find_identifier_matches(fact["normalized_value"], elements) else "missing",
-                derivation="source_derived", expected_retrieval_difficulty="distractor_sensitive",
-            ))
+        matched_element_by_fact_id.update(matched_map)
 
     if facts.get("heading"):
-        text_m, level_m, class_m, misses, alignments = _score_headings(loaded.fixture, facts["heading"], document, elements, chunk_map, raw_text_blob)
-        metrics.update({"heading_text_recall": text_m, "heading_level_accuracy": level_m, "heading_classification_accuracy": class_m})
+        heading_metrics, misses, alignments, matched_map = _score_headings(loaded.fixture, facts["heading"], document, elements, chunk_map, raw_text_blob)
+        metrics.update(heading_metrics)
         miss_records += misses
         evidence_alignments += alignments
+        matched_element_by_fact_id.update(matched_map)
 
     if facts.get("table"):
         table_metrics, misses, alignments = _score_tables(loaded.fixture, facts["table"], document, chunk_map)
@@ -1098,21 +1607,42 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         miss_records += misses
         evidence_alignments += alignments
 
+    picture_ocr_annotations: list = []
     if facts.get("picture") or facts.get("caption"):
-        pc_metrics, misses, alignments = _score_pictures_captions(loaded.fixture, facts.get("picture", []), facts.get("caption", []), document, chunk_map)
+        pc_metrics, misses, alignments, matched_map = _score_pictures_captions(loaded.fixture, facts.get("picture", []), facts.get("caption", []), document, chunk_map, raw_debug)
         metrics.update(pc_metrics)
         miss_records += misses
         evidence_alignments += alignments
+        matched_element_by_fact_id.update(matched_map)
+        picture_ids = {p.picture_id for p in document.pictures}
+        picture_ocr_annotations = [a for a in document.annotations if a.annotation_type == "ocr" and a.target_ref in picture_ids]
+
+    if facts.get("identifier_target") or facts.get("identifier_distractor"):
+        fact_expected_location_by_id: dict[str, dict] = {}
+        for category in ("paragraph", "heading", "caption"):
+            for f in facts.get(category, []):
+                loc = f.get("expected_location")
+                if loc:
+                    fact_expected_location_by_id[f["fact_id"]] = loc
+        id_metrics, misses, unexpected, alignments = _score_identifiers(
+            loaded.fixture, facts.get("identifier_target", []), facts.get("identifier_distractor", []),
+            elements, chunk_map, matched_element_by_fact_id, picture_ocr_annotations, raw_text_blob,
+            fact_expected_location_by_id,
+        )
+        metrics.update(id_metrics)
+        miss_records += misses
+        unexpected_observations += unexpected
+        evidence_alignments += alignments
 
     if facts.get("ocr_token"):
-        token_m, prov_m, misses, alignments = _score_ocr_tokens(loaded.fixture, facts["ocr_token"], document, chunk_map)
-        metrics.update({"ocr_token_recall": token_m, "ocr_provenance_completeness": prov_m})
+        ocr_metrics, misses, alignments = _score_ocr_tokens(loaded.fixture, facts["ocr_token"], document, chunk_map)
+        metrics.update(ocr_metrics)
         miss_records += misses
         evidence_alignments += alignments
 
     if facts.get("whole_page_ocr_text"):
         m, misses, alignments = _score_whole_page_ocr(loaded.fixture, facts["whole_page_ocr_text"], document, chunk_map)
-        metrics["ocr_whole_page_text_recall"] = m
+        metrics["whole_page_ocr_text_recall"] = m
         miss_records += misses
         evidence_alignments += alignments
 
@@ -1122,26 +1652,23 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         miss_records += misses
         evidence_alignments += alignments
 
-    if facts.get("visual_fact"):
-        metrics["visual_fact_accuracy"] = _metric(
-            "visual_fact_accuracy", "VisualFactAnnotation recovery -- structurally not_applicable to path A (no VisionEnricher, Stage 5A never produces VisualFactAnnotation)",
-            0, 0, excluded=len(facts["visual_fact"]),
-        )
+    if facts.get("visual_fact") or facts.get("unsupported_claim"):
+        vf_metrics, alignments = _score_visual_facts_and_unsupported_claims(loaded.fixture, facts.get("visual_fact", []), facts.get("unsupported_claim", []), document)
+        metrics.update(vf_metrics)
+        evidence_alignments += alignments
 
     structural_metrics, structural_misses, structural_alignments = _score_structural_stress(loaded.fixture, loaded.suite_key, facts, document, chunk_map)
     metrics.update(structural_metrics)
     miss_records += structural_misses
     evidence_alignments += structural_alignments
 
-    # Stage 6A section 1: evaluation-contract limitation, recorded rather
-    # than invented -- the chart fixture declares visual_facts (numeric
-    # values, requiring a VisionEnricher path A doesn't have) but no
-    # expected_ocr_tokens/expected_ocr_text field the way the parity
-    # picture and scanned-PDF fixtures do, so OCR-token recall cannot be
-    # scored for this fixture from the frozen manifest alone.
+    # Stage 6A section 1 / item 7: evaluation-contract limitation, recorded
+    # rather than invented -- the chart fixture declares visual_facts
+    # (requiring a VisionEnricher path A doesn't have) but no
+    # expected_ocr_tokens/expected_ocr_text field.
     if loaded.suite_key == "stress_chart":
         miss_records.append(MissRecord(
-            fixture=loaded.fixture, fact_id=f"{loaded.doc_id}_ocr_tokens_undeclared", metric="ocr_token_recall",
+            fixture=loaded.fixture, fact_id=f"{loaded.doc_id}_ocr_tokens_undeclared", metric="picture_ocr_token_recall",
             expected_value=None, observed_value=None, result="miss", failure_class="evaluation_contract_insufficient",
             confidence="certain",
             explanation=(
@@ -1154,13 +1681,13 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
             ),
         ))
 
-    metrics.update(_score_provenance(loaded.fixture, document))
+    provenance_metrics, provenance_misses = _score_provenance(loaded.fixture, document)
+    metrics.update(provenance_metrics)
+    miss_records += provenance_misses
 
-    # Backfill EvidenceAlignment.unit_indexes (Stage 6A section 16) from
-    # every matched canonical element/annotation's own unit_index, rather
-    # than threading it through all dozen construction call sites above --
-    # a single, exhaustive lookup here is less error-prone than repeating
-    # the same lookup logic at every call site.
+    # Stage 6A.1 item 9: unit_indexes/source_references backfill, plus the
+    # global chunk-availability sweep (item 9's "chunk_projection_loss"
+    # requirement applied uniformly across every fact type).
     unit_index_by_id: dict[str, int] = {}
     for h in document.headings:
         unit_index_by_id[h.block_id] = h.unit_index
@@ -1177,6 +1704,7 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
     for ann in document.annotations:
         unit_index_by_id[ann.annotation_id] = ann.unit_index
     source_ref_by_id = {p.element_id: p.source_element_ref for p in document.provenance if p.source_element_ref}
+
     evidence_alignments = [
         alignment.model_copy(update={
             "unit_indexes": sorted({
@@ -1192,6 +1720,10 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         })
         for alignment in evidence_alignments
     ]
+
+    chunk_availability_metric, chunk_availability_misses = _sweep_chunk_availability(loaded.fixture, evidence_alignments)
+    metrics["chunk_availability"] = chunk_availability_metric
+    miss_records += chunk_availability_misses
 
     operational = OperationalEvidence(
         conversion_status=loaded.conversion_report["conversion_status"],
@@ -1213,6 +1745,12 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         textual_chunk_count=loaded.conversion_report["textual_chunk_count"],
         asset_only_chunk_count=loaded.conversion_report["asset_only_chunk_count"],
         canonical_document_hash=stable_canonical_hash(document),
+        determinism=loaded.determinism,
+        canonical_document_file_sha256=loaded.canonical_document_file_sha256,
+        canonical_chunks_file_sha256=loaded.canonical_chunks_file_sha256,
+        conversion_report_file_sha256=loaded.conversion_report_file_sha256,
+        raw_docling_debug_file_sha256=loaded.raw_docling_debug_file_sha256,
+        artifact_completeness=loaded.artifact_completeness,
     )
 
     return FixtureEvaluationResult(

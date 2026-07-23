@@ -2026,3 +2026,199 @@ captured in a persisted file, recorded here per that review:
 `evaluate_fixture` (backfill pass); `reports/stage6a_docling_miss_ledger.json`
 (zero `"confidence": "unresolved"` entries, verifiable directly by
 inspection or `grep -c unresolved reports/stage6a_docling_miss_ledger.json`).
+
+---
+
+## D-044 — The gold evidence-alignment catalog is complete and occurrence-aware, never a matched-only summary
+
+**Status:** Accepted
+**Stage:** Stage 6A.1
+**Date/commit:** Needs confirmation (assigned at Stage 6A.1 implementation time)
+
+### Problem
+Stage 6A's original evaluator had two related gaps caught in review:
+(1) identifier occurrence recall was computed by counting every
+boundary-safe appearance of an identifier GLOBALLY across the whole
+document and capping the total at the manifest's declared occurrence
+count -- this could not distinguish "every expected occurrence was found
+where expected" from "some unrelated extra appearance happened to make
+the total add up," and one observed occurrence could effectively satisfy
+two different expected occurrences. (2) `artifacts/stage6a/evidence_alignment.json`
+only ever contained an entry for a fact once it MATCHED -- a missing
+expected fact (heading never found, table cell never found, identifier
+occurrence never found) had no catalog entry at all, so a future
+retrieval evaluation reading this catalog could not distinguish "this
+fact was never ingested" from "this fact was ingested but is simply
+absent from the catalog for an unrelated reason."
+
+### Alternatives considered
+For (1): (a) keep the global-count-and-cap approach, accepting the
+ambiguity. (b) Treat every manifest-declared occurrence
+(`identifiers.target_identifiers[*].occurrences[*]`) as its OWN
+expectation (`<identifier_fact_id>_occ_<index>`), resolved via the
+occurrence's own `source_fact` metadata to a SPECIFIC canonical element,
+and matched one-to-one (a consumed span can never satisfy a second
+expectation).
+For (2): (a) keep catalog entries matched-only, relying on the separate
+miss ledger for everything else. (b) Emit exactly one
+`EvidenceAlignment` per expected manifest fact, always, with
+`match_status` of `matched`/`partial`/`missing`/`not_applicable` --
+`missing`/`not_applicable` entries carry empty evidence-id lists but
+remain present.
+
+### Decision
+(b) for both.
+
+### Rationale
+Occurrence-level, source-fact-resolved matching is the only way to
+actually prove "every expected mention was found in its expected place"
+rather than "the right NUMBER of mentions exist somewhere" -- the two are
+not the same claim, and only the former is useful evidence for a future
+retrieval benchmark (D-042) that needs to know exactly which chunk
+contains which occurrence. A complete catalog (matched AND missing AND
+not_applicable) is what makes the catalog usable as the single source of
+truth for "was this fact ingested at all" -- a future retrieval-quality
+evaluation (Stage 6B+) must be able to tell ingestion loss apart from
+retrieval loss, which requires knowing a fact was expected in the first
+place, not just that it happened to match something.
+
+### Trade-offs and consequences
+The evidence-alignment catalog roughly doubled in size (77 -> 147 entries
+in the real baseline run) since every table cell, identifier occurrence,
+and previously-uncatalogued fact type now gets its own record. Building
+the occurrence-level resolution required computing text/heading/caption
+matches BEFORE identifier scoring (a real ordering dependency introduced
+into `evaluate_fixture`) so identifier occurrences can resolve their
+`source_fact` against already-matched elements. Extra (unconsumed)
+identifier occurrences beyond every expected occurrence's one-to-one
+resolution are recorded as `UnexpectedObservation`s, never silently
+absorbed into a different expectation's count.
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/evaluator.py::_score_identifiers` (occurrence
+resolution, one-to-one span consumption), every `_score_*` function
+(complete alignment emission on both the matched and missing paths);
+`tests/test_evaluation_identifier_occurrence.py` (the exact "missing
+occurrence not satisfied by an extra distractor occurrence" regression
+scenario); `tests/test_stage6a_report_generation.py::test_every_matched_expected_fact_has_an_evidence_alignment_entry_in_the_catalog`.
+
+---
+
+## D-045 — mapper_loss for a missing RELATIONSHIP requires explicit raw evidence of that relationship, never inferred from text presence alone
+
+**Status:** Accepted
+**Stage:** Stage 6A.1
+**Date/commit:** Needs confirmation (assigned at Stage 6A.1 implementation time)
+
+### Problem
+Stage 6A's original caption-linkage attribution classified the DOCX/PPTX
+"caption text present as an unlinked paragraph" case as `mapper_loss`
+whenever the matched paragraph had ANY raw Docling `self_ref` -- but a
+`self_ref` only proves the TEXT reached Docling's output, it says nothing
+about whether Docling itself ever exposed the CAPTION RELATIONSHIP for
+the Stage 5A mapper to preserve. Direct inspection of real raw Docling
+debug JSON confirmed this was a real misclassification: for both DOCX and
+PPTX, the raw picture object's own `captions` list is `[]` -- Docling
+never exposed the relationship at all for these formats -- yet the
+original evaluator reported `mapper_loss` (implying the mapper's fault)
+for both.
+
+### Alternatives considered
+(a) Keep classifying any present-but-unlinked text as `mapper_loss` when
+a `self_ref` exists, accepting the imprecision. (b) Attribute the missing
+relationship by inspecting the SPECIFIC raw relation field directly
+(e.g. `raw_debug["pictures"][i]["captions"]`) for a reference to the
+child element's own `self_ref`: `mapper_loss` only if that field
+explicitly contains it (Docling exposed the relationship, mapper dropped
+it); `parser_relationship_loss` if the field is empty or absent (Docling
+never exposed it to begin with).
+
+### Decision
+(b).
+
+### Rationale
+A raw `self_ref` is evidence of content existence, not of relationship
+exposure -- conflating the two systematically over-blames the Stage 5A
+mapper for gaps that are actually genuine Docling parser limitations.
+Verified directly against real data before implementing: `docling_raw/PARITY_001_pdf.json`'s
+picture object has `"captions": [{"$ref": "#/texts/10"}]` (Docling DOES
+expose it for PDF, and the mapper DOES preserve it there -- no miss at
+all for PDF); `docling_raw/PARITY_001_docx.json`/`PARITY_001_pptx.json`'s
+picture objects both have `"captions": []` (Docling never exposes it for
+either format) -- so both are correctly `parser_relationship_loss` after
+this fix, not `mapper_loss`.
+
+### Trade-offs and consequences
+`classification.py::classify_relationship_absence` is a new, general
+attribution helper (parent collection, parent self_ref, relation field,
+child self_ref) reusable for any future relationship-loss attribution
+(table structure, list hierarchy, etc.), not just captions. When the
+parent object itself cannot be found in raw Docling at all, the result is
+`("parser_relationship_loss", "unresolved", [])` -- never guessed as
+`mapper_loss` for lack of evidence either way.
+
+### Deferred questions or reconsideration trigger
+Heading-level/list-hierarchy/table-structure misses already used
+`parser_classification_loss`/`parser_structure_loss`/`parser_relationship_loss`
+(never `mapper_loss`) even before this patch, and were verified directly
+against real raw Docling data to confirm those classifications remain
+correct (e.g. PPTX heading text's raw Docling `label` is `"paragraph"`,
+never a heading-classifying label) -- no further correction was needed
+for those categories in this pass.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/classification.py::classify_relationship_absence`;
+`evaluator.py::_score_pictures_captions` (caption-as-paragraph branch);
+real measured result: both DOCX/PPTX caption-linkage misses in
+`reports/stage6a_docling_miss_ledger.json` now read
+`"failure_class": "parser_relationship_loss"` (previously `"mapper_loss"`).
+
+---
+
+## D-046 — expected_retrieval_difficulty stays unclassified (None) throughout Stage 6A
+
+**Status:** Accepted (closes D-042's own deferred reconsideration trigger)
+**Stage:** Stage 6A.1
+**Date/commit:** Needs confirmation (assigned at Stage 6A.1 implementation time)
+
+### Problem
+Stage 6A's original `EvidenceAlignment.expected_retrieval_difficulty`
+assigned a heuristic tag (e.g. "an identifier with more than one
+occurrence is multi_hop") directly from ingestion-side signals. D-042
+itself flagged this as coarse and only provisionally acceptable,
+"revisited... once real retrieval questions exist." Review confirmed this
+inference was premature: occurrence count is an ingestion-side property,
+not a property of any actual retrieval question, and assigning a
+difficulty label that looks authoritative invites Stage 6B to treat it as
+validated when it was never grounded in a real question.
+
+### Decision
+`expected_retrieval_difficulty` is now `RetrievalDifficulty | None`,
+always `None` in Stage 6A. No heuristic inference of any kind runs in
+this stage. Stage 6B assigns real difficulty to concrete benchmark
+questions built on top of this catalog.
+
+### Rationale
+An unclassified field is honest about what Stage 6A actually knows
+(nothing about retrieval difficulty, by design -- it doesn't build
+retrieval questions); a coarse heuristic field looks like evidence but
+isn't. This directly closes the reconsideration trigger D-042 itself
+recorded.
+
+### Trade-offs and consequences
+The evidence-alignment catalog carries one less dimension of (previously
+speculative) information; Stage 6B must design its own difficulty
+assignment from real questions rather than inheriting anything from
+Stage 6A.
+
+### Deferred questions or reconsideration trigger
+None -- Stage 6B owns this entirely from here.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/model.py::EvidenceAlignment.expected_retrieval_difficulty`;
+`evaluator.py::_alignment` (always passes `None`); the former
+`_difficulty_for` heuristic function was deleted entirely, not merely
+unused; `tests/test_stage6a_integration.py::test_no_evidence_alignment_ever_has_a_retrieval_difficulty_assigned`.

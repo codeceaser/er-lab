@@ -22,13 +22,17 @@ from ingestion_bench.evaluation.model import (
 )
 
 
-def _operational(status: str = "success") -> OperationalEvidence:
-    return OperationalEvidence(
+def _operational(status: str = "success", **overrides) -> OperationalEvidence:
+    kwargs = dict(
         conversion_status=status, elapsed_ms=1.0, unit_count=1, heading_count=0, paragraph_count=1,
         list_item_count=0, table_count=0, table_cell_count=0, picture_count=0, caption_count=0,
         provenance_count=1, canonical_chunk_count=1, textual_chunk_count=1, asset_only_chunk_count=0,
-        canonical_document_hash="a" * 64,
+        canonical_document_hash="a" * 64, canonical_document_file_sha256="b" * 64,
+        canonical_chunks_file_sha256="c" * 64, conversion_report_file_sha256="d" * 64,
+        raw_docling_debug_file_sha256="e" * 64, artifact_completeness={"canonical_document": True},
     )
+    kwargs.update(overrides)
+    return OperationalEvidence(**kwargs)
 
 
 def _metric(numerator: int, denominator: int) -> MetricResult:
@@ -96,13 +100,18 @@ def test_build_evaluation_run_is_deterministic():
     assert run_a.run_id == run_b.run_id
 
 
-def test_build_evaluation_run_id_changes_with_different_canonical_document_hash():
+def test_build_evaluation_run_id_changes_with_different_input_file_hash():
+    """Stage 6A.1 item 11: run_id is derived from input_bundle_hash, which
+    is itself a pure function of every input FILE's own bytes hash (not
+    the semantic canonical_document_hash) -- changing the file hash must
+    change both input_bundle_hash and run_id."""
     manifest = {"manifest_version": "1.2.1"}
     result_a = _pdf_result()
-    result_b = result_a.model_copy(update={"operational": _operational().model_copy(update={"canonical_document_hash": "b" * 64})})
+    result_b = result_a.model_copy(update={"operational": _operational(canonical_document_file_sha256="f" * 64)})
     run_a = build_evaluation_run([result_a], manifest, "m" * 64, "s" * 64)
     run_b = build_evaluation_run([result_b], manifest, "m" * 64, "s" * 64)
     assert run_a.run_id != run_b.run_id
+    assert run_a.input_bundle_hash != run_b.input_bundle_hash
 
 
 def test_miss_ledger_contains_every_scored_miss():

@@ -76,15 +76,20 @@ def test_miss_ledger_classification_counts_match_aggregate():
 
 
 def test_scorecard_markdown_contains_the_required_table_columns():
+    """Stage 6A.1 item 12: picture OCR is never labeled generically as
+    "OCR text recall" -- it has its own row, distinct from whole-page
+    OCR recall."""
     run = _run()
     markdown = render_scorecard_markdown(run)
     for column in (
         "Text fact recall", "Unique identifier recall", "Occurrence identifier recall",
-        "Heading text recall", "Heading level accuracy", "Table cell-text accuracy",
-        "Table coordinate accuracy", "Picture detection", "Caption linking", "OCR text recall",
-        "Provenance coverage",
+        "Heading text recall", "Heading level accuracy", "Heading classification accuracy",
+        "Table cell-text accuracy", "Table coordinate accuracy", "Picture detection", "Caption linking",
+        "Picture OCR token recall", "Whole-page OCR recall", "Unsupported-visual-claim absence",
+        "Provenance-entry coverage", "Bbox-provenance coverage",
     ):
         assert column in markdown, column
+    assert "OCR text recall" not in markdown
 
 
 def test_scorecard_never_claims_retrieval_or_answer_quality_was_measured():

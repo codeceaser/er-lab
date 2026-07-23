@@ -12,27 +12,33 @@ the two are not wired together.
 
 ## Current stage
 
-**Stage 6A complete** (uncommitted at time of writing — see `git log` for
-the actual commit once made). Stage 5A/5A.1/5A.2 (Docling
+**Stage 6A.1 complete** (uncommitted at time of writing — see `git log`
+for the actual commit once made). Stage 5A/5A.1/5A.2 (Docling
 `DOCLING_STANDARD_LOCAL` adapter, path A) remain **complete and frozen**:
 all 9 generated fixtures convert to a valid `CanonicalDocument` (7
 `success`, 2 `partial` — the two DOCX fixtures) and chunk through the
 unmodified frozen chunker, with truthful `conversion_status` validation,
 component-level determinism evidence, and generated (not hand-typed)
-environment/model-footprint evidence. **Stage 6A — the deterministic
+environment/model-footprint evidence. **Stage 6A/6A.1 — the deterministic
 ingestion-fidelity evaluator — now scores that output against the frozen
-`reference_manifest.json`**: 9/9 fixtures scored, 24 classified misses, 77
-gold evidence-alignment entries (`artifacts/stage6a/evidence_alignment.json`).
-See `reports/stage6a_docling_baseline_scorecard.md` for the real,
-measured results and `POC_STATUS_AND_EVIDENCE.md` "Stage 6A findings" for
-their interpretation. 428 tests passing, 3 pre-existing warnings from
-Docling's own dependencies.
+`reference_manifest.json`**: 9/9 fixtures scored, 56 classified misses,
+147 gold evidence-alignment entries, matched/partial/missing/not_applicable
+(`artifacts/stage6a/evidence_alignment.json`). The 6A.1 hardening patch
+made identifier occurrence recall one-to-one (never globally counted-and-
+capped), made the evidence catalog complete (not matched-only), corrected
+parser-vs-mapper attribution to require explicit raw relationship
+evidence, made the miss ledger exhaustive, and added input-bundle
+traceability. See `reports/stage6a_docling_baseline_scorecard.md` for the
+real, measured results and `POC_STATUS_AND_EVIDENCE.md` "Stage 6A.1
+findings" for their interpretation, including the old-vs-new comparison.
+449 tests passing, 3 pre-existing warnings from Docling's own
+dependencies.
 
 **Next: Stage 6B — the retrieval benchmark contract**, built on the Stage
-6A evidence-alignment catalog, not vision enrichment. See
+6A/6A.1 evidence-alignment catalog, not vision enrichment. See
 `POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions (corrected roadmap)"
-for the full corrected stage sequence (Stage 6A done → Stage 6B next →
-Stages 7A/7B/7C vector/graph/wiki projections → Stages 8A/8B vision
+for the full corrected stage sequence (Stage 6A/6A.1 done → Stage 6B next
+→ Stages 7A/7B/7C vector/graph/wiki projections → Stages 8A/8B vision
 enrichment/OpenAI vendor-native → Stage 9 cross-lane comparison) and why
 vision enrichment moved later (decision D-040).
 
@@ -73,15 +79,16 @@ stage reports):
 .venv/Scripts/python.exe -m pytest -v
 ```
 
-This runs all fifteen test files (`test_canonical_schema.py`,
+This runs all seventeen test files (`test_canonical_schema.py`,
 `test_canonical_hashing.py`, `test_fixture_generation.py`,
 `test_chunking.py`, `test_docling_standard_mapper.py`,
 `test_docling_standard_adapter.py`, `test_docling_standard_integration.py`,
 `test_adapters_base.py`, `test_run_docling_standard_report.py`,
 `test_evaluation_models.py`, `test_evaluation_normalization.py`,
 `test_evaluation_matcher.py`, `test_evaluation_aggregation.py`,
-`test_stage6a_integration.py`, `test_stage6a_report_generation.py`) — 428
-tests as of Stage 6A (3 pre-existing warnings from Docling's own
+`test_evaluation_identifier_occurrence.py`, `test_evaluation_table_matching.py`,
+`test_stage6a_integration.py`, `test_stage6a_report_generation.py`) — 449
+tests as of Stage 6A.1 (3 pre-existing warnings from Docling's own
 dependencies, not this project's code). The three `test_docling_standard_*`
 files run the real Docling adapter (not mocked) against the generated
 fixtures; the `test_evaluation_*`/`test_stage6a_*` files run the real

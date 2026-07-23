@@ -1,31 +1,32 @@
 # POC Status and Evidence — Enterprise Document-Ingestion Benchmark
 
-Snapshot as of Stage 6A (uncommitted at time of writing — see `git log`
+Snapshot as of Stage 6A.1 (uncommitted at time of writing — see `git log`
 for the actual commit once made) on branch `main`. Update this document
 at the end of every subsequent stage — see the maintenance rules in
 `docs/README.md`.
 
 ## Current test totals
 
-**428 tests passed, 0 failed, 3 warnings** — full suite, all files
+**449 tests passed, 0 failed, 3 warnings** — full suite, all files
 (`test_canonical_schema.py` 87, `test_canonical_hashing.py` 21,
 `test_fixture_generation.py` 38, `test_chunking.py` 110,
 `test_docling_standard_mapper.py` 28, `test_docling_standard_adapter.py`
 10, `test_docling_standard_integration.py` 34, `test_adapters_base.py`
 19, `test_run_docling_standard_report.py` 3, `test_evaluation_models.py`
-18, `test_evaluation_normalization.py` 16, `test_evaluation_matcher.py`
-7, `test_evaluation_aggregation.py` 11, `test_stage6a_integration.py`
-18, `test_stage6a_report_generation.py` 8). Full verbose output:
-`reports/stage6a_pytest_output.txt` (the Stage 5A-line files at
-`reports/stage5a_pytest_output.txt` still hold the Stage 5A/5A.1/5A.2-only
-snapshot; this new file is the first full-suite snapshot including Stage
-6A). The 3 warnings are pre-existing, unrelated deprecation warnings from
-Docling's own dependencies (RapidOCR, docling-core's `ListItem`
-auto-grouping), not from this project's own code. The Docling test files
-run real (small, CPU) Docling conversions; the six new
-`test_evaluation_*`/`test_stage6a_*` files run the real Stage 6A evaluator
-against real Stage 5A artifacts — none of this is mocked. Progression
-across stages (each report file is a real, committed snapshot):
+18, `test_evaluation_normalization.py` 23, `test_evaluation_matcher.py`
+7, `test_evaluation_aggregation.py` 11, `test_evaluation_identifier_occurrence.py`
+3, `test_evaluation_table_matching.py` 4, `test_stage6a_integration.py`
+25, `test_stage6a_report_generation.py` 8). Full verbose output:
+`reports/stage6a_pytest_output.txt` (regenerated in place at Stage 6A.1,
+same file, not renamed per sub-stage -- same convention as
+`reports/stage5a_pytest_output.txt` across 5A/5A.1/5A.2). The 3 warnings
+are pre-existing, unrelated deprecation warnings from Docling's own
+dependencies (RapidOCR, docling-core's `ListItem` auto-grouping), not
+from this project's own code. The Docling test files run real (small,
+CPU) Docling conversions; the eight `test_evaluation_*`/`test_stage6a_*`
+files run the real Stage 6A.1 evaluator against real Stage 5A artifacts —
+none of this is mocked. Progression across stages (each report file is a
+real, committed snapshot):
 
 | Report | Pass count |
 |---|---|
@@ -39,7 +40,8 @@ across stages (each report file is a real, committed snapshot):
 | `reports/stage5a_pytest_output.txt` (Stage 5A) | 322 |
 | `reports/stage5a_pytest_output.txt` (Stage 5A.1) | 343 |
 | `reports/stage5a_pytest_output.txt` (Stage 5A.2) | 350 |
-| `reports/stage6a_pytest_output.txt` (Stage 6A, current) | 428 |
+| `reports/stage6a_pytest_output.txt` (Stage 6A) | 428 |
+| `reports/stage6a_pytest_output.txt` (Stage 6A.1, current) | 449 |
 
 ## Stage status table
 
@@ -57,8 +59,9 @@ across stages (each report file is a real, committed snapshot):
 | 5A | Docling `DOCLING_STANDARD_LOCAL` adapter (path A) | **Completed, frozen** (hardened by 5A.1/5A.2) | `src/ingestion_bench/adapters/{base.py,docling_standard/}`, `scripts/run_docling_standard.py` | `tests/test_docling_standard_{mapper,adapter,integration}.py`; `reports/stage5a_pytest_output.txt`, `reports/stage5a_docling_standard_baseline.md`, `reports/stage5a_docling_standard_results.json` | See "Current limitations" below — these are genuine Docling baseline findings, not open adapter defects |
 | 5A.1 | Evidence/provenance hardening patch (diagnostic severity vs. fidelity impact, DOCX partial status, OCR annotation provenance, AdapterConversionResult validation, portable reports, single-execution dual report generation) | **Completed** | Same files as Stage 5A, patched — no new package | `tests/test_adapters_base.py` (15, new), `tests/test_run_docling_standard_report.py` (2, new), 4 new tests added to `test_docling_standard_integration.py`, 1 test updated in `test_docling_standard_mapper.py`; `reports/stage5a_pytest_output.txt` (regenerated in place) | None known — see decisions D-037, D-038 |
 | 5A.2 | Evidence-contract correction (truthful conversion-status validation, component-level determinism evidence, restored environment/model-footprint evidence) | **Completed, frozen** | Same files as Stage 5A, patched, plus `src/ingestion_bench/adapters/docling_standard/environment.py` (new) | `tests/test_adapters_base.py` (+4), `tests/test_docling_standard_adapter.py` (+2), `tests/test_run_docling_standard_report.py` (+1, extended); `reports/stage5a_pytest_output.txt` (regenerated in place), `reports/stage5a_docling_standard_baseline.md`/`results.json` (regenerated from one execution) | None known — see decisions D-039, D-040 |
-| 6A | Deterministic ingestion-fidelity evaluator (scores Stage 5A output against `reference_manifest.json`) | **Completed** | `src/ingestion_bench/evaluation/{model,normalization,matcher,classification,evaluator,aggregation}.py`, `scripts/run_stage6a_evaluation.py` | `tests/test_evaluation_{models,normalization,matcher,aggregation}.py`, `tests/test_stage6a_{integration,report_generation}.py` (78 tests); `reports/stage6a_pytest_output.txt`, `reports/stage6a_docling_baseline_scorecard.md`, `reports/stage6a_docling_baseline_results.json`, `reports/stage6a_docling_miss_ledger.json`, `artifacts/stage6a/evidence_alignment.json` | See "Stage 6A findings" below — genuine measured misses against the frozen manifest, not open evaluator defects. One manifest-contract gap recorded (chart OCR tokens undeclared), not invented around |
-| 6B | Retrieval benchmark contract + gold evidence set (built on the Stage 6A alignment catalog) | **Not started** | — | — | — |
+| 6A | Deterministic ingestion-fidelity evaluator (scores Stage 5A output against `reference_manifest.json`) | **Completed, frozen** (hardened by 6A.1) | `src/ingestion_bench/evaluation/{model,normalization,matcher,classification,evaluator,aggregation}.py`, `scripts/run_stage6a_evaluation.py` | `tests/test_evaluation_*.py`, `tests/test_stage6a_{integration,report_generation}.py`; `reports/stage6a_pytest_output.txt`, `reports/stage6a_docling_baseline_scorecard.md`, `reports/stage6a_docling_baseline_results.json`, `reports/stage6a_docling_miss_ledger.json`, `artifacts/stage6a/evidence_alignment.json` | See "Stage 6A findings" below — genuine measured misses against the frozen manifest, not open evaluator defects |
+| 6A.1 | Correctness and gold-evidence hardening patch (occurrence-aware identifiers, complete evidence catalog, corrected parser/mapper attribution, exhaustive miss ledger, tightened OCR matching, best-candidate table matching, input-bundle traceability) | **Completed** | Same files as Stage 6A, patched | `tests/test_evaluation_identifier_occurrence.py` (3, new), `tests/test_evaluation_table_matching.py` (4, new), extended `test_evaluation_normalization.py`/`test_stage6a_integration.py` | None known — see decisions D-044, D-045, D-046 |
+| 6B | Retrieval benchmark contract + gold evidence set (built on the Stage 6A/6A.1 alignment catalog) | **Not started** | — | — | — |
 | 7A | Regular vector RAG projection + retrieval baseline | **Not started** | — | — | — |
 | 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
 | 7C | Wiki page/link projection | **Not started** | — | — | — |
@@ -201,13 +204,16 @@ Stage 9   Cross-lane quality, cost, latency, and ROI comparison
     remains a documented limitation (`ocr_sequence` reflects scan order,
     not verified visual reading order).
 
-## Stage 6A findings — Docling Standard Local baseline scored against reference_manifest.json
+## Stage 6A.1 findings — Docling Standard Local baseline scored against reference_manifest.json
 
 Real, measured results from `reports/stage6a_docling_baseline_scorecard.md`
 (regenerate via `python scripts/run_stage6a_evaluation.py` after
 `scripts/run_docling_standard.py`). Never invented, never claimed beyond
 what the evaluator actually computed against the frozen manifest and
-Stage 5A output:
+Stage 5A output. This is the Stage 6A.1-corrected scorecard (see
+D-044/D-045/D-046 for what changed and why) — the original Stage 6A
+scorecard is superseded, not deleted; see "Stage 6A -> 6A.1 corrections"
+below for the exact before/after comparison.
 
 | Metric | PDF | DOCX | PPTX | Overall |
 |---|---:|---:|---:|---:|
@@ -216,18 +222,43 @@ Stage 5A output:
 | Occurrence identifier recall | 100.0% (9/9) | 88.9% (8/9) | 88.9% (8/9) | 92.6% (25/27) |
 | Heading text recall | 100.0% (3/3) | 100.0% (6/6) | 100.0% (3/3) | 100.0% (12/12) |
 | Heading level accuracy | 33.3% (1/3) | 100.0% (6/6) | n/a (0/0) | 77.8% (7/9) |
+| Heading classification accuracy | 100.0% (3/3) | 100.0% (6/6) | 0.0% (0/3) | 75.0% (9/12) |
 | Table cell-text accuracy | 100.0% (15/15) | 100.0% (8/8) | 100.0% (12/12) | 100.0% (35/35) |
 | Table coordinate accuracy | 100.0% (15/15) | 100.0% (8/8) | 100.0% (12/12) | 100.0% (35/35) |
 | Picture detection | 100.0% (2/2) | 100.0% (1/1) | 100.0% (1/1) | 100.0% (4/4) |
 | Caption linking | 100.0% (1/1) | 0.0% (0/1) | 0.0% (0/1) | 33.3% (1/3) |
-| OCR text recall | 100.0% (3/3) | 0.0% (0/3) | 0.0% (0/3) | 33.3% (3/9) |
-| Provenance coverage | 100.0% (30/30) | 100.0% (24/24) | 100.0% (19/19) | 100.0% (73/73) |
+| Picture OCR token recall | 100.0% (3/3) | 0.0% (0/3) | 0.0% (0/3) | 33.3% (3/9) |
+| Whole-page OCR recall | 100.0% (1/1) | n/a | n/a | 100.0% (1/1) |
+| Unsupported-visual-claim absence | 100.0% (1/1) | n/a | n/a | 100.0% (1/1) |
+| Provenance-entry coverage | 100.0% (30/30) | 100.0% (24/24) | 100.0% (19/19) | 100.0% (73/73) |
+| Bbox-provenance coverage | 100.0% (30/30) | **0.0% (0/24)** | 100.0% (19/19) | 67.1% (49/73) |
+| Chunk availability | 100.0% (48/48) | 100.0% (40/40) | 100.0% (42/42) | 100.0% (130/130) |
 
-24 total misses across 9 fixtures, classified as: `parser_content_loss` 8,
-`parser_classification_loss` 5, `parser_structure_loss` 4,
-`parser_relationship_loss` 4, `mapper_loss` 2,
-`evaluation_contract_insufficient` 1. 77 gold evidence-alignment entries
-written to `artifacts/stage6a/evidence_alignment.json` — see D-042.
+56 total misses across 9 fixtures, classified as: `parser_provenance_loss`
+28, `parser_structure_loss` 8, `parser_relationship_loss` 6,
+`parser_classification_loss` 5, `parser_content_loss` 6, `mapper_loss` 2,
+`evaluation_contract_insufficient` 1. 147 gold evidence-alignment entries
+written to `artifacts/stage6a/evidence_alignment.json` (matched 121,
+partial 9, missing 8, not_applicable 9) — see D-042/D-044.
+
+### Stage 6A -> 6A.1 corrections (old vs. new, same 9 fixtures)
+
+| | Stage 6A (superseded) | Stage 6A.1 (current) |
+|---|---:|---:|
+| Total misses | 24 | 56 |
+| Evidence-alignment entries | 77 (matched-only) | 147 (complete: matched/partial/missing/not_applicable) |
+| Miss classifications | `parser_content_loss` 8, `parser_classification_loss` 5, `parser_structure_loss` 4, `parser_relationship_loss` 4, `mapper_loss` 2, `evaluation_contract_insufficient` 1 | `parser_provenance_loss` 28 (new category surfaced), `parser_structure_loss` 8, `parser_relationship_loss` 6, `parser_classification_loss` 5, `parser_content_loss` 6, `mapper_loss` 2, `evaluation_contract_insufficient` 1 |
+| DOCX/PPTX caption-linkage attribution | `mapper_loss` (incorrect — inferred from mere text `self_ref` presence) | `parser_relationship_loss` (correct — raw Docling's own `picture.captions` list is empty for both formats, verified directly, D-045) |
+| Bbox-provenance visibility | Hidden inside a single "Provenance coverage" column (100% for DOCX, masking that DOCX has zero bbox-carrying entries) | Split into "Provenance-entry coverage" (100%) and "Bbox-provenance coverage" (**0% for DOCX**) — a real, previously-invisible finding now surfaced |
+| Identifier occurrence scoring | Global count-and-cap (could not prove *which* occurrence was found *where*) | Occurrence-level, one-to-one, resolved to each occurrence's own `source_fact` location (D-044) |
+| `expected_retrieval_difficulty` | Coarse heuristic (e.g. "multi_hop" inferred from occurrence count) | Always `null`/unclassified — Stage 6B's job, not Stage 6A's (D-046) |
+
+Misses roughly doubled not because Stage 5A's actual output changed (it
+did not — Stage 5A remains frozen) but because Stage 6A.1 closes real
+under-reporting gaps: bbox-provenance was previously invisible inside an
+aggregate that only checked provenance-entry PRESENCE, and every scored
+metric now gets an exhaustive corresponding `MissRecord` per deficit
+(D-044, item 5) rather than only some metrics being ledgered.
 
 These numbers now *quantify* findings that were previously only described
 qualitatively in this document's "Genuine Docling ... baseline findings"
@@ -236,21 +267,26 @@ accuracy (1/3 — only the title-level heading, which happens to already be
 level 1, scores correctly); PPTX's total heading-classification loss shows
 up as `heading_level_accuracy` having **zero applicable expectations**
 (`n/a`, never a misleading 0%, since no text matched as a real
-`CanonicalHeading` at all — see `heading_classification_accuracy` in the
-full JSON for that separate metric); DOCX/PPTX caption linking is a
-measured, real 0% with both misses correctly classified `mapper_loss` (the
-caption text IS present as a plain paragraph — confirmed against raw
-Docling output, per D-041 — it just isn't linked); DOCX/PPTX OCR text
-recall is a measured 0% (Docling's DOCX/PPTX backends never populate the
-picture-child OCR annotations PDF gets, a genuinely new finding this
-evaluator surfaced, not previously documented). One manifest-contract gap
-was recorded rather than worked around: `STRESS_CHART_001`'s
-`chart_visual_stress` section declares `visual_facts` (which require a
-`VisionEnricher` path A doesn't have) but no `expected_ocr_tokens` field,
-so raw chart-label OCR recall cannot be scored without inventing an
-expected value — recorded as `evaluation_contract_insufficient`, with a
-proposed fix (a separate, versioned evaluation-profile addendum, never a
-frozen-manifest edit) in the miss ledger and scorecard.
+`CanonicalHeading` at all — see `heading_classification_accuracy`, now its
+own headline column); DOCX/PPTX caption linking is a measured, real 0%
+with both misses correctly classified `parser_relationship_loss` (the
+caption text IS present as a plain paragraph — Docling itself never
+exposes the linkage for these formats, confirmed against raw Docling
+output, D-045); DOCX/PPTX picture-OCR-token recall is a measured 0%
+(Docling's DOCX/PPTX backends never populate the picture-child OCR
+annotations PDF gets); **DOCX bbox-provenance is a measured 0%** (every
+DOCX canonical element has a `ProvenanceEntry`, but none of them carry a
+`bbox` — a real, previously-hidden finding this correction surfaced, per
+D-034's known DOCX-geometry limitation, now precisely quantified rather
+than masked by the old aggregate "Provenance coverage" column). One
+manifest-contract gap was recorded rather than worked around:
+`STRESS_CHART_001`'s `chart_visual_stress` section declares `visual_facts`
+(which require a `VisionEnricher` path A doesn't have) but no
+`expected_ocr_tokens` field, so raw chart-label OCR recall cannot be
+scored without inventing an expected value — recorded as
+`evaluation_contract_insufficient`, with a proposed fix (a separate,
+versioned evaluation-profile addendum, never a frozen-manifest edit) in
+the miss ledger and scorecard.
 
 ## Known non-goals (see also "Explicitly deferred scope" below)
 
@@ -278,8 +314,8 @@ canonical element's own text) has a corresponding fix and test — see
 
 Per the corrected roadmap above, the next step is **Stage 6B — the
 retrieval benchmark contract and gold evidence set**, building directly on
-the now-complete Stage 6A evaluator and its
-`artifacts/stage6a/evidence_alignment.json` catalog (D-042). Vision
+the now-complete, hardened Stage 6A/6A.1 evaluator and its
+`artifacts/stage6a/evidence_alignment.json` catalog (D-042/D-044). Vision
 enrichment (previously described as "Stage 6" earlier in this project's
 history) remains Stage 8A — see D-040 for why the evaluator and the
 retrieval-projection work come first. Stage 5A/5A.1/5A.2 is complete and
@@ -287,10 +323,10 @@ frozen: `docling==2.114.0` is installed and pinned, the adapter converts
 all 9 generated fixtures to a valid `CanonicalDocument` (7 `success`, 2
 `partial` — DOCX, per D-037), its output chunks through the existing
 frozen `chunk_document()` unmodified, and conversion determinism is backed
-by five independent component-level comparisons (D-039). Stage 6A is
-complete: the evaluator scores that same output against the frozen
-manifest (see "Stage 6A findings" above) and produces the reusable gold
-evidence-alignment catalog Stage 6B needs.
+by five independent component-level comparisons (D-039). Stage 6A/6A.1 is
+complete and frozen: the evaluator scores that same output against the
+frozen manifest (see "Stage 6A.1 findings" above) and produces the
+reusable, complete gold evidence-alignment catalog Stage 6B needs.
 
 ---
 

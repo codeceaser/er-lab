@@ -21,16 +21,39 @@ def _canonical_json_bytes(data: dict[str, Any]) -> bytes:
     return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
-def _compute_run_id(fixture_results: list[FixtureEvaluationResult], manifest_sha256: str) -> str:
-    """Deterministic, never uuid4() -- a pure function of which exact
-    Stage 5A canonical documents (by their own stable_canonical_hash) and
-    which manifest revision this run scored, consistent with this
-    project's established identity discipline (D-010)."""
+def _compute_input_bundle_hash(
+    fixture_results: list[FixtureEvaluationResult], manifest_sha256: str, stage5a_results_sha256: str,
+) -> str:
+    """Stage 6A.1 item 11: a deterministic SHA-256 over every input this
+    run actually read -- the manifest, the Stage 5A aggregate results
+    file, and every fixture's own four raw-artifact-bytes hashes. Two
+    evaluation runs over byte-identical inputs always produce the same
+    input_bundle_hash; any single-byte drift in any input file changes
+    it."""
     fixtures = sorted(
-        ({"fixture": r.fixture, "canonical_document_hash": r.operational.canonical_document_hash} for r in fixture_results),
+        (
+            {
+                "fixture": r.fixture,
+                "canonical_document_file_sha256": r.operational.canonical_document_file_sha256,
+                "canonical_chunks_file_sha256": r.operational.canonical_chunks_file_sha256,
+                "conversion_report_file_sha256": r.operational.conversion_report_file_sha256,
+                "raw_docling_debug_file_sha256": r.operational.raw_docling_debug_file_sha256,
+            }
+            for r in fixture_results
+        ),
         key=lambda d: d["fixture"],
     )
-    payload = {"manifest_sha256": manifest_sha256, "evaluator_version": EVALUATOR_VERSION, "fixtures": fixtures}
+    payload = {"manifest_sha256": manifest_sha256, "stage5a_results_sha256": stage5a_results_sha256, "fixtures": fixtures}
+    return hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()
+
+
+def _compute_run_id(input_bundle_hash: str) -> str:
+    """Deterministic, never uuid4() -- a pure function of input_bundle_hash
+    (which is itself a pure function of every input file's bytes) and the
+    evaluator version, consistent with this project's established
+    identity discipline (D-010). run_id is derived FROM input_bundle_hash,
+    not computed independently of it (Stage 6A.1 item 11)."""
+    payload = {"input_bundle_hash": input_bundle_hash, "evaluator_version": EVALUATOR_VERSION}
     return hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()
 
 
@@ -63,10 +86,15 @@ def build_aggregate(fixture_results: list[FixtureEvaluationResult]) -> Aggregate
         for miss in result.miss_records:
             miss_by_class[miss.failure_class] = miss_by_class.get(miss.failure_class, 0) + 1
     evidence_count = sum(len(r.evidence_alignments) for r in fixture_results)
+    evidence_by_status: dict[str, int] = {}
+    for result in fixture_results:
+        for alignment in result.evidence_alignments:
+            evidence_by_status[alignment.match_status] = evidence_by_status.get(alignment.match_status, 0) + 1
     return AggregateEvaluationResult(
         metrics_by_format=aggregate_metrics_by_format(fixture_results),
         miss_count_by_classification=miss_by_class,
         evidence_alignment_count=evidence_count,
+        evidence_alignment_count_by_status=evidence_by_status,
         total_fixtures=len(fixture_results),
     )
 
@@ -75,8 +103,10 @@ def build_evaluation_run(
     fixture_results: list[FixtureEvaluationResult], manifest: dict[str, Any], manifest_sha256: str, stage5a_results_sha256: str,
 ) -> EvaluationRun:
     aggregate = build_aggregate(fixture_results)
+    input_bundle_hash = _compute_input_bundle_hash(fixture_results, manifest_sha256, stage5a_results_sha256)
     return EvaluationRun(
-        run_id=_compute_run_id(fixture_results, manifest_sha256),
+        run_id=_compute_run_id(input_bundle_hash),
+        input_bundle_hash=input_bundle_hash,
         generated_at=datetime.now(timezone.utc).isoformat(),
         manifest_version=manifest["manifest_version"],
         manifest_sha256=manifest_sha256,
@@ -109,18 +139,27 @@ def build_evidence_alignment_catalog(run: EvaluationRun) -> list[dict[str, Any]]
     return entries
 
 
+# Stage 6A.1 item 12: labels corrected -- picture OCR is never labeled
+# generically as "OCR text recall" (whole-page OCR gets its own row), and
+# new rows added for heading classification, provenance-entry/bbox
+# coverage, and unsupported-visual-claim absence.
 _SCORECARD_METRIC_COLUMNS: list[tuple[str, str]] = [
     ("text_fact_recall", "Text fact recall"),
     ("identifier_unique_recall", "Unique identifier recall"),
     ("identifier_occurrence_recall", "Occurrence identifier recall"),
     ("heading_text_recall", "Heading text recall"),
     ("heading_level_accuracy", "Heading level accuracy"),
+    ("heading_classification_accuracy", "Heading classification accuracy"),
     ("table_cell_text_recall", "Table cell-text accuracy"),
     ("table_cell_coordinate_accuracy", "Table coordinate accuracy"),
     ("picture_presence", "Picture detection"),
     ("caption_linkage_accuracy", "Caption linking"),
-    ("ocr_token_recall", "OCR text recall"),
-    ("provenance_coverage_overall", "Provenance coverage"),
+    ("picture_ocr_token_recall", "Picture OCR token recall"),
+    ("whole_page_ocr_text_recall", "Whole-page OCR recall"),
+    ("unsupported_visual_claim_absence", "Unsupported-visual-claim absence"),
+    ("provenance_coverage_overall", "Provenance-entry coverage"),
+    ("provenance_bbox_coverage_overall", "Bbox-provenance coverage"),
+    ("chunk_availability", "Chunk availability"),
 ]
 
 
@@ -150,19 +189,37 @@ def render_scorecard_markdown(run: EvaluationRun) -> str:
             f"{name}={_fmt_score(metric)}" for name, metric in sorted(result.metrics.items())
             if name in {k for k, _ in _SCORECARD_METRIC_COLUMNS}
         )
+        determinism_note = ""
+        if result.operational.determinism is not None:
+            all_equal = result.operational.determinism.get("all_equal")
+            determinism_note = f", determinism.all_equal={all_equal}"
         fixture_lines.append(
             f"- **{result.fixture}** ({result.operational.conversion_status}, "
-            f"{len(result.miss_records)} misses, {len(result.evidence_alignments)} evidence alignments): {top_metrics or '(no applicable expectations for the headline metrics)'}"
+            f"{len(result.miss_records)} misses, {len(result.evidence_alignments)} evidence alignments{determinism_note}): "
+            f"{top_metrics or '(no applicable expectations for the headline metrics)'}"
         )
 
     miss_class_lines = "\n".join(
         f"| `{cls}` | {count} |" for cls, count in sorted(run.aggregate.miss_count_by_classification.items())
     ) or "| (none) | 0 |"
 
+    evidence_status_lines = "\n".join(
+        f"| `{status}` | {count} |" for status, count in sorted(run.aggregate.evidence_alignment_count_by_status.items())
+    ) or "| (none) | 0 |"
+
     limitation_entries = [
         m for r in run.fixture_results for m in r.miss_records if m.failure_class == "evaluation_contract_insufficient"
     ]
     limitation_lines = "\n".join(f"- **{m.fixture}** / `{m.fact_id}`: {m.explanation}" for m in limitation_entries) or "None recorded."
+
+    input_bundle_lines = "\n".join(
+        f"| {r.fixture} | `{r.operational.canonical_document_file_sha256[:16]}...` | "
+        f"`{(r.operational.canonical_chunks_file_sha256 or 'MISSING')[:16]}...` | "
+        f"`{r.operational.conversion_report_file_sha256[:16]}...` | "
+        f"`{(r.operational.raw_docling_debug_file_sha256 or 'MISSING')[:16]}...` | "
+        f"{r.operational.determinism.get('all_equal') if r.operational.determinism else 'n/a'} |"
+        for r in run.fixture_results
+    )
 
     return f"""# Stage 6A — Deterministic Ingestion-Fidelity Evaluator: Docling Standard Local Baseline
 
@@ -172,6 +229,7 @@ from the same in-memory `EvaluationRun`, never two separate runs (same
 discipline as Stage 5A.1/D-039).
 
 `run_id`: `{run.run_id}`
+`input_bundle_hash` (every input file this run actually read, hashed together -- Stage 6A.1 item 11): `{run.input_bundle_hash}`
 `manifest_version`: `{run.manifest_version}` (`manifest_sha256`: `{run.manifest_sha256}`)
 `stage5a_results_sha256` (the exact `reports/stage5a_docling_standard_results.json` bytes this run scored): `{run.stage5a_results_sha256}`
 `evaluator_version`: `{run.evaluator_version}`
@@ -184,7 +242,10 @@ answer-quality was measured, and scores primarily against
 `CanonicalDocument` (`CanonicalChunk` establishes downstream evidence
 availability; raw Docling debug JSON is consulted only to attribute an
 already-established miss between the parser and the Stage 5A mapper --
-see `src/ingestion_bench/evaluation/classification.py`).
+see `src/ingestion_bench/evaluation/classification.py`). Every
+`EvidenceAlignment.expected_retrieval_difficulty` is `null`/unclassified
+in Stage 6A -- Stage 6B assigns real difficulty to concrete benchmark
+questions, never inferred here from ingestion-side signals alone.
 
 ## Aggregate scorecard
 
@@ -195,8 +256,8 @@ zero applicable expectations for that format (never silently reported as
 0%) -- see the full per-metric breakdown in
 `reports/stage6a_docling_baseline_results.json` for every metric beyond
 this headline table (table span/header accuracy, list-item indentation/
-parent-link accuracy, per-category provenance coverage, structural stress
-metrics, and more).
+parent-link accuracy, per-category provenance coverage, occurrence-level
+identifier location accuracy, structural stress metrics, and more).
 
 ## Fixture-by-fixture summary
 
@@ -213,13 +274,28 @@ Total misses: {sum(run.aggregate.miss_count_by_classification.values())}. Full d
 ## Gold evidence-alignment catalog
 
 {run.aggregate.evidence_alignment_count} entries written to
-`artifacts/stage6a/evidence_alignment.json` -- one per expected fact that
-Stage 5A output could be matched against, with its supporting canonical
-element ids, annotation ids, chunk ids, and a coarse retrieval-difficulty
-tag. This catalog is the gold evidence set later reused, unmodified, to
+`artifacts/stage6a/evidence_alignment.json` -- ONE ENTRY PER EXPECTED
+MANIFEST FACT, not only matched ones (Stage 6A.1 item 2): every heading,
+paragraph/distractor, identifier occurrence, table cell, caption, picture,
+OCR expectation, diagram node/edge, visual fact, and unsupported claim has
+a record, with `match_status` distinguishing matched/partial/missing/
+not_applicable so a future retrieval evaluation can tell ingestion loss
+apart from retrieval loss. Status breakdown:
+
+| Status | Count |
+|---|---:|
+{evidence_status_lines}
+
+This catalog is the gold evidence set later reused, unmodified, to
 evaluate vector RAG, Graph RAG, and wiki retrieval against the SAME
-expected facts and supporting chunks (D-040) -- no retrieval questions are
-invented here (Stage 6B).
+expected facts and supporting chunks (D-040) -- no retrieval questions or
+difficulty labels are invented here (Stage 6B).
+
+## Input-bundle traceability (Stage 6A.1 item 11)
+
+| Fixture | canonical_document SHA-256 | canonical_chunks SHA-256 | conversion_report SHA-256 | raw_docling_debug SHA-256 | determinism.all_equal |
+|---|---|---|---|---|---|
+{input_bundle_lines}
 
 ## Manifest fields insufficient for scoring (recorded, not invented)
 
@@ -232,7 +308,7 @@ invented here (Stage 6B).
 - Vision-enrichment accuracy (picture classification, diagram node/edge
   recovery, visual-fact accuracy) -- Stage 5A path A produces none of this
   content by design; every such expectation is recorded as
-  `expected_not_applicable_to_lane`, never scored as a failure.
+  not_applicable/excluded, never scored as a failure.
 - ROI, cost, or latency comparison across ingestion approaches (Stage 9).
 - OpenAI-based ingestion (paths B/C) quality -- not implemented.
 """

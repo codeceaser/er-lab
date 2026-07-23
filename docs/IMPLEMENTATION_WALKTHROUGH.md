@@ -886,6 +886,115 @@ versioned evaluation-profile addendum, never a frozen-manifest edit).
 
 ---
 
+## Stage 6A.1 — Correctness and Gold-Evidence Hardening Patch `[IMPLEMENTED]`
+
+Same files as Stage 6A, patched in place -- no new package, no retrieval/
+vector/graph/wiki/vision/OpenAI code added. Adds
+`tests/test_evaluation_identifier_occurrence.py` and
+`tests/test_evaluation_table_matching.py`.
+
+1. **Occurrence-aware identifier scoring (D-044).** Every manifest
+   occurrence (`identifiers.target_identifiers[*].occurrences[*]`) is now
+   its own `FactExpectation` (`<identifier_fact_id>_occ_<index>`),
+   resolved via the occurrence's own `source_fact` metadata to a SPECIFIC
+   canonical element (text facts/headings/captions already matched
+   earlier in `evaluate_fixture`, or a picture's OCR annotations for
+   diagram-node-referenced occurrences) and matched ONE-TO-ONE -- a
+   consumed span can never satisfy a second expectation. Occurrence
+   recall is never computed by counting appearances globally and capping
+   at the expected total. Extra unconsumed occurrences (e.g. in a
+   distractor paragraph) are recorded as `UnexpectedObservation`s, never
+   silently used to fill a different expectation.
+2. **Complete evidence-alignment catalog (D-044).** Every `_score_*`
+   function now emits exactly one `EvidenceAlignment` per expected
+   manifest fact, always -- `match_status` of `matched`/`partial`/
+   `missing`/`not_applicable`; missing/not_applicable entries carry empty
+   evidence-id lists but remain present. Applies to identifier
+   occurrences, table cells (one alignment per expected cell, item 10),
+   headings, paragraphs/distractors, captions/pictures, OCR expectations,
+   diagram nodes/edges, visual facts, and unsupported claims. Catalog grew
+   77 -> 147 real entries.
+3. **`expected_retrieval_difficulty` is unclassified (D-046).**
+   `EvidenceAlignment.expected_retrieval_difficulty` is now
+   `RetrievalDifficulty | None`, always `None` in Stage 6A -- the former
+   `_difficulty_for` heuristic (e.g. "multi_hop" inferred from occurrence
+   count) was deleted, not merely unused. Stage 6B assigns real difficulty
+   to concrete benchmark questions.
+4. **Corrected parser-vs-mapper attribution (D-045).** New
+   `classification.py::classify_relationship_absence(raw_debug, parent_collection,
+   parent_self_ref, relation_field, child_self_ref)` attributes a missing
+   RELATIONSHIP (not missing text) by inspecting Docling's own raw
+   relation field directly -- `mapper_loss` only when that field
+   explicitly references the child; `parser_relationship_loss` when it's
+   empty/absent. Fixed a real misclassification: DOCX/PPTX caption-as-
+   paragraph was previously `mapper_loss` (inferred from mere text
+   `self_ref` presence); verified against real raw Docling JSON that both
+   formats' `picture.captions` list is `[]` (Docling never exposes the
+   relationship), so both are now correctly `parser_relationship_loss`.
+5. **Exhaustive miss ledger.** Every metric where `numerator < denominator`
+   now has a corresponding `MissRecord`, including previously-unledgered
+   deficits: `text_fact_location_accuracy`, `ocr_provenance_completeness`,
+   every `provenance_coverage_*`/`provenance_bbox_coverage_*` (per-category
+   AND overall summary records), `overlap_z_order_recorded`,
+   `caption_unit_location_accuracy`. `MetricResult.supporting_misses` is
+   populated via a new `_MetricAcc` accumulator class used throughout,
+   keeping counts and fact-id lists in lockstep so they can never drift
+   apart.
+6. **Metric-direction contract.** `unexpected_text_duplication`
+   (lower-is-better) renamed to `no_unexpected_text_duplication`
+   (higher-is-better) -- every `MetricResult` in this evaluator is now
+   documented (in `model.py`'s class docstring) as higher-is-better by
+   convention.
+7. **Visual facts and unsupported claims scored separately (item 7).**
+   `_score_visual_facts_and_unsupported_claims` splits the two into
+   distinct metrics: `visual_fact_recall` (structurally not-applicable to
+   path A, excluded) and `unsupported_visual_claim_absence` (scored --
+   trivially 100% since Stage 5A produces zero `VisualFactAnnotation`s of
+   any kind, supported or not).
+8. **Tightened OCR matching (item 8).** New
+   `normalization.py::ocr_phrase_recovered` replaces the old "observed
+   substring of expected OR expected substring of observed" rule (which
+   would have credited a short fragment like `"P-205"` as full recovery of
+   `"Activate Procedure P-205"`) with word-boundary-safe single-line
+   containment OR reconstruction from ADJACENT, `ocr_sequence`-ordered OCR
+   fragments only.
+9. **New location/chunk-availability/artifact metrics (item 9).**
+   `heading_unit_location_accuracy`, `picture_unit_location_accuracy`,
+   `caption_unit_location_accuracy`, `identifier_occurrence_location_accuracy`,
+   `picture_artifact_completeness`, and a global `chunk_availability` sweep
+   (`_sweep_chunk_availability`, run once over the fully-built alignment
+   list) that creates a `chunk_projection_loss` `MissRecord` for any
+   matched/partial fact with no supporting `CanonicalChunk`.
+10. **Best-candidate table matching, one-to-one cells (item 10).**
+    `_select_best_table` now scores every candidate table's cell-text
+    overlap and picks the MAXIMUM, never the first exceeding a threshold.
+    Cell matching tracks consumed observed-cell identities so one
+    duplicate observed value (e.g. two "N/A" cells) can never satisfy two
+    expected cells. One `EvidenceAlignment` per expected table cell.
+11. **Input-bundle traceability (item 11).** `OperationalEvidence` gained
+    `canonical_document_file_sha256`/`canonical_chunks_file_sha256`/
+    `conversion_report_file_sha256`/`raw_docling_debug_file_sha256`
+    (raw-bytes hashes of the actual artifact files read) and
+    `artifact_completeness`; `determinism` is now actually populated (never
+    silently `None`) for fixtures Stage 5A's own results.json supplied
+    determinism evidence for. `EvaluationRun.input_bundle_hash` is a
+    deterministic SHA-256 over every input file's bytes across all
+    fixtures plus the manifest/Stage-5A-results hashes; `run_id` is
+    derived FROM `input_bundle_hash`, not computed independently.
+12. **Scorecard label corrections (item 12).** Headline table gained
+    "Heading classification accuracy," "Provenance-entry coverage,"
+    "Bbox-provenance coverage" (previously hidden inside one aggregate --
+    now shows DOCX at a real, measured 0%), "Picture OCR token recall,"
+    "Whole-page OCR recall," and "Unsupported-visual-claim absence" --
+    picture OCR is never labeled generically as "OCR text recall."
+
+449 tests pass (up from 428 at Stage 6A) — see
+`reports/stage6a_pytest_output.txt`. Old vs. new aggregate scores and
+miss-classification counts: see `docs/POC_STATUS_AND_EVIDENCE.md`
+"Stage 6A -> 6A.1 corrections."
+
+---
+
 ## Corrected roadmap (Stage 5A.2, updated Stage 6A)
 
 Vision enrichment is **not** the next stage. An earlier framing of this

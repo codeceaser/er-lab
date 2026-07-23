@@ -21,7 +21,9 @@ def _operational(**overrides) -> OperationalEvidence:
         conversion_status="success", elapsed_ms=10.0, unit_count=1, heading_count=0, paragraph_count=1,
         list_item_count=0, table_count=0, table_cell_count=0, picture_count=0, caption_count=0,
         provenance_count=1, canonical_chunk_count=1, textual_chunk_count=1, asset_only_chunk_count=0,
-        canonical_document_hash="a" * 64,
+        canonical_document_hash="a" * 64, canonical_document_file_sha256="b" * 64,
+        canonical_chunks_file_sha256="c" * 64, conversion_report_file_sha256="d" * 64,
+        raw_docling_debug_file_sha256="e" * 64, artifact_completeness={"canonical_document": True},
     )
     kwargs.update(overrides)
     return OperationalEvidence(**kwargs)

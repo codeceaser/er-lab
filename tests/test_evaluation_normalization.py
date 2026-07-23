@@ -10,6 +10,7 @@ from ingestion_bench.evaluation.normalization import (
     identifier_present,
     normalize_linebreaks,
     normalize_text_for_comparison,
+    ocr_phrase_recovered,
     texts_match,
 )
 
@@ -97,3 +98,49 @@ def test_find_identifier_occurrences_respects_start_and_end_boundaries():
 def test_identifier_boundary_no_match_when_directly_adjacent_to_alnum():
     assert not identifier_present("XP-205Y", "P-205")
     assert identifier_present("(P-205)", "P-205")
+
+
+# --- OCR phrase matching (Stage 6A.1 item 8) --------------------------------
+
+
+def test_ocr_phrase_recovered_exact_single_line_match():
+    assert ocr_phrase_recovered("Activate Procedure P-205", [("Activate Procedure P-205", 1)])
+
+
+def test_ocr_phrase_recovered_case_insensitive_and_whitespace_normalized():
+    assert ocr_phrase_recovered("Activate Procedure P-205", [("  activate   procedure p-205  ", 1)])
+
+
+def test_ocr_phrase_rejects_a_short_fragment_as_full_recovery_of_a_longer_phrase():
+    """The exact example required by Stage 6A.1 item 8: a short observed
+    fragment ("P-205") must never be credited as full recovery of a
+    longer expected phrase ("Activate Procedure P-205")."""
+    assert not ocr_phrase_recovered("Activate Procedure P-205", [("P-205", 1)])
+
+
+def test_ocr_phrase_recovered_via_adjacent_ordered_fragment_reconstruction():
+    """If OCR split one phrase into two adjacent, ORDERED fragments, the
+    expected phrase is recovered by their concatenation."""
+    fragments = [("Activate Procedure", 1), ("P-205", 2)]
+    assert ocr_phrase_recovered("Activate Procedure P-205", fragments)
+
+
+def test_ocr_phrase_not_recovered_from_non_adjacent_fragments_out_of_order():
+    """Fragments that don't actually concatenate (in sequence order) into
+    the expected phrase must not be credited."""
+    fragments = [("P-205", 2), ("Some unrelated line", 3), ("Activate Procedure", 1)]
+    # Sorted by ocr_sequence: "Activate Procedure" (1), "P-205" (2), "Some unrelated line" (3)
+    # -- "Activate Procedure P-205" IS recoverable from the first two, in order.
+    assert ocr_phrase_recovered("Activate Procedure P-205", fragments)
+
+
+def test_ocr_phrase_not_recovered_when_fragments_share_no_real_adjacency():
+    fragments = [("Totally unrelated content", 1), ("Another unrelated fragment", 2)]
+    assert not ocr_phrase_recovered("Activate Procedure P-205", fragments)
+
+
+def test_ocr_phrase_recovered_handles_missing_sequence_gracefully():
+    """A fragment with ocr_sequence=None (Docling supplied no sequence
+    evidence) must not crash the sort/reconstruction -- it sorts last."""
+    fragments = [("Activate Procedure P-205", None)]
+    assert ocr_phrase_recovered("Activate Procedure P-205", fragments)

@@ -100,7 +100,23 @@ class FactObservation(BaseModel):
 class EvidenceAlignment(BaseModel):
     """One entry of the Stage 6A gold fact-to-evidence-alignment catalog
     (section 16) -- reusable later to evaluate vector/graph/wiki retrieval
-    against the SAME expected facts and supporting chunks (D-040)."""
+    against the SAME expected facts and supporting chunks (D-040).
+
+    Stage 6A.1 item 2: the catalog is COMPLETE -- one entry exists for
+    EVERY expected manifest fact, not only matched ones. `match_status`
+    distinguishes `"matched"` / `"partial"` / `"missing"` / `"not_applicable"`;
+    a `"missing"` entry has empty evidence-id lists but is still present,
+    so a future retrieval evaluation can distinguish "this was never
+    ingested" (present here as `"missing"`) from "this was ingested but
+    retrieval failed to surface it" (would be a retrieval-layer concern,
+    not an ingestion one).
+
+    Stage 6A.1 item 3: `expected_retrieval_difficulty` is deliberately
+    UNCLASSIFIED (always `None`) in Stage 6A -- assigning a difficulty tag
+    from ingestion-side signals alone (e.g. "appears more than once ->
+    multi_hop") was premature inference not grounded in an actual
+    retrieval question. Stage 6B assigns real difficulty to concrete
+    benchmark questions built on top of this catalog."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -116,7 +132,19 @@ class EvidenceAlignment(BaseModel):
     unit_indexes: list[int] = Field(default_factory=list)
     match_status: MatchStatus
     derivation: DerivationClass
-    expected_retrieval_difficulty: RetrievalDifficulty
+    # Stage 6A.1 item 3: nullable, always None until Stage 6B assigns real
+    # difficulty to concrete benchmark questions -- never inferred here.
+    expected_retrieval_difficulty: RetrievalDifficulty | None = None
+
+    @model_validator(mode="after")
+    def _validate_missing_has_no_evidence(self) -> "EvidenceAlignment":
+        if self.match_status in ("missing", "not_applicable"):
+            if self.matched_canonical_element_ids or self.matched_annotation_ids or self.matched_chunk_ids:
+                raise ValueError(
+                    f"match_status={self.match_status!r} must carry empty evidence-id lists "
+                    f"(fact_id={self.fact_id!r})"
+                )
+        return self
 
     @model_validator(mode="after")
     def _validate_fixture_portable(self) -> "EvidenceAlignment":
@@ -186,7 +214,17 @@ class MetricResult(BaseModel):
     a metric with no applicable expectations is never silently reported as
     0%. matching_rule documents, in one line, the exact normalization/
     matching rule used (see normalization.py) so a reader never has to
-    guess whether a metric is fuzzy/semantic (it never is)."""
+    guess whether a metric is fuzzy/semantic (it never is).
+
+    Metric-direction contract (Stage 6A.1 item 6): every MetricResult in
+    this evaluator is HIGHER-IS-BETTER -- numerator counts the GOOD
+    outcome (a match, a coverage hit, an absence of an unsupported claim),
+    never the bad one. A metric that would naturally read as "count of
+    problems" (e.g. duplicate text, missing z-order) is always phrased as
+    its positive complement (e.g. `no_unexpected_text_duplication`,
+    `overlap_z_order_recorded`) so `score * 100` can always be read as "%
+    good" across the whole scorecard without checking each metric's
+    polarity individually."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -223,7 +261,17 @@ class MetricResult(BaseModel):
 
 class OperationalEvidence(BaseModel):
     """Copied and validated from Stage 5A evidence -- never recomputed or
-    reinterpreted (Stage 6A section 14)."""
+    reinterpreted (Stage 6A section 14).
+
+    Stage 6A.1 item 11: full input traceability. `canonical_document_hash`
+    is `stable_canonical_hash()` (a semantic/content hash, unchanged from
+    Stage 6A); the four `*_file_sha256` fields are raw-BYTES hashes of the
+    actual Stage 5A artifact files this evaluation run read, so the exact
+    input bytes are independently verifiable even for files (conversion
+    report, raw Docling debug export) that have no canonical-model hash of
+    their own. `determinism` is populated (never silently left `None`)
+    whenever Stage 5A's own results.json supplied a determinism entry for
+    this fixture (currently the three parity fixtures only)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -247,6 +295,11 @@ class OperationalEvidence(BaseModel):
     asset_only_chunk_count: int = Field(ge=0)
     canonical_document_hash: str
     determinism: dict | None = None
+    canonical_document_file_sha256: str
+    canonical_chunks_file_sha256: str | None = None
+    conversion_report_file_sha256: str
+    raw_docling_debug_file_sha256: str | None = None
+    artifact_completeness: dict[str, bool] = Field(default_factory=dict)
 
 
 class FixtureEvaluationResult(BaseModel):
@@ -282,13 +335,26 @@ class AggregateEvaluationResult(BaseModel):
     metrics_by_format: dict[str, dict[str, MetricResult]] = Field(default_factory=dict)
     miss_count_by_classification: dict[str, int] = Field(default_factory=dict)
     evidence_alignment_count: int = Field(ge=0)
+    # Stage 6A.1 item 2: the catalog is complete (every expected fact gets
+    # an entry), so a status breakdown is meaningful evidence of that
+    # completeness -- matched/partial/missing/not_applicable counts.
+    evidence_alignment_count_by_status: dict[str, int] = Field(default_factory=dict)
     total_fixtures: int = Field(ge=0)
 
 
 class EvaluationRun(BaseModel):
+    """Stage 6A.1 item 11: `input_bundle_hash` is a deterministic SHA-256
+    over every input this run actually read -- `manifest_sha256`,
+    `stage5a_results_sha256`, and every fixture's own four
+    `OperationalEvidence.*_file_sha256` values -- and `run_id` is itself
+    derived from `input_bundle_hash` (never independent of it), so
+    `run_id` genuinely identifies "this exact input bundle scored by this
+    exact evaluator version," not just "a run happened.\""""
+
     model_config = ConfigDict(extra="forbid")
 
     run_id: str
+    input_bundle_hash: str
     generated_at: str
     manifest_version: str
     manifest_sha256: str
