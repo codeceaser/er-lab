@@ -1,25 +1,31 @@
 # POC Status and Evidence — Enterprise Document-Ingestion Benchmark
 
-Snapshot as of Stage 5A.2 (uncommitted at time of writing — see `git log`
+Snapshot as of Stage 6A (uncommitted at time of writing — see `git log`
 for the actual commit once made) on branch `main`. Update this document
 at the end of every subsequent stage — see the maintenance rules in
 `docs/README.md`.
 
 ## Current test totals
 
-**350 tests passed, 0 failed, 3 warnings** — full suite, all files
+**428 tests passed, 0 failed, 3 warnings** — full suite, all files
 (`test_canonical_schema.py` 87, `test_canonical_hashing.py` 21,
 `test_fixture_generation.py` 38, `test_chunking.py` 110,
 `test_docling_standard_mapper.py` 28, `test_docling_standard_adapter.py`
 10, `test_docling_standard_integration.py` 34, `test_adapters_base.py`
-19, `test_run_docling_standard_report.py` 3). Full verbose output:
-`reports/stage5a_pytest_output.txt` (this file is regenerated in place at
-each Stage 5A/5A.1/5A.2 sub-stage, not renamed per sub-stage). The 3
-warnings are pre-existing, unrelated deprecation warnings from Docling's
-own dependencies (RapidOCR, docling-core's `ListItem` auto-grouping), not
-from this project's own code. The Docling test files run real (small,
-CPU) Docling conversions — they are not mocked. Progression across stages
-(each report file is a real, committed snapshot):
+19, `test_run_docling_standard_report.py` 3, `test_evaluation_models.py`
+18, `test_evaluation_normalization.py` 16, `test_evaluation_matcher.py`
+7, `test_evaluation_aggregation.py` 11, `test_stage6a_integration.py`
+18, `test_stage6a_report_generation.py` 8). Full verbose output:
+`reports/stage6a_pytest_output.txt` (the Stage 5A-line files at
+`reports/stage5a_pytest_output.txt` still hold the Stage 5A/5A.1/5A.2-only
+snapshot; this new file is the first full-suite snapshot including Stage
+6A). The 3 warnings are pre-existing, unrelated deprecation warnings from
+Docling's own dependencies (RapidOCR, docling-core's `ListItem`
+auto-grouping), not from this project's own code. The Docling test files
+run real (small, CPU) Docling conversions; the six new
+`test_evaluation_*`/`test_stage6a_*` files run the real Stage 6A evaluator
+against real Stage 5A artifacts — none of this is mocked. Progression
+across stages (each report file is a real, committed snapshot):
 
 | Report | Pass count |
 |---|---|
@@ -32,7 +38,8 @@ CPU) Docling conversions — they are not mocked. Progression across stages
 | `reports/stage4_2a_pytest_output.txt` | 256 |
 | `reports/stage5a_pytest_output.txt` (Stage 5A) | 322 |
 | `reports/stage5a_pytest_output.txt` (Stage 5A.1) | 343 |
-| `reports/stage5a_pytest_output.txt` (Stage 5A.2, current) | 350 |
+| `reports/stage5a_pytest_output.txt` (Stage 5A.2) | 350 |
+| `reports/stage6a_pytest_output.txt` (Stage 6A, current) | 428 |
 
 ## Stage status table
 
@@ -50,7 +57,7 @@ CPU) Docling conversions — they are not mocked. Progression across stages
 | 5A | Docling `DOCLING_STANDARD_LOCAL` adapter (path A) | **Completed, frozen** (hardened by 5A.1/5A.2) | `src/ingestion_bench/adapters/{base.py,docling_standard/}`, `scripts/run_docling_standard.py` | `tests/test_docling_standard_{mapper,adapter,integration}.py`; `reports/stage5a_pytest_output.txt`, `reports/stage5a_docling_standard_baseline.md`, `reports/stage5a_docling_standard_results.json` | See "Current limitations" below — these are genuine Docling baseline findings, not open adapter defects |
 | 5A.1 | Evidence/provenance hardening patch (diagnostic severity vs. fidelity impact, DOCX partial status, OCR annotation provenance, AdapterConversionResult validation, portable reports, single-execution dual report generation) | **Completed** | Same files as Stage 5A, patched — no new package | `tests/test_adapters_base.py` (15, new), `tests/test_run_docling_standard_report.py` (2, new), 4 new tests added to `test_docling_standard_integration.py`, 1 test updated in `test_docling_standard_mapper.py`; `reports/stage5a_pytest_output.txt` (regenerated in place) | None known — see decisions D-037, D-038 |
 | 5A.2 | Evidence-contract correction (truthful conversion-status validation, component-level determinism evidence, restored environment/model-footprint evidence) | **Completed, frozen** | Same files as Stage 5A, patched, plus `src/ingestion_bench/adapters/docling_standard/environment.py` (new) | `tests/test_adapters_base.py` (+4), `tests/test_docling_standard_adapter.py` (+2), `tests/test_run_docling_standard_report.py` (+1, extended); `reports/stage5a_pytest_output.txt` (regenerated in place), `reports/stage5a_docling_standard_baseline.md`/`results.json` (regenerated from one execution) | None known — see decisions D-039, D-040 |
-| 6A | Deterministic ingestion-fidelity evaluator (scores Stage 5A output against `reference_manifest.json`) | **Not started** | — | — | Produces the gold fact-to-chunk evidence-alignment catalog reused by Stage 6B+ (D-040) |
+| 6A | Deterministic ingestion-fidelity evaluator (scores Stage 5A output against `reference_manifest.json`) | **Completed** | `src/ingestion_bench/evaluation/{model,normalization,matcher,classification,evaluator,aggregation}.py`, `scripts/run_stage6a_evaluation.py` | `tests/test_evaluation_{models,normalization,matcher,aggregation}.py`, `tests/test_stage6a_{integration,report_generation}.py` (78 tests); `reports/stage6a_pytest_output.txt`, `reports/stage6a_docling_baseline_scorecard.md`, `reports/stage6a_docling_baseline_results.json`, `reports/stage6a_docling_miss_ledger.json`, `artifacts/stage6a/evidence_alignment.json` | See "Stage 6A findings" below — genuine measured misses against the frozen manifest, not open evaluator defects. One manifest-contract gap recorded (chart OCR tokens undeclared), not invented around |
 | 6B | Retrieval benchmark contract + gold evidence set (built on the Stage 6A alignment catalog) | **Not started** | — | — | — |
 | 7A | Regular vector RAG projection + retrieval baseline | **Not started** | — | — | — |
 | 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
@@ -130,8 +137,8 @@ state may enter `CanonicalDocument`/`CanonicalChunk`.
 framing in this project's history — vision enrichment moved to Stage 8A):
 
 ```
-Stage 6A  Deterministic ingestion-fidelity evaluator          <- NEXT
-Stage 6B  Retrieval benchmark contract + gold evidence set
+Stage 6A  Deterministic ingestion-fidelity evaluator          <- DONE
+Stage 6B  Retrieval benchmark contract + gold evidence set     <- NEXT
 Stage 7A  Regular vector RAG projection + retrieval baseline
 Stage 7B  Graph-enriched RAG projection
 Stage 7C  Wiki page/link projection
@@ -142,10 +149,11 @@ Stage 9   Cross-lane quality, cost, latency, and ROI comparison
 
 ## Current limitations
 
-- No evaluator exists — extraction quality has never been measured against
-  `reference_manifest.json` (Stage 6A, not started — see "Corrected
-  roadmap" above). Stage 5A produces counts and structural observations
-  only — see `reports/stage5a_docling_standard_baseline.md`.
+- Extraction quality has now been measured against `reference_manifest.json`
+  for path A only (Stage 6A) — see "Stage 6A findings" below and
+  `reports/stage6a_docling_baseline_scorecard.md`. No retrieval, answer-
+  quality, or cross-lane (path B/C, vector/graph/wiki) comparison has been
+  measured yet (Stages 6B–9, not started).
 - Paths B, C, D (OpenAI vision enrichment, OpenAI vendor-native, local
   Granite Vision) are not implemented — only path A
   (`DOCLING_STANDARD_LOCAL`) exists.
@@ -193,12 +201,66 @@ Stage 9   Cross-lane quality, cost, latency, and ROI comparison
     remains a documented limitation (`ocr_sequence` reflects scan order,
     not verified visual reading order).
 
+## Stage 6A findings — Docling Standard Local baseline scored against reference_manifest.json
+
+Real, measured results from `reports/stage6a_docling_baseline_scorecard.md`
+(regenerate via `python scripts/run_stage6a_evaluation.py` after
+`scripts/run_docling_standard.py`). Never invented, never claimed beyond
+what the evaluator actually computed against the frozen manifest and
+Stage 5A output:
+
+| Metric | PDF | DOCX | PPTX | Overall |
+|---|---:|---:|---:|---:|
+| Text fact recall | 100.0% (9/9) | 100.0% (7/7) | 100.0% (7/7) | 100.0% (23/23) |
+| Unique identifier recall | 100.0% (4/4) | 100.0% (4/4) | 100.0% (4/4) | 100.0% (12/12) |
+| Occurrence identifier recall | 100.0% (9/9) | 88.9% (8/9) | 88.9% (8/9) | 92.6% (25/27) |
+| Heading text recall | 100.0% (3/3) | 100.0% (6/6) | 100.0% (3/3) | 100.0% (12/12) |
+| Heading level accuracy | 33.3% (1/3) | 100.0% (6/6) | n/a (0/0) | 77.8% (7/9) |
+| Table cell-text accuracy | 100.0% (15/15) | 100.0% (8/8) | 100.0% (12/12) | 100.0% (35/35) |
+| Table coordinate accuracy | 100.0% (15/15) | 100.0% (8/8) | 100.0% (12/12) | 100.0% (35/35) |
+| Picture detection | 100.0% (2/2) | 100.0% (1/1) | 100.0% (1/1) | 100.0% (4/4) |
+| Caption linking | 100.0% (1/1) | 0.0% (0/1) | 0.0% (0/1) | 33.3% (1/3) |
+| OCR text recall | 100.0% (3/3) | 0.0% (0/3) | 0.0% (0/3) | 33.3% (3/9) |
+| Provenance coverage | 100.0% (30/30) | 100.0% (24/24) | 100.0% (19/19) | 100.0% (73/73) |
+
+24 total misses across 9 fixtures, classified as: `parser_content_loss` 8,
+`parser_classification_loss` 5, `parser_structure_loss` 4,
+`parser_relationship_loss` 4, `mapper_loss` 2,
+`evaluation_contract_insufficient` 1. 77 gold evidence-alignment entries
+written to `artifacts/stage6a/evidence_alignment.json` — see D-042.
+
+These numbers now *quantify* findings that were previously only described
+qualitatively in this document's "Genuine Docling ... baseline findings"
+list above: PDF's heading-level flattening is a measured 33.3% level
+accuracy (1/3 — only the title-level heading, which happens to already be
+level 1, scores correctly); PPTX's total heading-classification loss shows
+up as `heading_level_accuracy` having **zero applicable expectations**
+(`n/a`, never a misleading 0%, since no text matched as a real
+`CanonicalHeading` at all — see `heading_classification_accuracy` in the
+full JSON for that separate metric); DOCX/PPTX caption linking is a
+measured, real 0% with both misses correctly classified `mapper_loss` (the
+caption text IS present as a plain paragraph — confirmed against raw
+Docling output, per D-041 — it just isn't linked); DOCX/PPTX OCR text
+recall is a measured 0% (Docling's DOCX/PPTX backends never populate the
+picture-child OCR annotations PDF gets, a genuinely new finding this
+evaluator surfaced, not previously documented). One manifest-contract gap
+was recorded rather than worked around: `STRESS_CHART_001`'s
+`chart_visual_stress` section declares `visual_facts` (which require a
+`VisionEnricher` path A doesn't have) but no `expected_ocr_tokens` field,
+so raw chart-label OCR recall cannot be scored without inventing an
+expected value — recorded as `evaluation_contract_insufficient`, with a
+proposed fix (a separate, versioned evaluation-profile addendum, never a
+frozen-manifest edit) in the miss ledger and scorecard.
+
 ## Known non-goals (see also "Explicitly deferred scope" below)
 
-Real extraction accuracy of any kind, retrieval relevance, answer quality,
-and production deployment readiness are all explicitly out of scope for
-what exists today — none of the code in this repository attempts to
-measure them yet.
+Retrieval relevance, answer quality, ROI, and production deployment
+readiness remain explicitly out of scope for what exists today — no
+retrieval layer has been built or measured yet (Stages 6B–9). Path A
+(`DOCLING_STANDARD_LOCAL`) ingestion-fidelity accuracy against the frozen
+manifest **has** now been measured (Stage 6A, above) — this is the one
+extraction-accuracy claim this repository can currently substantiate;
+paths B/C/D ingestion accuracy remain unmeasured (not implemented).
 
 ## Pending Stage 4.x corrections
 
@@ -214,21 +276,21 @@ canonical element's own text) has a corresponding fix and test — see
 
 ## Next critical implementation step
 
-Per the corrected roadmap above, the next step is **Stage 6A — the
-deterministic ingestion-fidelity evaluator**, building on the now-complete,
-now-frozen Stage 5A/5A.1/5A.2 Docling adapter. Vision enrichment
-(previously described as "Stage 6" earlier in this project's history) is
-now Stage 8A — see D-040 and "Benchmark dimensions" above for why the
-evaluator and the retrieval-projection work come first: the Stage 6A
-evaluator's gold fact-to-chunk evidence-alignment catalog is the shared
-evidence set every later retrieval projection (Stage 7A/7B/7C) will be
-scored against, so it must exist before those projections are worth
-comparing. Stage 5A/5A.1/5A.2 is complete: `docling==2.114.0` is installed
-and pinned, the adapter converts all 9 generated fixtures to a valid
-`CanonicalDocument` (7 `success`, 2 `partial` — DOCX, per D-037), its
-output chunks through the existing frozen `chunk_document()` unmodified,
-and conversion determinism is now backed by five independent
-component-level comparisons (D-039), not one collapsed hash.
+Per the corrected roadmap above, the next step is **Stage 6B — the
+retrieval benchmark contract and gold evidence set**, building directly on
+the now-complete Stage 6A evaluator and its
+`artifacts/stage6a/evidence_alignment.json` catalog (D-042). Vision
+enrichment (previously described as "Stage 6" earlier in this project's
+history) remains Stage 8A — see D-040 for why the evaluator and the
+retrieval-projection work come first. Stage 5A/5A.1/5A.2 is complete and
+frozen: `docling==2.114.0` is installed and pinned, the adapter converts
+all 9 generated fixtures to a valid `CanonicalDocument` (7 `success`, 2
+`partial` — DOCX, per D-037), its output chunks through the existing
+frozen `chunk_document()` unmodified, and conversion determinism is backed
+by five independent component-level comparisons (D-039). Stage 6A is
+complete: the evaluator scores that same output against the frozen
+manifest (see "Stage 6A findings" above) and produces the reusable gold
+evidence-alignment catalog Stage 6B needs.
 
 ---
 
@@ -342,26 +404,27 @@ component-level comparisons (D-039), not one collapsed hash.
 
 ## What the existing tests do not prove
 
-- Whether Docling's extraction is *correct* against
-  `reference_manifest.json` — no evaluator exists (Stage 6A, corrected
-  roadmap). Stage 5A tests check structural presence (a table exists, an
-  identifier substring is present, a picture was retained) never
-  accuracy/recall/precision.
-- OCR *accuracy* — Stage 5A confirms OCR-derived text is extracted at all
-  (e.g. the scanned PDF's OCR text is nonempty, the diagram's 3 OCR tokens
-  and the chart's 9 OCR tokens are captured as `OcrAnnotation`s) but never
-  checks whether the transcribed text is correct.
-- Table-*cell-value* extraction accuracy against expected content.
+- OCR *transcription* accuracy at the character level — Stage 6A confirms
+  whether an expected OCR token/text was recovered at all (substring/exact
+  match against `OcrAnnotation`/paragraph text) but does not check
+  character-level transcription fidelity beyond that.
+- Table-cell-value accuracy beyond what Stage 6A's cell-text/coordinate/
+  header/span metrics check (real, measured — see "Stage 6A findings"
+  above — but scored against this one frozen manifest's specific tables,
+  not a claim about arbitrary real-world tables).
 - Visual-semantic accuracy (picture classification, diagram node/edge
   recovery, visual-fact accuracy) — no `VisionEnricher` exists; Stage 5A
-  explicitly proves the *absence* of invented visual facts, not the
-  presence of correct ones.
-- OpenAI extraction/comparison quality (paths B/C) — not implemented.
+  explicitly proves the *absence* of invented visual facts, and Stage 6A
+  records every such expectation as excluded-not-applicable, never scored
+  as a failure and never invented.
+- OpenAI extraction/comparison quality (paths B/C) — not implemented, not
+  evaluated.
 - Retrieval relevance or answer quality — no retrieval layer exists for
-  this pipeline.
+  this pipeline (Stages 6B–7C, not started).
 - Production scalability, latency, or cost under real load (Stage 5A's
   timings are for 9 small synthetic fixtures on one CPU-only laptop-class
   machine, not a load test).
+- ROI or cross-lane cost/quality comparison of any kind (Stage 9).
 - OpenShift (or any) deployment readiness.
 
 ---
@@ -376,19 +439,20 @@ chunk contract frozen (Stage 4.2a, done)
         -> process the controlled Stage 3 fixtures (DONE -- all 9 produce a valid CanonicalDocument; 7 success, 2 partial)
         -> produce valid CanonicalDocuments (DONE)
         -> produce deterministic CanonicalChunks (DONE -- existing chunker, unmodified; determinism now backed by 5 independent component comparisons, D-039)
-        -> compare output against reference_manifest.json ground truth (NOT STARTED -- Stage 6A)
-        -> report extraction metrics + gold fact-to-chunk evidence alignment (per BENCHMARK_CONTRACT.md section 9) (NOT STARTED -- Stage 6A)
+        -> compare output against reference_manifest.json ground truth (DONE -- Stage 6A)
+        -> report extraction metrics + gold fact-to-chunk evidence alignment (per BENCHMARK_CONTRACT.md section 9) (DONE -- Stage 6A)
         -> retrieval benchmark contract + vector/graph/wiki projections (NOT STARTED -- Stages 6B/7A/7B/7C)
         -> add selective vision/vendor-native comparison (paths B/C) as time permits (NOT STARTED -- Stages 8A/8B)
         -> cross-lane quality/cost/latency/ROI comparison (NOT STARTED -- Stage 9)
 ```
 
-The remaining gap to a first *measurable* result (accuracy/recall against
-the manifest, not just "did conversion succeed") is the evaluator
-(Stage 6A, corrected roadmap — see "Benchmark dimensions" above) — Stage
-5A intentionally stops at producing baseline counts and structural
-observations (`reports/stage5a_docling_standard_baseline.md`), never
-manifest comparison.
+The first *measurable* result (accuracy/recall against the manifest, not
+just "did conversion succeed") now exists — see "Stage 6A findings" above
+and `reports/stage6a_docling_baseline_scorecard.md`. The remaining gap to
+a *retrieval-relevant* measurable result is Stage 6B (the retrieval
+benchmark contract, built on the Stage 6A evidence-alignment catalog) —
+Stage 6A intentionally stops at ingestion-fidelity scoring, never
+retrieval or answer-quality evaluation.
 
 ## Explicitly deferred scope
 

@@ -9,7 +9,7 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at Stage 5A.2 (see `git log` for the exact commit once
+and the repository at Stage 6A (see `git log` for the exact commit once
 made).
 
 ---
@@ -23,9 +23,10 @@ Source documents (DOCX/PDF/PPTX)
   -> DocumentRevisionContext            [implemented — supplied by caller]
   -> chunk_document(...)                [implemented — do not redesign]
   -> CanonicalChunk[]                   [common evidence substrate — D-040]
-  -> Ingestion-fidelity evaluator vs. reference_manifest.json  [not implemented — Stage 6A, NEXT]
-  -> Gold fact-to-chunk evidence-alignment catalog              [not implemented — Stage 6A output]
-  -> Retrieval benchmark contract + gold evidence set            [not implemented — Stage 6B]
+  -> Ingestion-fidelity evaluator vs. reference_manifest.json  [DONE — Stage 6A]
+  -> Gold fact-to-chunk evidence-alignment catalog              [DONE — Stage 6A output,
+                                                                     artifacts/stage6a/evidence_alignment.json]
+  -> Retrieval benchmark contract + gold evidence set            [not implemented — Stage 6B, NEXT]
   -> Knowledge Projections (vector / graph / wiki), independently
      derived from the SAME CanonicalDocument/CanonicalChunk corpus
      and the SAME Stage 6A evidence-alignment catalog (D-040)      [not implemented — Stage 7A/7B/7C]
@@ -57,6 +58,15 @@ Final module boundaries:
 - `src/ingestion_bench/vision/` — **does not exist yet.** Expected shape:
   a `VisionEnricher` protocol, `NoOpVisionEnricher`, `OpenAIVisionEnricher`
   (path B), optionally `GraniteVisionEnricher` (path D, deferred).
+- `src/ingestion_bench/evaluation/` — **Stage 6A implemented.** `model.py`
+  (strict Pydantic result models), `normalization.py` (deterministic text/
+  identifier rules), `matcher.py` (exact-match primitives),
+  `classification.py` (miss-attribution against raw Docling debug JSON
+  only), `evaluator.py` (per-fixture scoring, the manifest fact catalog
+  builder), `aggregation.py` (per-format/overall aggregation, report
+  rendering). **The only package in the repository allowed to read
+  `reference_manifest.json`** — verified by
+  `tests/test_stage6a_integration.py::test_evaluation_package_is_the_only_package_referencing_the_manifest`.
 - `fixtures/` — `reference_manifest.json` (frozen), `BENCHMARK_CONTRACT.md`
   (frozen), `manifest_schema.py`, `generate_fixtures.py`, `diagram_image.py`.
 - `src/` (repository root, outside `ingestion_bench/`) — the **separate**
@@ -138,11 +148,14 @@ more *ingestion* lane, not a prerequisite for retrieval work.
    model-footprint evidence is collected live, never hand-typed.
 6. Stage 6A — deterministic ingestion-fidelity evaluator, scoring
    `CanonicalDocument`/`CanonicalChunk` output against
-   `reference_manifest.json` only (never LLM-grades-LLM). Produces the
-   gold fact-to-chunk evidence-alignment catalog reused by every later
-   retrieval projection (D-040). **Next.**
+   `reference_manifest.json` only (never LLM-grades-LLM). **Done.**
+   `src/ingestion_bench/evaluation/`; 9/9 fixtures scored; 24 total misses
+   (classified, never unclassified); 77 gold evidence-alignment entries
+   written to `artifacts/stage6a/evidence_alignment.json` (D-041, D-042).
+   One manifest-contract gap recorded, not invented around (chart OCR
+   tokens undeclared).
 7. Stage 6B — retrieval benchmark contract + gold evidence set, built on
-   the Stage 6A alignment catalog.
+   the Stage 6A alignment catalog. **Next.**
 8. Stage 7A — regular vector RAG projection + retrieval baseline.
 9. Stage 7B — graph-enriched RAG projection.
 10. Stage 7C — wiki page/link projection.
@@ -163,10 +176,16 @@ At minimum, the full existing suite must continue to pass unmodified:
 `tests/test_docling_standard_adapter.py` (10),
 `tests/test_docling_standard_integration.py` (34),
 `tests/test_adapters_base.py` (19),
-`tests/test_run_docling_standard_report.py` (3) — 350 total, 3 warnings
+`tests/test_run_docling_standard_report.py` (3),
+`tests/test_evaluation_models.py` (18),
+`tests/test_evaluation_normalization.py` (16),
+`tests/test_evaluation_matcher.py` (7),
+`tests/test_evaluation_aggregation.py` (11),
+`tests/test_stage6a_integration.py` (18),
+`tests/test_stage6a_report_generation.py` (8) — 428 total, 3 warnings
 (pre-existing Docling-dependency deprecation warnings, not this project's
-own code). A new adapter/evaluator implementation must add its own test
-files following the same pattern (one file per concern, `pytest`,
+own code). A new adapter/retrieval-projection implementation must add its
+own test files following the same pattern (one file per concern, `pytest`,
 `pythonpath = src fixtures` per `pytest.ini`) rather than modifying the
 existing ones.
 
@@ -256,6 +275,39 @@ required of any future adapter (path B/C/D) too:
   JSON, canonical hash, chunk-list JSON, chunk ids, chunk content hashes)
   independently, never as one collapsed pass/fail.
 
+## Evaluator contract (Stage 6A — new, must be preserved by Stage 6B+)
+
+- Score primarily against `CanonicalDocument`; use `CanonicalChunk` only
+  for downstream evidence/chunk-alignment availability; use raw Docling
+  debug JSON only to attribute an already-established miss between the
+  parser and the Stage 5A mapper, never as the scored representation
+  (D-041). `MissRecord.failure_class="mapper_loss"` must never be
+  constructible without a real raw-Docling reference — a Pydantic
+  invariant, not a convention.
+- Never invent an expected value not present in the frozen manifest — a
+  gap (e.g. `STRESS_CHART_001` declaring no `expected_ocr_tokens`) is
+  recorded as `failure_class="evaluation_contract_insufficient"` with a
+  proposed versioned evaluation-profile addendum, never worked around by
+  guessing a plausible-looking expected value.
+- `MetricResult.score` is `None` exactly when `denominator == 0` — a
+  metric with zero applicable expectations must never be silently
+  reported as 0%; `excluded_not_applicable` records deliberately-excluded
+  expectations (e.g. `VisualFactAnnotation` recovery, structurally
+  not-applicable to path A) distinctly from a genuine miss.
+- Text/identifier matching is exact and documented
+  (`normalization.py`'s `TEXT_NORMALIZED_*_RULE`/`IDENTIFIER_MATCH_RULE`
+  constants) — never fuzzy or semantic. Identifier matching is boundary-
+  safe and case-sensitive (`C-88` must never match inside `C-88a`).
+- The gold fact-to-chunk evidence-alignment catalog
+  (`artifacts/stage6a/evidence_alignment.json`, D-042) is a first-class,
+  independently reusable output — Stage 6B must build directly on its
+  `fact_id -> matched_chunk_ids` mapping, never re-derive fact-to-evidence
+  matching from the manifest itself (retrieval-projection code stays
+  manifest-independent, same as adapters/canonical/chunking).
+- The Markdown scorecard and JSON results must come from the SAME
+  in-memory `EvaluationRun` object, same discipline as Stage 5A.1 item 7 /
+  D-039.
+
 ## Explicit non-goals (for the first reproduction)
 
 - Any UI.
@@ -277,10 +329,13 @@ At the end of each implementation stage, report:
 - Files changed (full paths).
 - Full `pytest` output (all files, not just new ones) and the resulting
   total test count.
-- Extraction metrics against `reference_manifest.json`, once an evaluator
-  exists (per `fixtures/BENCHMARK_CONTRACT.md` section 9 — text/structure
-  recall, identifier recall split by unique vs. occurrence, visual/vision
-  metrics where applicable).
+- Extraction metrics against `reference_manifest.json` — the Stage 6A
+  evaluator now produces these for path A (per
+  `fixtures/BENCHMARK_CONTRACT.md` section 9 — text/structure recall,
+  identifier recall split by unique vs. occurrence, and more; see
+  `reports/stage6a_docling_baseline_scorecard.md`); a future path B/C/D
+  adapter's metrics come from running the same, unmodified evaluator
+  against its own Stage 5-equivalent output.
 - Latency (cold and warm, where relevant).
 - API token/cost usage report for any remote call (OpenAI paths B/C).
 - Deliberate deviations from this seed's contracts, stated explicitly.
@@ -326,7 +381,12 @@ is provably inconsistent with any fidelity-affecting diagnostic), D-038
 `ProvenanceEntry`), D-039 (determinism reported component by component,
 never as one collapsed hash comparison), D-040 (canonical chunks are the
 common evidence substrate for every future knowledge projection; vector/
-graph/wiki representations remain derived, never authoritative).
+graph/wiki representations remain derived, never authoritative), D-041
+(evaluator scores primarily against `CanonicalDocument`; raw Docling
+output only attributes an already-established miss, `mapper_loss` never
+assignable without raw evidence), D-042 (the Stage 6A gold fact-to-chunk
+evidence-alignment catalog is the reusable retrieval-evaluation asset,
+not a scorecard byproduct — Stage 6B builds directly on it).
 
 D-009 (Granite Vision optional/deferred), D-022 (effective-revision
 retrieval policy), D-023 (upstream duplicate-upload rejection policy) are

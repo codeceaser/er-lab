@@ -1,0 +1,465 @@
+{
+  "run_id": "9e943cae4410d1a1a6e98ae60a0e7e3c38a772b5bc92781fc5078b4c4af6bb77",
+  "generated_at": "2026-07-23T03:09:51.052619+00:00",
+  "total_misses": 24,
+  "miss_count_by_classification": {
+    "parser_classification_loss": 5,
+    "parser_content_loss": 8,
+    "mapper_loss": 2,
+    "parser_structure_loss": 4,
+    "parser_relationship_loss": 4,
+    "evaluation_contract_insufficient": 1
+  },
+  "entries": [
+    {
+      "fixture": "parity/PARITY_001.pdf",
+      "fact_id": "H_002",
+      "metric": "heading_level_accuracy",
+      "expected_value": {
+        "level": 2
+      },
+      "observed_value": {
+        "level": 1
+      },
+      "result": "partial",
+      "failure_class": "parser_classification_loss",
+      "explanation": "heading 'H_002' text matched but level 1 != expected 2",
+      "supporting_canonical_element_ids": [
+        "2de7ccf9053ce3c5747fedec53d6f0b187fa8c36e03c7164d043ddeb2d176833"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.pdf",
+      "fact_id": "H_003",
+      "metric": "heading_level_accuracy",
+      "expected_value": {
+        "level": 2
+      },
+      "observed_value": {
+        "level": 1
+      },
+      "result": "partial",
+      "failure_class": "parser_classification_loss",
+      "explanation": "heading 'H_003' text matched but level 1 != expected 2",
+      "supporting_canonical_element_ids": [
+        "421ab950a14cc6b9d5983914efb011906e6f65f4c88f45e53ec4bec4e17ca57e"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "ID_004",
+      "metric": "identifier_occurrence_recall",
+      "expected_value": {
+        "expected_occurrences": 3
+      },
+      "observed_value": {
+        "observed_occurrences": 2
+      },
+      "result": "partial",
+      "failure_class": "parser_content_loss",
+      "explanation": "identifier 'P-205' found in only 2 of 3 expected occurrences",
+      "supporting_canonical_element_ids": [
+        "1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5",
+        "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "CAP_001",
+      "metric": "caption_linkage_accuracy",
+      "expected_value": {
+        "text": "Figure 1: Escalation flow from incident detection to activation of Recovery Procedure P-205.",
+        "target_picture": "PIC_001"
+      },
+      "observed_value": {
+        "as": "paragraph"
+      },
+      "result": "partial",
+      "failure_class": "mapper_loss",
+      "explanation": "caption text for 'CAP_001' present as a plain CanonicalParagraph, not linked to its picture -- caption text present, caption relationship missed",
+      "supporting_canonical_element_ids": [
+        "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [
+        "#/texts/13"
+      ],
+      "confidence": "supported"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "PIC_001_ocr_0",
+      "metric": "ocr_token_recall",
+      "expected_value": {
+        "text": "Incident Detected"
+      },
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "parser_content_loss",
+      "explanation": "expected OCR token 'Incident Detected' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "supported"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "PIC_001_ocr_1",
+      "metric": "ocr_token_recall",
+      "expected_value": {
+        "text": "Escalate to Resilience Team"
+      },
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "parser_content_loss",
+      "explanation": "expected OCR token 'Escalate to Resilience Team' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "supported"
+    },
+    {
+      "fixture": "parity/PARITY_001.docx",
+      "fact_id": "PIC_001_ocr_2",
+      "metric": "ocr_token_recall",
+      "expected_value": {
+        "text": "Activate Procedure P-205"
+      },
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "parser_content_loss",
+      "explanation": "expected OCR token 'Activate Procedure P-205' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "supported"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "ID_004",
+      "metric": "identifier_occurrence_recall",
+      "expected_value": {
+        "expected_occurrences": 3
+      },
+      "observed_value": {
+        "observed_occurrences": 2
+      },
+      "result": "partial",
+      "failure_class": "parser_content_loss",
+      "explanation": "identifier 'P-205' found in only 2 of 3 expected occurrences",
+      "supporting_canonical_element_ids": [
+        "1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5",
+        "b2d0e421bc27661d4f63a0b36fb949114fc9573d3aeaa22049e8361f34da3b74"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "H_001",
+      "metric": "heading_classification_accuracy",
+      "expected_value": {
+        "as": "heading"
+      },
+      "observed_value": {
+        "as": "paragraph"
+      },
+      "result": "partial",
+      "failure_class": "parser_classification_loss",
+      "explanation": "heading text for 'H_001' present but represented as paragraph, not CanonicalHeading -- text present, heading classification missed",
+      "supporting_canonical_element_ids": [
+        "6d7aa91bdf4a524b6aaf65c3ec42678f9049f2bd00fbea6ab573689932576565"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "H_002",
+      "metric": "heading_classification_accuracy",
+      "expected_value": {
+        "as": "heading"
+      },
+      "observed_value": {
+        "as": "paragraph"
+      },
+      "result": "partial",
+      "failure_class": "parser_classification_loss",
+      "explanation": "heading text for 'H_002' present but represented as paragraph, not CanonicalHeading -- text present, heading classification missed",
+      "supporting_canonical_element_ids": [
+        "b4ca1bf1a7b2caca2043cc2a742aaa5f0bfb4e4f63a4100970bcbda7458d9191"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "H_003",
+      "metric": "heading_classification_accuracy",
+      "expected_value": {
+        "as": "heading"
+      },
+      "observed_value": {
+        "as": "paragraph"
+      },
+      "result": "partial",
+      "failure_class": "parser_classification_loss",
+      "explanation": "heading text for 'H_003' present but represented as paragraph, not CanonicalHeading -- text present, heading classification missed",
+      "supporting_canonical_element_ids": [
+        "c8181fcfb8ad163202edacd5aee73cca6b93fcc6a471296953ab7a04d9927b50"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "CAP_001",
+      "metric": "caption_linkage_accuracy",
+      "expected_value": {
+        "text": "Figure 1: Escalation flow from incident detection to activation of Recovery Procedure P-205.",
+        "target_picture": "PIC_001"
+      },
+      "observed_value": {
+        "as": "paragraph"
+      },
+      "result": "partial",
+      "failure_class": "mapper_loss",
+      "explanation": "caption text for 'CAP_001' present as a plain CanonicalParagraph, not linked to its picture -- caption text present, caption relationship missed",
+      "supporting_canonical_element_ids": [
+        "b2d0e421bc27661d4f63a0b36fb949114fc9573d3aeaa22049e8361f34da3b74"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [
+        "#/texts/10"
+      ],
+      "confidence": "supported"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "PIC_001_ocr_0",
+      "metric": "ocr_token_recall",
+      "expected_value": {
+        "text": "Incident Detected"
+      },
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "parser_content_loss",
+      "explanation": "expected OCR token 'Incident Detected' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "supported"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "PIC_001_ocr_1",
+      "metric": "ocr_token_recall",
+      "expected_value": {
+        "text": "Escalate to Resilience Team"
+      },
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "parser_content_loss",
+      "explanation": "expected OCR token 'Escalate to Resilience Team' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "supported"
+    },
+    {
+      "fixture": "parity/PARITY_001.pptx",
+      "fact_id": "PIC_001_ocr_2",
+      "metric": "ocr_token_recall",
+      "expected_value": {
+        "text": "Activate Procedure P-205"
+      },
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "parser_content_loss",
+      "explanation": "expected OCR token 'Activate Procedure P-205' not found (as substring, either direction) among extracted OcrAnnotation text",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "supported"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "SL_002",
+      "metric": "list_indentation_accuracy",
+      "expected_value": {
+        "indent_level": 1
+      },
+      "observed_value": {
+        "indent_level": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_structure_loss",
+      "explanation": "list item 'SL_002' text matched but indent_level 0 != expected 1",
+      "supporting_canonical_element_ids": [
+        "6dd0da2a4a9f968261f5a24340bd31b77b8de779b1daa24869ec5c58326e701a"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "SL_003",
+      "metric": "list_indentation_accuracy",
+      "expected_value": {
+        "indent_level": 1
+      },
+      "observed_value": {
+        "indent_level": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_structure_loss",
+      "explanation": "list item 'SL_003' text matched but indent_level 0 != expected 1",
+      "supporting_canonical_element_ids": [
+        "10dd1d4c5df3613746b3b8eb8aa1098799d7aa1f20e22e26ae92e09452354599"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "SL_004",
+      "metric": "list_indentation_accuracy",
+      "expected_value": {
+        "indent_level": 2
+      },
+      "observed_value": {
+        "indent_level": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_structure_loss",
+      "explanation": "list item 'SL_004' text matched but indent_level 0 != expected 2",
+      "supporting_canonical_element_ids": [
+        "1ae9c0426f81157de20d7870017a95094f6e98bfed3412902c8f19fc5fd335e9"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "SL_005",
+      "metric": "list_indentation_accuracy",
+      "expected_value": {
+        "indent_level": 2
+      },
+      "observed_value": {
+        "indent_level": 0
+      },
+      "result": "partial",
+      "failure_class": "parser_structure_loss",
+      "explanation": "list item 'SL_005' text matched but indent_level 0 != expected 2",
+      "supporting_canonical_element_ids": [
+        "0bb184f8cdd35d9a7bb25ddfae7d1e1ea66fc47009b492c372c4f3c1901afe95"
+      ],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "SL_002",
+      "metric": "list_parent_link_accuracy",
+      "expected_value": {
+        "parent": "SL_001"
+      },
+      "observed_value": {
+        "parent_block_id": null
+      },
+      "result": "partial",
+      "failure_class": "parser_relationship_loss",
+      "explanation": "list item 'SL_002' does not carry the expected parent_block_id linkage to 'SL_001'",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "SL_003",
+      "metric": "list_parent_link_accuracy",
+      "expected_value": {
+        "parent": "SL_001"
+      },
+      "observed_value": {
+        "parent_block_id": null
+      },
+      "result": "partial",
+      "failure_class": "parser_relationship_loss",
+      "explanation": "list item 'SL_003' does not carry the expected parent_block_id linkage to 'SL_001'",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "SL_004",
+      "metric": "list_parent_link_accuracy",
+      "expected_value": {
+        "parent": "SL_003"
+      },
+      "observed_value": {
+        "parent_block_id": null
+      },
+      "result": "partial",
+      "failure_class": "parser_relationship_loss",
+      "explanation": "list item 'SL_004' does not carry the expected parent_block_id linkage to 'SL_003'",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_DOCX_001.docx",
+      "fact_id": "SL_005",
+      "metric": "list_parent_link_accuracy",
+      "expected_value": {
+        "parent": "SL_003"
+      },
+      "observed_value": {
+        "parent_block_id": null
+      },
+      "result": "partial",
+      "failure_class": "parser_relationship_loss",
+      "explanation": "list item 'SL_005' does not carry the expected parent_block_id linkage to 'SL_003'",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    },
+    {
+      "fixture": "stress/STRESS_CHART_001.pdf",
+      "fact_id": "STRESS_CHART_001_ocr_tokens_undeclared",
+      "metric": "ocr_token_recall",
+      "expected_value": null,
+      "observed_value": null,
+      "result": "miss",
+      "failure_class": "evaluation_contract_insufficient",
+      "explanation": "chart_visual_stress declares visual_facts (CF_*/CC_*/CU_*, numeric-value facts requiring a VisionEnricher path A does not have) but no expected_ocr_tokens/expected_ocr_text field -- unlike the parity picture and scanned-PDF fixtures, this manifest section provides no frozen ground truth an evaluator could score raw chart-label OCR recall against without inventing expected values. Proposed fix: a separate, versioned evaluation-profile addendum (never a frozen-manifest edit) adding an explicit expected_ocr_tokens list for chart_visual_stress.",
+      "supporting_canonical_element_ids": [],
+      "supporting_chunk_ids": [],
+      "raw_docling_references": [],
+      "confidence": "certain"
+    }
+  ]
+}

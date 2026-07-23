@@ -12,30 +12,29 @@ the two are not wired together.
 
 ## Current stage
 
-**Stage 5A.2 complete and frozen** (committed — see `git log` for the
-exact commit): canonical document model, deterministic benchmark
-fixtures, deterministic canonical chunking, and the Docling
-`DOCLING_STANDARD_LOCAL` parser adapter (path A) are implemented,
-hardened, and tested (350 tests passing, 3 pre-existing warnings from
-Docling's own dependencies). All 9 generated fixtures convert to a valid
-`CanonicalDocument` through real Docling (7 `success`, 2 `partial` — the
-two DOCX fixtures, since Docling exposes no DOCX pagination geometry) and
-chunk through the unmodified frozen chunker. The frozen baseline now
-includes: truthful `conversion_status` validation (a `"success"` result
-cannot carry a fidelity-affecting diagnostic), fidelity-impact diagnostics
-independent of severity, DOCX valid-but-`partial` status, OCR annotation
-provenance, complete portable diagnostics, component-level determinism
-evidence (five independent comparisons, not one collapsed hash), and
-generated (not hand-typed) environment/model-footprint evidence — all
-baseline Markdown/JSON generated from one execution.
+**Stage 6A complete** (uncommitted at time of writing — see `git log` for
+the actual commit once made). Stage 5A/5A.1/5A.2 (Docling
+`DOCLING_STANDARD_LOCAL` adapter, path A) remain **complete and frozen**:
+all 9 generated fixtures convert to a valid `CanonicalDocument` (7
+`success`, 2 `partial` — the two DOCX fixtures) and chunk through the
+unmodified frozen chunker, with truthful `conversion_status` validation,
+component-level determinism evidence, and generated (not hand-typed)
+environment/model-footprint evidence. **Stage 6A — the deterministic
+ingestion-fidelity evaluator — now scores that output against the frozen
+`reference_manifest.json`**: 9/9 fixtures scored, 24 classified misses, 77
+gold evidence-alignment entries (`artifacts/stage6a/evidence_alignment.json`).
+See `reports/stage6a_docling_baseline_scorecard.md` for the real,
+measured results and `POC_STATUS_AND_EVIDENCE.md` "Stage 6A findings" for
+their interpretation. 428 tests passing, 3 pre-existing warnings from
+Docling's own dependencies.
 
-**Next: Stage 6A — the deterministic ingestion-fidelity evaluator**, not
-vision enrichment. See `POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions
-(corrected roadmap)" for the full corrected stage sequence (Stage 6A
-evaluator → Stage 6B retrieval benchmark contract → Stages 7A/7B/7C
-vector/graph/wiki projections → Stages 8A/8B vision enrichment/OpenAI
-vendor-native → Stage 9 cross-lane comparison) and why vision enrichment
-moved later (decision D-040).
+**Next: Stage 6B — the retrieval benchmark contract**, built on the Stage
+6A evidence-alignment catalog, not vision enrichment. See
+`POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions (corrected roadmap)"
+for the full corrected stage sequence (Stage 6A done → Stage 6B next →
+Stages 7A/7B/7C vector/graph/wiki projections → Stages 8A/8B vision
+enrichment/OpenAI vendor-native → Stage 9 cross-lane comparison) and why
+vision enrichment moved later (decision D-040).
 
 ## Repository root
 
@@ -74,21 +73,31 @@ stage reports):
 .venv/Scripts/python.exe -m pytest -v
 ```
 
-This runs all nine test files (`test_canonical_schema.py`,
+This runs all fifteen test files (`test_canonical_schema.py`,
 `test_canonical_hashing.py`, `test_fixture_generation.py`,
 `test_chunking.py`, `test_docling_standard_mapper.py`,
 `test_docling_standard_adapter.py`, `test_docling_standard_integration.py`,
-`test_adapters_base.py`, `test_run_docling_standard_report.py`) — 350
-tests as of Stage 5A.2 (3 pre-existing warnings from Docling's own
+`test_adapters_base.py`, `test_run_docling_standard_report.py`,
+`test_evaluation_models.py`, `test_evaluation_normalization.py`,
+`test_evaluation_matcher.py`, `test_evaluation_aggregation.py`,
+`test_stage6a_integration.py`, `test_stage6a_report_generation.py`) — 428
+tests as of Stage 6A (3 pre-existing warnings from Docling's own
 dependencies, not this project's code). The three `test_docling_standard_*`
 files run the real Docling adapter (not mocked) against the generated
-fixtures. It does **not** exercise embedding, retrieval, or evaluator
-code, because none of that exists yet (the evaluator is Stage 6A, next).
+fixtures; the `test_evaluation_*`/`test_stage6a_*` files run the real
+Stage 6A evaluator against real Stage 5A output. It does **not** exercise
+embedding or retrieval code, because none of that exists yet (Stage
+6B onward).
 
 To reproduce the Stage 5A baseline conversion of every fixture (not just
 run the test suite): `python scripts/run_docling_standard.py` — writes
 `artifacts/stage5a/` (gitignored, regenerable) and
-`reports/stage5a_docling_standard_results.json`.
+`reports/stage5a_docling_standard_results.json`. To then score that
+output against the manifest: `python scripts/run_stage6a_evaluation.py`
+— writes `artifacts/stage6a/` (gitignored, regenerable),
+`reports/stage6a_docling_baseline_scorecard.md`,
+`reports/stage6a_docling_baseline_results.json`, and
+`reports/stage6a_docling_miss_ledger.json`.
 
 Regenerating the benchmark fixtures (`fixtures/generated/` is gitignored,
 not committed) requires running the generator directly, e.g.:

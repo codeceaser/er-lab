@@ -1856,6 +1856,173 @@ evidence layer, not their implementation.
 ### Implementation and evidence
 No projection code exists yet. This decision governs the design of the
 Stage 6A gold evidence-alignment catalog (`artifacts/stage6a/evidence_alignment.json`,
-once Stage 6A is implemented) and constrains Stages 6B/7A/7B/7C when they
-are built — see the corrected roadmap in `docs/POC_STATUS_AND_EVIDENCE.md`
-and `docs/DEVIN_HANDOFF_SEED.md`.
+implemented in Stage 6A — see D-041/D-042) and constrains Stages 6B/7A/7B/7C
+when they are built — see the corrected roadmap in
+`docs/POC_STATUS_AND_EVIDENCE.md` and `docs/DEVIN_HANDOFF_SEED.md`.
+
+---
+
+## D-041 — Score primarily against CanonicalDocument; raw Docling output only attributes an already-established miss, never scores
+
+**Status:** Accepted
+**Stage:** Stage 6A
+**Date/commit:** Needs confirmation (assigned at Stage 6A implementation time)
+
+### Problem
+The Stage 6A evaluator has three candidate representations it could score
+against: raw Docling debug JSON (`artifacts/stage5a/docling_raw/`),
+`CanonicalDocument`/`CanonicalChunk` (Stage 5A's mapped output), or some
+blend of both. Scoring against raw Docling output would measure Docling's
+own capability, not this project's actual mapped, chunked, retrievable
+output — and would reintroduce a Docling-shaped dependency into the one
+package explicitly allowed to be parser-agnostic evaluation logic.
+
+### Alternatives considered
+(a) Score against raw Docling debug JSON directly (fastest to implement,
+but measures the wrong thing — Docling's capability, not this project's
+mapping/chunking fidelity). (b) Score exclusively against
+`CanonicalDocument`, treating any miss as unattributed. (c) Score against
+`CanonicalDocument` (primary) and `CanonicalChunk` (downstream evidence/
+chunk-alignment availability), and consult raw Docling debug JSON ONLY to
+classify the ORIGIN of an already-established miss —
+`parser_content_loss` (never reached Docling's own output) vs.
+`mapper_loss` (reached Docling's raw output but the Stage 5A mapper did
+not carry it into `CanonicalDocument`).
+
+### Decision
+(c).
+
+### Rationale
+`CanonicalDocument`/`CanonicalChunk` are what every downstream consumer
+(chunker, future retrieval projections) actually sees — scoring against
+anything else would produce a "baseline" nobody's real pipeline uses.
+Raw Docling output is real, useful *evidence* for attributing a miss
+(distinguishing a Docling capability gap from a Stage 5A mapper bug), but
+must never become the scored representation itself, or the evaluator
+would silently start measuring Docling instead of this project's output.
+
+### Trade-offs and consequences
+`mapper_loss` may only ever be assigned when `raw_docling_references` is
+non-empty — enforced as a `MissRecord` Pydantic invariant, not just
+convention (`src/ingestion_bench/evaluation/model.py::MissRecord`), so a
+future evaluator change cannot silently claim `mapper_loss` on suspicion
+alone. When no raw debug artifact is available at all, the evaluator
+records `failure_class="unresolved"`, `confidence="unresolved"` rather
+than guessing. Raw-Docling-JSON parsing is confined to
+`classification.py` and is read-only, debug-evidence use only.
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/classification.py` (the only module that
+reads raw Docling debug JSON); `model.py::MissRecord._validate_mapper_loss_has_raw_evidence`;
+`tests/test_evaluation_models.py::test_miss_record_mapper_loss_requires_raw_docling_reference`;
+real measured example: `reports/stage6a_docling_miss_ledger.json`'s two
+`mapper_loss` entries (DOCX/PPTX caption text present as a paragraph, not
+linked — both carry a real `#/texts/N` raw Docling reference).
+
+---
+
+## D-042 — The Stage 6A evaluator's gold fact-to-chunk evidence-alignment catalog is the reusable retrieval-evaluation asset, not a byproduct
+
+**Status:** Accepted
+**Stage:** Stage 6A
+**Date/commit:** Needs confirmation (assigned at Stage 6A implementation time)
+
+### Problem
+D-040 established the *principle* that vector/graph/wiki retrieval
+projections must be evaluated against the same expected facts and
+supporting chunks. Stage 6A needed to decide what that shared asset
+actually IS, concretely, and how it is produced.
+
+### Decision
+The ingestion evaluator produces a gold fact-to-chunk evidence alignment
+(`artifacts/stage6a/evidence_alignment.json`, one `EvidenceAlignment`
+record per expected manifest fact that Stage 5A output could be matched
+against) that will be reused, unmodified, by every future retrieval
+projection's evaluation (Stage 6B onward) — this catalog, not the
+scorecard or miss ledger, is the primary reusable output of Stage 6A.
+Each entry carries the expected value/location, every matched canonical
+element id / annotation id / chunk id, unit indexes, source references,
+a `source_derived`/`model_derived` classification, and a coarse,
+deterministically-assigned `expected_retrieval_difficulty` tag
+(`direct`/`relational`/`multi_hop`/`consolidation`/`distractor_sensitive`)
+— never an invented retrieval question (explicitly out of scope until
+Stage 6B).
+
+### Rationale
+Building the evidence-alignment catalog as a first-class, independently
+consumable artifact (rather than an internal implementation detail of the
+scorecard) is what makes D-040's principle actually usable: Stage 6B can
+build a retrieval benchmark query contract directly on top of this
+catalog's `fact_id -> matched_chunk_ids` mapping without re-deriving
+fact-to-evidence matching from scratch, and without re-reading the
+manifest itself (retrieval-projection code must remain manifest-
+independent too, same as adapters/canonical/chunking — see
+`tests/test_stage6a_integration.py::test_evaluation_package_is_the_only_package_referencing_the_manifest`).
+
+### Trade-offs and consequences
+The catalog only contains entries for facts that were actually matched or
+partially matched (`match_status="missing"` entries are recorded too, for
+distractor identifiers specifically, but a fully-missed non-distractor
+fact appears in the miss ledger, not the catalog, since there is no
+evidence to align it to) — Stage 6B must treat catalog absence and
+miss-ledger presence as two views of the same underlying fact set, not
+merge them naively. The `expected_retrieval_difficulty` heuristic is
+coarse and explicitly documented as such
+(`evaluator.py::_difficulty_for`) — it is a reusable difficulty *tag*, not
+a validated retrieval-question difficulty; Stage 6B may need to refine it
+once real retrieval questions exist.
+
+### Deferred questions or reconsideration trigger
+Once Stage 6B designs the actual retrieval benchmark query contract, the
+`expected_retrieval_difficulty` heuristic should be revisited against real
+authored questions, not just this coarse fact-type-based tag.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/model.py::EvidenceAlignment`;
+`evaluator.py` (every `EvidenceAlignment(...)` construction site, plus the
+`unit_indexes`/`source_references` backfill pass in `evaluate_fixture`);
+`aggregation.py::build_evidence_alignment_catalog`;
+`artifacts/stage6a/evidence_alignment.json` (77 real entries as of the
+Stage 6A baseline run);
+`tests/test_stage6a_report_generation.py::test_every_matched_expected_fact_has_an_evidence_alignment_entry_in_the_catalog`.
+
+---
+
+## D-043 — Stage 6A implementation deviations (short note)
+
+**Status:** Accepted (record only — no reversible decision made)
+**Stage:** Stage 6A
+**Date/commit:** Needs confirmation (assigned at Stage 6A implementation time)
+
+Three points raised during Stage 6A review that were not otherwise
+captured in a persisted file, recorded here per that review:
+
+1. **`caption_text_recall` was broadened mid-implementation.** The first
+   pass matched only against real `CanonicalCaption` elements, which
+   scored the known DOCX/PPTX "caption present as an unlinked paragraph"
+   case as total content loss (`parser_content_loss`) — wrong, since the
+   text genuinely is present. Fixed to match `CanonicalCaption` OR
+   `CanonicalParagraph` text, so text recovery is scored independently of
+   linkage (`caption_linkage_accuracy` covers linkage separately). See
+   `evaluator.py::_score_pictures_captions`.
+2. **`EvidenceAlignment.unit_indexes`/`source_references` are populated by
+   a single backfill pass** in `evaluate_fixture` (looking up each matched
+   element's own `unit_index`/`ProvenanceEntry.source_element_ref` after
+   all alignments are collected), not threaded individually through each
+   of the ~12 `EvidenceAlignment(...)` construction sites — simpler and
+   less error-prone than repeating the same lookup at every site.
+3. **Zero unresolved parser/mapper attribution.** Every one of the 24
+   misses in the current baseline run (`reports/stage6a_docling_miss_ledger.json`)
+   has `confidence` of `"certain"` or `"supported"` — none is
+   `"unresolved"`. No `MissRecord` in this run needed the "no raw debug
+   artifact available" fallback path
+   (`classification.py::unresolved_classification`).
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/evaluator.py::_score_pictures_captions`,
+`evaluate_fixture` (backfill pass); `reports/stage6a_docling_miss_ledger.json`
+(zero `"confidence": "unresolved"` entries, verifiable directly by
+inspection or `grep -c unresolved reports/stage6a_docling_miss_ledger.json`).

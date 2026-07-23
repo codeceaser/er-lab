@@ -750,7 +750,143 @@ code.
 
 ---
 
-## Corrected roadmap (Stage 5A.2)
+## Stage 6A — Deterministic Ingestion-Fidelity Evaluator `[IMPLEMENTED]`
+
+**Files:** `src/ingestion_bench/evaluation/{__init__.py,model.py,normalization.py,matcher.py,classification.py,evaluator.py,aggregation.py}`,
+`scripts/run_stage6a_evaluation.py`;
+`tests/test_evaluation_{models,normalization,matcher,aggregation}.py`,
+`tests/test_stage6a_{integration,report_generation}.py` (78 tests)
+
+```
+frozen fixtures/reference_manifest.json                     [READ ONLY --
+   + frozen fixtures/BENCHMARK_CONTRACT.md                    evaluation/
+   + Stage 5A canonical_document.json                         is the ONLY
+   + Stage 5A canonical_chunks.jsonl                           package that
+   + Stage 5A conversion_report.json                           reads the
+        |                                                       manifest]
+        v
+evaluator.py::evaluate_fixture()                             [IMPLEMENTED]
+   builds a per-suite FactExpectation catalog directly from the loaded
+   manifest dict (never hardcoded/duplicated as Python literals), flattens
+   CanonicalDocument into uniform TextElements, matches via matcher.py
+   (exact, normalized -- never fuzzy/semantic), classifies any miss via
+   classification.py (raw Docling debug JSON consulted ONLY here, ONLY to
+   attribute an already-established miss -- never to score, D-041)
+        |
+        v
+FixtureEvaluationResult (metrics, miss_records,               [IMPLEMENTED]
+   unexpected_observations, evidence_alignments)               strict
+        |                                                        Pydantic,
+        v                                                        extra=
+aggregation.py (per-format + overall MetricResult merge,        "forbid"]
+   run_id, miss ledger, evidence-alignment catalog, Markdown
+   scorecard -- all from ONE EvaluationRun object)             [IMPLEMENTED]
+        |
+        v
+reports/stage6a_docling_baseline_scorecard.md                 [IMPLEMENTED
+reports/stage6a_docling_baseline_results.json                  -- real,
+reports/stage6a_docling_miss_ledger.json                       measured
+artifacts/stage6a/evaluation/<fixture>_evaluation.json         output, see
+artifacts/stage6a/evidence_alignment.json                      results
+                                                                 below]
+```
+
+### Strict evaluator models (`model.py`)
+
+`MetricResult` (`metric_name`, `matching_rule`, `numerator`, `denominator`,
+`excluded_not_applicable`, `score`, `supporting_matches`,
+`supporting_misses`) enforces `numerator <= denominator`,
+`score is None` iff `denominator == 0` (a metric with zero applicable
+expectations is never silently reported as 0%), and finite-score-only via
+Pydantic `model_validator`s. `MissRecord` carries a controlled
+`failure_class` vocabulary (12 values, section 15) and a Pydantic
+invariant that `failure_class="mapper_loss"` can never be constructed
+without a non-empty `raw_docling_references` list. `EvidenceAlignment`
+(the gold catalog record, D-042), `FactExpectation`/`FactObservation`,
+`FixtureEvaluationResult`, `AggregateEvaluationResult`, and `EvaluationRun`
+round out the model — every one `ConfigDict(extra="forbid")`.
+
+### Normalization and matching rules (`normalization.py`, `matcher.py`)
+
+`TEXT_NORMALIZED_CASE_FOLD_RULE`: unicode NFC -> CRLF/CR normalized to LF
+-> horizontal whitespace collapsed -> each line stripped -> `casefold()`.
+No punctuation stripping. `IDENTIFIER_MATCH_RULE`: exact, case-SENSITIVE,
+boundary-safe substring match (`(?<![A-Za-z0-9])<identifier>(?![A-Za-z0-9])`)
+-- `C-88` never matches inside `C-88a`, and vice versa (the manifest's own
+declared stress case, `ID_D002.false_merge_risk`). Every `MetricResult`
+stores which exact rule it used in `matching_rule`. `matcher.py::find_exact_text_matches`
+is always WHOLE-VALUE equality, never substring -- a fact's text
+appearing merely as part of a longer unrelated block must not be credited.
+
+### Evidence hierarchy (`evaluator.py`, `classification.py`) -- D-041
+
+Scores primarily against `CanonicalDocument`. Uses `CanonicalChunk` only
+to establish downstream evidence availability
+(`evaluator.py::element_to_chunk_ids`) and fact-to-chunk alignment. Uses
+raw Docling debug JSON (`classification.py`) only to classify the ORIGIN
+of an already-established miss -- `parser_content_loss` (never reached
+Docling's own output) vs. `mapper_loss` (reached Docling's raw output, the
+Stage 5A mapper did not carry it into `CanonicalDocument`) -- never as the
+scored representation itself.
+
+### Metrics implemented
+
+Text (`text_fact_recall`, `text_fact_location_accuracy`,
+`unexpected_text_duplication`); identifiers
+(`identifier_unique_recall`, `identifier_occurrence_recall`,
+`identifier_distractor_no_false_merge`); headings (`heading_text_recall`,
+`heading_level_accuracy`, `heading_classification_accuracy` -- a heading
+found only as a `CanonicalParagraph` is "text present, classification
+missed," never total loss); tables (`table_presence`,
+`table_structure_accuracy`, `table_cell_text_recall`,
+`table_cell_coordinate_accuracy`, `table_header_status_accuracy`,
+`table_span_accuracy` -- content scored separately from coordinate
+placement); pictures/captions (`picture_presence`,
+`picture_provenance_completeness`, `caption_text_recall` -- matched
+against `CanonicalCaption` OR `CanonicalParagraph`, so text recovery is
+scored independently of linkage -- `caption_linkage_accuracy`); OCR
+(`ocr_token_recall`, `ocr_provenance_completeness`,
+`ocr_whole_page_text_recall` -- scored as text recovery, independent of
+OCR-origin classification, per D-035); structural stress
+(`column_text_retention`, `column_reading_order_correct`,
+`overlap_both_retained`, `overlap_z_order_recorded`,
+`diagram_label_recall`, `no_invented_diagram_relationships`,
+`diagram_edge_recovery` -- `excluded_not_applicable`, never scored,
+since Stage 5A has no `VisionEnricher`, `list_item_recall`,
+`list_indentation_accuracy`, `list_parent_link_accuracy`); provenance
+(`provenance_coverage_<category>`/`provenance_bbox_coverage_<category>`
+per heading/paragraph/list_item/table/picture/caption/annotation, plus
+`provenance_coverage_overall` -- bbox absence is never treated as total
+provenance absence, a separate sub-count exists for it); operational
+(`OperationalEvidence`, copied verbatim from Stage 5A's own
+`conversion_report.json`, never recomputed).
+
+### Real baseline results (Stage 6A)
+
+All 9 fixtures scored. 24 total misses (`parser_content_loss` 8,
+`parser_classification_loss` 5, `parser_structure_loss` 4,
+`parser_relationship_loss` 4, `mapper_loss` 2,
+`evaluation_contract_insufficient` 1), 77 gold evidence-alignment entries.
+Full scorecard: `reports/stage6a_docling_baseline_scorecard.md`; full
+detail: `reports/stage6a_docling_baseline_results.json`,
+`reports/stage6a_docling_miss_ledger.json`. This is real, measured output
+against the frozen manifest -- see `docs/POC_STATUS_AND_EVIDENCE.md`
+"Stage 6A findings" for the headline numbers and their interpretation.
+
+One manifest-contract limitation was recorded, not invented around:
+`STRESS_CHART_001`'s `chart_visual_stress` section has no
+`expected_ocr_tokens`/`expected_ocr_text` field (unlike the parity picture
+and scanned-PDF fixtures), so chart-label OCR recall cannot be scored
+without inventing an expected value -- recorded as
+`evaluation_contract_insufficient` with a proposed fix (a separate,
+versioned evaluation-profile addendum, never a frozen-manifest edit).
+
+428 tests pass (up from 350 at Stage 5A.2) — see
+`reports/stage6a_pytest_output.txt`.
+
+---
+
+## Corrected roadmap (Stage 5A.2, updated Stage 6A)
 
 Vision enrichment is **not** the next stage. An earlier framing of this
 project's plan (visible in older commit history and in decision D-009)
@@ -761,8 +897,8 @@ before retrieval projections are worth comparing, and vision enrichment
 is one more *ingestion* lane, not a retrieval concern):
 
 ```
-Stage 6A  Deterministic ingestion-fidelity evaluator          <- NEXT
-Stage 6B  Retrieval benchmark contract + gold evidence set
+Stage 6A  Deterministic ingestion-fidelity evaluator          <- DONE
+Stage 6B  Retrieval benchmark contract + gold evidence set     <- NEXT
 Stage 7A  Regular vector RAG projection + retrieval baseline
 Stage 7B  Graph-enriched RAG projection
 Stage 7C  Wiki page/link projection
@@ -775,7 +911,7 @@ See `docs/POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions (corrected
 roadmap)" for the full two-dimension framing (ingestion approach ×
 retrieval projection) this sequence is derived from.
 
-## Future walkthrough (Stage 6A+) — `[PLANNED, none of this exists yet]`
+## Future walkthrough (Stage 6B+) — `[PLANNED, none of this exists yet]`
 
 ```
 CanonicalPicture (already extracted, path A)
@@ -796,10 +932,23 @@ Merged back into the SAME CanonicalDocument the path-A adapter produced  [PLANNE
 Evaluation against reference_manifest.json, comparing path A vs. path B  [PLANNED --
                                                                             Stage 6A
                                                                             evaluator
-                                                                            reused]
+                                                                            REUSED,
+                                                                            not
+                                                                            rebuilt]
+
+artifacts/stage6a/evidence_alignment.json (already produced, D-042)     [IMPLEMENTED]
+        |
+        v
+Stage 6B retrieval benchmark contract + gold evidence set              [PLANNED --
+        |                                                                 NEXT]
+        v
+Stage 7A/7B/7C vector/graph/wiki projections, scored against the        [PLANNED]
+   SAME evidence-alignment catalog (D-040)
 ```
 
-Every step above is planned, not implemented. No `vision/` package
-exists; no `OpenAIVisionEnricher`, no OpenAI vendor-native adapter (path
-C), no evaluator. Treat any claim to the contrary — in this document or
-elsewhere — as inaccurate.
+Every step marked `[PLANNED]` above is planned, not implemented. No
+`vision/` package exists; no `OpenAIVisionEnricher`, no OpenAI
+vendor-native adapter (path C), no retrieval benchmark contract, no
+vector/graph/wiki projection. The Stage 6A evaluator and its evidence-
+alignment catalog ARE implemented (see the Stage 6A section above) — treat
+any claim beyond that, in this document or elsewhere, as inaccurate.
