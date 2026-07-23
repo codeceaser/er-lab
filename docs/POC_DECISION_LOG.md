@@ -2222,3 +2222,293 @@ None -- Stage 6B owns this entirely from here.
 `evaluator.py::_alignment` (always passes `None`); the former
 `_difficulty_for` heuristic function was deleted entirely, not merely
 unused; `tests/test_stage6a_integration.py::test_no_evidence_alignment_ever_has_a_retrieval_difficulty_assigned`.
+
+---
+
+## D-047 — Identifier-occurrence miss ATTRIBUTION is scoped to that occurrence's own expected context, never a whole-document raw-text search
+
+**Status:** Accepted
+**Stage:** Stage 6A.2
+**Date/commit:** Needs confirmation (assigned at Stage 6A.2 implementation time)
+
+### Problem
+D-044/Stage 6A.1 made identifier occurrence *matching* (against
+CanonicalDocument) occurrence-aware and one-to-one, but the occurrence
+*miss attribution* path (`classify_identifier_absence(identifier,
+raw_text_blob)`, used only after a matching failure to decide
+`mapper_loss` vs. `parser_content_loss`) still searched the identifier
+anywhere in the WHOLE-document raw text blob. Direct inspection of real
+data proved this was a real bug: for both DOCX and PPTX,
+`ID_004_occ_2` (source_fact `VF_NODE_003`, expected only inside the
+parity image's own OCR content) was classified `mapper_loss` citing
+`#/texts/4` (the unrelated body paragraph P_004) and the caption's own
+text item as "evidence" -- neither is the occurrence's own expected
+context. Both DOCX and PPTX's raw picture object actually has
+`"children": []` -- Docling captured zero OCR text for that picture in
+either format -- so the correct classification is `parser_content_loss`.
+
+### Alternatives considered
+(a) Keep the whole-document search, accepting that an unrelated mention
+elsewhere can manufacture a false `mapper_loss`. (b) Resolve the specific
+raw Docling item(s) relevant to THIS occurrence's own `source_fact`
+before searching: a matched paragraph/heading/caption element's own
+`source_element_ref`; an unmatched one's raw counterpart identified by
+CONTENT (its own expected text, never the identifier); a visual-node/OCR
+occurrence's own picture's raw `texts[].parent.$ref` children only.
+Search only within that scoped set.
+
+### Decision
+(b).
+
+### Rationale
+An identifier's mere presence somewhere in the document is not evidence
+about a SPECIFIC expected occurrence's own context -- the whole point of
+occurrence-level expectations (D-044) is that each occurrence is tied to
+one place. Attribution must honor that same discipline: `mapper_loss` may
+only be assigned when the occurrence's OWN expected context, in raw
+Docling, explicitly contains the identifier and the mapper failed to
+carry it forward -- otherwise it's `parser_content_loss` (context
+resolved, raw evidence absent there) or `unresolved` (context itself
+couldn't be resolved in raw Docling at all).
+
+### Trade-offs and consequences
+`evaluator.py::_score_identifiers` now requires `raw_debug`,
+`source_ref_by_id` (element_id -> raw self_ref), `fact_text_by_id`
+(paragraph/heading/caption fact_id -> expected text), and
+`matched_picture_ids` -- all computed earlier in `evaluate_fixture` than
+before (the element-id -> self_ref mapping used to be built only in the
+post-hoc alignment backfill pass; it is now built before identifier
+scoring and reused, unchanged, by that same backfill pass). Real
+baseline impact: the two DOCX/PPTX `ID_004_occ_2` misses changed from
+`mapper_loss` to `parser_content_loss` (total miss count unchanged at 56,
+since these were already counted as misses -- only the classification,
+and therefore the parser-vs-mapper attribution story, changed).
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/classification.py::classify_identifier_occurrence_absence`
+(new); `evaluator.py::_scoped_raw_items_for_occurrence` (new); real raw
+Docling verification (`artifacts/stage5a/docling_raw/PARITY_001_{docx,pptx}.json`
+`pictures[0].children == []`);
+`tests/test_evaluation_identifier_occurrence.py::test_missing_visual_node_occurrence_is_not_mapper_loss_from_an_unrelated_paragraph_mention`
+(the exact required regression) and
+`::test_missing_visual_node_occurrence_is_mapper_loss_when_picture_child_ocr_explicitly_has_it`
+(contrast case); real measured result in
+`reports/stage6a_docling_miss_ledger.json`.
+
+---
+
+## D-048 — unsupported_visual_claim_absence is scored per claim, via structured matching, never from the mere presence of any other visual fact
+
+**Status:** Accepted
+**Stage:** Stage 6A.2
+**Date/commit:** Needs confirmation (assigned at Stage 6A.2 implementation time)
+
+### Problem
+Stage 6A's original `unsupported_visual_claim_absence` used
+`any(a.annotation_type == "visual_fact" for a in document.annotations)`
+as a BLANKET signal: if ANY VisualFactAnnotation existed at all, EVERY
+unsupported claim in the fixture was marked as incorrectly asserted
+(`missing`). A single correct visual fact (e.g. "Q4 pass rate = 95%")
+would therefore have wrongly failed an unrelated unsupported claim (e.g.
+"Q2 pass rate exceeded 95%, which is false") even though that specific
+false claim was never actually asserted.
+
+### Alternatives considered
+(a) Keep the blanket check, since path A never produces
+VisualFactAnnotation today so the bug is currently latent/unobservable in
+the real baseline. (b) Match each unsupported claim's OWN structured
+content (`fact_type`/`subject`/`relation`/`object`/`value`/`unit` --
+exactly the shape both `unsupported_claims` and `visual_facts` share in
+the manifest, and exactly `VisualFactAnnotation`'s own field shape)
+against actual `VisualFactAnnotation` output; only a structural match of
+THAT claim's own content counts as a failure for it.
+
+### Decision
+(b).
+
+### Rationale
+The Stage 6A.1 gold-catalog discipline (D-044) already requires per-fact
+evidence, not aggregate signals; the same discipline belongs here. This
+bug is latent only because path A never produces `VisualFactAnnotation` --
+but the evaluator's OWN internal correctness must not depend on that
+being true forever (Stage 7A/8A's vision-enrichment paths will produce
+these annotations for real, and the evaluator must already be correct
+before that happens, not patched reactively then).
+
+### Trade-offs and consequences
+`evaluator.py::_visual_fact_matches_claim` is a new structured-equality
+helper (numeric `value` compared with a `float()` fallback to normalized
+string comparison for non-numeric values). No change to the real Stage
+6A/6A.1/6A.2 baseline numbers (`unsupported_visual_claim_absence` remains
+100% for `STRESS_CHART_001` in every format, since path A still produces
+zero `VisualFactAnnotation`s) -- this is a forward-looking correctness
+fix, verified by new unit tests using hand-built `VisualFactAnnotation`
+instances rather than real Stage 5A output (which cannot exercise this
+path yet).
+
+### Deferred questions or reconsideration trigger
+Revisit once Stage 7A/8A vision-enrichment paths actually produce
+`VisualFactAnnotation` output and this metric's real baseline value can
+move off 100% for the first time -- at that point, confirm the per-claim
+match is discriminating correctly against real (not hand-built) model
+output.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/evaluator.py::_visual_fact_matches_claim`,
+`_score_visual_facts_and_unsupported_claims` (rewritten);
+`tests/test_evaluation_visual_claims.py` (new file; the exact two
+required scenarios -- a correct supported fact not failing an unrelated
+claim, and the claim itself being present failing only that claim -- plus
+a third two-claims-one-asserted test).
+
+---
+
+## D-049 — MetricResult.supporting_misses must resolve to a real MissRecord with the same fixture, metric, and fact_id -- never an id borrowed from a different metric's bookkeeping
+
+**Status:** Accepted
+**Stage:** Stage 6A.2
+**Date/commit:** Needs confirmation (assigned at Stage 6A.2 implementation time)
+
+### Problem
+`provenance_coverage_overall`/`provenance_bbox_coverage_overall`'s
+`supporting_misses` were populated from the UNION of every per-category
+accumulator's misses (e.g. `provenance_coverage_heading`'s misses,
+`provenance_coverage_paragraph`'s misses, ...) -- element ids that only
+ever appear in `MissRecord`s carrying the PER-CATEGORY metric name (e.g.
+`metric="provenance_coverage_heading"`), never
+`metric="provenance_coverage_overall"`. A reader following
+`supporting_misses` on the overall metric to find its `MissRecord` would
+find nothing under that exact (metric, fact_id) pair. Auditing the rest
+of the evaluator for the same pattern also found two smaller, currently-
+dormant instances: `_score_tables`'s "no candidate table" branch recorded
+`table_cell_text_recall` misses in the accumulator without ever emitting
+the corresponding per-cell `MissRecord`s; `column_reading_order_correct`
+and `no_invented_diagram_relationships` (both built via the raw `_metric()`
+helper, not `_MetricAcc`) never populated `supporting_misses` at all even
+when a real, already-recorded miss existed for them.
+
+### Alternatives considered
+For the provenance overall metrics: (a) duplicate every per-category
+`MissRecord` a second time under the overall metric name (redundant
+double-bookkeeping). (b) Reference only the overall metric's OWN single
+summary `MissRecord` (already created, one per overall metric, when a
+deficit exists) in `supporting_misses`.
+
+### Decision
+(b) for the provenance overall metrics; the two table/structural-stress
+gaps found during the same audit were fixed directly (added the missing
+`MissRecord`s and/or referenced the ones that already existed).
+
+### Rationale
+Referential integrity of `supporting_misses` is what makes the miss
+ledger trustworthy as a navigable index, not just an aggregate count --
+"look up this id to find out why" must always resolve. Duplicating every
+per-category record under the overall metric name too would have worked
+but adds bookkeeping surface for no benefit when a single summary record
+already exists and is the natural target.
+
+### Trade-offs and consequences
+No change to the real Stage 6A.1 -> 6A.2 total miss count (both
+provenance-overall gaps and the table/structural-stress gaps were latent
+correctness bugs, not baseline-affecting misclassifications -- the table
+"no candidate table" and reading-order/diagram gaps never actually
+trigger against the real 9 fixtures). The referential-integrity test
+(`test_supporting_misses_on_metric_result_reference_real_miss_records`)
+was strengthened from "supporting_misses is non-empty" to "every id in
+supporting_misses resolves to an actual MissRecord with the same
+fixture/metric/fact_id," which would have caught this bug directly had
+it existed at Stage 6A.1 time.
+
+### Deferred questions or reconsideration trigger
+None -- the strengthened test now runs against the real baseline on
+every future change to this module, so a regression here would be caught
+immediately.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/evaluator.py::_score_provenance` (overall
+metrics' `misses=` now reference only their own summary MissRecord's
+fact_id), `_score_tables` (added the missing per-cell MissRecords in the
+no-candidate-table branch), `_score_structural_stress`
+(`column_reading_order_correct`/`no_invented_diagram_relationships` now
+populate `supporting_misses`);
+`tests/test_stage6a_integration.py::test_supporting_misses_on_metric_result_reference_real_miss_records`
+(strengthened).
+
+---
+
+## D-050 — evaluation_content_hash is a separate deterministic content identity from run_id/input_bundle_hash, and every hash-shaped field is now validated as lowercase 64-hex
+
+**Status:** Accepted
+**Stage:** Stage 6A.2
+**Date/commit:** Needs confirmation (assigned at Stage 6A.2 implementation time)
+
+### Problem
+`run_id`/`input_bundle_hash` (D-044-era Stage 6A.1 fields) identify WHICH
+INPUTS a run scored, not what it CONCLUDED -- two runs of a genuinely
+non-deterministic evaluator over the same inputs would share the same
+`run_id` even if their actual metrics/misses/alignments differed. There
+was no separate identity for "this run's actual output content," and no
+field in this module validated that a value claiming to be a SHA-256
+digest actually was one (wrong length, uppercase, or non-hex characters
+were all silently accepted).
+
+### Alternatives considered
+For content identity: (a) leave `run_id`/`input_bundle_hash` as the only
+identity fields, relying on separate determinism tests to catch output
+drift. (b) Add `evaluation_content_hash`, a SHA-256 over every STABLE
+`EvaluationRun` field (`input_bundle_hash`, `evaluator_version`, every
+fixture result, `aggregate`) excluding `generated_at` (mutable
+runtime/report metadata) and the hash field itself.
+For hash validation: (a) leave hash-shaped fields as unconstrained `str`.
+(b) Validate every hash-shaped field (`run_id`, `input_bundle_hash`,
+`evaluation_content_hash`, `manifest_sha256`, `stage5a_results_sha256`,
+every `OperationalEvidence` artifact hash when present,
+`canonical_document_hash`) as a lowercase 64-character hex string.
+
+### Decision
+(b) for both.
+
+### Rationale
+`input_bundle_hash` answers "did the inputs change"; `evaluation_content_hash`
+answers "did the conclusions change" -- these are genuinely different
+questions (a non-deterministic bug could change the second while leaving
+the first identical), and Stage 6A's own determinism-verification
+practice (re-running the evaluator and comparing outputs, established
+since Stage 5A.1/D-039) deserves a first-class field to compare against
+directly rather than diffing entire JSON files. Validating every hash
+field as real lowercase hex turns a malformed identity from a silent,
+undetected data-quality issue into an immediate, loud `ValidationError`
+at construction time -- consistent with this project's "fail loud, never
+silently accept malformed identity" discipline used everywhere else
+(portable fixture-ref validation, mapper_loss's raw-evidence
+requirement, D-046's null-difficulty enforcement).
+
+### Trade-offs and consequences
+Several existing tests across `test_evaluation_aggregation.py` and
+`test_stage6a_report_generation.py` used non-hex placeholder strings
+(`"m" * 64`, `"s" * 64`) for `manifest_sha256`/`stage5a_results_sha256` --
+all corrected to valid hex placeholders (`"1" * 64`, `"2" * 64`) as part
+of this change; this is a test-only correction, not a behavior change.
+`run_id` is itself a SHA-256 hex digest already (D-044-era), so this
+validation is enforcement of an existing invariant, not a new one for
+that field.
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/aggregation.py::_compute_evaluation_content_hash`
+(new), `build_evaluation_run` (computes and threads it through);
+`src/ingestion_bench/evaluation/model.py::_validate_sha256_hex` (new
+shared helper), `EvaluationRun._validate_hash_fields`,
+`OperationalEvidence._validate_hash_fields`;
+`tests/test_evaluation_aggregation.py` (six new
+`test_evaluation_content_hash_*` tests: stability, `generated_at`
+insensitivity, and sensitivity to a metric/evidence-alignment/input-
+artifact/evaluator-version change); `tests/test_evaluation_models.py`
+(new parametrized malformed-hash-rejection tests for every validated
+field); real measured `evaluation_content_hash` in
+`reports/stage6a_docling_baseline_results.json`.

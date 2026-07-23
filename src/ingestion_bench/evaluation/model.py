@@ -11,10 +11,22 @@ CanonicalChunk output to populate these models.
 from __future__ import annotations
 
 import math
+import re
 from pathlib import PurePosixPath, PureWindowsPath
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+# Stage 6A.2 item 5: every hash-shaped field in this module is validated as
+# a lowercase 64-character hex SHA-256 digest -- never an uppercase, short,
+# or otherwise malformed string silently accepted as an "identity."
+_SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _validate_sha256_hex(value: str, field_name: str) -> str:
+    if not _SHA256_HEX_RE.fullmatch(value):
+        raise ValueError(f"{field_name} must be a lowercase 64-character hex SHA-256 digest, got {value!r}")
+    return value
 
 # Controlled miss-classification vocabulary (Stage 6A section 15) -- never
 # freeform strings, so every miss ledger entry is machine-groupable.
@@ -301,6 +313,17 @@ class OperationalEvidence(BaseModel):
     raw_docling_debug_file_sha256: str | None = None
     artifact_completeness: dict[str, bool] = Field(default_factory=dict)
 
+    @model_validator(mode="after")
+    def _validate_hash_fields(self) -> "OperationalEvidence":
+        _validate_sha256_hex(self.canonical_document_hash, "canonical_document_hash")
+        _validate_sha256_hex(self.canonical_document_file_sha256, "canonical_document_file_sha256")
+        _validate_sha256_hex(self.conversion_report_file_sha256, "conversion_report_file_sha256")
+        if self.canonical_chunks_file_sha256 is not None:
+            _validate_sha256_hex(self.canonical_chunks_file_sha256, "canonical_chunks_file_sha256")
+        if self.raw_docling_debug_file_sha256 is not None:
+            _validate_sha256_hex(self.raw_docling_debug_file_sha256, "raw_docling_debug_file_sha256")
+        return self
+
 
 class FixtureEvaluationResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -349,12 +372,26 @@ class EvaluationRun(BaseModel):
     `OperationalEvidence.*_file_sha256` values -- and `run_id` is itself
     derived from `input_bundle_hash` (never independent of it), so
     `run_id` genuinely identifies "this exact input bundle scored by this
-    exact evaluator version," not just "a run happened.\""""
+    exact evaluator version," not just "a run happened."
+
+    Stage 6A.2 item 4: `evaluation_content_hash` is a SEPARATE, broader
+    deterministic SHA-256 -- over every STABLE field of this run
+    (`input_bundle_hash`, `evaluator_version`, every `fixture_results`
+    entry, and `aggregate`), explicitly EXCLUDING `generated_at` (mutable
+    runtime/report metadata -- when this run happened, not what it found)
+    and `evaluation_content_hash` itself. Two runs that read
+    byte-identical inputs AND produced byte-identical results always
+    share the same `evaluation_content_hash`, regardless of wall-clock
+    time; any change to a metric, evidence alignment, miss record, input
+    artifact hash, or `evaluator_version` changes it. See
+    `aggregation.py::_compute_evaluation_content_hash`, the only place
+    this value is ever computed."""
 
     model_config = ConfigDict(extra="forbid")
 
     run_id: str
     input_bundle_hash: str
+    evaluation_content_hash: str
     generated_at: str
     manifest_version: str
     manifest_sha256: str
@@ -370,4 +407,13 @@ class EvaluationRun(BaseModel):
             if result.fixture in seen:
                 raise ValueError(f"duplicate fixture in fixture_results: {result.fixture!r}")
             seen.add(result.fixture)
+        return self
+
+    @model_validator(mode="after")
+    def _validate_hash_fields(self) -> "EvaluationRun":
+        _validate_sha256_hex(self.run_id, "run_id")
+        _validate_sha256_hex(self.input_bundle_hash, "input_bundle_hash")
+        _validate_sha256_hex(self.evaluation_content_hash, "evaluation_content_hash")
+        _validate_sha256_hex(self.manifest_sha256, "manifest_sha256")
+        _validate_sha256_hex(self.stage5a_results_sha256, "stage5a_results_sha256")
         return self

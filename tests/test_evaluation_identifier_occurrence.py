@@ -3,7 +3,12 @@ tests. Occurrence recall must never be computed by counting all
 appearances globally and capping at the expected total -- every manifest
 occurrence is matched one-to-one against the specific element its
 source_fact resolves to. No real Docling artifacts needed -- exercises
-evaluator._score_identifiers directly against hand-built data."""
+evaluator._score_identifiers directly against hand-built data.
+
+Stage 6A.2 item 1 adds miss-ATTRIBUTION regression tests: a raw
+occurrence of the same identifier ELSEWHERE in the document (a different
+paragraph, unrelated to the missing occurrence's own expected context)
+must never manufacture a false mapper_loss classification."""
 
 from __future__ import annotations
 
@@ -111,3 +116,75 @@ def test_unique_recall_is_true_when_at_least_one_occurrence_matches():
     )
     assert metrics["identifier_unique_recall"].numerator == 1
     assert metrics["identifier_unique_recall"].denominator == 1
+
+
+def test_missing_visual_node_occurrence_is_not_mapper_loss_from_an_unrelated_paragraph_mention():
+    """The exact DOCX/PPTX ID_004_occ_2 regression case (Stage 6A.2 item
+    1): the identifier's real-world manifest occurrence is tied to
+    source_fact VF_NODE_003 (OCR/vision-visible inside the parity image),
+    but Docling's raw DOCX/PPTX output never captured any OCR text for
+    that picture at all (`pictures[0].children == []`). The SAME
+    identifier legitimately appears in raw Docling as PLAIN BODY TEXT
+    (source_fact P_004, an unrelated paragraph) -- that unrelated raw
+    occurrence must never be used to justify mapper_loss for the missing
+    picture-context occurrence. Must be parser_content_loss."""
+    identifier = "P-205"
+    target_facts = [{
+        "fact_id": "ID_004", "normalized_value": identifier,
+        "occurrences": [{"raw_text": identifier, "source_fact": "VF_NODE_003"}],
+    }]
+    # No canonical element resolves VF_NODE_003 (path A never produces
+    # DiagramNodeAnnotation) and no picture_ocr_annotations exist either
+    # (DOCX/PPTX: Docling extracted zero OCR text from the embedded image).
+    matched_element_by_fact_id: dict = {}
+    picture_ocr_annotations: list = []
+    raw_debug = {
+        "texts": [
+            {"self_ref": "#/texts/4", "parent": {"$ref": "#/body"}, "text": f"Control C-88 mandates Recovery Procedure {identifier} for critical applications."},
+        ],
+        "pictures": [{"self_ref": "#/pictures/0", "children": []}],
+    }
+    raw_text_blob = [(item["self_ref"], item["text"]) for item in raw_debug["texts"]]
+
+    metrics, miss_records, unexpected, alignments = _score_identifiers(
+        "parity/PARITY_001.docx", target_facts, [], [], {}, matched_element_by_fact_id,
+        picture_ocr_annotations, raw_text_blob, None,
+        raw_debug=raw_debug, source_ref_by_id={"PIC_001": "#/pictures/0"},
+        fact_text_by_id={}, matched_picture_ids=["PIC_001"],
+    )
+
+    assert metrics["identifier_occurrence_recall"].numerator == 0
+    assert metrics["identifier_occurrence_recall"].denominator == 1
+
+    miss = next(m for m in miss_records if m.fact_id == "ID_004_occ_0" and m.metric == "identifier_occurrence_recall")
+    assert miss.failure_class == "parser_content_loss"
+    assert miss.raw_docling_references == []
+
+
+def test_missing_visual_node_occurrence_is_mapper_loss_when_picture_child_ocr_explicitly_has_it():
+    """Contrast case: when the picture's raw OCR child text DOES contain
+    the identifier (Docling captured it) but no canonical evidence exists
+    (simulating a mapper preservation failure), mapper_loss is correctly
+    assigned, scoped only to that picture's own children."""
+    identifier = "P-205"
+    target_facts = [{
+        "fact_id": "ID_004", "normalized_value": identifier,
+        "occurrences": [{"raw_text": identifier, "source_fact": "VF_NODE_003"}],
+    }]
+    raw_debug = {
+        "texts": [
+            {"self_ref": "#/texts/4", "parent": {"$ref": "#/body"}, "text": "Control C-88 mandates a recovery procedure."},
+            {"self_ref": "#/texts/13", "parent": {"$ref": "#/pictures/0"}, "text": f"Activate Procedure {identifier}"},
+        ],
+    }
+    raw_text_blob = [(item["self_ref"], item["text"]) for item in raw_debug["texts"]]
+
+    metrics, miss_records, unexpected, alignments = _score_identifiers(
+        "parity/PARITY_001.pdf", target_facts, [], [], {}, {}, [], raw_text_blob, None,
+        raw_debug=raw_debug, source_ref_by_id={"PIC_001": "#/pictures/0"},
+        fact_text_by_id={}, matched_picture_ids=["PIC_001"],
+    )
+
+    miss = next(m for m in miss_records if m.fact_id == "ID_004_occ_0")
+    assert miss.failure_class == "mapper_loss"
+    assert miss.raw_docling_references == ["#/texts/13"]

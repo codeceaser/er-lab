@@ -36,7 +36,7 @@ def _run():
         manifest = load_manifest(FIXTURES_ROOT)
         loaded = load_fixture_artifacts(ARTIFACTS_ROOT)
         results = [evaluate_fixture(f, manifest) for f in loaded]
-        _CACHE["run"] = build_evaluation_run(results, manifest, "m" * 64, "s" * 64)
+        _CACHE["run"] = build_evaluation_run(results, manifest, "1" * 64, "2" * 64)
     return _CACHE["run"]
 
 

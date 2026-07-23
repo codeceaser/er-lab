@@ -95,8 +95,8 @@ def test_build_aggregate_counts_misses_by_classification():
 
 def test_build_evaluation_run_is_deterministic():
     manifest = {"manifest_version": "1.2.1"}
-    run_a = build_evaluation_run([_pdf_result()], manifest, "m" * 64, "s" * 64)
-    run_b = build_evaluation_run([_pdf_result()], manifest, "m" * 64, "s" * 64)
+    run_a = build_evaluation_run([_pdf_result()], manifest, "1" * 64, "2" * 64)
+    run_b = build_evaluation_run([_pdf_result()], manifest, "1" * 64, "2" * 64)
     assert run_a.run_id == run_b.run_id
 
 
@@ -108,15 +108,79 @@ def test_build_evaluation_run_id_changes_with_different_input_file_hash():
     manifest = {"manifest_version": "1.2.1"}
     result_a = _pdf_result()
     result_b = result_a.model_copy(update={"operational": _operational(canonical_document_file_sha256="f" * 64)})
-    run_a = build_evaluation_run([result_a], manifest, "m" * 64, "s" * 64)
-    run_b = build_evaluation_run([result_b], manifest, "m" * 64, "s" * 64)
+    run_a = build_evaluation_run([result_a], manifest, "1" * 64, "2" * 64)
+    run_b = build_evaluation_run([result_b], manifest, "1" * 64, "2" * 64)
     assert run_a.run_id != run_b.run_id
     assert run_a.input_bundle_hash != run_b.input_bundle_hash
 
 
+# --- evaluation_content_hash (Stage 6A.2 item 4) ----------------------------
+
+
+def test_evaluation_content_hash_stable_for_identical_inputs_and_results():
+    manifest = {"manifest_version": "1.2.1"}
+    run_a = build_evaluation_run([_pdf_result()], manifest, "1" * 64, "2" * 64)
+    run_b = build_evaluation_run([_pdf_result()], manifest, "1" * 64, "2" * 64)
+    assert run_a.evaluation_content_hash == run_b.evaluation_content_hash
+
+
+def test_evaluation_content_hash_unaffected_by_generated_at():
+    """generated_at is mutable runtime/report metadata -- two runs that
+    differ ONLY in when they happened must share the same
+    evaluation_content_hash."""
+    manifest = {"manifest_version": "1.2.1"}
+    run = build_evaluation_run([_pdf_result()], manifest, "1" * 64, "2" * 64)
+    mutated = run.model_copy(update={"generated_at": "2099-01-01T00:00:00+00:00"})
+    assert mutated.generated_at != run.generated_at
+    assert mutated.evaluation_content_hash == run.evaluation_content_hash
+
+
+def test_evaluation_content_hash_changes_with_a_metric_change():
+    manifest = {"manifest_version": "1.2.1"}
+    result_a = _pdf_result()
+    result_b = result_a.model_copy(update={"metrics": {"text_fact_recall": _metric(3, 5)}})
+    run_a = build_evaluation_run([result_a], manifest, "1" * 64, "2" * 64)
+    run_b = build_evaluation_run([result_b], manifest, "1" * 64, "2" * 64)
+    assert run_a.evaluation_content_hash != run_b.evaluation_content_hash
+
+
+def test_evaluation_content_hash_changes_with_an_evidence_alignment_change():
+    manifest = {"manifest_version": "1.2.1"}
+    result_a = _pdf_result()
+    result_b = result_a.model_copy(update={
+        "evidence_alignments": [
+            EvidenceAlignment(
+                fact_id="P_001", fixture="parity/PARITY_001.pdf", fact_type="paragraph",
+                match_status="missing", derivation="not_applicable",
+            ),
+        ],
+    })
+    run_a = build_evaluation_run([result_a], manifest, "1" * 64, "2" * 64)
+    run_b = build_evaluation_run([result_b], manifest, "1" * 64, "2" * 64)
+    assert run_a.evaluation_content_hash != run_b.evaluation_content_hash
+
+
+def test_evaluation_content_hash_changes_with_an_input_artifact_hash_change():
+    manifest = {"manifest_version": "1.2.1"}
+    result_a = _pdf_result()
+    result_b = result_a.model_copy(update={"operational": _operational(canonical_document_file_sha256="f" * 64)})
+    run_a = build_evaluation_run([result_a], manifest, "1" * 64, "2" * 64)
+    run_b = build_evaluation_run([result_b], manifest, "1" * 64, "2" * 64)
+    assert run_a.evaluation_content_hash != run_b.evaluation_content_hash
+
+
+def test_evaluation_content_hash_changes_with_evaluator_version():
+    from ingestion_bench.evaluation.aggregation import _compute_evaluation_content_hash
+
+    aggregate = build_aggregate([_pdf_result()])
+    hash_a = _compute_evaluation_content_hash("bundle" * 8, "1.1.0", "1.2.1", "1" * 64, "2" * 64, [_pdf_result()], aggregate)
+    hash_b = _compute_evaluation_content_hash("bundle" * 8, "1.2.0", "1.2.1", "1" * 64, "2" * 64, [_pdf_result()], aggregate)
+    assert hash_a != hash_b
+
+
 def test_miss_ledger_contains_every_scored_miss():
     manifest = {"manifest_version": "1.2.1"}
-    run = build_evaluation_run([_pdf_result()], manifest, "m" * 64, "s" * 64)
+    run = build_evaluation_run([_pdf_result()], manifest, "1" * 64, "2" * 64)
     ledger = build_miss_ledger(run)
     assert ledger["total_misses"] == 1
     assert ledger["entries"][0]["fact_id"] == "P_999"
@@ -124,14 +188,14 @@ def test_miss_ledger_contains_every_scored_miss():
 
 def test_evidence_alignment_catalog_contains_every_matched_fact():
     manifest = {"manifest_version": "1.2.1"}
-    run = build_evaluation_run([_pdf_result()], manifest, "m" * 64, "s" * 64)
+    run = build_evaluation_run([_pdf_result()], manifest, "1" * 64, "2" * 64)
     catalog = build_evidence_alignment_catalog(run)
     assert [e["fact_id"] for e in catalog] == ["P_001"]
 
 
 def test_scorecard_markdown_renders_na_for_zero_denominator_never_zero_percent():
     manifest = {"manifest_version": "1.2.1"}
-    run = build_evaluation_run([_docx_result()], manifest, "m" * 64, "s" * 64)
+    run = build_evaluation_run([_docx_result()], manifest, "1" * 64, "2" * 64)
     markdown = render_scorecard_markdown(run)
     assert "n/a" in markdown
     assert "0.0%" not in markdown
@@ -142,7 +206,7 @@ def test_scorecard_and_json_come_from_the_same_run_object():
     EvaluationRun the JSON would serialize -- proven here by checking the
     rendered numerator/denominator match the run's own aggregate."""
     manifest = {"manifest_version": "1.2.1"}
-    run = build_evaluation_run([_pdf_result()], manifest, "m" * 64, "s" * 64)
+    run = build_evaluation_run([_pdf_result()], manifest, "1" * 64, "2" * 64)
     markdown = render_scorecard_markdown(run)
     metric = run.aggregate.metrics_by_format["overall"]["text_fact_recall"]
     assert f"({metric.numerator}/{metric.denominator})" in markdown
@@ -150,7 +214,7 @@ def test_scorecard_and_json_come_from_the_same_run_object():
 
 def test_scorecard_markdown_lists_every_fixture():
     manifest = {"manifest_version": "1.2.1"}
-    run = build_evaluation_run([_pdf_result(), _docx_result()], manifest, "m" * 64, "s" * 64)
+    run = build_evaluation_run([_pdf_result(), _docx_result()], manifest, "1" * 64, "2" * 64)
     markdown = render_scorecard_markdown(run)
     assert "parity/PARITY_001.pdf" in markdown
     assert "parity/PARITY_001.docx" in markdown

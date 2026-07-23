@@ -9,8 +9,9 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at Stage 6A.1 (see `git log` for the exact commit once
-made).
+and the repository at Stage 6A.2 (see `git log` for the exact commit once
+made). Stage 6A/6A.1/6A.2 is complete but **not yet marked frozen** —
+review of the 6A.2 correction is pending.
 
 ---
 
@@ -59,14 +60,19 @@ Final module boundaries:
   a `VisionEnricher` protocol, `NoOpVisionEnricher`, `OpenAIVisionEnricher`
   (path B), optionally `GraniteVisionEnricher` (path D, deferred).
 - `src/ingestion_bench/evaluation/` — **Stage 6A implemented, hardened by
-  6A.1.** `model.py` (strict Pydantic result models), `normalization.py`
-  (deterministic text/identifier/OCR-phrase rules), `matcher.py`
-  (exact-match primitives), `classification.py` (miss-attribution against
-  raw Docling debug JSON only, incl. `classify_relationship_absence` for
-  relationship/structure loss attribution, D-045), `evaluator.py`
-  (per-fixture scoring, the manifest fact catalog builder,
-  occurrence-aware identifier resolution, D-044), `aggregation.py`
-  (per-format/overall aggregation, input-bundle hashing, report
+  6A.1 and 6A.2.** `model.py` (strict Pydantic result models, incl.
+  `_validate_sha256_hex` for every hash-shaped field, D-050),
+  `normalization.py` (deterministic text/identifier/OCR-phrase rules),
+  `matcher.py` (exact-match primitives), `classification.py`
+  (miss-attribution against raw Docling debug JSON only, incl.
+  `classify_relationship_absence` for relationship/structure loss
+  attribution (D-045) and `classify_identifier_occurrence_absence` for
+  context-SCOPED identifier-occurrence attribution (D-047)),
+  `evaluator.py` (per-fixture scoring, the manifest fact catalog builder,
+  occurrence-aware identifier resolution scoped to each occurrence's own
+  expected context, D-044/D-047), `aggregation.py` (per-format/overall
+  aggregation, input-bundle hashing, `evaluation_content_hash` — a
+  SEPARATE deterministic hash of results, not inputs, D-050 — report
   rendering). **The only package in the repository allowed to read
   `reference_manifest.json`** — verified by
   `tests/test_stage6a_integration.py::test_evaluation_package_is_the_only_package_referencing_the_manifest`.
@@ -149,22 +155,32 @@ more *ingestion* lane, not a prerequisite for retrieval work.
    independent component-level comparisons (D-039); `success` status
    cannot coexist with a fidelity-affecting diagnostic; environment/
    model-footprint evidence is collected live, never hand-typed.
-6. Stage 6A (+6A.1 correctness/gold-evidence hardening) — deterministic
-   ingestion-fidelity evaluator, scoring `CanonicalDocument`/
-   `CanonicalChunk` output against `reference_manifest.json` only (never
-   LLM-grades-LLM). **Done, frozen.** `src/ingestion_bench/evaluation/`;
-   9/9 fixtures scored; 56 total misses (classified, never unclassified,
-   every deficit ledgered per D-044/item 5); 147 gold evidence-alignment
-   entries (matched/partial/missing/not_applicable, one per expected
-   manifest fact, never matched-only) written to
-   `artifacts/stage6a/evidence_alignment.json` (D-041, D-042, D-044).
-   Identifier occurrence recall is occurrence-level and one-to-one, never
-   globally counted-and-capped (D-044); parser-vs-mapper attribution for
-   relationship/structure gaps requires explicit raw Docling relationship
-   evidence, never inferred from mere text presence (D-045);
+6. Stage 6A (+6A.1 correctness/gold-evidence hardening, +6A.2
+   correctness/reproducibility patch) — deterministic ingestion-fidelity
+   evaluator, scoring `CanonicalDocument`/`CanonicalChunk` output against
+   `reference_manifest.json` only (never LLM-grades-LLM). **Done, not yet
+   frozen** (explicit instruction pending review of the 6A.2 correction).
+   `src/ingestion_bench/evaluation/`; 9/9 fixtures scored; 56 total misses
+   (classified, never unclassified, every deficit ledgered per D-044/item
+   5); 147 gold evidence-alignment entries (matched/partial/missing/
+   not_applicable, one per expected manifest fact, never matched-only)
+   written to `artifacts/stage6a/evidence_alignment.json` (D-041, D-042,
+   D-044). Identifier occurrence recall is occurrence-level and
+   one-to-one, never globally counted-and-capped (D-044); occurrence miss
+   ATTRIBUTION is scoped to that occurrence's own expected context, never
+   a whole-document raw-text search (D-047); parser-vs-mapper attribution
+   for relationship/structure gaps requires explicit raw Docling
+   relationship evidence, never inferred from mere text presence (D-045);
    `expected_retrieval_difficulty` stays unclassified/`null` throughout
-   Stage 6A (D-046). One manifest-contract gap recorded, not invented
-   around (chart OCR tokens undeclared).
+   Stage 6A (D-046); unsupported-visual-claim absence is scored per claim,
+   via structured matching, never from the mere presence of any other
+   visual fact (D-048); every `MetricResult.supporting_misses` entry
+   resolves to a real `MissRecord` with the same fixture/metric/fact_id
+   (D-049); `EvaluationRun.evaluation_content_hash` is a separate
+   deterministic content identity from `run_id`/`input_bundle_hash`, and
+   every hash-shaped field is validated as lowercase 64-hex (D-050). One
+   manifest-contract gap recorded, not invented around (chart OCR tokens
+   undeclared).
 7. Stage 6B — retrieval benchmark contract + gold evidence set, built on
    the Stage 6A alignment catalog. **Next.**
 8. Stage 7A — regular vector RAG projection + retrieval baseline.
@@ -188,14 +204,15 @@ At minimum, the full existing suite must continue to pass unmodified:
 `tests/test_docling_standard_integration.py` (34),
 `tests/test_adapters_base.py` (19),
 `tests/test_run_docling_standard_report.py` (3),
-`tests/test_evaluation_models.py` (18),
+`tests/test_evaluation_models.py` (30),
 `tests/test_evaluation_normalization.py` (23),
 `tests/test_evaluation_matcher.py` (7),
-`tests/test_evaluation_aggregation.py` (11),
-`tests/test_evaluation_identifier_occurrence.py` (3),
+`tests/test_evaluation_aggregation.py` (17),
+`tests/test_evaluation_identifier_occurrence.py` (5),
 `tests/test_evaluation_table_matching.py` (4),
+`tests/test_evaluation_visual_claims.py` (3),
 `tests/test_stage6a_integration.py` (25),
-`tests/test_stage6a_report_generation.py` (8) — 449 total, 3 warnings
+`tests/test_stage6a_report_generation.py` (8) — 472 total, 3 warnings
 (pre-existing Docling-dependency deprecation warnings, not this project's
 own code). A new adapter/retrieval-projection implementation must add its
 own test files following the same pattern (one file per concern, `pytest`,
@@ -288,7 +305,7 @@ required of any future adapter (path B/C/D) too:
   JSON, canonical hash, chunk-list JSON, chunk ids, chunk content hashes)
   independently, never as one collapsed pass/fail.
 
-## Evaluator contract (Stage 6A, hardened 6A.1 — must be preserved by Stage 6B+)
+## Evaluator contract (Stage 6A, hardened 6A.1/6A.2 — must be preserved by Stage 6B+)
 
 - Score primarily against `CanonicalDocument`; use `CanonicalChunk` only
   for downstream evidence/chunk-alignment availability; use raw Docling
@@ -304,6 +321,19 @@ required of any future adapter (path B/C/D) too:
   `classification.py::classify_relationship_absence`, which inspects the
   specific raw relation field directly (e.g. `pictures[i].captions`) --
   never inferred from mere text presence elsewhere in the document.
+- Identifier-occurrence miss ATTRIBUTION is scoped to that occurrence's
+  own expected context, never a whole-document raw-text search (D-047) —
+  `classification.py::classify_identifier_occurrence_absence` only ever
+  searches the raw item(s) `evaluator.py::_scoped_raw_items_for_occurrence`
+  resolves for that SPECIFIC occurrence (its own matched element's raw
+  self_ref; its own expected text if unmatched; its own picture's raw OCR
+  children for visual-node occurrences). An identifier appearing anywhere
+  else in the document must never manufacture a false `mapper_loss`.
+- `unsupported_visual_claim_absence` is scored per claim (D-048) — each
+  claim's own `fact_type`/`subject`/`relation`/`object`/`value`/`unit` is
+  matched structurally against actual `VisualFactAnnotation` output
+  (`evaluator.py::_visual_fact_matches_claim`); the presence of any OTHER,
+  correct visual fact must never fail an unrelated unsupported claim.
 - Never invent an expected value not present in the frozen manifest — a
   gap (e.g. `STRESS_CHART_001` declaring no `expected_ocr_tokens`) is
   recorded as `failure_class="evaluation_contract_insufficient"` with a
@@ -321,7 +351,11 @@ required of any future adapter (path B/C/D) too:
 - Every metric where `numerator < denominator` must have a corresponding
   `MissRecord`, and `MetricResult.supporting_misses` must reference the
   real fact/miss ids behind the deficit — never a bare number with no
-  ledger entry to back it up.
+  ledger entry to back it up. Every `supporting_misses` entry must
+  resolve to an ACTUAL `MissRecord` with the SAME fixture, metric name,
+  and fact_id — never an id borrowed from a different metric's
+  bookkeeping (D-049; the provenance-overall metrics were the real bug
+  this closes).
 - Identifier occurrence recall is occurrence-level and one-to-one — every
   manifest-declared occurrence is its own expectation, resolved to a
   SPECIFIC canonical element via its own `source_fact` metadata; one
@@ -351,6 +385,16 @@ required of any future adapter (path B/C/D) too:
   D-039. `EvaluationRun.run_id` is derived from `input_bundle_hash` (a
   deterministic hash over every input file's actual bytes across all
   fixtures), never computed independently of it.
+- `EvaluationRun.evaluation_content_hash` is a SEPARATE deterministic
+  identity from `run_id`/`input_bundle_hash` (D-050) — a hash over every
+  STABLE result field (excluding `generated_at` and itself), answering
+  "did the conclusions change" rather than "did the inputs change." Every
+  hash-shaped field in this module (`run_id`, `input_bundle_hash`,
+  `evaluation_content_hash`, `manifest_sha256`, `stage5a_results_sha256`,
+  `canonical_document_hash`, every `OperationalEvidence.*_file_sha256`
+  when present) is validated as lowercase 64-character hex SHA-256 at
+  construction time — a malformed hash is a loud `ValidationError`, never
+  a silently accepted string.
 
 ## Explicit non-goals (for the first reproduction)
 
@@ -438,7 +482,16 @@ recall is one-to-one, never globally counted-and-capped), D-045
 Docling relationship evidence inspected directly, never inferred from
 text `self_ref` presence alone), D-046 (`expected_retrieval_difficulty`
 stays unclassified/`null` throughout Stage 6A — Stage 6B owns real
-difficulty assignment entirely).
+difficulty assignment entirely), D-047 (identifier-occurrence miss
+attribution is scoped to that occurrence's own expected context, never a
+whole-document raw-text search), D-048 (`unsupported_visual_claim_absence`
+is scored per claim via structured matching, never from the mere
+presence of any other visual fact), D-049
+(`MetricResult.supporting_misses` must resolve to a real `MissRecord`
+with the same fixture/metric/fact_id, never an id borrowed from a
+different metric's bookkeeping), D-050 (`evaluation_content_hash` is a
+separate deterministic content identity from `run_id`/`input_bundle_hash`;
+every hash-shaped field is validated as lowercase 64-hex).
 
 D-009 (Granite Vision optional/deferred), D-022 (effective-revision
 retrieval policy), D-023 (upstream duplicate-upload rejection policy) are

@@ -590,6 +590,16 @@ def _score_tables(
             for (row, col), expected_cell in expected_cells.items():
                 cell_fact_id = f"{fact['fact_id']}_r{row}c{col}"
                 cell_text_acc.record_miss(cell_fact_id)
+                # Stage 6A.2 item 3: every supporting_misses entry must
+                # resolve to a real MissRecord with the SAME metric name
+                # and fact_id -- a per-cell MissRecord is required here
+                # too, not just the one table-level "table_presence" entry.
+                miss_records.append(MissRecord(
+                    fixture=fixture, fact_id=cell_fact_id, metric="table_cell_text_recall",
+                    expected_value={"row": row, "col": col, "text": expected_cell["text"]}, result="miss",
+                    failure_class="parser_structure_loss", confidence="supported",
+                    explanation=f"no candidate table identified for {fact['fact_id']!r} -- cell (row={row}, col={col}) could not be scored",
+                ))
                 alignments.append(_alignment(
                     cell_fact_id, fixture, "table_cell", expected_value={"row": row, "col": col, "text": expected_cell["text"]},
                     match_status="missing", derivation="not_applicable",
@@ -709,7 +719,7 @@ def _score_tables(
 def _score_pictures_captions(
     fixture: str, picture_facts: list[dict], caption_facts: list[dict], document: CanonicalDocument,
     chunk_map: dict[str, list[str]], raw_debug: dict[str, Any] | None,
-) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment], dict[str, TextElement]]:
+) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment], dict[str, TextElement], list[str]]:
     presence_acc = _MetricAcc("picture_presence", "at least one CanonicalPicture present per expected picture fact")
     provenance_acc = _MetricAcc("picture_provenance_completeness", "matched picture has a ProvenanceEntry")
     location_acc = _MetricAcc("picture_unit_location_accuracy", "unit_index of the matched picture == expected_location.unit_index")
@@ -888,7 +898,7 @@ def _score_pictures_captions(
         "caption_text_recall": caption_text_acc.result(), "caption_linkage_accuracy": caption_link_acc.result(),
         "caption_unit_location_accuracy": caption_location_acc.result(),
     }
-    return metrics, miss_records, alignments, matched_by_fact_id
+    return metrics, miss_records, alignments, matched_by_fact_id, matched_picture_ids
 
 
 def _score_ocr_tokens(
@@ -1039,16 +1049,63 @@ def _score_list_items(
     return metrics, miss_records, alignments
 
 
+def _visual_fact_matches_claim(annotation: Any, claim: dict) -> bool:
+    """Stage 6A.2 item 2: structured equality between ONE manifest claim
+    (an unsupported_claim or a visual_fact entry -- both share the same
+    fact_type/subject/relation/object/value/unit shape) and ONE actual
+    VisualFactAnnotation. Never a blanket 'any VisualFactAnnotation
+    exists' check -- a correct visual fact asserting a DIFFERENT claim
+    must never match here."""
+    if annotation.fact_type != claim.get("fact_type"):
+        return False
+    if normalize_text_for_comparison(annotation.subject) != normalize_text_for_comparison(str(claim.get("subject", ""))):
+        return False
+    if normalize_text_for_comparison(annotation.relation) != normalize_text_for_comparison(str(claim.get("relation", ""))):
+        return False
+
+    expected_object = claim.get("object")
+    if (annotation.object is None) != (expected_object is None):
+        return False
+    if annotation.object is not None and expected_object is not None:
+        if normalize_text_for_comparison(annotation.object) != normalize_text_for_comparison(str(expected_object)):
+            return False
+
+    expected_value = claim.get("value")
+    if (annotation.value is None) != (expected_value is None):
+        return False
+    if annotation.value is not None and expected_value is not None:
+        try:
+            if float(annotation.value) != float(expected_value):
+                return False
+        except (TypeError, ValueError):
+            if normalize_text_for_comparison(str(annotation.value)) != normalize_text_for_comparison(str(expected_value)):
+                return False
+
+    expected_unit = claim.get("unit")
+    if (annotation.unit is None) != (expected_unit is None):
+        return False
+    if annotation.unit is not None and expected_unit is not None:
+        if normalize_text_for_comparison(annotation.unit) != normalize_text_for_comparison(str(expected_unit)):
+            return False
+    return True
+
+
 def _score_visual_facts_and_unsupported_claims(
     fixture: str, visual_facts: list[dict], unsupported_claims: list[dict], document: CanonicalDocument,
-) -> tuple[dict[str, MetricResult], list[EvidenceAlignment]]:
+) -> tuple[dict[str, MetricResult], list[MissRecord], list[EvidenceAlignment]]:
     """Stage 6A.1 item 7: scored, and catalogued, SEPARATELY. Path A never
     produces VisualFactAnnotation -- visual_fact_recall is structurally
-    not_applicable (excluded, never scored as 0%); the absence of any
-    unsupported claim being asserted IS scored (and trivially passes,
-    since Stage 5A produces zero VisualFactAnnotations of any kind,
-    supported or not)."""
+    not_applicable (excluded, never scored as 0%).
+
+    Stage 6A.2 item 2: unsupported_visual_claim_absence is scored PER
+    CLAIM -- each unsupported claim's own structured content
+    (fact_type/subject/relation/object/value/unit) is matched against
+    actual VisualFactAnnotation output via `_visual_fact_matches_claim`.
+    A correct, DIFFERENT visual fact being present must never trigger
+    failure for an unrelated unsupported claim -- only a structural match
+    of THAT claim's own content counts as a failure."""
     alignments: list[EvidenceAlignment] = []
+    miss_records: list[MissRecord] = []
     visual_fact_metric = _metric(
         "visual_fact_recall", "VisualFactAnnotation recovery -- structurally not_applicable to path A (no VisionEnricher, Stage 5A never produces VisualFactAnnotation)",
         0, 0, excluded=len(visual_facts),
@@ -1056,32 +1113,49 @@ def _score_visual_facts_and_unsupported_claims(
     for vf in visual_facts:
         alignments.append(_alignment(vf["fact_id"], fixture, "visual_fact", expected_value={"raw_text": vf.get("raw_text")}, match_status="not_applicable", derivation="not_applicable"))
 
-    has_visual_fact_annotation = any(a.annotation_type == "visual_fact" for a in document.annotations)
-    unsupported_num = 0 if has_visual_fact_annotation else len(unsupported_claims)
-    unsupported_metric = _metric(
+    visual_fact_annotations = [a for a in document.annotations if a.annotation_type == "visual_fact"]
+    unsupported_acc = _MetricAcc(
         "unsupported_visual_claim_absence",
-        "fraction of manifest unsupported_claims that Stage 5A does NOT structurally assert (path A produces zero VisualFactAnnotations of any kind, so this is 100% by construction unless that invariant is ever violated)",
-        unsupported_num, len(unsupported_claims),
+        "per-claim structural match (fact_type/subject/relation/object/value/unit) of each manifest unsupported_claim "
+        "against actual VisualFactAnnotation output -- never inferred from the mere presence of any OTHER visual fact "
+        "(Stage 6A.2 item 2)",
     )
     for uc in unsupported_claims:
+        asserted = [a for a in visual_fact_annotations if _visual_fact_matches_claim(a, uc)]
         # An "unsupported claim" fact is an ABSENCE check, not a presence
-        # check -- when Stage 5A correctly never asserts it, there is no
-        # canonical element to point evidence at (nothing was extracted,
-        # by design), so match_status="not_applicable" (never "matched",
-        # which would wrongly imply real supporting evidence exists and
-        # would trip the chunk-availability sweep, item 9, into demanding
-        # a chunk for a fact that was never meant to be ingested).
-        # "missing" is reserved for the genuine failure case: Stage 5A DID
-        # structurally assert this unsupported claim.
-        status = "not_applicable" if not has_visual_fact_annotation else "missing"
-        alignments.append(_alignment(uc["fact_id"], fixture, "unsupported_claim", expected_value={"claim": uc.get("claim")}, match_status=status, derivation="not_applicable" if not has_visual_fact_annotation else "model_derived"))
+        # check -- when Stage 5A correctly never asserts THIS SPECIFIC
+        # claim, there is no canonical element to point evidence at
+        # (nothing was extracted, by design), so match_status=
+        # "not_applicable" (never "matched", which would wrongly imply
+        # real supporting evidence exists and would trip the chunk-
+        # availability sweep, item 9, into demanding a chunk for a fact
+        # that was never meant to be ingested). "missing" is reserved for
+        # the genuine failure case: Stage 5A DID structurally assert this
+        # exact claim (the EvidenceAlignment validator forbids evidence
+        # ids on a "missing" entry, so the asserting annotation id is
+        # recorded on the MissRecord instead).
+        if asserted:
+            unsupported_acc.record_miss(uc["fact_id"])
+            miss_records.append(MissRecord(
+                fixture=fixture, fact_id=uc["fact_id"], metric="unsupported_visual_claim_absence",
+                expected_value={"claim": uc.get("claim"), "should_be_asserted": False},
+                observed_value={"asserted": True}, result="unexpected",
+                failure_class="unexpected_content", confidence="certain",
+                explanation=f"unsupported claim {uc['fact_id']!r} ({uc.get('claim')!r}) was structurally asserted by a "
+                            f"VisualFactAnnotation matching its own subject/relation/object/value/unit",
+                supporting_canonical_element_ids=[a.annotation_id for a in asserted],
+            ))
+            alignments.append(_alignment(uc["fact_id"], fixture, "unsupported_claim", expected_value={"claim": uc.get("claim")}, match_status="missing", derivation="model_derived"))
+        else:
+            unsupported_acc.record_match(uc["fact_id"])
+            alignments.append(_alignment(uc["fact_id"], fixture, "unsupported_claim", expected_value={"claim": uc.get("claim")}, match_status="not_applicable", derivation="not_applicable"))
 
     metrics = {}
     if visual_facts:
         metrics["visual_fact_recall"] = visual_fact_metric
     if unsupported_claims:
-        metrics["unsupported_visual_claim_absence"] = unsupported_metric
-    return metrics, alignments
+        metrics["unsupported_visual_claim_absence"] = unsupported_acc.result()
+    return metrics, miss_records, alignments
 
 
 def _score_provenance(fixture: str, document: CanonicalDocument) -> tuple[dict[str, MetricResult], list[MissRecord]]:
@@ -1100,9 +1174,7 @@ def _score_provenance(fixture: str, document: CanonicalDocument) -> tuple[dict[s
     total_num = total_den = 0
     bbox_total_num = bbox_total_den = 0
     all_cov_matches: list[str] = []
-    all_cov_misses: list[str] = []
     all_bbox_matches: list[str] = []
-    all_bbox_misses: list[str] = []
     for category, element_ids in categories.items():
         cov_acc = _MetricAcc(f"provenance_coverage_{category}", "element_id present as a ProvenanceEntry.element_id")
         bbox_acc = _MetricAcc(f"provenance_bbox_coverage_{category}", "has a ProvenanceEntry AND that entry's bbox is not None (bbox absence is not treated as total provenance absence)")
@@ -1136,16 +1208,23 @@ def _score_provenance(fixture: str, document: CanonicalDocument) -> tuple[dict[s
         bbox_total_num += bbox_acc.numerator
         bbox_total_den += bbox_acc.denominator
         all_cov_matches += cov_acc.matches
-        all_cov_misses += cov_acc.misses
         all_bbox_matches += bbox_acc.matches
-        all_bbox_misses += bbox_acc.misses
+    # Stage 6A.2 item 3: supporting_misses on the OVERALL rollup metrics
+    # must resolve to a real MissRecord with the SAME metric name -- the
+    # per-category MissRecords above carry metric=f"provenance_coverage_
+    # {category}", never "provenance_coverage_overall", so they can never
+    # legitimately appear in this metric's own supporting_misses. The
+    # overall metric instead references only its own single summary
+    # MissRecord (created below), by that record's own fact_id.
     metrics["provenance_coverage_overall"] = _metric(
         "provenance_coverage_overall", "element_id present as a ProvenanceEntry.element_id, across every element category",
-        total_num, total_den, matches=all_cov_matches, misses=all_cov_misses,
+        total_num, total_den, matches=all_cov_matches,
+        misses=["provenance_coverage_overall"] if total_num < total_den else [],
     )
     metrics["provenance_bbox_coverage_overall"] = _metric(
         "provenance_bbox_coverage_overall", "has a ProvenanceEntry with a non-None bbox, across every element category",
-        bbox_total_num, bbox_total_den, matches=all_bbox_matches, misses=all_bbox_misses,
+        bbox_total_num, bbox_total_den, matches=all_bbox_matches,
+        misses=["provenance_bbox_coverage_overall"] if bbox_total_num < bbox_total_den else [],
     )
     # Stage 6A.1 item 5: the "overall" rollups are sums of the per-category
     # accumulators above (which already have their own per-element
@@ -1210,7 +1289,10 @@ def _score_structural_stress(
             first_order = para_order.get(by_fact[first["fact_id"]].element_id)
             second_order = para_order.get(by_fact[second["fact_id"]].element_id)
             correct = first_order is not None and second_order is not None and first_order < second_order
-            metrics["column_reading_order_correct"] = _metric("column_reading_order_correct", "column-1 paragraph's order_index < column-2 paragraph's order_index", 1 if correct else 0, 1)
+            metrics["column_reading_order_correct"] = _metric(
+                "column_reading_order_correct", "column-1 paragraph's order_index < column-2 paragraph's order_index",
+                1 if correct else 0, 1, misses=[] if correct else ["STRESS_PDF_001_reading_order"],
+            )
             if not correct:
                 miss_records.append(MissRecord(
                     fixture=fixture, fact_id="STRESS_PDF_001_reading_order", metric="column_reading_order_correct",
@@ -1287,7 +1369,15 @@ def _score_structural_stress(
         metrics["no_invented_diagram_relationships"] = _metric(
             "no_invented_diagram_relationships", "Stage 5A must never produce DiagramNode/EdgeAnnotation (no VisionEnricher exists) -- verifies zero such annotations exist",
             1 if no_diagram_annotation else 0, 1,
+            misses=[] if no_diagram_annotation else [f"{suite_key}_invented_diagram_annotation"],
         )
+        if not no_diagram_annotation:
+            miss_records.append(MissRecord(
+                fixture=fixture, fact_id=f"{suite_key}_invented_diagram_annotation", metric="no_invented_diagram_relationships",
+                expected_value={"diagram_node_or_edge_annotation_count": 0}, result="unexpected",
+                failure_class="unexpected_content", confidence="certain",
+                explanation="Stage 5A path A produced a DiagramNode/EdgeAnnotation despite having no VisionEnricher -- an invented relationship never derivable from raw Docling structure alone",
+            ))
         edge_facts = facts.get("diagram_edge", [])
         metrics["diagram_edge_recovery"] = _metric(
             "diagram_edge_recovery", "DiagramEdgeAnnotation recovery -- structurally not_applicable to path A (no VisionEnricher; Docling's native PPTX backend does not expose connector source/target linkage to this mapper)",
@@ -1310,17 +1400,85 @@ def _resolve_source_fact_element(
     return matched_element_by_fact_id.get(source_fact_id)
 
 
+def _scoped_raw_items_for_occurrence(
+    source_fact_id: str | None, *, matched_element_by_fact_id: dict[str, TextElement],
+    source_ref_by_id: dict[str, str], fact_text_by_id: dict[str, str],
+    raw_text_blob: list[tuple[str, str]] | None, raw_debug: dict[str, Any] | None,
+    matched_picture_ids: list[str],
+) -> list[tuple[str, str]] | None:
+    """Stage 6A.2 item 1: resolves the raw Docling item(s) relevant to ONE
+    identifier occurrence's OWN expected context only -- never the whole-
+    document raw text blob (a raw occurrence elsewhere in the document
+    must never prove mapper_loss for a different missing occurrence).
+
+    - paragraph/heading/caption source_fact whose element WAS matched in
+      CanonicalDocument: the single raw item at that element's own
+      source_element_ref.
+    - paragraph/heading/caption source_fact whose element was NOT matched
+      at all: raw items whose text equals that source fact's own expected
+      text (content-identified, since there is no canonical self_ref to
+      resolve from).
+    - visual node / OCR source_fact (`VF_NODE_*`/`DN_*`): raw items that
+      are children of the matched picture(s) (raw `texts[].parent.$ref`
+      pointing at the picture's own self_ref) -- Docling's own picture-
+      child OCR text, never any other text in the document.
+
+    Returns None when the context itself could not be resolved in raw
+    Docling at all (unresolved); an empty list means the context WAS
+    resolved but no raw item exists there (parser_content_loss, once
+    searched by the caller)."""
+    if source_fact_id is None or raw_debug is None:
+        return None
+
+    if source_fact_id.startswith("VF_NODE") or source_fact_id.startswith("DN_"):
+        picture_self_refs = {source_ref_by_id[pid] for pid in matched_picture_ids if pid in source_ref_by_id}
+        if not picture_self_refs:
+            return None
+        return [
+            (item.get("self_ref", "#/texts/?"), item.get("text", ""))
+            for item in raw_debug.get("texts", []) or []
+            if (item.get("parent") or {}).get("$ref") in picture_self_refs and item.get("text")
+        ]
+
+    resolved = matched_element_by_fact_id.get(source_fact_id)
+    if resolved is not None:
+        self_ref = source_ref_by_id.get(resolved.element_id)
+        if self_ref is None:
+            return None
+        for item in raw_debug.get("texts", []) or []:
+            if item.get("self_ref") == self_ref:
+                return [(self_ref, item.get("text", ""))] if item.get("text") else []
+        return None
+
+    expected_text = fact_text_by_id.get(source_fact_id)
+    if expected_text is None or raw_text_blob is None:
+        return None
+    target = normalize_text_for_comparison(expected_text)
+    return [(ref, text) for ref, text in raw_text_blob if normalize_text_for_comparison(text) == target]
+
+
 def _score_identifiers(
     fixture: str, target_facts: list[dict], distractor_facts: list[dict], elements: list[TextElement],
     chunk_map: dict[str, list[str]], matched_element_by_fact_id: dict[str, TextElement],
     picture_ocr_annotations: list, raw_text_blob: list[tuple[str, str]] | None,
-    fact_expected_location_by_id: dict[str, dict] | None = None,
+    fact_expected_location_by_id: dict[str, dict] | None = None, *,
+    raw_debug: dict[str, Any] | None = None, source_ref_by_id: dict[str, str] | None = None,
+    fact_text_by_id: dict[str, str] | None = None, matched_picture_ids: list[str] | None = None,
 ) -> tuple[dict[str, MetricResult], list[MissRecord], list[UnexpectedObservation], list[EvidenceAlignment]]:
     """Stage 6A.1 item 1: every manifest occurrence is its own expectation
     (`<identifier_fact_id>_occ_<index>`), matched ONE-TO-ONE against the
     specific canonical element its `source_fact` resolves to -- never a
     globally-counted-then-capped total. One observed occurrence can never
-    satisfy two expected occurrences (spans are consumed once)."""
+    satisfy two expected occurrences (spans are consumed once).
+
+    Stage 6A.2 item 1: miss ATTRIBUTION for a missing occurrence is also
+    scoped to that occurrence's own expected context (via
+    `_scoped_raw_items_for_occurrence`) -- never a whole-document raw-text
+    search, so an identifier appearing elsewhere in the document can never
+    manufacture a false mapper_loss for this occurrence."""
+    source_ref_by_id = source_ref_by_id or {}
+    fact_text_by_id = fact_text_by_id or {}
+    matched_picture_ids = matched_picture_ids or []
     unique_acc = _MetricAcc("identifier_unique_recall", IDENTIFIER_MATCH_RULE)
     occurrence_acc = _MetricAcc("identifier_occurrence_recall", IDENTIFIER_MATCH_RULE + " -- occurrence-level, one-to-one against the occurrence's own source_fact location, never globally counted-and-capped (Stage 6A.1 item 1)")
     occ_location_acc = _MetricAcc("identifier_occurrence_location_accuracy", "the resolved source_fact element's unit_index matches that source fact's own expected_location.unit_index (only occurrences whose source resolves and declares a location)")
@@ -1409,15 +1567,18 @@ def _score_identifiers(
                     ))
             else:
                 occurrence_acc.record_miss(occ_fact_id)
-                if raw_text_blob is not None:
-                    failure_class, confidence, raw_refs = classification.classify_identifier_absence(identifier, raw_text_blob)
-                else:
-                    failure_class, confidence, raw_refs = classification.unresolved_classification("no raw debug artifact")
+                scoped_raw_items = _scoped_raw_items_for_occurrence(
+                    source_fact_id, matched_element_by_fact_id=matched_element_by_fact_id,
+                    source_ref_by_id=source_ref_by_id, fact_text_by_id=fact_text_by_id,
+                    raw_text_blob=raw_text_blob, raw_debug=raw_debug, matched_picture_ids=matched_picture_ids,
+                )
+                failure_class, confidence, raw_refs = classification.classify_identifier_occurrence_absence(identifier, scoped_raw_items)
                 miss_records.append(MissRecord(
                     fixture=fixture, fact_id=occ_fact_id, metric="identifier_occurrence_recall",
                     expected_value={"normalized_value": identifier, "source_fact": source_fact_id}, result="miss",
                     failure_class=failure_class, confidence=confidence,
-                    explanation=f"expected occurrence of {identifier!r} tied to source_fact={source_fact_id!r} not found at that resolved location",
+                    explanation=f"expected occurrence of {identifier!r} tied to source_fact={source_fact_id!r} not found at that resolved location "
+                                f"(attribution scoped to that occurrence's own expected context only, Stage 6A.2 item 1)",
                     raw_docling_references=raw_refs,
                 ))
                 alignments.append(_alignment(
@@ -1608,8 +1769,9 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         evidence_alignments += alignments
 
     picture_ocr_annotations: list = []
+    matched_picture_ids: list[str] = []
     if facts.get("picture") or facts.get("caption"):
-        pc_metrics, misses, alignments, matched_map = _score_pictures_captions(loaded.fixture, facts.get("picture", []), facts.get("caption", []), document, chunk_map, raw_debug)
+        pc_metrics, misses, alignments, matched_map, matched_picture_ids = _score_pictures_captions(loaded.fixture, facts.get("picture", []), facts.get("caption", []), document, chunk_map, raw_debug)
         metrics.update(pc_metrics)
         miss_records += misses
         evidence_alignments += alignments
@@ -1617,17 +1779,29 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         picture_ids = {p.picture_id for p in document.pictures}
         picture_ocr_annotations = [a for a in document.annotations if a.annotation_type == "ocr" and a.target_ref in picture_ids]
 
+    # Stage 6A.2 item 1: element_id -> raw self_ref, needed by identifier
+    # occurrence miss attribution BEFORE it runs (moved up from what was
+    # previously a post-hoc EvidenceAlignment backfill-only computation --
+    # that backfill pass, further below, now reuses this same mapping).
+    source_ref_by_id: dict[str, str] = {p.element_id: p.source_element_ref for p in document.provenance if p.source_element_ref}
+
     if facts.get("identifier_target") or facts.get("identifier_distractor"):
         fact_expected_location_by_id: dict[str, dict] = {}
+        fact_text_by_id: dict[str, str] = {}
         for category in ("paragraph", "heading", "caption"):
             for f in facts.get(category, []):
                 loc = f.get("expected_location")
                 if loc:
                     fact_expected_location_by_id[f["fact_id"]] = loc
+                text = f.get("text")
+                if text is not None:
+                    fact_text_by_id[f["fact_id"]] = text
         id_metrics, misses, unexpected, alignments = _score_identifiers(
             loaded.fixture, facts.get("identifier_target", []), facts.get("identifier_distractor", []),
             elements, chunk_map, matched_element_by_fact_id, picture_ocr_annotations, raw_text_blob,
             fact_expected_location_by_id,
+            raw_debug=raw_debug, source_ref_by_id=source_ref_by_id, fact_text_by_id=fact_text_by_id,
+            matched_picture_ids=matched_picture_ids,
         )
         metrics.update(id_metrics)
         miss_records += misses
@@ -1653,8 +1827,9 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         evidence_alignments += alignments
 
     if facts.get("visual_fact") or facts.get("unsupported_claim"):
-        vf_metrics, alignments = _score_visual_facts_and_unsupported_claims(loaded.fixture, facts.get("visual_fact", []), facts.get("unsupported_claim", []), document)
+        vf_metrics, vf_misses, alignments = _score_visual_facts_and_unsupported_claims(loaded.fixture, facts.get("visual_fact", []), facts.get("unsupported_claim", []), document)
         metrics.update(vf_metrics)
+        miss_records += vf_misses
         evidence_alignments += alignments
 
     structural_metrics, structural_misses, structural_alignments = _score_structural_stress(loaded.fixture, loaded.suite_key, facts, document, chunk_map)
@@ -1703,7 +1878,8 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         unit_index_by_id[pic.picture_id] = pic.unit_index
     for ann in document.annotations:
         unit_index_by_id[ann.annotation_id] = ann.unit_index
-    source_ref_by_id = {p.element_id: p.source_element_ref for p in document.provenance if p.source_element_ref}
+    # source_ref_by_id computed earlier (before identifier scoring, Stage
+    # 6A.2 item 1) -- reused here unchanged for the alignment backfill.
 
     evidence_alignments = [
         alignment.model_copy(update={

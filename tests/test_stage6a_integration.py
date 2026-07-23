@@ -244,18 +244,35 @@ def test_every_metric_deficit_is_represented_in_the_miss_ledger():
 
 
 def test_supporting_misses_on_metric_result_reference_real_miss_records():
-    """Stage 6A.1 item 5: supporting_misses on MetricResult must contain
-    the relevant miss/fact ids -- never left empty when a deficit exists."""
+    """Stage 6A.2 item 3: every MetricResult.supporting_misses entry must
+    resolve to an ACTUAL MissRecord in the SAME fixture, with the SAME
+    metric name, and fact_id == the supporting_miss id -- never merely
+    non-empty. An id left over from a different metric's bookkeeping (the
+    provenance_coverage_overall/provenance_bbox_coverage_overall bug this
+    item fixes) must never appear here."""
     _skip_if_no_artifacts()
     _, results = _run_evaluation()
-    checked = 0
+    checked_deficits = 0
+    checked_ids = 0
     for result in results:
+        miss_records_by_key: dict[tuple[str, str], list] = {}
+        for miss in result.miss_records:
+            miss_records_by_key.setdefault((miss.metric, miss.fact_id), []).append(miss)
         for metric in result.metrics.values():
             if metric.denominator == 0 or metric.numerator >= metric.denominator:
                 continue
-            checked += 1
+            checked_deficits += 1
             assert metric.supporting_misses, f"{result.fixture}/{metric.metric_name}: deficit exists but supporting_misses is empty"
-    assert checked > 0
+            for miss_id in metric.supporting_misses:
+                checked_ids += 1
+                key = (metric.metric_name, miss_id)
+                assert key in miss_records_by_key, (
+                    f"{result.fixture}/{metric.metric_name}: supporting_misses contains {miss_id!r} but no "
+                    f"MissRecord exists with fixture={result.fixture!r}, metric={metric.metric_name!r}, "
+                    f"fact_id={miss_id!r}"
+                )
+    assert checked_deficits > 0
+    assert checked_ids > 0
 
 
 def test_manifest_sha256_matches_frozen_generation_report():
@@ -355,8 +372,8 @@ def test_input_bundle_hash_changes_when_any_artifact_file_changes(tmp_path):
     original_results = [evaluate_fixture(f, manifest) for f in original]
     tampered_results = [evaluate_fixture(f, manifest) for f in tampered]
 
-    run_original = build_evaluation_run(original_results, manifest, manifest_sha256, "s" * 64)
-    run_tampered = build_evaluation_run(tampered_results, manifest, manifest_sha256, "s" * 64)
+    run_original = build_evaluation_run(original_results, manifest, manifest_sha256, "2" * 64)
+    run_tampered = build_evaluation_run(tampered_results, manifest, manifest_sha256, "2" * 64)
     assert run_original.input_bundle_hash != run_tampered.input_bundle_hash
     assert run_original.run_id != run_tampered.run_id
 

@@ -166,8 +166,57 @@ def test_evaluation_run_rejects_duplicate_fixtures():
 
     with pytest.raises(ValidationError):
         EvaluationRun(
-            run_id="r", generated_at="2026-01-01T00:00:00+00:00", manifest_version="1.2.1", manifest_sha256="a" * 64,
+            run_id="r" * 64, input_bundle_hash="i" * 64, evaluation_content_hash="c" * 64,
+            generated_at="2026-01-01T00:00:00+00:00", manifest_version="1.2.1", manifest_sha256="a" * 64,
             stage5a_results_sha256="b" * 64, evaluator_version="1.0.0",
             fixture_results=[_fixture_result("parity/PARITY_001.pdf"), _fixture_result("parity/PARITY_001.pdf")],
             aggregate=AggregateEvaluationResult(evidence_alignment_count=0, total_fixtures=2),
         )
+
+
+# --- hash field validation (Stage 6A.2 item 5) ------------------------------
+
+
+def _valid_run_kwargs(**overrides) -> dict:
+    from ingestion_bench.evaluation.model import AggregateEvaluationResult
+
+    kwargs = dict(
+        run_id="a" * 64, input_bundle_hash="b" * 64, evaluation_content_hash="c" * 64,
+        generated_at="2026-01-01T00:00:00+00:00", manifest_version="1.2.1", manifest_sha256="d" * 64,
+        stage5a_results_sha256="e" * 64, evaluator_version="1.0.0",
+        fixture_results=[_fixture_result("parity/PARITY_001.pdf")],
+        aggregate=AggregateEvaluationResult(evidence_alignment_count=0, total_fixtures=1),
+    )
+    kwargs.update(overrides)
+    return kwargs
+
+
+@pytest.mark.parametrize("field", ["run_id", "input_bundle_hash", "evaluation_content_hash", "manifest_sha256", "stage5a_results_sha256"])
+def test_evaluation_run_rejects_malformed_hash_fields(field):
+    for bad_value in ["not-a-hash", "A" * 64, "a" * 63, "a" * 65, "g" * 64, ""]:
+        with pytest.raises(ValidationError):
+            EvaluationRun(**_valid_run_kwargs(**{field: bad_value}))
+
+
+def test_evaluation_run_accepts_well_formed_hash_fields():
+    run = EvaluationRun(**_valid_run_kwargs())
+    assert run.run_id == "a" * 64
+
+
+@pytest.mark.parametrize("field", ["canonical_document_hash", "canonical_document_file_sha256", "conversion_report_file_sha256"])
+def test_operational_evidence_rejects_malformed_required_hash_fields(field):
+    for bad_value in ["not-a-hash", "A" * 64, "a" * 63, "g" * 64]:
+        with pytest.raises(ValidationError):
+            _operational(**{field: bad_value})
+
+
+@pytest.mark.parametrize("field", ["canonical_chunks_file_sha256", "raw_docling_debug_file_sha256"])
+def test_operational_evidence_rejects_malformed_optional_hash_fields_when_present(field):
+    with pytest.raises(ValidationError):
+        _operational(**{field: "not-a-hash"})
+
+
+def test_operational_evidence_accepts_none_for_optional_hash_fields():
+    op = _operational(canonical_chunks_file_sha256=None, raw_docling_debug_file_sha256=None)
+    assert op.canonical_chunks_file_sha256 is None
+    assert op.raw_docling_debug_file_sha256 is None

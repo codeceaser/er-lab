@@ -995,6 +995,81 @@ miss-classification counts: see `docs/POC_STATUS_AND_EVIDENCE.md`
 
 ---
 
+## Stage 6A.2 — Correctness and Reproducibility Patch `[IMPLEMENTED]`
+
+Same files as Stage 6A/6A.1, patched in place -- no new package, no
+retrieval/vector/graph/wiki/vision/OpenAI code added. Adds
+`tests/test_evaluation_visual_claims.py`. Stage 6A/6A.1/6A.2 is not yet
+marked frozen (explicit instruction pending review of this correction).
+
+1. **Context-scoped identifier-occurrence miss attribution (D-047).**
+   `classification.py::classify_identifier_absence(identifier, raw_text_blob)`
+   was called with the WHOLE-document raw text blob when a matched
+   occurrence failed -- an identifier appearing anywhere else in the
+   document could manufacture a false `mapper_loss`. New
+   `evaluator.py::_scoped_raw_items_for_occurrence` resolves the raw
+   Docling item(s) relevant to ONE occurrence's own expected context
+   only: a matched paragraph/heading/caption element's own
+   `source_element_ref`; an unmatched one's raw counterpart identified by
+   its own expected TEXT (never the identifier); a visual-node/OCR
+   occurrence's own picture's raw `texts[].parent.$ref` children only.
+   New `classification.py::classify_identifier_occurrence_absence` then
+   searches only that scoped set. Fixed a real misclassification: DOCX/PPTX
+   `ID_004_occ_2` (source_fact `VF_NODE_003`) was `mapper_loss` citing the
+   unrelated body paragraph/caption's raw text as "evidence" -- both
+   formats' raw picture object actually has `"children": []` (Docling
+   captured zero OCR text for that picture), so both are now correctly
+   `parser_content_loss`.
+2. **Per-claim unsupported-visual-claim matching (D-048).**
+   `_score_visual_facts_and_unsupported_claims` no longer uses `any(a.annotation_type
+   == "visual_fact" for a in document.annotations)` as blanket evidence
+   that every unsupported claim was asserted. New
+   `evaluator.py::_visual_fact_matches_claim` structurally compares each
+   claim's own `fact_type`/`subject`/`relation`/`object`/`value`/`unit`
+   against actual `VisualFactAnnotation` output; only a claim's OWN
+   structural match counts as a failure for it. No real-baseline number
+   change (path A still produces zero `VisualFactAnnotation`s, so
+   `unsupported_visual_claim_absence` remains 100%) -- a forward-looking
+   correctness fix verified with hand-built annotation instances, since
+   Stage 5A cannot exercise this path yet.
+3. **Supporting-miss referential integrity (D-049).** Every
+   `MetricResult.supporting_misses` entry must now resolve to a real
+   `MissRecord` with the same fixture, metric name, and fact_id. Fixed
+   `provenance_coverage_overall`/`provenance_bbox_coverage_overall`
+   (previously referenced per-element ids that only had `MissRecord`s
+   under PER-CATEGORY metric names -- now reference only their own single
+   summary `MissRecord`'s fact_id) plus two smaller, real-baseline-dormant
+   gaps found during the same audit: `_score_tables`'s "no candidate
+   table" branch now emits the missing per-cell `MissRecord`s;
+   `column_reading_order_correct`/`no_invented_diagram_relationships` now
+   populate `supporting_misses`. The referential-integrity test was
+   strengthened from "non-empty" to "every id resolves to an exact
+   (fixture, metric, fact_id) match."
+4. **`evaluation_content_hash` (D-050).** New `EvaluationRun.evaluation_content_hash`
+   -- a deterministic SHA-256 over every STABLE field (`input_bundle_hash`,
+   `evaluator_version`, every fixture result, `aggregate`), explicitly
+   excluding `generated_at` and itself. `run_id`/`input_bundle_hash`
+   identify WHICH INPUTS a run scored; `evaluation_content_hash` answers
+   "did the conclusions change" -- a genuinely different question, useful
+   for the project's existing determinism-verification practice.
+   `aggregation.py::_compute_evaluation_content_hash` is the only place
+   this value is ever computed.
+5. **Strengthened hash validation (D-050).** New
+   `model.py::_validate_sha256_hex` shared helper validates `run_id`,
+   `input_bundle_hash`, `evaluation_content_hash`, `manifest_sha256`,
+   `stage5a_results_sha256` (`EvaluationRun`), and `canonical_document_hash`/
+   every `*_file_sha256` field when present (`OperationalEvidence`) as
+   lowercase 64-character hex SHA-256 -- a malformed hash-shaped field is
+   now a loud `ValidationError` at construction time, not a silently
+   accepted string.
+
+472 tests pass (up from 449 at Stage 6A.1) — see
+`reports/stage6a_pytest_output.txt`. Old vs. new miss-classification
+counts and the exact `mapper_loss` -> `parser_content_loss` correction:
+see `docs/POC_STATUS_AND_EVIDENCE.md` "Stage 6A.1 -> 6A.2 corrections."
+
+---
+
 ## Corrected roadmap (Stage 5A.2, updated Stage 6A)
 
 Vision enrichment is **not** the next stage. An earlier framing of this

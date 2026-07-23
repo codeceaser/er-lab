@@ -84,6 +84,7 @@ def main() -> None:
     print(f"Miss by classification: {run.aggregate.miss_count_by_classification}")
     print(f"Evidence alignment entries: {run.aggregate.evidence_alignment_count} (by status: {run.aggregate.evidence_alignment_count_by_status})")
     print(f"input_bundle_hash: {run.input_bundle_hash}")
+    print(f"evaluation_content_hash: {run.evaluation_content_hash}")
     print(f"run_id: {run.run_id}")
     print(f"Scorecard written to {REPORTS_DIR / 'stage6a_docling_baseline_scorecard.md'}")
     print(f"Results written to {REPORTS_DIR / 'stage6a_docling_baseline_results.json'}")

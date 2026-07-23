@@ -1,7 +1,8 @@
 {
   "run_id": "38beed91dc9deced3c9df216eb611ab8f230aaddbd5a6df03d007918955ff71b",
   "input_bundle_hash": "3f8af5f37d1e761b4e9f232a40b7ab222ce5106717abcc3eab1ffce933a57b8b",
-  "generated_at": "2026-07-23T17:01:59.937653+00:00",
+  "evaluation_content_hash": "5b4f2e735dc506fccab802b9e3672096a7cc11f0f9f4fe79be46ae7f9023a2f0",
+  "generated_at": "2026-07-23T20:20:25.079994+00:00",
   "manifest_version": "1.2.1",
   "manifest_sha256": "9a58c2c52af0d2ebdad644cd71d81b25503191036b06083b36b5b1af978dee1a",
   "stage5a_results_sha256": "1fcad47c68a66c1ea722e590e7695ce4220c871e3b9c708998516e37aefe7cfb",
@@ -779,17 +780,17 @@
         },
         {
           "fixture": "parity/PARITY_001.pdf",
-          "element_id": "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
-          "element_type": "paragraph",
-          "text": "it is superseded by APP-224510.",
-          "reason": "extra occurrence of 'APP-224510' beyond every manifest-declared occurrence's one-to-one resolution"
-        },
-        {
-          "fixture": "parity/PARITY_001.pdf",
           "element_id": "19d92a304432f3d893293d83118064bb1b502843a3b056215d320152b5971840",
           "element_type": "ocr_annotation",
           "text": "Activate Procedure P-205",
           "reason": "extra occurrence of 'P-205' beyond every manifest-declared occurrence's one-to-one resolution"
+        },
+        {
+          "fixture": "parity/PARITY_001.pdf",
+          "element_id": "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
+          "element_type": "paragraph",
+          "text": "it is superseded by APP-224510.",
+          "reason": "extra occurrence of 'APP-224510' beyond every manifest-declared occurrence's one-to-one resolution"
         }
       ],
       "evidence_alignments": [
@@ -2441,22 +2442,7 @@
           "score": 0.0,
           "supporting_matches": [],
           "supporting_misses": [
-            "5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed",
-            "2de7ccf9053ce3c5747fedec53d6f0b187fa8c36e03c7164d043ddeb2d176833",
-            "977c0332161b960ebb3f109a61dfa0a1225d9d0e38fbbcf443f3c4f6ab1758d9",
-            "59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7",
-            "0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311",
-            "a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7",
-            "1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5",
-            "970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883",
-            "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
-            "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
-            "20e6f7c6087d207e0cd700b8e79364d5f1fd0e48adc7041fb6fe32ad8b55626f",
-            "bbdc136a5ff00dd6f1f35732e671c2ce979006c7f130252c182a744c845f2f5f",
-            "8469e59969393ce34379d070bc95b0ef944287d891ba36ea882e3252f936c284",
-            "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42",
-            "d970148620b5a24de203347fd3cfa317d04c5709d3affee270ae84607ff8c664",
-            "7cbaac5efc1568264312d4d86aee00bc9b96d422989379a9aea828ce8930a1d1"
+            "provenance_bbox_coverage_overall"
           ]
         },
         "chunk_availability": {
@@ -2615,14 +2601,11 @@
           },
           "observed_value": null,
           "result": "miss",
-          "failure_class": "mapper_loss",
-          "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location",
+          "failure_class": "parser_content_loss",
+          "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location (attribution scoped to that occurrence's own expected context only, Stage 6A.2 item 1)",
           "supporting_canonical_element_ids": [],
           "supporting_chunk_ids": [],
-          "raw_docling_references": [
-            "#/texts/4",
-            "#/texts/13"
-          ],
+          "raw_docling_references": [],
           "confidence": "certain"
         },
         {
@@ -4749,14 +4732,11 @@
           },
           "observed_value": null,
           "result": "miss",
-          "failure_class": "mapper_loss",
-          "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location",
+          "failure_class": "parser_content_loss",
+          "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location (attribution scoped to that occurrence's own expected context only, Stage 6A.2 item 1)",
           "supporting_canonical_element_ids": [],
           "supporting_chunk_ids": [],
-          "raw_docling_references": [
-            "#/texts/4",
-            "#/texts/10"
-          ],
+          "raw_docling_references": [],
           "confidence": "certain"
         },
         {
@@ -6125,14 +6105,7 @@
           "score": 0.0,
           "supporting_matches": [],
           "supporting_misses": [
-            "45223fa70c7003ce9f52bdd84c42b8959b8f6ed66f139403b1b9dd4cd265cdc9",
-            "509868a0cc33a1eff6436ca859f7dd51425c51a611519ca61589097f9c57d796",
-            "1d567461a7cedc66066dda76128732ef301125c9eb0c8a5353bc4a4a72963e66",
-            "792a524688451b14c3900cc5423251e20231926a5f8cc5ca1948e0940788d611",
-            "6dd0da2a4a9f968261f5a24340bd31b77b8de779b1daa24869ec5c58326e701a",
-            "10dd1d4c5df3613746b3b8eb8aa1098799d7aa1f20e22e26ae92e09452354599",
-            "1ae9c0426f81157de20d7870017a95094f6e98bfed3412902c8f19fc5fd335e9",
-            "0bb184f8cdd35d9a7bb25ddfae7d1e1ea66fc47009b492c372c4f3c1901afe95"
+            "provenance_bbox_coverage_overall"
           ]
         },
         "chunk_availability": {
@@ -8437,12 +8410,14 @@
         },
         "unsupported_visual_claim_absence": {
           "metric_name": "unsupported_visual_claim_absence",
-          "matching_rule": "fraction of manifest unsupported_claims that Stage 5A does NOT structurally assert (path A produces zero VisualFactAnnotations of any kind, so this is 100% by construction unless that invariant is ever violated)",
+          "matching_rule": "per-claim structural match (fact_type/subject/relation/object/value/unit) of each manifest unsupported_claim against actual VisualFactAnnotation output -- never inferred from the mere presence of any OTHER visual fact (Stage 6A.2 item 2)",
           "numerator": 1,
           "denominator": 1,
           "excluded_not_applicable": 0,
           "score": 1.0,
-          "supporting_matches": [],
+          "supporting_matches": [
+            "CU_001"
+          ],
           "supporting_misses": []
         },
         "provenance_coverage_heading": {
@@ -9902,12 +9877,14 @@
         },
         "unsupported_visual_claim_absence": {
           "metric_name": "unsupported_visual_claim_absence",
-          "matching_rule": "fraction of manifest unsupported_claims that Stage 5A does NOT structurally assert (path A produces zero VisualFactAnnotations of any kind, so this is 100% by construction unless that invariant is ever violated)",
+          "matching_rule": "per-claim structural match (fact_type/subject/relation/object/value/unit) of each manifest unsupported_claim against actual VisualFactAnnotation output -- never inferred from the mere presence of any OTHER visual fact (Stage 6A.2 item 2)",
           "numerator": 1,
           "denominator": 1,
           "excluded_not_applicable": 0,
           "score": 1.0,
-          "supporting_matches": [],
+          "supporting_matches": [
+            "CU_001"
+          ],
           "supporting_misses": []
         },
         "whole_page_ocr_text_recall": {
@@ -10556,30 +10533,7 @@
           "score": 0.0,
           "supporting_matches": [],
           "supporting_misses": [
-            "0bb184f8cdd35d9a7bb25ddfae7d1e1ea66fc47009b492c372c4f3c1901afe95",
-            "0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311",
-            "10dd1d4c5df3613746b3b8eb8aa1098799d7aa1f20e22e26ae92e09452354599",
-            "1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5",
-            "1ae9c0426f81157de20d7870017a95094f6e98bfed3412902c8f19fc5fd335e9",
-            "1d567461a7cedc66066dda76128732ef301125c9eb0c8a5353bc4a4a72963e66",
-            "20e6f7c6087d207e0cd700b8e79364d5f1fd0e48adc7041fb6fe32ad8b55626f",
-            "2de7ccf9053ce3c5747fedec53d6f0b187fa8c36e03c7164d043ddeb2d176833",
-            "45223fa70c7003ce9f52bdd84c42b8959b8f6ed66f139403b1b9dd4cd265cdc9",
-            "509868a0cc33a1eff6436ca859f7dd51425c51a611519ca61589097f9c57d796",
-            "5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed",
-            "59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7",
-            "6dd0da2a4a9f968261f5a24340bd31b77b8de779b1daa24869ec5c58326e701a",
-            "792a524688451b14c3900cc5423251e20231926a5f8cc5ca1948e0940788d611",
-            "7cbaac5efc1568264312d4d86aee00bc9b96d422989379a9aea828ce8930a1d1",
-            "8469e59969393ce34379d070bc95b0ef944287d891ba36ea882e3252f936c284",
-            "970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883",
-            "977c0332161b960ebb3f109a61dfa0a1225d9d0e38fbbcf443f3c4f6ab1758d9",
-            "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
-            "a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7",
-            "bbdc136a5ff00dd6f1f35732e671c2ce979006c7f130252c182a744c845f2f5f",
-            "d970148620b5a24de203347fd3cfa317d04c5709d3affee270ae84607ff8c664",
-            "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
-            "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42"
+            "provenance_bbox_coverage_overall"
           ]
         },
         "chunk_availability": {
@@ -12293,30 +12247,7 @@
             "fe97f4a448bb40eea48d77ba2db9a89cb4566b250f93a92a43cec9e3ef75a35f"
           ],
           "supporting_misses": [
-            "0bb184f8cdd35d9a7bb25ddfae7d1e1ea66fc47009b492c372c4f3c1901afe95",
-            "0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311",
-            "10dd1d4c5df3613746b3b8eb8aa1098799d7aa1f20e22e26ae92e09452354599",
-            "1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5",
-            "1ae9c0426f81157de20d7870017a95094f6e98bfed3412902c8f19fc5fd335e9",
-            "1d567461a7cedc66066dda76128732ef301125c9eb0c8a5353bc4a4a72963e66",
-            "20e6f7c6087d207e0cd700b8e79364d5f1fd0e48adc7041fb6fe32ad8b55626f",
-            "2de7ccf9053ce3c5747fedec53d6f0b187fa8c36e03c7164d043ddeb2d176833",
-            "45223fa70c7003ce9f52bdd84c42b8959b8f6ed66f139403b1b9dd4cd265cdc9",
-            "509868a0cc33a1eff6436ca859f7dd51425c51a611519ca61589097f9c57d796",
-            "5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed",
-            "59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7",
-            "6dd0da2a4a9f968261f5a24340bd31b77b8de779b1daa24869ec5c58326e701a",
-            "792a524688451b14c3900cc5423251e20231926a5f8cc5ca1948e0940788d611",
-            "7cbaac5efc1568264312d4d86aee00bc9b96d422989379a9aea828ce8930a1d1",
-            "8469e59969393ce34379d070bc95b0ef944287d891ba36ea882e3252f936c284",
-            "970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883",
-            "977c0332161b960ebb3f109a61dfa0a1225d9d0e38fbbcf443f3c4f6ab1758d9",
-            "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
-            "a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7",
-            "bbdc136a5ff00dd6f1f35732e671c2ce979006c7f130252c182a744c845f2f5f",
-            "d970148620b5a24de203347fd3cfa317d04c5709d3affee270ae84607ff8c664",
-            "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
-            "fac316d732c040dfcec02dfb4d3f57a638e9ba2194ddc6610f7e540854ee6a42"
+            "provenance_bbox_coverage_overall"
           ]
         },
         "chunk_availability": {
@@ -12539,12 +12470,14 @@
         },
         "unsupported_visual_claim_absence": {
           "metric_name": "unsupported_visual_claim_absence",
-          "matching_rule": "fraction of manifest unsupported_claims that Stage 5A does NOT structurally assert (path A produces zero VisualFactAnnotations of any kind, so this is 100% by construction unless that invariant is ever violated)",
+          "matching_rule": "per-claim structural match (fact_type/subject/relation/object/value/unit) of each manifest unsupported_claim against actual VisualFactAnnotation output -- never inferred from the mere presence of any OTHER visual fact (Stage 6A.2 item 2)",
           "numerator": 1,
           "denominator": 1,
           "excluded_not_applicable": 0,
           "score": 1.0,
-          "supporting_matches": [],
+          "supporting_matches": [
+            "CU_001"
+          ],
           "supporting_misses": []
         },
         "whole_page_ocr_text_recall": {
@@ -12565,8 +12498,7 @@
       "parser_classification_loss": 5,
       "parser_structure_loss": 8,
       "parser_relationship_loss": 6,
-      "mapper_loss": 2,
-      "parser_content_loss": 6,
+      "parser_content_loss": 8,
       "parser_provenance_loss": 28,
       "evaluation_contract_insufficient": 1
     },

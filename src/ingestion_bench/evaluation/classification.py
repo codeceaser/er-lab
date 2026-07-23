@@ -27,6 +27,16 @@ for a relationship/structure gap is only ever returned by
 reference the element in question -- never inferred from mere text
 presence.
 
+Stage 6A.2 correction (item 1): the same discipline applies to identifier
+OCCURRENCE misses. `classify_identifier_occurrence_absence` never
+searches the whole-document raw text blob for the identifier -- an
+identifier appearing anywhere else in the document (a different
+paragraph, a different picture) must never prove `mapper_loss` for a
+missing occurrence tied to a SPECIFIC expected context (a specific
+paragraph/heading/caption, or a specific picture's own OCR children).
+The caller (evaluator.py::_score_identifiers) resolves that specific
+scoped context first; this function only ever inspects it.
+
 Raw Docling output is never used as the scored representation -- scoring
 is always against CanonicalDocument/CanonicalChunk; this module is
 consulted only for attribution once a miss is already established.
@@ -76,6 +86,34 @@ def classify_identifier_absence(
     identifier: str, raw_text_blob: list[tuple[str, str]]
 ) -> tuple[str, str, list[str]]:
     matches = [ref for ref, text in raw_text_blob if identifier_present(text, identifier)]
+    if matches:
+        return "mapper_loss", "certain", matches
+    return "parser_content_loss", "certain", []
+
+
+def classify_identifier_occurrence_absence(
+    identifier: str, scoped_raw_items: list[tuple[str, str]] | None,
+) -> tuple[str, str, list[str]]:
+    """Stage 6A.2 item 1: attributes a missing identifier OCCURRENCE using
+    ONLY the raw Docling item(s) relevant to that occurrence's own
+    expected context (a specific paragraph/heading/caption's raw
+    counterpart, or a specific picture's own raw OCR children) -- never
+    the whole-document raw text blob. `scoped_raw_items` is:
+      None -- the expected context itself could not be resolved in raw
+        Docling at all (e.g. the source paragraph/picture has no
+        identifiable raw counterpart) -- returns ("unresolved",
+        "unresolved", []), never guessed as mapper_loss.
+      [] -- the context WAS resolved (a specific raw item, or a specific
+        picture's children list) but contains no matching raw text at
+        all -- returns ("parser_content_loss", "certain", []).
+      non-empty -- searched for `identifier`; a match returns
+        ("mapper_loss", "certain", [matching refs]) since raw Docling
+        explicitly contains the identifier in the exact required context
+        and the mapper failed to preserve it; no match still returns
+        ("parser_content_loss", "certain", [])."""
+    if scoped_raw_items is None:
+        return "unresolved", "unresolved", []
+    matches = [ref for ref, text in scoped_raw_items if identifier_present(text, identifier)]
     if matches:
         return "mapper_loss", "certain", matches
     return "parser_content_loss", "certain", []

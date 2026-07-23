@@ -7,6 +7,7 @@ discipline as Stage 5A.1/D-039).
 
 `run_id`: `38beed91dc9deced3c9df216eb611ab8f230aaddbd5a6df03d007918955ff71b`
 `input_bundle_hash` (every input file this run actually read, hashed together -- Stage 6A.1 item 11): `3f8af5f37d1e761b4e9f232a40b7ab222ce5106717abcc3eab1ffce933a57b8b`
+`evaluation_content_hash` (every STABLE result this run produced, hashed together, excluding `generated_at` -- Stage 6A.2 item 4): `5b4f2e735dc506fccab802b9e3672096a7cc11f0f9f4fe79be46ae7f9023a2f0`
 `manifest_version`: `1.2.1` (`manifest_sha256`: `9a58c2c52af0d2ebdad644cd71d81b25503191036b06083b36b5b1af978dee1a`)
 `stage5a_results_sha256` (the exact `reports/stage5a_docling_standard_results.json` bytes this run scored): `1fcad47c68a66c1ea722e590e7695ce4220c871e3b9c708998516e37aefe7cfb`
 `evaluator_version`: `1.1.0`
@@ -70,9 +71,8 @@ identifier location accuracy, structural stress metrics, and more).
 | Classification | Count |
 |---|---:|
 | `evaluation_contract_insufficient` | 1 |
-| `mapper_loss` | 2 |
 | `parser_classification_loss` | 5 |
-| `parser_content_loss` | 6 |
+| `parser_content_loss` | 8 |
 | `parser_provenance_loss` | 28 |
 | `parser_relationship_loss` | 6 |
 | `parser_structure_loss` | 8 |

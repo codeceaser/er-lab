@@ -1,13 +1,12 @@
 {
   "run_id": "38beed91dc9deced3c9df216eb611ab8f230aaddbd5a6df03d007918955ff71b",
-  "generated_at": "2026-07-23T17:01:59.937653+00:00",
+  "generated_at": "2026-07-23T20:20:25.079994+00:00",
   "total_misses": 56,
   "miss_count_by_classification": {
     "parser_classification_loss": 5,
     "parser_structure_loss": 8,
     "parser_relationship_loss": 6,
-    "mapper_loss": 2,
-    "parser_content_loss": 6,
+    "parser_content_loss": 8,
     "parser_provenance_loss": 28,
     "evaluation_contract_insufficient": 1
   },
@@ -163,14 +162,11 @@
       },
       "observed_value": null,
       "result": "miss",
-      "failure_class": "mapper_loss",
-      "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location",
+      "failure_class": "parser_content_loss",
+      "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location (attribution scoped to that occurrence's own expected context only, Stage 6A.2 item 1)",
       "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
-      "raw_docling_references": [
-        "#/texts/4",
-        "#/texts/13"
-      ],
+      "raw_docling_references": [],
       "confidence": "certain"
     },
     {
@@ -618,14 +614,11 @@
       },
       "observed_value": null,
       "result": "miss",
-      "failure_class": "mapper_loss",
-      "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location",
+      "failure_class": "parser_content_loss",
+      "explanation": "expected occurrence of 'P-205' tied to source_fact='VF_NODE_003' not found at that resolved location (attribution scoped to that occurrence's own expected context only, Stage 6A.2 item 1)",
       "supporting_canonical_element_ids": [],
       "supporting_chunk_ids": [],
-      "raw_docling_references": [
-        "#/texts/4",
-        "#/texts/10"
-      ],
+      "raw_docling_references": [],
       "confidence": "certain"
     },
     {

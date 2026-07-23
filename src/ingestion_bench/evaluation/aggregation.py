@@ -57,6 +57,30 @@ def _compute_run_id(input_bundle_hash: str) -> str:
     return hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()
 
 
+def _compute_evaluation_content_hash(
+    input_bundle_hash: str, evaluator_version: str, manifest_version: str, manifest_sha256: str,
+    stage5a_results_sha256: str, fixture_results: list[FixtureEvaluationResult], aggregate: AggregateEvaluationResult,
+) -> str:
+    """Stage 6A.2 item 4: a deterministic SHA-256 over every STABLE piece
+    of EvaluationRun content -- explicitly excluding `generated_at`
+    (mutable runtime/report metadata) and `evaluation_content_hash` itself
+    (this function's own output is never fed back into its own input).
+    Two runs over byte-identical inputs that produce byte-identical
+    results always share this hash, independent of wall-clock time; any
+    change to a metric, evidence alignment, miss record, input artifact
+    hash, or evaluator_version changes it."""
+    payload = {
+        "input_bundle_hash": input_bundle_hash,
+        "evaluator_version": evaluator_version,
+        "manifest_version": manifest_version,
+        "manifest_sha256": manifest_sha256,
+        "stage5a_results_sha256": stage5a_results_sha256,
+        "fixture_results": [r.model_dump(mode="json") for r in fixture_results],
+        "aggregate": aggregate.model_dump(mode="json"),
+    }
+    return hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()
+
+
 def _merge_metric(a: MetricResult, b: MetricResult) -> MetricResult:
     numerator = a.numerator + b.numerator
     denominator = a.denominator + b.denominator
@@ -104,9 +128,14 @@ def build_evaluation_run(
 ) -> EvaluationRun:
     aggregate = build_aggregate(fixture_results)
     input_bundle_hash = _compute_input_bundle_hash(fixture_results, manifest_sha256, stage5a_results_sha256)
+    evaluation_content_hash = _compute_evaluation_content_hash(
+        input_bundle_hash, EVALUATOR_VERSION, manifest["manifest_version"], manifest_sha256, stage5a_results_sha256,
+        fixture_results, aggregate,
+    )
     return EvaluationRun(
         run_id=_compute_run_id(input_bundle_hash),
         input_bundle_hash=input_bundle_hash,
+        evaluation_content_hash=evaluation_content_hash,
         generated_at=datetime.now(timezone.utc).isoformat(),
         manifest_version=manifest["manifest_version"],
         manifest_sha256=manifest_sha256,
@@ -230,6 +259,7 @@ discipline as Stage 5A.1/D-039).
 
 `run_id`: `{run.run_id}`
 `input_bundle_hash` (every input file this run actually read, hashed together -- Stage 6A.1 item 11): `{run.input_bundle_hash}`
+`evaluation_content_hash` (every STABLE result this run produced, hashed together, excluding `generated_at` -- Stage 6A.2 item 4): `{run.evaluation_content_hash}`
 `manifest_version`: `{run.manifest_version}` (`manifest_sha256`: `{run.manifest_sha256}`)
 `stage5a_results_sha256` (the exact `reports/stage5a_docling_standard_results.json` bytes this run scored): `{run.stage5a_results_sha256}`
 `evaluator_version`: `{run.evaluator_version}`
