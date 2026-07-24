@@ -1,0 +1,113 @@
+{
+  "contract_version": "1.0.0",
+  "questions": [
+    {
+      "question_id": "Q_DIRECT_001",
+      "question": "Which application supports the Payment Settlement business service?",
+      "difficulty": "direct",
+      "required_fact_ids": ["P_001"],
+      "forbidden_fact_ids": ["D_001"],
+      "citation_required": true,
+      "answer_rubric": "Correct answer names APP-224510 as the supporting application, sourced from P_001. The decommissioned predecessor APP-224499, mentioned only in distractor paragraph D_001, must not be cited as the answer."
+    },
+    {
+      "question_id": "Q_DIRECT_002",
+      "question": "Which team owns the Payment Settlement service, and in which region does it operate?",
+      "difficulty": "direct",
+      "required_fact_ids": ["P_005"],
+      "forbidden_fact_ids": [],
+      "citation_required": true,
+      "answer_rubric": "Correct answer names the Resilience Engineering Team and the EMEA region, both sourced from P_005."
+    },
+    {
+      "question_id": "Q_DIRECT_003",
+      "question": "What Recovery Time Objective (RTO) is documented for Payment Settlement?",
+      "difficulty": "direct",
+      "required_fact_ids": ["T_001_r1c0", "T_001_r1c1"],
+      "forbidden_fact_ids": ["T_001_r3c0", "T_001_r3c1"],
+      "citation_required": true,
+      "answer_rubric": "Correct answer states 4 hours, sourced from the RTO row of T_001 (row 1). The retired/legacy distractor row (T_001 row 3, tied to C-88a) must not be cited as a current RTO/RPO value."
+    },
+    {
+      "question_id": "Q_DIRECT_004",
+      "question": "According to the scanned procedure page, what must be tested quarterly?",
+      "difficulty": "direct",
+      "required_fact_ids": ["STRESS_SCANNED_001_OCR_TEXT"],
+      "forbidden_fact_ids": [],
+      "citation_required": true,
+      "answer_rubric": "Correct answer states that Recovery Procedure P-205 must be tested quarterly, sourced from the OCR'd scanned-page text."
+    },
+    {
+      "question_id": "Q_DISTRACTOR_001",
+      "question": "Which application is currently in scope for Regulatory Obligation O-31: APP-224510 or APP-224499?",
+      "difficulty": "distractor_sensitive",
+      "required_fact_ids": ["P_001", "P_002"],
+      "forbidden_fact_ids": ["D_001"],
+      "citation_required": true,
+      "answer_rubric": "Correct answer is APP-224510 (P_001/P_002), the current in-scope application. APP-224499 is the decommissioned predecessor named only in distractor paragraph D_001 and must not be cited as the in-scope application."
+    },
+    {
+      "question_id": "Q_DISTRACTOR_002",
+      "question": "Which control currently satisfies Regulatory Obligation O-31: C-88 or C-88a?",
+      "difficulty": "distractor_sensitive",
+      "required_fact_ids": ["P_003"],
+      "forbidden_fact_ids": ["D_002"],
+      "citation_required": true,
+      "answer_rubric": "Correct answer is Control C-88 (P_003), the current control. C-88a is retired/historical per distractor paragraph D_002 and must not be cited as the current control, despite sharing 'C-88' as a substring."
+    },
+    {
+      "question_id": "Q_DISTRACTOR_003",
+      "question": "In the overlapping-annotation stress fixture, which RTO annotation is the current, primary value: 4h or 6h?",
+      "difficulty": "distractor_sensitive",
+      "required_fact_ids": ["SB_001"],
+      "forbidden_fact_ids": ["SB_002"],
+      "citation_required": true,
+      "answer_rubric": "Correct answer cites the 4h RTO annotation (SB_001, labeled 'Primary annotation'). SB_002 ('Superseded annotation... draft, do not use') must not be cited as the current value."
+    },
+    {
+      "question_id": "Q_RELATIONAL_001",
+      "question": "Which regulatory obligation does Control C-88 satisfy, and which application is that obligation associated with?",
+      "difficulty": "relational",
+      "required_fact_ids": ["P_002", "P_003"],
+      "forbidden_fact_ids": [],
+      "citation_required": true,
+      "answer_rubric": "Correct answer links Control C-88 to Regulatory Obligation O-31 (P_003), and O-31 to APP-224510 (P_002). Citing only one of the two facts, without connecting them, is insufficient."
+    },
+    {
+      "question_id": "Q_RELATIONAL_002",
+      "question": "What does the figure caption say the escalation diagram depicts, and which picture does that caption belong to?",
+      "difficulty": "relational",
+      "required_fact_ids": ["CAP_001", "PIC_001"],
+      "forbidden_fact_ids": [],
+      "citation_required": true,
+      "answer_rubric": "Correct answer describes the escalation flow from incident detection to activation of Recovery Procedure P-205 (CAP_001), and identifies PIC_001 as the picture the caption is linked to."
+    },
+    {
+      "question_id": "Q_MULTIHOP_001",
+      "question": "Trace the full chain from the payment application to the recovery procedure it must follow: which application, which regulatory obligation, which control, and which recovery procedure?",
+      "difficulty": "multi_hop",
+      "required_fact_ids": ["P_001", "P_002", "P_003", "P_004"],
+      "forbidden_fact_ids": ["D_001", "D_002"],
+      "citation_required": true,
+      "answer_rubric": "Correct answer chains all four hops: APP-224510 (P_001) -> in scope for O-31 (P_002) -> satisfied by Control C-88 (P_003) -> which mandates Recovery Procedure P-205 (P_004). The decommissioned APP-224499 (D_001) or retired C-88a (D_002) must not be substituted at any hop."
+    },
+    {
+      "question_id": "Q_MULTIHOP_002",
+      "question": "Starting from the escalation diagram's caption, what recovery procedure does the escalation flow activate, and what does the body text say Control C-88 mandates for that same procedure?",
+      "difficulty": "multi_hop",
+      "required_fact_ids": ["CAP_001", "P_004"],
+      "forbidden_fact_ids": [],
+      "citation_required": true,
+      "answer_rubric": "Correct answer recognizes Recovery Procedure P-205 named in the caption (CAP_001) as the SAME procedure the body text says Control C-88 mandates (P_004) -- both facts must be connected as referring to one identifier, not treated as two separate procedures."
+    },
+    {
+      "question_id": "Q_CONSOLIDATION_001",
+      "question": "Summarize the Payment Settlement service's resilience posture: application identity, ownership, governing control/obligation, mandated recovery procedure, and documented RTO/RPO.",
+      "difficulty": "consolidation",
+      "required_fact_ids": ["P_001", "P_005", "P_003", "P_004", "T_001_r1c0", "T_001_r1c1", "T_001_r2c0", "T_001_r2c1"],
+      "forbidden_fact_ids": ["D_001", "D_002", "T_001_r3c0", "T_001_r3c1"],
+      "citation_required": true,
+      "answer_rubric": "Correct answer consolidates: APP-224510 (P_001), owned by the Resilience Engineering Team in EMEA (P_005), governed by Control C-88 satisfying O-31 (P_003), which mandates Recovery Procedure P-205 (P_004), with a documented RTO of 4 hours and RPO of 1 hour (T_001 rows 1-2). The decommissioned/retired distractors (D_001, D_002) and the legacy C-88a RPO row (T_001 row 3) must not appear as if they were current facts."
+    }
+  ]
+}
