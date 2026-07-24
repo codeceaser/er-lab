@@ -248,9 +248,11 @@ what actually changed.
 see D-047 below). 147 gold evidence-alignment entries written to
 `artifacts/stage6a/evidence_alignment.json` (matched 121, partial 9,
 missing 8, not_applicable 9) — see D-042/D-044.
-`evaluation_content_hash`: `5b4f2e735dc506fccab802b9e3672096a7cc11f0f9f4fe79be46ae7f9023a2f0`
-(D-050) — a deterministic hash over every stable result this run
-produced, separate from `input_bundle_hash` (which identifies only the
+`evaluation_content_hash`: `838df9d92461476b5c9194668d2ba337cc65b9a7208bc9850d96840492df277c`
+(D-050; regenerated at Stage 6A.2a's `EVALUATOR_VERSION` bump to `1.2.0`,
+see `reports/stage6a_docling_baseline_scorecard.md` for `run_id`) — a
+deterministic hash over every stable result this run produced, separate
+from `input_bundle_hash` (which identifies only the
 inputs read).
 
 ### Stage 6A -> 6A.1 corrections (old vs. new, same 9 fixtures)
@@ -313,7 +315,7 @@ discipline, not which facts matched.
 | Evidence-alignment entries | 147 (matched 121/partial 9/missing 8/not_applicable 9) | 147, same breakdown (unchanged) |
 | Miss classifications | `parser_provenance_loss` 28, `parser_structure_loss` 8, `parser_relationship_loss` 6, `parser_classification_loss` 5, `parser_content_loss` 6, `mapper_loss` 2, `evaluation_contract_insufficient` 1 | `parser_provenance_loss` 28, `parser_structure_loss` 8, `parser_relationship_loss` 6, `parser_classification_loss` 5, `parser_content_loss` 8, `evaluation_contract_insufficient` 1 (`mapper_loss` 2 -> 0) |
 | DOCX/PPTX `ID_004_occ_2` (identifier occurrence tied to `VF_NODE_003`, expected only inside the parity image's own OCR content) | `mapper_loss` (incorrect — attributed from a WHOLE-DOCUMENT raw-text search that found "P-205" in the unrelated body paragraph/caption) | `parser_content_loss` (correct — DOCX/PPTX's own raw picture object has `"children": []`; scoped to the occurrence's own picture context, D-047) |
-| `unsupported_visual_claim_absence` scoring | Any `VisualFactAnnotation` existing at all marked EVERY unsupported claim as asserted (blanket, latent bug — never observed in the real baseline since path A produces none) | Per-claim structural match (`fact_type`/`subject`/`relation`/`object`/`value`/`unit`) against actual `VisualFactAnnotation` output (D-048) — no real-baseline number change (still 100%), but now correct for when Stage 7A/8A vision enrichment exists |
+| `unsupported_visual_claim_absence` scoring | Any `VisualFactAnnotation` existing at all marked EVERY unsupported claim as asserted (blanket, latent bug — never observed in the real baseline since path A produces none) | Per-claim structural match (`fact_type`/`subject`/`relation`/`object`/`value`/`unit`) against actual `VisualFactAnnotation` output (D-048) — no real-baseline number change (still 100%), but now correct for when Stage 8A vision enrichment exists |
 | `provenance_coverage_overall`/`provenance_bbox_coverage_overall` `supporting_misses` | Contained per-element ids that only had `MissRecord`s under PER-CATEGORY metric names, never resolving under the overall metric itself | References only its own single summary `MissRecord`'s fact_id (D-049) |
 | Result identity | `run_id`/`input_bundle_hash` only (identifies inputs, not conclusions) | Adds `evaluation_content_hash` (D-050) — a separate deterministic hash over every stable result this run produced, insensitive to `generated_at` |
 | Hash field validation | Any string accepted for `run_id`/`input_bundle_hash`/`manifest_sha256`/`stage5a_results_sha256`/`canonical_document_hash`/artifact hashes | Every one validated as lowercase 64-character hex SHA-256 at construction time (D-050) |

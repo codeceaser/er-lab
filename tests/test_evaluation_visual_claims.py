@@ -6,9 +6,18 @@ objects, no real Docling artifacts needed."""
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from ingestion_bench.canonical import CanonicalDocument, CanonicalPicture, CanonicalUnit
 from ingestion_bench.canonical.annotations import VisualFactAnnotation
-from ingestion_bench.evaluation.evaluator import _score_visual_facts_and_unsupported_claims
+from ingestion_bench.evaluation.evaluator import (
+    _score_visual_facts_and_unsupported_claims,
+    build_fact_catalog,
+    load_manifest,
+)
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+FIXTURES_ROOT = REPO_ROOT / "fixtures"
 
 
 def _unit() -> CanonicalUnit:
@@ -126,3 +135,94 @@ def test_two_different_unsupported_claims_only_the_asserted_one_fails():
 
     other_alignment = next(a for a in alignments if a.fact_id == "CU_002")
     assert other_alignment.match_status == "not_applicable"
+
+
+# --- real-manifest integration (Stage 6A.2a item 3) -------------------------
+
+
+def test_real_manifest_cu_001_carries_full_structured_fields_through_the_catalog():
+    """Loads the FROZEN reference_manifest.json through build_fact_catalog()
+    -- the same path the real evaluator uses -- and proves CU_001's
+    structured fields (fact_type/subject/relation/object/value/unit/claim/
+    is_supported/reason) survive intact. This must FAIL against a
+    _stress_chart_facts() implementation truncated to fact_id/claim only."""
+    manifest = load_manifest(FIXTURES_ROOT)
+    catalog = build_fact_catalog(manifest, "stress_chart", "STRESS_CHART_001")
+
+    cu_001 = next(f for f in catalog["unsupported_claim"] if f["fact_id"] == "CU_001")
+
+    assert cu_001["fact_type"] == "numeric"
+    assert cu_001["subject"] == "Q2 pass rate"
+    assert cu_001["relation"] == "greater_than"
+    assert cu_001["object"] is None
+    assert cu_001["value"] == 95
+    assert cu_001["unit"] == "%"
+    assert cu_001["claim"] == "Pass rate exceeded 95% in Q2."
+    assert cu_001["is_supported"] is False
+    assert cu_001["reason"]
+
+
+def test_real_manifest_catalog_scored_against_an_unrelated_visual_fact_stays_100_percent():
+    """The exact catalog result from build_fact_catalog() -- not a
+    hand-built replacement -- passed to
+    _score_visual_facts_and_unsupported_claims() alongside an unrelated,
+    valid VisualFactAnnotation (matching CF_004, Q4 pass rate). CU_001
+    (Q2 pass rate > 95%) was never asserted -- absence must stay 100%."""
+    manifest = load_manifest(FIXTURES_ROOT)
+    catalog = build_fact_catalog(manifest, "stress_chart", "STRESS_CHART_001")
+    cf_004 = next(f for f in catalog["visual_fact"] if f["fact_id"] == "CF_004")
+
+    unrelated_fact = VisualFactAnnotation(
+        annotation_id="VF_ANN_CF_004", target_ref="PIC_001", unit_index=0,
+        derivation="model_derived", extraction_method="test_vision_enricher",
+        fact_type=cf_004["fact_type"], subject=cf_004["subject"], relation=cf_004["relation"],
+        object=cf_004["object"], value=cf_004["value"], unit=cf_004["unit"], raw_text=cf_004["raw_text"],
+    )
+    document = _doc([unrelated_fact])
+
+    metrics, miss_records, alignments = _score_visual_facts_and_unsupported_claims(
+        "stress/STRESS_CHART_001.pdf", catalog["visual_fact"], catalog["unsupported_claim"], document,
+    )
+
+    absence_metric = metrics["unsupported_visual_claim_absence"]
+    assert absence_metric.score == 1.0
+    assert not any(m.fact_id == "CU_001" for m in miss_records)
+    cu_alignment = next(a for a in alignments if a.fact_id == "CU_001")
+    assert cu_alignment.match_status == "not_applicable"
+    assert cu_alignment.expected_value["subject"] == "Q2 pass rate"
+
+
+def test_real_manifest_catalog_scored_against_cu_001_itself_flags_only_cu_001():
+    """The exact catalog result from build_fact_catalog() passed to
+    _score_visual_facts_and_unsupported_claims() alongside a
+    VisualFactAnnotation that structurally matches CU_001 itself (Q2 pass
+    rate > 95%) -- CU_001 alone must be detected as an unsupported
+    asserted claim; must FAIL (silently score 100%) against a
+    _stress_chart_facts() implementation truncated to fact_id/claim only,
+    since a truncated CU_001 dict has fact_type=None/subject=None/etc. and
+    can never structurally match any real VisualFactAnnotation."""
+    manifest = load_manifest(FIXTURES_ROOT)
+    catalog = build_fact_catalog(manifest, "stress_chart", "STRESS_CHART_001")
+    cu_001 = next(f for f in catalog["unsupported_claim"] if f["fact_id"] == "CU_001")
+
+    asserting_fact = VisualFactAnnotation(
+        annotation_id="VF_ANN_CU_001", target_ref="PIC_001", unit_index=0,
+        derivation="model_derived", extraction_method="test_vision_enricher",
+        fact_type=cu_001["fact_type"], subject=cu_001["subject"], relation=cu_001["relation"],
+        object=cu_001["object"], value=cu_001["value"], unit=cu_001["unit"], raw_text=cu_001["claim"],
+    )
+    document = _doc([asserting_fact])
+
+    metrics, miss_records, alignments = _score_visual_facts_and_unsupported_claims(
+        "stress/STRESS_CHART_001.pdf", catalog["visual_fact"], catalog["unsupported_claim"], document,
+    )
+
+    absence_metric = metrics["unsupported_visual_claim_absence"]
+    assert absence_metric.numerator == 0
+    assert absence_metric.score == 0.0
+
+    miss_fact_ids = {m.fact_id for m in miss_records if m.metric == "unsupported_visual_claim_absence"}
+    assert miss_fact_ids == {"CU_001"}
+
+    cu_alignment = next(a for a in alignments if a.fact_id == "CU_001")
+    assert cu_alignment.match_status == "missing"

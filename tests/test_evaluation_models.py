@@ -162,16 +162,24 @@ def _fixture_result(fixture: str) -> FixtureEvaluationResult:
 
 
 def test_evaluation_run_rejects_duplicate_fixtures():
+    """Stage 6A.2a item 5: every hash-shaped field must be a VALID
+    lowercase-hex placeholder here -- a malformed hash (e.g. "r" * 64,
+    not valid hex) would itself raise ValidationError first, so this test
+    would pass for the WRONG reason (hash-format rejection, not
+    duplicate-fixture rejection) without ever exercising
+    EvaluationRun._validate_fixtures_unique at all."""
     from ingestion_bench.evaluation.model import AggregateEvaluationResult
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as exc_info:
         EvaluationRun(
-            run_id="r" * 64, input_bundle_hash="i" * 64, evaluation_content_hash="c" * 64,
+            run_id="1" * 64, input_bundle_hash="2" * 64, evaluation_content_hash="3" * 64,
             generated_at="2026-01-01T00:00:00+00:00", manifest_version="1.2.1", manifest_sha256="a" * 64,
             stage5a_results_sha256="b" * 64, evaluator_version="1.0.0",
             fixture_results=[_fixture_result("parity/PARITY_001.pdf"), _fixture_result("parity/PARITY_001.pdf")],
             aggregate=AggregateEvaluationResult(evidence_alignment_count=0, total_fixtures=2),
         )
+    assert "duplicate fixture" in str(exc_info.value)
+    assert "parity/PARITY_001.pdf" in str(exc_info.value)
 
 
 # --- hash field validation (Stage 6A.2 item 5) ------------------------------

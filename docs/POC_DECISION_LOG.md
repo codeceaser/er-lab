@@ -2334,7 +2334,7 @@ The Stage 6A.1 gold-catalog discipline (D-044) already requires per-fact
 evidence, not aggregate signals; the same discipline belongs here. This
 bug is latent only because path A never produces `VisualFactAnnotation` --
 but the evaluator's OWN internal correctness must not depend on that
-being true forever (Stage 7A/8A's vision-enrichment paths will produce
+being true forever (Stage 8A's vision-enrichment path will produce
 these annotations for real, and the evaluator must already be correct
 before that happens, not patched reactively then).
 
@@ -2350,7 +2350,7 @@ instances rather than real Stage 5A output (which cannot exercise this
 path yet).
 
 ### Deferred questions or reconsideration trigger
-Revisit once Stage 7A/8A vision-enrichment paths actually produce
+Revisit once Stage 8A's vision-enrichment path actually produces
 `VisualFactAnnotation` output and this metric's real baseline value can
 move off 100% for the first time -- at that point, confirm the per-claim
 match is discriminating correctly against real (not hand-built) model

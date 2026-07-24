@@ -1,12 +1,12 @@
 {
-  "run_id": "38beed91dc9deced3c9df216eb611ab8f230aaddbd5a6df03d007918955ff71b",
+  "run_id": "90b0cc1672243f13ddaf8cdac015965ec2ff366bd697aeeddbc91166d968be32",
   "input_bundle_hash": "3f8af5f37d1e761b4e9f232a40b7ab222ce5106717abcc3eab1ffce933a57b8b",
-  "evaluation_content_hash": "5b4f2e735dc506fccab802b9e3672096a7cc11f0f9f4fe79be46ae7f9023a2f0",
-  "generated_at": "2026-07-23T20:20:25.079994+00:00",
+  "evaluation_content_hash": "838df9d92461476b5c9194668d2ba337cc65b9a7208bc9850d96840492df277c",
+  "generated_at": "2026-07-24T12:53:52.935142+00:00",
   "manifest_version": "1.2.1",
   "manifest_sha256": "9a58c2c52af0d2ebdad644cd71d81b25503191036b06083b36b5b1af978dee1a",
   "stage5a_results_sha256": "1fcad47c68a66c1ea722e590e7695ce4220c871e3b9c708998516e37aefe7cfb",
-  "evaluator_version": "1.1.0",
+  "evaluator_version": "1.2.0",
   "fixture_results": [
     {
       "fixture": "parity/PARITY_001.pdf",
@@ -773,10 +773,10 @@
       "unexpected_observations": [
         {
           "fixture": "parity/PARITY_001.pdf",
-          "element_id": "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
+          "element_id": "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
           "element_type": "paragraph",
-          "text": "replaced by Control C-88; references to C-88",
-          "reason": "extra occurrence of 'C-88' beyond every manifest-declared occurrence's one-to-one resolution"
+          "text": "it is superseded by APP-224510.",
+          "reason": "extra occurrence of 'APP-224510' beyond every manifest-declared occurrence's one-to-one resolution"
         },
         {
           "fixture": "parity/PARITY_001.pdf",
@@ -787,10 +787,10 @@
         },
         {
           "fixture": "parity/PARITY_001.pdf",
-          "element_id": "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
+          "element_id": "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
           "element_type": "paragraph",
-          "text": "it is superseded by APP-224510.",
-          "reason": "extra occurrence of 'APP-224510' beyond every manifest-declared occurrence's one-to-one resolution"
+          "text": "replaced by Control C-88; references to C-88",
+          "reason": "extra occurrence of 'C-88' beyond every manifest-declared occurrence's one-to-one resolution"
         }
       ],
       "evidence_alignments": [
@@ -2966,17 +2966,17 @@
       "unexpected_observations": [
         {
           "fixture": "parity/PARITY_001.docx",
-          "element_id": "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
-          "element_type": "paragraph",
-          "text": "replaced by Control C-88; references to C-88",
-          "reason": "extra occurrence of 'C-88' beyond every manifest-declared occurrence's one-to-one resolution"
-        },
-        {
-          "fixture": "parity/PARITY_001.docx",
           "element_id": "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
           "element_type": "paragraph",
           "text": "it is superseded by APP-224510.",
           "reason": "extra occurrence of 'APP-224510' beyond every manifest-declared occurrence's one-to-one resolution"
+        },
+        {
+          "fixture": "parity/PARITY_001.docx",
+          "element_id": "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
+          "element_type": "paragraph",
+          "text": "replaced by Control C-88; references to C-88",
+          "reason": "extra occurrence of 'C-88' beyond every manifest-declared occurrence's one-to-one resolution"
         }
       ],
       "evidence_alignments": [
@@ -4791,17 +4791,17 @@
       "unexpected_observations": [
         {
           "fixture": "parity/PARITY_001.pptx",
-          "element_id": "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
-          "element_type": "paragraph",
-          "text": "replaced by Control C-88; references to C-88",
-          "reason": "extra occurrence of 'C-88' beyond every manifest-declared occurrence's one-to-one resolution"
-        },
-        {
-          "fixture": "parity/PARITY_001.pptx",
           "element_id": "e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d",
           "element_type": "paragraph",
           "text": "it is superseded by APP-224510.",
           "reason": "extra occurrence of 'APP-224510' beyond every manifest-declared occurrence's one-to-one resolution"
+        },
+        {
+          "fixture": "parity/PARITY_001.pptx",
+          "element_id": "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
+          "element_type": "paragraph",
+          "text": "replaced by Control C-88; references to C-88",
+          "reason": "extra occurrence of 'C-88' beyond every manifest-declared occurrence's one-to-one resolution"
         }
       ],
       "evidence_alignments": [
@@ -8688,6 +8688,12 @@
           "fixture": "stress/STRESS_CHART_001.pdf",
           "fact_type": "visual_fact",
           "expected_value": {
+            "fact_type": "numeric",
+            "subject": "Q1 pass rate",
+            "relation": "equals",
+            "object": null,
+            "value": 82,
+            "unit": "%",
             "raw_text": "Q1: 82%"
           },
           "expected_location": {},
@@ -8705,6 +8711,12 @@
           "fixture": "stress/STRESS_CHART_001.pdf",
           "fact_type": "visual_fact",
           "expected_value": {
+            "fact_type": "numeric",
+            "subject": "Q2 pass rate",
+            "relation": "equals",
+            "object": null,
+            "value": 88,
+            "unit": "%",
             "raw_text": "Q2: 88%"
           },
           "expected_location": {},
@@ -8722,6 +8734,12 @@
           "fixture": "stress/STRESS_CHART_001.pdf",
           "fact_type": "visual_fact",
           "expected_value": {
+            "fact_type": "numeric",
+            "subject": "Q3 pass rate",
+            "relation": "equals",
+            "object": null,
+            "value": 91,
+            "unit": "%",
             "raw_text": "Q3: 91%"
           },
           "expected_location": {},
@@ -8739,6 +8757,12 @@
           "fixture": "stress/STRESS_CHART_001.pdf",
           "fact_type": "visual_fact",
           "expected_value": {
+            "fact_type": "numeric",
+            "subject": "Q4 pass rate",
+            "relation": "equals",
+            "object": null,
+            "value": 95,
+            "unit": "%",
             "raw_text": "Q4: 95%"
           },
           "expected_location": {},
@@ -8756,6 +8780,12 @@
           "fixture": "stress/STRESS_CHART_001.pdf",
           "fact_type": "visual_fact",
           "expected_value": {
+            "fact_type": "comparative",
+            "subject": "Q4 pass rate",
+            "relation": "greater_than",
+            "object": "Q1 pass rate",
+            "value": null,
+            "unit": null,
             "raw_text": "Q4 higher than Q1"
           },
           "expected_location": {},
@@ -8773,6 +8803,12 @@
           "fixture": "stress/STRESS_CHART_001.pdf",
           "fact_type": "visual_fact",
           "expected_value": {
+            "fact_type": "comparative",
+            "subject": "Q3 pass rate",
+            "relation": "greater_than",
+            "object": "Q2 pass rate",
+            "value": null,
+            "unit": null,
             "raw_text": "Q3 higher than Q2"
           },
           "expected_location": {},
@@ -8790,7 +8826,15 @@
           "fixture": "stress/STRESS_CHART_001.pdf",
           "fact_type": "unsupported_claim",
           "expected_value": {
-            "claim": "Pass rate exceeded 95% in Q2."
+            "fact_type": "numeric",
+            "subject": "Q2 pass rate",
+            "relation": "greater_than",
+            "object": null,
+            "value": 95,
+            "unit": "%",
+            "claim": "Pass rate exceeded 95% in Q2.",
+            "is_supported": false,
+            "reason": "Q2 value is 88%, not >95%. A correct VisualFactAnnotation set must NOT assert this. Scored only against structured VisualFactAnnotation output, never against summary prose."
           },
           "expected_location": {},
           "matched_canonical_element_ids": [],

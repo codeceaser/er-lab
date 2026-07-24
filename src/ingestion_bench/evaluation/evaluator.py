@@ -56,7 +56,7 @@ from .normalization import (
     ocr_phrase_recovered,
 )
 
-EVALUATOR_VERSION = "1.1.0"
+EVALUATOR_VERSION = "1.2.0"
 
 # --- fixture registry --------------------------------------------------
 FIXTURES: list[tuple[str, str, str, str, str]] = [
@@ -329,13 +329,30 @@ def _stress_chart_facts(section: dict) -> dict[str, list[dict]]:
     """Stage 6A.1 item 7: visual_facts and unsupported_claims are kept as
     SEPARATE fact-catalog keys -- never combined into one bucket -- so
     they can be scored with different, correctly-named metrics
-    (visual_fact_recall vs. unsupported_visual_claim_absence)."""
+    (visual_fact_recall vs. unsupported_visual_claim_absence).
+
+    Stage 6A.2a item 1: the manifest's full structured shape -- fact_type/
+    subject/relation/object/value/unit -- is preserved for BOTH
+    visual_facts and unsupported_claims, not truncated to fact_id/raw_text
+    or fact_id/claim. `_visual_fact_matches_claim` (Stage 6A.2 item 2)
+    compares exactly these structured fields; truncating them here would
+    silently make every real per-claim structural comparison compare
+    against `None` for every field but fact_id, defeating that fix."""
     facts: dict[str, list[dict]] = {"picture": [], "visual_fact": [], "unsupported_claim": []}
     facts["picture"].append({"fact_id": f"{section['doc_id']}_PICTURE", "expected_picture_class": section.get("expected_picture_class")})
     for vf in section.get("visual_facts", []):
-        facts["visual_fact"].append({"fact_id": vf["fact_id"], "raw_text": vf.get("raw_text")})
+        facts["visual_fact"].append({
+            "fact_id": vf["fact_id"], "fact_type": vf.get("fact_type"), "subject": vf.get("subject"),
+            "relation": vf.get("relation"), "object": vf.get("object"), "value": vf.get("value"),
+            "unit": vf.get("unit"), "raw_text": vf.get("raw_text"),
+        })
     for uc in section.get("unsupported_claims", []):
-        facts["unsupported_claim"].append({"fact_id": uc["fact_id"], "claim": uc.get("claim")})
+        facts["unsupported_claim"].append({
+            "fact_id": uc["fact_id"], "fact_type": uc.get("fact_type"), "subject": uc.get("subject"),
+            "relation": uc.get("relation"), "object": uc.get("object"), "value": uc.get("value"),
+            "unit": uc.get("unit"), "claim": uc.get("claim"), "is_supported": uc.get("is_supported"),
+            "reason": uc.get("reason"),
+        })
     return facts
 
 
@@ -1111,7 +1128,11 @@ def _score_visual_facts_and_unsupported_claims(
         0, 0, excluded=len(visual_facts),
     )
     for vf in visual_facts:
-        alignments.append(_alignment(vf["fact_id"], fixture, "visual_fact", expected_value={"raw_text": vf.get("raw_text")}, match_status="not_applicable", derivation="not_applicable"))
+        # Stage 6A.2a item 2: the full structured fact (fact_type/subject/
+        # relation/object/value/unit/raw_text), not only raw_text -- this
+        # catalog is the future source for expected-visual-fact/forbidden-
+        # answer-claim definitions in retrieval/answer evaluation.
+        alignments.append(_alignment(vf["fact_id"], fixture, "visual_fact", expected_value={k: v for k, v in vf.items() if k != "fact_id"}, match_status="not_applicable", derivation="not_applicable"))
 
     visual_fact_annotations = [a for a in document.annotations if a.annotation_type == "visual_fact"]
     unsupported_acc = _MetricAcc(
@@ -1134,21 +1155,27 @@ def _score_visual_facts_and_unsupported_claims(
         # exact claim (the EvidenceAlignment validator forbids evidence
         # ids on a "missing" entry, so the asserting annotation id is
         # recorded on the MissRecord instead).
+        # Stage 6A.2a item 2: the full structured claim (fact_type/subject/
+        # relation/object/value/unit/claim/is_supported/reason), not only
+        # the prose `claim` string -- this catalog is the future source
+        # for forbidden-answer-claim definitions in retrieval/answer
+        # evaluation.
+        structured_expected_value = {k: v for k, v in uc.items() if k != "fact_id"}
         if asserted:
             unsupported_acc.record_miss(uc["fact_id"])
             miss_records.append(MissRecord(
                 fixture=fixture, fact_id=uc["fact_id"], metric="unsupported_visual_claim_absence",
-                expected_value={"claim": uc.get("claim"), "should_be_asserted": False},
+                expected_value={**structured_expected_value, "should_be_asserted": False},
                 observed_value={"asserted": True}, result="unexpected",
                 failure_class="unexpected_content", confidence="certain",
                 explanation=f"unsupported claim {uc['fact_id']!r} ({uc.get('claim')!r}) was structurally asserted by a "
                             f"VisualFactAnnotation matching its own subject/relation/object/value/unit",
                 supporting_canonical_element_ids=[a.annotation_id for a in asserted],
             ))
-            alignments.append(_alignment(uc["fact_id"], fixture, "unsupported_claim", expected_value={"claim": uc.get("claim")}, match_status="missing", derivation="model_derived"))
+            alignments.append(_alignment(uc["fact_id"], fixture, "unsupported_claim", expected_value=structured_expected_value, match_status="missing", derivation="model_derived"))
         else:
             unsupported_acc.record_match(uc["fact_id"])
-            alignments.append(_alignment(uc["fact_id"], fixture, "unsupported_claim", expected_value={"claim": uc.get("claim")}, match_status="not_applicable", derivation="not_applicable"))
+            alignments.append(_alignment(uc["fact_id"], fixture, "unsupported_claim", expected_value=structured_expected_value, match_status="not_applicable", derivation="not_applicable"))
 
     metrics = {}
     if visual_facts:
