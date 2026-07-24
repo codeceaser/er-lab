@@ -1070,6 +1070,112 @@ see `docs/POC_STATUS_AND_EVIDENCE.md` "Stage 6A.1 -> 6A.2 corrections."
 
 ---
 
+## Stage 6A.2a — Manifest-Integration and Evaluator-Identity Closure Patch `[IMPLEMENTED]`
+
+Same files as Stage 6A/6A.1/6A.2, patched in place. Adds real-manifest
+integration tests to `tests/test_evaluation_visual_claims.py`.
+
+1. **Complete structured chart-fact contract.** `_stress_chart_facts()`
+   was truncating `visual_facts` to `fact_id`/`raw_text` and
+   `unsupported_claims` to `fact_id`/`claim` -- discarding `fact_type`/
+   `subject`/`relation`/`object`/`value`/`unit` (and `is_supported`/
+   `reason` for unsupported claims). This silently defeated the Stage
+   6A.2 per-claim structural matcher (`_visual_fact_matches_claim`) in
+   PRODUCTION, since every real comparison field but `fact_id` was
+   `None` when the catalog reached it. Now preserves the manifest's full
+   structured shape for both.
+2. **Structured `EvidenceAlignment.expected_value`.** Visual-fact and
+   unsupported-claim alignments now store `{k: v for k, v in fact.items()
+   if k != "fact_id"}` -- the complete structured fact, not only
+   `raw_text`/`claim` -- the future source for forbidden-answer-claim and
+   expected-visual-fact definitions in retrieval/answer evaluation.
+3. **Real-manifest integration test.** New tests load
+   `reference_manifest.json` through `build_fact_catalog()`, extract
+   `CU_001` from `stress_suite.chart_visual_stress.unsupported_claims`,
+   prove its structured fields survive intact, then pass that EXACT
+   catalog result (never a hand-built replacement) to
+   `_score_visual_facts_and_unsupported_claims()` -- once against an
+   unrelated valid `VisualFactAnnotation` (stays 100%), once against one
+   matching `CU_001` itself (flags only `CU_001`). Verified (via a
+   temporary revert) to fail against the pre-fix truncated
+   implementation.
+4. **`EVALUATOR_VERSION` bumped to `1.2.0`.** Stage 6A.2 changed
+   evaluator semantics and conclusions -- it must not share Stage 6A.1's
+   version or `run_id`.
+5. **Corrected `test_evaluation_run_rejects_duplicate_fixtures`.** Used
+   non-hex hash placeholders (`"r" * 64`), so it passed for the WRONG
+   reason (hash-format `ValidationError`, never actually exercising the
+   duplicate-fixture validator). Now uses valid hex placeholders and
+   asserts the error message concerns the duplicate fixture specifically.
+6. **Corrected two documentation references** describing Stage 7A as a
+   vision-enrichment stage. Stage 7A is Regular Vector RAG; selective
+   vision enrichment is Stage 8A.
+
+475 tests pass (up from 472 at Stage 6A.2). Miss/evidence-alignment
+counts unchanged (56 misses, 147 alignments) -- this patch corrected
+manifest-integration plumbing and identity, not match outcomes.
+
+---
+
+## Stage 6A.2b — Deterministic Serialized-Output Closure `[IMPLEMENTED]`
+
+Same files as Stage 6A/6A.1/6A.2/6A.2a, patched in place. Adds
+`tests/test_evaluation_determinism_subprocess.py`.
+
+1. **Deterministic identifier iteration.** `_score_identifiers`'s
+   `all_identifiers` (every target/distractor identifier's normalized
+   value, iterated to discover extra/unconsumed occurrences) was a raw
+   Python `set`, iterated directly. `set` iteration order for `str`
+   elements is a function of `PYTHONHASHSEED`, randomized per PROCESS by
+   default -- this caused a REAL observed symptom: `unexpected_observations`
+   changed order between the Stage 6A.2 and Stage 6A.2a report-
+   regeneration runs, even though the underlying findings were identical.
+   Now `all_identifiers = sorted(...)`.
+2. **Canonically ordered `unexpected_observations`.** `evaluate_fixture`
+   now sorts the complete `unexpected_observations` list by
+   `(fixture, reason, element_type, element_id, text)` immediately before
+   constructing `FixtureEvaluationResult` -- defense-in-depth beyond
+   item 1's fix, since this is a DERIVED collection (extra findings, not
+   source material). Canonical elements/chunks/manifest-declared facts,
+   whose existing order carries real semantic (reading-order) meaning,
+   are never reordered.
+3. **Unordered-collection audit.** Every other `set` in the evaluation
+   package was inspected: each is used only for O(1) membership testing
+   (`in`/`not in`, which never depends on iteration order) or was already
+   wrapped in `sorted()` (`matched_chunk_ids`,
+   `EvidenceAlignment.unit_indexes`/`source_references`,
+   `_merge_metric`'s `supporting_matches`/`supporting_misses`,
+   `_compute_input_bundle_hash`'s fixture ordering). Every `dict` in the
+   package is built from a fixed-order iterable (Python dict insertion
+   order is preserved regardless of hash values, unlike `set` iteration)
+   or used for lookup only -- no other instance of this bug class found.
+4. **Cross-process `PYTHONHASHSEED` determinism tests.** New
+   `tests/test_evaluation_determinism_subprocess.py` spawns real CHILD
+   PROCESSES with `PYTHONHASHSEED=1` and `PYTHONHASHSEED=2` (a same-
+   process repeated-call test cannot detect this bug class, since one
+   process has one fixed hash seed for its whole lifetime) -- one focused
+   test around `_score_identifiers` with 8 identifiers each producing an
+   extra occurrence (empirically confirmed, via a temporary revert, to
+   FAIL against the pre-fix code with a real observed reordering), and
+   one integration test comparing the complete `evaluation_content_hash`/
+   `input_bundle_hash`/stable fixture-result JSON/`unexpected_observations`
+   across the same two hash seeds, against real Stage 5A artifacts.
+5. **`EVALUATOR_VERSION` bumped to `1.2.1`.** Stage 6A.2b changes
+   persisted-output determinism -- `input_bundle_hash` is unchanged
+   (Stage 5A inputs/manifest never changed), but `run_id`/
+   `evaluation_content_hash` are regenerated.
+
+477 tests pass (up from 475 at Stage 6A.2a) — see
+`reports/stage6a_pytest_output.txt`. Miss/evidence-alignment counts
+unchanged (56 misses, 147 alignments: matched 121/partial 9/missing
+8/not_applicable 9) -- see `docs/POC_DECISION_LOG.md` D-051.
+
+**Stage 6A / 6A.1 / 6A.2 / 6A.2a / 6A.2b is now marked COMPLETE AND
+FROZEN.** No further changes to `src/ingestion_bench/evaluation/` are
+expected outside of what Stage 6B's own retrieval-contract work requires.
+
+---
+
 ## Corrected roadmap (Stage 5A.2, updated Stage 6A)
 
 Vision enrichment is **not** the next stage. An earlier framing of this

@@ -9,9 +9,8 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at Stage 6A.2 (see `git log` for the exact commit once
-made). Stage 6A/6A.1/6A.2 is complete but **not yet marked frozen** —
-review of the 6A.2 correction is pending.
+and the repository at Stage 6A.2b (see `git log` for the exact commit).
+**Stage 6A/6A.1/6A.2/6A.2a/6A.2b is complete and frozen.**
 
 ---
 
@@ -60,17 +59,19 @@ Final module boundaries:
   a `VisionEnricher` protocol, `NoOpVisionEnricher`, `OpenAIVisionEnricher`
   (path B), optionally `GraniteVisionEnricher` (path D, deferred).
 - `src/ingestion_bench/evaluation/` — **Stage 6A implemented, hardened by
-  6A.1 and 6A.2.** `model.py` (strict Pydantic result models, incl.
-  `_validate_sha256_hex` for every hash-shaped field, D-050),
-  `normalization.py` (deterministic text/identifier/OCR-phrase rules),
-  `matcher.py` (exact-match primitives), `classification.py`
-  (miss-attribution against raw Docling debug JSON only, incl.
-  `classify_relationship_absence` for relationship/structure loss
-  attribution (D-045) and `classify_identifier_occurrence_absence` for
-  context-SCOPED identifier-occurrence attribution (D-047)),
-  `evaluator.py` (per-fixture scoring, the manifest fact catalog builder,
-  occurrence-aware identifier resolution scoped to each occurrence's own
-  expected context, D-044/D-047), `aggregation.py` (per-format/overall
+  6A.1/6A.2/6A.2a/6A.2b, complete and FROZEN (`EVALUATOR_VERSION` `1.2.1`).**
+  `model.py` (strict Pydantic result models, incl. `_validate_sha256_hex`
+  for every hash-shaped field, D-050), `normalization.py` (deterministic
+  text/identifier/OCR-phrase rules), `matcher.py` (exact-match
+  primitives), `classification.py` (miss-attribution against raw Docling
+  debug JSON only, incl. `classify_relationship_absence` for
+  relationship/structure loss attribution (D-045) and
+  `classify_identifier_occurrence_absence` for context-SCOPED
+  identifier-occurrence attribution (D-047)), `evaluator.py` (per-fixture
+  scoring, the manifest fact catalog builder, occurrence-aware identifier
+  resolution scoped to each occurrence's own expected context, D-044/
+  D-047, with every set-derived iteration order that feeds persisted
+  output sorted, D-051), `aggregation.py` (per-format/overall
   aggregation, input-bundle hashing, `evaluation_content_hash` — a
   SEPARATE deterministic hash of results, not inputs, D-050 — report
   rendering). **The only package in the repository allowed to read
@@ -156,10 +157,12 @@ more *ingestion* lane, not a prerequisite for retrieval work.
    cannot coexist with a fidelity-affecting diagnostic; environment/
    model-footprint evidence is collected live, never hand-typed.
 6. Stage 6A (+6A.1 correctness/gold-evidence hardening, +6A.2
-   correctness/reproducibility patch) — deterministic ingestion-fidelity
-   evaluator, scoring `CanonicalDocument`/`CanonicalChunk` output against
-   `reference_manifest.json` only (never LLM-grades-LLM). **Done, not yet
-   frozen** (explicit instruction pending review of the 6A.2 correction).
+   correctness/reproducibility patch, +6A.2a manifest-integration/
+   evaluator-identity closure, +6A.2b deterministic serialized-output
+   closure) — deterministic ingestion-fidelity evaluator, scoring
+   `CanonicalDocument`/`CanonicalChunk` output against
+   `reference_manifest.json` only (never LLM-grades-LLM). **Done,
+   COMPLETE AND FROZEN** (`EVALUATOR_VERSION` `1.2.1`).
    `src/ingestion_bench/evaluation/`; 9/9 fixtures scored; 56 total misses
    (classified, never unclassified, every deficit ledgered per D-044/item
    5); 147 gold evidence-alignment entries (matched/partial/missing/
@@ -173,16 +176,21 @@ more *ingestion* lane, not a prerequisite for retrieval work.
    relationship evidence, never inferred from mere text presence (D-045);
    `expected_retrieval_difficulty` stays unclassified/`null` throughout
    Stage 6A (D-046); unsupported-visual-claim absence is scored per claim,
-   via structured matching, never from the mere presence of any other
-   visual fact (D-048); every `MetricResult.supporting_misses` entry
-   resolves to a real `MissRecord` with the same fixture/metric/fact_id
-   (D-049); `EvaluationRun.evaluation_content_hash` is a separate
+   via structured matching against the manifest's FULL structured fact
+   shape (never truncated to fact_id/raw_text or fact_id/claim, D-048's
+   original fix plus the 6A.2a truncation-bug correction), never from the
+   mere presence of any other visual fact; every `MetricResult.supporting_misses`
+   entry resolves to a real `MissRecord` with the same fixture/metric/
+   fact_id (D-049); `EvaluationRun.evaluation_content_hash` is a separate
    deterministic content identity from `run_id`/`input_bundle_hash`, and
-   every hash-shaped field is validated as lowercase 64-hex (D-050). One
-   manifest-contract gap recorded, not invented around (chart OCR tokens
-   undeclared).
+   every hash-shaped field is validated as lowercase 64-hex (D-050);
+   every set-derived iteration order that feeds persisted output is
+   sorted, `unexpected_observations` is canonically ordered, and this is
+   verified by real cross-process `PYTHONHASHSEED` subprocess tests, not
+   inference (D-051). One manifest-contract gap recorded, not invented
+   around (chart OCR tokens undeclared).
 7. Stage 6B — retrieval benchmark contract + gold evidence set, built on
-   the Stage 6A alignment catalog. **Next.**
+   the Stage 6A/6A.1/6A.2/6A.2a/6A.2b alignment catalog. **Next.**
 8. Stage 7A — regular vector RAG projection + retrieval baseline.
 9. Stage 7B — graph-enriched RAG projection.
 10. Stage 7C — wiki page/link projection.
@@ -210,9 +218,10 @@ At minimum, the full existing suite must continue to pass unmodified:
 `tests/test_evaluation_aggregation.py` (17),
 `tests/test_evaluation_identifier_occurrence.py` (5),
 `tests/test_evaluation_table_matching.py` (4),
-`tests/test_evaluation_visual_claims.py` (3),
+`tests/test_evaluation_visual_claims.py` (6),
+`tests/test_evaluation_determinism_subprocess.py` (2),
 `tests/test_stage6a_integration.py` (25),
-`tests/test_stage6a_report_generation.py` (8) — 472 total, 3 warnings
+`tests/test_stage6a_report_generation.py` (8) — 477 total, 3 warnings
 (pre-existing Docling-dependency deprecation warnings, not this project's
 own code). A new adapter/retrieval-projection implementation must add its
 own test files following the same pattern (one file per concern, `pytest`,
@@ -305,7 +314,7 @@ required of any future adapter (path B/C/D) too:
   JSON, canonical hash, chunk-list JSON, chunk ids, chunk content hashes)
   independently, never as one collapsed pass/fail.
 
-## Evaluator contract (Stage 6A, hardened 6A.1/6A.2 — must be preserved by Stage 6B+)
+## Evaluator contract (Stage 6A, hardened 6A.1/6A.2/6A.2a/6A.2b, FROZEN — must be preserved by Stage 6B+)
 
 - Score primarily against `CanonicalDocument`; use `CanonicalChunk` only
   for downstream evidence/chunk-alignment availability; use raw Docling
@@ -333,7 +342,27 @@ required of any future adapter (path B/C/D) too:
   claim's own `fact_type`/`subject`/`relation`/`object`/`value`/`unit` is
   matched structurally against actual `VisualFactAnnotation` output
   (`evaluator.py::_visual_fact_matches_claim`); the presence of any OTHER,
-  correct visual fact must never fail an unrelated unsupported claim.
+  correct visual fact must never fail an unrelated unsupported claim. The
+  fact-catalog builder (`_stress_chart_facts`) MUST preserve every one of
+  these structured fields for both `visual_facts` and `unsupported_claims`
+  -- truncating to `fact_id`/`raw_text` or `fact_id`/`claim` silently
+  defeats this matcher in production (every real comparison field but
+  `fact_id` becomes `None`), a real bug found and fixed at Stage 6A.2a
+  and proven by a real-manifest integration test
+  (`tests/test_evaluation_visual_claims.py`) that loads
+  `reference_manifest.json` through `build_fact_catalog()` directly,
+  never a hand-built replacement.
+- Every set-derived iteration order that feeds PERSISTED output is
+  `sorted()`, never raw `set` iteration (D-051) — Python `set` order for
+  `str` elements is a function of `PYTHONHASHSEED`, randomized per
+  process by default, and a same-process test cannot detect a violation
+  of this rule (see `tests/test_evaluation_determinism_subprocess.py`,
+  which spawns real child processes with different `PYTHONHASHSEED`
+  values). `unexpected_observations` is additionally canonically sorted
+  by `(fixture, reason, element_type, element_id, text)` immediately
+  before being returned/serialized. Canonical elements, chunks, and
+  manifest-declared facts, whose existing order carries real semantic
+  (reading-order) meaning, are never reordered.
 - Never invent an expected value not present in the frozen manifest — a
   gap (e.g. `STRESS_CHART_001` declaring no `expected_ocr_tokens`) is
   recorded as `failure_class="evaluation_contract_insufficient"` with a
@@ -491,7 +520,12 @@ presence of any other visual fact), D-049
 with the same fixture/metric/fact_id, never an id borrowed from a
 different metric's bookkeeping), D-050 (`evaluation_content_hash` is a
 separate deterministic content identity from `run_id`/`input_bundle_hash`;
-every hash-shaped field is validated as lowercase 64-hex).
+every hash-shaped field is validated as lowercase 64-hex), D-051 (every
+set-derived iteration order that feeds persisted evaluator output is
+sorted, never raw `set` iteration order, which is a function of
+`PYTHONHASHSEED` and therefore not reproducible across processes;
+`unexpected_observations` is canonically ordered before serialization;
+verified by real cross-process `PYTHONHASHSEED` subprocess tests).
 
 D-009 (Granite Vision optional/deferred), D-022 (effective-revision
 retrieval policy), D-023 (upstream duplicate-upload rejection policy) are

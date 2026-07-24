@@ -2512,3 +2512,92 @@ artifact/evaluator-version change); `tests/test_evaluation_models.py`
 (new parametrized malformed-hash-rejection tests for every validated
 field); real measured `evaluation_content_hash` in
 `reports/stage6a_docling_baseline_results.json`.
+
+---
+
+## D-051 — Persisted evaluator output is canonically ordered, never dependent on Python set iteration order (PYTHONHASHSEED)
+
+**Status:** Accepted
+**Stage:** Stage 6A.2b
+**Date/commit:** Needs confirmation (assigned at Stage 6A.2b implementation time)
+
+### Problem
+`_score_identifiers`'s `all_identifiers` (the set of every target and
+distractor identifier's normalized value, iterated to discover extra/
+unconsumed occurrences) was a raw Python `set`, iterated directly:
+`for identifier in all_identifiers: ...`. Python's `set` iteration order
+for `str` elements is a function of each element's hash value, which is
+randomized per PROCESS by `PYTHONHASHSEED` unless explicitly fixed. This
+produced a real, observed symptom: `unexpected_observations` changed
+ORDER between the Stage 6A.2 and Stage 6A.2a report-regeneration runs
+even though the underlying findings were identical -- a report diff that
+looked like a content change but was actually pure process-to-process
+hash-seed noise. A repeated in-process call could never have caught this
+(one process has one fixed hash seed for its whole lifetime).
+
+### Alternatives considered
+(a) Leave iteration order undefined and treat `unexpected_observations`
+as an intrinsically unordered collection (accept nondeterministic
+serialization). (b) Sort every set-derived iteration order used to build
+persisted output, and canonically sort `unexpected_observations` itself
+by a documented stable key before it is ever returned/serialized. (c)
+Fix `PYTHONHASHSEED` globally for every evaluator invocation (e.g. via
+`os.environ` at import time) rather than fixing the code.
+
+### Decision
+(b).
+
+### Rationale
+(c) would only mask the symptom for THIS project's own invocations while
+leaving the underlying nondeterminism latent and exportable (any external
+caller of this evaluator library without the same environment variable
+would still observe the bug); it also does nothing for genuinely
+different runs that legitimately use different `PYTHONHASHSEED` values
+for unrelated reasons. A deterministic evaluator must produce identical
+output given identical input, independent of process-level
+incidentals -- this is the same discipline already applied to `run_id`/
+`input_bundle_hash`/`evaluation_content_hash` (D-044, D-050): identity and
+serialized content must be reproducible, not merely plausible-looking.
+Canonicalizing the OUTPUT order (not just fixing the one known set) is
+defense-in-depth against the same class of bug being reintroduced
+elsewhere without being caught until a report diff looks suspicious again.
+
+### Trade-offs and consequences
+`_score_identifiers`'s `all_identifiers` now iterates in `sorted()` order.
+`evaluate_fixture` sorts the complete `unexpected_observations` list by
+`(fixture, reason, element_type, element_id, text)` immediately before
+constructing `FixtureEvaluationResult` -- a DERIVED collection (extra
+findings beyond the manifest, not source material), unlike canonical
+elements/chunks or manifest-declared facts, whose existing reading-order
+carries real semantic meaning and must never be reordered. A full audit
+of every other list built from set iteration, dict-key iteration, or
+set-to-list conversion found no other instance of this bug: every other
+`set` in the evaluation package is used only for O(1) membership testing
+(`in`/`not in`, which is hash-order-independent by definition) or is
+already wrapped in `sorted()` (e.g. `matched_chunk_ids`,
+`EvidenceAlignment.unit_indexes`/`source_references`,
+`_merge_metric`'s `supporting_matches`/`supporting_misses`,
+`_compute_input_bundle_hash`'s fixture ordering); every dict in the
+package is either built from a fixed-order iterable (Python dict
+insertion order is preserved regardless of hash values, per the language
+spec since 3.7 -- only `set` iteration order is hash-seed-dependent) or
+used for lookup only.
+
+### Deferred questions or reconsideration trigger
+None -- verified by real subprocess-level testing (see below), not
+inference from code reading alone.
+
+### Implementation and evidence
+`src/ingestion_bench/evaluation/evaluator.py::_score_identifiers`
+(`all_identifiers = sorted(...)`), `evaluate_fixture` (final
+`unexpected_observations` canonical sort);
+`tests/test_evaluation_determinism_subprocess.py` (new file) --
+`test_score_identifiers_unexpected_observations_identical_across_hash_seeds`
+(focused, spawns real `PYTHONHASHSEED=1`/`PYTHONHASHSEED=2` child
+processes; empirically confirmed to FAIL against the pre-fix code, with a
+real observed reordering between two identifiers' extra-occurrence
+records, before being fixed) and
+`test_full_evaluation_content_hash_and_unexpected_observations_identical_across_hash_seeds`
+(integration, real Stage 5A artifacts, compares `evaluation_content_hash`/
+`input_bundle_hash`/stable fixture-result JSON/`unexpected_observations`
+across the same two hash seeds).

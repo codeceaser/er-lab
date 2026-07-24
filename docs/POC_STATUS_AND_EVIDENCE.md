@@ -1,13 +1,13 @@
 # POC Status and Evidence — Enterprise Document-Ingestion Benchmark
 
-Snapshot as of Stage 6A.2 (uncommitted at time of writing — see `git log`
-for the actual commit once made) on branch `main`. Update this document
-at the end of every subsequent stage — see the maintenance rules in
-`docs/README.md`.
+Snapshot as of Stage 6A.2b (see `git log` for the exact commit) on branch
+`main`. **Stage 6A / 6A.1 / 6A.2 / 6A.2a / 6A.2b is complete and frozen**
+as of this snapshot. Update this document at the end of every subsequent
+stage — see the maintenance rules in `docs/README.md`.
 
 ## Current test totals
 
-**472 tests passed, 0 failed, 3 warnings** — full suite, all files
+**477 tests passed, 0 failed, 3 warnings** — full suite, all 19 files
 (`test_canonical_schema.py` 87, `test_canonical_hashing.py` 21,
 `test_fixture_generation.py` 38, `test_chunking.py` 110,
 `test_docling_standard_mapper.py` 28, `test_docling_standard_adapter.py`
@@ -16,18 +16,20 @@ at the end of every subsequent stage — see the maintenance rules in
 30, `test_evaluation_normalization.py` 23, `test_evaluation_matcher.py`
 7, `test_evaluation_aggregation.py` 17, `test_evaluation_identifier_occurrence.py`
 5, `test_evaluation_table_matching.py` 4, `test_evaluation_visual_claims.py`
-3, `test_stage6a_integration.py` 25, `test_stage6a_report_generation.py`
-8). Full verbose output: `reports/stage6a_pytest_output.txt` (regenerated
-in place at Stage 6A.2, same file, not renamed per sub-stage -- same
+6, `test_evaluation_determinism_subprocess.py` 2 (new, Stage 6A.2b),
+`test_stage6a_integration.py` 25, `test_stage6a_report_generation.py` 8).
+Full verbose output: `reports/stage6a_pytest_output.txt` (regenerated in
+place at Stage 6A.2b, same file, not renamed per sub-stage -- same
 convention as `reports/stage5a_pytest_output.txt` across 5A/5A.1/5A.2).
 The 3 warnings are pre-existing, unrelated deprecation warnings from
 Docling's own dependencies (RapidOCR, docling-core's `ListItem`
 auto-grouping), not from this project's own code. The Docling test files
-run real (small, CPU) Docling conversions; the nine
-`test_evaluation_*`/`test_stage6a_*` files run the real Stage 6A.2
-evaluator against real Stage 5A artifacts — none of this is mocked.
-Progression across stages (each report file is a real, committed
-snapshot):
+run real (small, CPU) Docling conversions; the ten
+`test_evaluation_*`/`test_stage6a_*` files run the real Stage 6A.2b
+evaluator against real Stage 5A artifacts, including two subprocess-based
+cross-process determinism tests that spawn real child processes with
+different `PYTHONHASHSEED` values — none of this is mocked. Progression
+across stages (each report file is a real, committed snapshot):
 
 | Report | Pass count |
 |---|---|
@@ -43,7 +45,9 @@ snapshot):
 | `reports/stage5a_pytest_output.txt` (Stage 5A.2) | 350 |
 | `reports/stage6a_pytest_output.txt` (Stage 6A) | 428 |
 | `reports/stage6a_pytest_output.txt` (Stage 6A.1) | 449 |
-| `reports/stage6a_pytest_output.txt` (Stage 6A.2, current) | 472 |
+| `reports/stage6a_pytest_output.txt` (Stage 6A.2) | 472 |
+| `reports/stage6a_pytest_output.txt` (Stage 6A.2a) | 475 |
+| `reports/stage6a_pytest_output.txt` (Stage 6A.2b, current) | 477 |
 
 ## Stage status table
 
@@ -61,10 +65,12 @@ snapshot):
 | 5A | Docling `DOCLING_STANDARD_LOCAL` adapter (path A) | **Completed, frozen** (hardened by 5A.1/5A.2) | `src/ingestion_bench/adapters/{base.py,docling_standard/}`, `scripts/run_docling_standard.py` | `tests/test_docling_standard_{mapper,adapter,integration}.py`; `reports/stage5a_pytest_output.txt`, `reports/stage5a_docling_standard_baseline.md`, `reports/stage5a_docling_standard_results.json` | See "Current limitations" below — these are genuine Docling baseline findings, not open adapter defects |
 | 5A.1 | Evidence/provenance hardening patch (diagnostic severity vs. fidelity impact, DOCX partial status, OCR annotation provenance, AdapterConversionResult validation, portable reports, single-execution dual report generation) | **Completed** | Same files as Stage 5A, patched — no new package | `tests/test_adapters_base.py` (15, new), `tests/test_run_docling_standard_report.py` (2, new), 4 new tests added to `test_docling_standard_integration.py`, 1 test updated in `test_docling_standard_mapper.py`; `reports/stage5a_pytest_output.txt` (regenerated in place) | None known — see decisions D-037, D-038 |
 | 5A.2 | Evidence-contract correction (truthful conversion-status validation, component-level determinism evidence, restored environment/model-footprint evidence) | **Completed, frozen** | Same files as Stage 5A, patched, plus `src/ingestion_bench/adapters/docling_standard/environment.py` (new) | `tests/test_adapters_base.py` (+4), `tests/test_docling_standard_adapter.py` (+2), `tests/test_run_docling_standard_report.py` (+1, extended); `reports/stage5a_pytest_output.txt` (regenerated in place), `reports/stage5a_docling_standard_baseline.md`/`results.json` (regenerated from one execution) | None known — see decisions D-039, D-040 |
-| 6A | Deterministic ingestion-fidelity evaluator (scores Stage 5A output against `reference_manifest.json`) | **Completed, not yet frozen** (hardened by 6A.1/6A.2) | `src/ingestion_bench/evaluation/{model,normalization,matcher,classification,evaluator,aggregation}.py`, `scripts/run_stage6a_evaluation.py` | `tests/test_evaluation_*.py`, `tests/test_stage6a_{integration,report_generation}.py`; `reports/stage6a_pytest_output.txt`, `reports/stage6a_docling_baseline_scorecard.md`, `reports/stage6a_docling_baseline_results.json`, `reports/stage6a_docling_miss_ledger.json`, `artifacts/stage6a/evidence_alignment.json` | See "Stage 6A.2 findings" below — genuine measured misses against the frozen manifest, not open evaluator defects |
-| 6A.1 | Correctness and gold-evidence hardening patch (occurrence-aware identifiers, complete evidence catalog, corrected parser/mapper attribution, exhaustive miss ledger, tightened OCR matching, best-candidate table matching, input-bundle traceability) | **Completed, superseded by 6A.2** | Same files as Stage 6A, patched | `tests/test_evaluation_identifier_occurrence.py` (3), `tests/test_evaluation_table_matching.py` (4, new), extended `test_evaluation_normalization.py`/`test_stage6a_integration.py` | None known — see decisions D-044, D-045, D-046 |
-| 6A.2 | Correctness and reproducibility patch (context-scoped identifier miss attribution, per-claim unsupported-visual-claim matching, supporting-miss referential integrity, `evaluation_content_hash`, strengthened hash-field validation) | **Completed, not yet frozen** | Same files as Stage 6A/6A.1, patched | `tests/test_evaluation_identifier_occurrence.py` (+2), `tests/test_evaluation_visual_claims.py` (3, new), extended `test_evaluation_models.py`/`test_evaluation_aggregation.py`/`test_stage6a_integration.py` | None known — see decisions D-047, D-048, D-049, D-050. "Do not mark Stage 6A frozen until this correction is reviewed" (explicit instruction) — awaiting review |
-| 6B | Retrieval benchmark contract + gold evidence set (built on the Stage 6A/6A.1/6A.2 alignment catalog) | **Not started** | — | — | — |
+| 6A | Deterministic ingestion-fidelity evaluator (scores Stage 5A output against `reference_manifest.json`) | **Completed, frozen** (hardened by 6A.1/6A.2/6A.2a/6A.2b) | `src/ingestion_bench/evaluation/{model,normalization,matcher,classification,evaluator,aggregation}.py`, `scripts/run_stage6a_evaluation.py` | `tests/test_evaluation_*.py`, `tests/test_stage6a_{integration,report_generation}.py`; `reports/stage6a_pytest_output.txt`, `reports/stage6a_docling_baseline_scorecard.md`, `reports/stage6a_docling_baseline_results.json`, `reports/stage6a_docling_miss_ledger.json`, `artifacts/stage6a/evidence_alignment.json` | See "Stage 6A.2b findings" below — genuine measured misses against the frozen manifest, not open evaluator defects |
+| 6A.1 | Correctness and gold-evidence hardening patch (occurrence-aware identifiers, complete evidence catalog, corrected parser/mapper attribution, exhaustive miss ledger, tightened OCR matching, best-candidate table matching, input-bundle traceability) | **Completed, superseded by 6A.2/6A.2a/6A.2b, frozen with the whole 6A line** | Same files as Stage 6A, patched | `tests/test_evaluation_identifier_occurrence.py` (3), `tests/test_evaluation_table_matching.py` (4, new), extended `test_evaluation_normalization.py`/`test_stage6a_integration.py` | None known — see decisions D-044, D-045, D-046 |
+| 6A.2 | Correctness and reproducibility patch (context-scoped identifier miss attribution, per-claim unsupported-visual-claim matching, supporting-miss referential integrity, `evaluation_content_hash`, strengthened hash-field validation) | **Completed, superseded by 6A.2a/6A.2b, frozen with the whole 6A line** | Same files as Stage 6A/6A.1, patched | `tests/test_evaluation_identifier_occurrence.py` (+2), `tests/test_evaluation_visual_claims.py` (3, new), extended `test_evaluation_models.py`/`test_evaluation_aggregation.py`/`test_stage6a_integration.py` | None known — see decisions D-047, D-048, D-049, D-050 |
+| 6A.2a | Closure patch (complete structured chart-fact contract, structured `EvidenceAlignment.expected_value`, real-manifest CU_001 integration test, `EVALUATOR_VERSION` 1.2.0, corrected duplicate-fixture test, Stage 7A/8A documentation mislabel fix) | **Completed, superseded by 6A.2b, frozen with the whole 6A line** | Same files as Stage 6A/6A.1/6A.2, patched | `tests/test_evaluation_visual_claims.py` (+3 real-manifest tests), corrected `tests/test_evaluation_models.py::test_evaluation_run_rejects_duplicate_fixtures` | Fixed a real bug: `_stress_chart_facts()` was silently truncating every structured field the Stage 6A.2 per-claim matcher depended on — see the commit and this document's history |
+| 6A.2b | Deterministic serialized-output closure (sorted identifier iteration, canonically-ordered `unexpected_observations`, cross-process `PYTHONHASHSEED` determinism tests, `EVALUATOR_VERSION` 1.2.1) | **Completed, frozen** | Same files as Stage 6A/6A.1/6A.2/6A.2a, patched | `tests/test_evaluation_determinism_subprocess.py` (2, new) | None known — see decision D-051. **Stage 6A/6A.1/6A.2/6A.2a/6A.2b is now frozen** |
+| 6B | Retrieval benchmark contract + gold evidence set (built on the Stage 6A/6A.1/6A.2/6A.2a/6A.2b alignment catalog) | **Not started, next** | — | — | — |
 | 7A | Regular vector RAG projection + retrieval baseline | **Not started** | — | — | — |
 | 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
 | 7C | Wiki page/link projection | **Not started** | — | — | — |
@@ -156,7 +162,7 @@ Stage 9   Cross-lane quality, cost, latency, and ROI comparison
 ## Current limitations
 
 - Extraction quality has now been measured against `reference_manifest.json`
-  for path A only (Stage 6A) — see "Stage 6A.2 findings" below and
+  for path A only (Stage 6A) — see "Stage 6A.2b findings" below and
   `reports/stage6a_docling_baseline_scorecard.md`. No retrieval, answer-
   quality, or cross-lane (path B/C, vector/graph/wiki) comparison has been
   measured yet (Stages 6B–9, not started).
@@ -207,20 +213,22 @@ Stage 9   Cross-lane quality, cost, latency, and ROI comparison
     remains a documented limitation (`ocr_sequence` reflects scan order,
     not verified visual reading order).
 
-## Stage 6A.2 findings — Docling Standard Local baseline scored against reference_manifest.json
+## Stage 6A.2b findings — Docling Standard Local baseline scored against reference_manifest.json
 
 Real, measured results from `reports/stage6a_docling_baseline_scorecard.md`
 (regenerate via `python scripts/run_stage6a_evaluation.py` after
 `scripts/run_docling_standard.py`). Never invented, never claimed beyond
 what the evaluator actually computed against the frozen manifest and
-Stage 5A output. This is the Stage 6A.2-corrected scorecard (see
-D-044 through D-050 for what changed and why) — the Stage 6A/6A.1
+Stage 5A output. This is the Stage 6A.2b-corrected scorecard (see
+D-044 through D-051 for what changed and why) — the Stage 6A/6A.1/6A.2
 scorecards are superseded, not deleted; see "Stage 6A -> 6A.1 corrections"
 and "Stage 6A.1 -> 6A.2 corrections" below for the exact before/after
 comparisons. The headline metric table below is numerically UNCHANGED
-from Stage 6A.1 (Stage 6A.2 corrected classification/attribution and
-identity discipline, not match counts) — see the 6A.1 -> 6A.2 table for
-what actually changed.
+since Stage 6A.1 (Stage 6A.2/6A.2a corrected classification/attribution/
+manifest-integration/identity discipline; Stage 6A.2b corrected
+SERIALIZED OUTPUT ORDERING and evaluator identity only — none of these
+changed a single match/miss outcome) — see the 6A.1 -> 6A.2 table for
+what actually changed at the classification level.
 
 | Metric | PDF | DOCX | PPTX | Overall |
 |---|---:|---:|---:|---:|
@@ -247,11 +255,17 @@ what actually changed.
 `evaluation_contract_insufficient` 1 (no `mapper_loss` entries remain —
 see D-047 below). 147 gold evidence-alignment entries written to
 `artifacts/stage6a/evidence_alignment.json` (matched 121, partial 9,
-missing 8, not_applicable 9) — see D-042/D-044.
-`evaluation_content_hash`: `838df9d92461476b5c9194668d2ba337cc65b9a7208bc9850d96840492df277c`
-(D-050; regenerated at Stage 6A.2a's `EVALUATOR_VERSION` bump to `1.2.0`,
-see `reports/stage6a_docling_baseline_scorecard.md` for `run_id`) — a
-deterministic hash over every stable result this run produced, separate
+missing 8, not_applicable 9) — see D-042/D-044. Every one of these counts
+is IDENTICAL to Stage 6A.2/6A.2a — Stage 6A.2b corrected serialized-output
+ordering and evaluator identity only (D-051), never a match/miss outcome.
+
+`evaluator_version`: `1.2.1` (Stage 6A.2b bump, D-051).
+`run_id`: `2192a4a00f13c8babeb72b96fe1181c3229c68eddad7cfe25abb6030f9e820e3`.
+`input_bundle_hash` (UNCHANGED since Stage 6A.2 — Stage 5A inputs/manifest
+never changed): `3f8af5f37d1e761b4e9f232a40b7ab222ce5106717abcc3eab1ffce933a57b8b`.
+`evaluation_content_hash`: `8ded514144feafc3a90663492ba002907425eeb898a5246863c524d5ceb4915b`
+(D-050; regenerated at Stage 6A.2b's `EVALUATOR_VERSION` bump to `1.2.1`)
+— a deterministic hash over every stable result this run produced, separate
 from `input_bundle_hash` (which identifies only the
 inputs read).
 
@@ -331,6 +345,22 @@ result-identity hashing) are internal-correctness and reproducibility
 fixes verified by new unit tests, not changes visible in the aggregate
 scorecard.
 
+### Stage 6A.2 -> 6A.2a -> 6A.2b corrections (old vs. new, same 9 fixtures)
+
+None of the scorecard numbers below changed across these three
+sub-stages — every correction was either a manifest-integration/
+identity-plumbing fix (6A.2a) or a serialized-output-ordering/identity
+fix (6A.2b), never a match/miss outcome.
+
+| | Before | After |
+|---|---|---|
+| `_stress_chart_facts()` structured fields (6A.2a) | Truncated to `fact_id`/`raw_text` (visual facts) and `fact_id`/`claim` (unsupported claims) -- silently defeated the Stage 6A.2 per-claim structural matcher in production, since every real comparison field but `fact_id` was `None` | Preserves the full manifest shape (`fact_type`/`subject`/`relation`/`object`/`value`/`unit`, plus `is_supported`/`reason` for unsupported claims) -- proven by a new real-manifest integration test loading `reference_manifest.json` through `build_fact_catalog()` |
+| `EvidenceAlignment.expected_value` for visual facts/unsupported claims (6A.2a) | Only `raw_text`/`claim` | The full structured fact -- the future source for forbidden-answer-claim/expected-visual-fact definitions in retrieval/answer evaluation |
+| `test_evaluation_run_rejects_duplicate_fixtures` (6A.2a) | Used non-hex hash placeholders (`"r" * 64`), so it passed for the WRONG reason (hash-format rejection, never exercising the duplicate-fixture validator at all) | Uses valid hex placeholders and asserts the error message concerns the duplicate fixture specifically |
+| `_score_identifiers`'s `all_identifiers` iteration (6A.2b) | Raw Python `set` iteration -- order is a function of `PYTHONHASHSEED`, randomized per process by default; caused a REAL observed `unexpected_observations` order change between the Stage 6A.2 and 6A.2a report-regeneration runs | `sorted()` -- deterministic across every process/hash-seed, verified by real `PYTHONHASHSEED=1` vs. `PYTHONHASHSEED=2` subprocess tests (D-051) |
+| `unexpected_observations` serialization order (6A.2b) | Whatever order the contributing scoring passes happened to append records in | Canonically sorted by `(fixture, reason, element_type, element_id, text)` immediately before `FixtureEvaluationResult` is constructed |
+| `EVALUATOR_VERSION` | `1.1.0` (Stage 6A.1) | `1.2.0` (6A.2a) -> `1.2.1` (6A.2b) -- every sub-stage that changed evaluator semantics/conclusions or persisted-output determinism bumped the version, so `run_id` never silently aliases across them |
+
 ## Known non-goals (see also "Explicitly deferred scope" below)
 
 Retrieval relevance, answer quality, ROI, and production deployment
@@ -357,20 +387,23 @@ canonical element's own text) has a corresponding fix and test — see
 
 Per the corrected roadmap above, the next step is **Stage 6B — the
 retrieval benchmark contract and gold evidence set**, building directly on
-the now-complete, hardened Stage 6A/6A.1/6A.2 evaluator and its
-`artifacts/stage6a/evidence_alignment.json` catalog (D-042/D-044). Vision
-enrichment (previously described as "Stage 6" earlier in this project's
-history) remains Stage 8A — see D-040 for why the evaluator and the
-retrieval-projection work come first. Stage 5A/5A.1/5A.2 is complete and
-frozen: `docling==2.114.0` is installed and pinned, the adapter converts
-all 9 generated fixtures to a valid `CanonicalDocument` (7 `success`, 2
-`partial` — DOCX, per D-037), its output chunks through the existing
-frozen `chunk_document()` unmodified, and conversion determinism is backed
-by five independent component-level comparisons (D-039). Stage 6A/6A.1/6A.2
-is complete but **not yet marked frozen** (explicit instruction pending
-review of the 6A.2 correction): the evaluator scores that same output
-against the frozen manifest (see "Stage 6A.2 findings" above) and produces
-the reusable, complete gold evidence-alignment catalog Stage 6B needs.
+the now-complete, hardened, and FROZEN Stage 6A/6A.1/6A.2/6A.2a/6A.2b
+evaluator and its `artifacts/stage6a/evidence_alignment.json` catalog
+(D-042/D-044). Vision enrichment (previously described as "Stage 6"
+earlier in this project's history) remains Stage 8A — see D-040 for why
+the evaluator and the retrieval-projection work come first. Stage
+5A/5A.1/5A.2 is complete and frozen: `docling==2.114.0` is installed and
+pinned, the adapter converts all 9 generated fixtures to a valid
+`CanonicalDocument` (7 `success`, 2 `partial` — DOCX, per D-037), its
+output chunks through the existing frozen `chunk_document()` unmodified,
+and conversion determinism is backed by five independent component-level
+comparisons (D-039). **Stage 6A/6A.1/6A.2/6A.2a/6A.2b is now complete and
+frozen** (`EVALUATOR_VERSION` `1.2.1`, verified deterministic across real
+`PYTHONHASHSEED` variation, D-051): the evaluator scores Stage 5A output
+against the frozen manifest (see "Stage 6A.2b findings" above) and
+produces the reusable, complete gold evidence-alignment catalog Stage 6B
+needs. No further changes to `src/ingestion_bench/evaluation/` are
+expected outside of what Stage 6B's own retrieval-contract work requires.
 
 ---
 
@@ -489,7 +522,7 @@ the reusable, complete gold evidence-alignment catalog Stage 6B needs.
   match against `OcrAnnotation`/paragraph text) but does not check
   character-level transcription fidelity beyond that.
 - Table-cell-value accuracy beyond what Stage 6A's cell-text/coordinate/
-  header/span metrics check (real, measured — see "Stage 6A.2 findings"
+  header/span metrics check (real, measured — see "Stage 6A.2b findings"
   above — but scored against this one frozen manifest's specific tables,
   not a claim about arbitrary real-world tables).
 - Visual-semantic accuracy (picture classification, diagram node/edge
@@ -527,7 +560,7 @@ chunk contract frozen (Stage 4.2a, done)
 ```
 
 The first *measurable* result (accuracy/recall against the manifest, not
-just "did conversion succeed") now exists — see "Stage 6A.2 findings" above
+just "did conversion succeed") now exists — see "Stage 6A.2b findings" above
 and `reports/stage6a_docling_baseline_scorecard.md`. The remaining gap to
 a *retrieval-relevant* measurable result is Stage 6B (the retrieval
 benchmark contract, built on the Stage 6A evidence-alignment catalog) —

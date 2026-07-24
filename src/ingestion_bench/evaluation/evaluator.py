@@ -56,7 +56,7 @@ from .normalization import (
     ocr_phrase_recovered,
 )
 
-EVALUATOR_VERSION = "1.2.0"
+EVALUATOR_VERSION = "1.2.1"
 
 # --- fixture registry --------------------------------------------------
 FIXTURES: list[tuple[str, str, str, str, str]] = [
@@ -1685,7 +1685,14 @@ def _score_identifiers(
     # Stage 6A.1 item 1: extra observed occurrences beyond every expected
     # occurrence's one-to-one consumption, recorded separately -- never
     # used to silently satisfy a different missing expectation.
-    all_identifiers = {f["normalized_value"] for f in target_facts} | {f["normalized_value"] for f in distractor_facts}
+    #
+    # Stage 6A.2b item 1: iterated in SORTED order, never raw set order --
+    # Python set iteration order is a function of PYTHONHASHSEED (randomized
+    # per process by default) for str elements, so raw set iteration here
+    # produced a different unexpected_observations ORDER across otherwise-
+    # identical evaluation runs, purely from process-to-process hash-seed
+    # variance, not from any real difference in what was found.
+    all_identifiers = sorted({f["normalized_value"] for f in target_facts} | {f["normalized_value"] for f in distractor_facts})
     for identifier in all_identifiers:
         for element in elements:
             consumed = consumed_spans.get(element.element_id, set())
@@ -1954,6 +1961,19 @@ def evaluate_fixture(loaded: LoadedFixture, manifest: dict[str, Any]) -> Fixture
         conversion_report_file_sha256=loaded.conversion_report_file_sha256,
         raw_docling_debug_file_sha256=loaded.raw_docling_debug_file_sha256,
         artifact_completeness=loaded.artifact_completeness,
+    )
+
+    # Stage 6A.2b item 2: unexpected_observations is canonically ordered
+    # before it is ever returned/serialized, by a documented stable key --
+    # never left in whatever order the contributing scoring passes happened
+    # to append them (which, before item 1's fix, could vary by
+    # PYTHONHASHSEED). This is a DERIVED collection (extra findings, not
+    # source material), unlike canonical elements/chunks, whose existing
+    # reading-order carries real semantic meaning and must never be
+    # reordered.
+    unexpected_observations = sorted(
+        unexpected_observations,
+        key=lambda o: (o.fixture, o.reason, o.element_type, o.element_id, o.text),
     )
 
     return FixtureEvaluationResult(

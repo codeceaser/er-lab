@@ -1,12 +1,12 @@
 {
-  "run_id": "90b0cc1672243f13ddaf8cdac015965ec2ff366bd697aeeddbc91166d968be32",
+  "run_id": "2192a4a00f13c8babeb72b96fe1181c3229c68eddad7cfe25abb6030f9e820e3",
   "input_bundle_hash": "3f8af5f37d1e761b4e9f232a40b7ab222ce5106717abcc3eab1ffce933a57b8b",
-  "evaluation_content_hash": "838df9d92461476b5c9194668d2ba337cc65b9a7208bc9850d96840492df277c",
-  "generated_at": "2026-07-24T12:53:52.935142+00:00",
+  "evaluation_content_hash": "8ded514144feafc3a90663492ba002907425eeb898a5246863c524d5ceb4915b",
+  "generated_at": "2026-07-24T13:35:14.055052+00:00",
   "manifest_version": "1.2.1",
   "manifest_sha256": "9a58c2c52af0d2ebdad644cd71d81b25503191036b06083b36b5b1af978dee1a",
   "stage5a_results_sha256": "1fcad47c68a66c1ea722e590e7695ce4220c871e3b9c708998516e37aefe7cfb",
-  "evaluator_version": "1.2.0",
+  "evaluator_version": "1.2.1",
   "fixture_results": [
     {
       "fixture": "parity/PARITY_001.pdf",
@@ -780,17 +780,17 @@
         },
         {
           "fixture": "parity/PARITY_001.pdf",
-          "element_id": "19d92a304432f3d893293d83118064bb1b502843a3b056215d320152b5971840",
-          "element_type": "ocr_annotation",
-          "text": "Activate Procedure P-205",
-          "reason": "extra occurrence of 'P-205' beyond every manifest-declared occurrence's one-to-one resolution"
-        },
-        {
-          "fixture": "parity/PARITY_001.pdf",
           "element_id": "9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee",
           "element_type": "paragraph",
           "text": "replaced by Control C-88; references to C-88",
           "reason": "extra occurrence of 'C-88' beyond every manifest-declared occurrence's one-to-one resolution"
+        },
+        {
+          "fixture": "parity/PARITY_001.pdf",
+          "element_id": "19d92a304432f3d893293d83118064bb1b502843a3b056215d320152b5971840",
+          "element_type": "ocr_annotation",
+          "text": "Activate Procedure P-205",
+          "reason": "extra occurrence of 'P-205' beyond every manifest-declared occurrence's one-to-one resolution"
         }
       ],
       "evidence_alignments": [
