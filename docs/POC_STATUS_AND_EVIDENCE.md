@@ -1,13 +1,15 @@
 # POC Status and Evidence — Enterprise Document-Ingestion Benchmark
 
-Snapshot as of Stage 6A.2b (see `git log` for the exact commit) on branch
-`main`. **Stage 6A / 6A.1 / 6A.2 / 6A.2a / 6A.2b is complete and frozen**
-as of this snapshot. Update this document at the end of every subsequent
-stage — see the maintenance rules in `docs/README.md`.
+Snapshot as of Stage 7A.1 (see `git log` for the exact commit) on branch
+`main`. **Stage 6A / 6A.1 / 6A.2 / 6A.2a / 6A.2b is complete and frozen**;
+**Stage 6B (retrieval benchmark contract) and Stage 7A.1 (regular vector
+retrieval baseline) are both complete**. Update this document at the end
+of every subsequent stage — see the maintenance rules in
+`docs/README.md`.
 
 ## Current test totals
 
-**477 tests passed, 0 failed, 3 warnings** — full suite, all 19 files
+**547 tests passed, 0 failed, 3 warnings** — full suite, all 26 files
 (`test_canonical_schema.py` 87, `test_canonical_hashing.py` 21,
 `test_fixture_generation.py` 38, `test_chunking.py` 110,
 `test_docling_standard_mapper.py` 28, `test_docling_standard_adapter.py`
@@ -16,20 +18,31 @@ stage — see the maintenance rules in `docs/README.md`.
 30, `test_evaluation_normalization.py` 23, `test_evaluation_matcher.py`
 7, `test_evaluation_aggregation.py` 17, `test_evaluation_identifier_occurrence.py`
 5, `test_evaluation_table_matching.py` 4, `test_evaluation_visual_claims.py`
-6, `test_evaluation_determinism_subprocess.py` 2 (new, Stage 6A.2b),
-`test_stage6a_integration.py` 25, `test_stage6a_report_generation.py` 8).
-Full verbose output: `reports/stage6a_pytest_output.txt` (regenerated in
-place at Stage 6A.2b, same file, not renamed per sub-stage -- same
-convention as `reports/stage5a_pytest_output.txt` across 5A/5A.1/5A.2).
-The 3 warnings are pre-existing, unrelated deprecation warnings from
-Docling's own dependencies (RapidOCR, docling-core's `ListItem`
-auto-grouping), not from this project's own code. The Docling test files
-run real (small, CPU) Docling conversions; the ten
-`test_evaluation_*`/`test_stage6a_*` files run the real Stage 6A.2b
-evaluator against real Stage 5A artifacts, including two subprocess-based
-cross-process determinism tests that spawn real child processes with
-different `PYTHONHASHSEED` values — none of this is mocked. Progression
-across stages (each report file is a real, committed snapshot):
+6, `test_evaluation_determinism_subprocess.py` 2, `test_stage6a_integration.py`
+25, `test_stage6a_report_generation.py` 8, `test_retrieval_benchmark_contract.py`
+24 (new, Stage 6B), `test_retrieval_baseline_corpus.py` 11 (new, Stage
+7A.1), `test_retrieval_baseline_indexing.py` 7 (new), `test_retrieval_baseline_retrieval.py`
+4 (new), `test_retrieval_baseline_gold.py` 7 (new), `test_retrieval_baseline_metrics.py`
+9 (new), `test_retrieval_baseline_integration.py` 8 (new, includes a real
+sentence-transformers + real Postgres/pgvector end-to-end test)). Full
+verbose output: `reports/stage7a_pytest_output.txt` (new; earlier stages'
+own dedicated pytest-output files remain under `reports/stageN_pytest_output.txt`
+as historical snapshots -- Stage 6B and Stage 7A.1 did not require their
+own dedicated evaluator-style report scripts the way 5A/6A did, but a
+full-suite capture is still recorded here for the same evidence-trail
+discipline). The 3 warnings are pre-existing, unrelated deprecation
+warnings from Docling's own dependencies (RapidOCR, docling-core's
+`ListItem` auto-grouping), not from this project's own code. The Docling
+test files run real (small, CPU) Docling conversions; the
+`test_evaluation_*`/`test_stage6a_*`/`test_retrieval_*` files run the
+real, frozen Stage 6A.2b evaluator, the real Stage 6B benchmark contract,
+and the real Stage 7A.1 retrieval baseline (real sentence-transformers
+embeddings, real Postgres/pgvector) against real Stage 5A/6A artifacts —
+none of this is mocked, aside from the deterministic fake embeddings/
+in-memory vector store the default `pytest` run uses in place of the
+real (but network/database-dependent) embedding model and vector store.
+Progression across stages (each report file is a real, committed
+snapshot):
 
 | Report | Pass count |
 |---|---|
@@ -47,7 +60,8 @@ across stages (each report file is a real, committed snapshot):
 | `reports/stage6a_pytest_output.txt` (Stage 6A.1) | 449 |
 | `reports/stage6a_pytest_output.txt` (Stage 6A.2) | 472 |
 | `reports/stage6a_pytest_output.txt` (Stage 6A.2a) | 475 |
-| `reports/stage6a_pytest_output.txt` (Stage 6A.2b, current) | 477 |
+| `reports/stage6a_pytest_output.txt` (Stage 6A.2b) | 477 |
+| `reports/stage7a_pytest_output.txt` (Stage 6B + Stage 7A.1, current) | 547 |
 
 ## Stage status table
 
@@ -70,8 +84,8 @@ across stages (each report file is a real, committed snapshot):
 | 6A.2 | Correctness and reproducibility patch (context-scoped identifier miss attribution, per-claim unsupported-visual-claim matching, supporting-miss referential integrity, `evaluation_content_hash`, strengthened hash-field validation) | **Completed, superseded by 6A.2a/6A.2b, frozen with the whole 6A line** | Same files as Stage 6A/6A.1, patched | `tests/test_evaluation_identifier_occurrence.py` (+2), `tests/test_evaluation_visual_claims.py` (3, new), extended `test_evaluation_models.py`/`test_evaluation_aggregation.py`/`test_stage6a_integration.py` | None known — see decisions D-047, D-048, D-049, D-050 |
 | 6A.2a | Closure patch (complete structured chart-fact contract, structured `EvidenceAlignment.expected_value`, real-manifest CU_001 integration test, `EVALUATOR_VERSION` 1.2.0, corrected duplicate-fixture test, Stage 7A/8A documentation mislabel fix) | **Completed, superseded by 6A.2b, frozen with the whole 6A line** | Same files as Stage 6A/6A.1/6A.2, patched | `tests/test_evaluation_visual_claims.py` (+3 real-manifest tests), corrected `tests/test_evaluation_models.py::test_evaluation_run_rejects_duplicate_fixtures` | Fixed a real bug: `_stress_chart_facts()` was silently truncating every structured field the Stage 6A.2 per-claim matcher depended on — see the commit and this document's history |
 | 6A.2b | Deterministic serialized-output closure (sorted identifier iteration, canonically-ordered `unexpected_observations`, cross-process `PYTHONHASHSEED` determinism tests, `EVALUATOR_VERSION` 1.2.1) | **Completed, frozen** | Same files as Stage 6A/6A.1/6A.2/6A.2a, patched | `tests/test_evaluation_determinism_subprocess.py` (2, new) | None known — see decision D-051. **Stage 6A/6A.1/6A.2/6A.2a/6A.2b is now frozen** |
-| 6B | Retrieval benchmark contract + gold evidence set (built on the Stage 6A/6A.1/6A.2/6A.2a/6A.2b alignment catalog) | **Not started, next** | — | — | — |
-| 7A | Regular vector RAG projection + retrieval baseline | **Not started** | — | — | — |
+| 6B | Minimal, deterministic retrieval benchmark contract: 12 frozen questions (4 direct, 3 distractor_sensitive, 2 relational, 2 multi_hop, 1 consolidation) over real Stage 6A catalog facts, plus a single-fixture fact-to-chunk resolver | **Completed** | `contracts/retrieval_benchmark_v1.json`, `src/ingestion_bench/retrieval_benchmark/{model,resolver}.py` | `tests/test_retrieval_benchmark_contract.py` (24, new) | None known — see D-055's reuse of this contract's vocabulary |
+| 7A.1 | Regular vector retrieval baseline: local sentence-transformers embeddings + real Postgres/pgvector index (own table, isolated from the GraphRAG POC), 4 corpus profiles, corpus-level scoped gold resolution, deterministic K=1/3/5 metrics | **Completed** | `contracts/corpus_profiles_v1.json`, `src/ingestion_bench/retrieval_baseline/*.py`, `scripts/run_stage7a_retrieval_baseline.py` | `tests/test_retrieval_baseline_*.py` (46, new); `reports/stage7a_vector_retrieval_scorecard.md`, `reports/stage7a_vector_retrieval_results.json`, `artifacts/stage7a/index_manifest.json` | See "Stage 7A.1 findings" below — see decisions D-052 through D-055 |
 | 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
 | 7C | Wiki page/link projection | **Not started** | — | — | — |
 | 8A | Selective OpenAI vision enrichment (`VisionEnricher` framework + `OpenAIVisionEnricher`, path B) | **Not started** | — | — | No `vision/` package. Corrected roadmap position — no longer "Stage 6"; see D-040 and "Corrected roadmap" below |
@@ -135,7 +149,7 @@ combination yet:
 - Optional local vision lane (path D — deferred, D-009)
 
 **Dimension 2 — retrieval projection:**
-- Regular vector RAG (Stage 7A, not started)
+- Regular vector RAG (Stage 7A.1 — **implemented**, path-A-corpus baseline only; still not combined with a second ingestion approach)
 - Graph-enriched RAG (Stage 7B, not started)
 - Wiki page/link retrieval (Stage 7C, not started)
 
@@ -149,14 +163,14 @@ state may enter `CanonicalDocument`/`CanonicalChunk`.
 framing in this project's history — vision enrichment moved to Stage 8A):
 
 ```
-Stage 6A  Deterministic ingestion-fidelity evaluator          <- DONE
-Stage 6B  Retrieval benchmark contract + gold evidence set     <- NEXT
-Stage 7A  Regular vector RAG projection + retrieval baseline
-Stage 7B  Graph-enriched RAG projection
-Stage 7C  Wiki page/link projection
-Stage 8A  Selective OpenAI vision enrichment (path B)
-Stage 8B  OpenAI vendor-native ingestion (path C)
-Stage 9   Cross-lane quality, cost, latency, and ROI comparison
+Stage 6A   Deterministic ingestion-fidelity evaluator          <- DONE, FROZEN
+Stage 6B   Retrieval benchmark contract + gold evidence set     <- DONE
+Stage 7A.1 Regular vector RAG projection + retrieval baseline   <- DONE
+Stage 7B   Graph-enriched RAG projection                        <- NEXT
+Stage 7C   Wiki page/link projection
+Stage 8A   Selective OpenAI vision enrichment (path B)
+Stage 8B   OpenAI vendor-native ingestion (path C)
+Stage 9    Cross-lane quality, cost, latency, and ROI comparison
 ```
 
 ## Current limitations
@@ -361,15 +375,95 @@ fix (6A.2b), never a match/miss outcome.
 | `unexpected_observations` serialization order (6A.2b) | Whatever order the contributing scoring passes happened to append records in | Canonically sorted by `(fixture, reason, element_type, element_id, text)` immediately before `FixtureEvaluationResult` is constructed |
 | `EVALUATOR_VERSION` | `1.1.0` (Stage 6A.1) | `1.2.0` (6A.2a) -> `1.2.1` (6A.2b) -- every sub-stage that changed evaluator semantics/conclusions or persisted-output determinism bumped the version, so `run_id` never silently aliases across them |
 
+## Stage 6B — retrieval benchmark contract
+
+`contracts/retrieval_benchmark_v1.json` freezes exactly 12 questions,
+built entirely from real facts already proven present in the Stage 6A
+gold evidence-alignment catalog — never an invented fact:
+
+| Difficulty | Count | Example |
+|---|---:|---|
+| `direct` | 4 | "Which application supports the Payment Settlement business service?" |
+| `distractor_sensitive` | 3 | "Which control currently satisfies Regulatory Obligation O-31: C-88 or C-88a?" |
+| `relational` | 2 | "Which regulatory obligation does Control C-88 satisfy, and which application is that obligation associated with?" |
+| `multi_hop` | 2 | Traces application -> obligation -> control -> recovery procedure across 4 facts |
+| `consolidation` | 1 | Summarizes application identity, ownership, governing control, recovery procedure, and RTO/RPO across 8 facts |
+
+Every question carries `required_fact_ids`/`forbidden_fact_ids` (real
+manifest fact ids or the evaluator's own derived compound ids, e.g.
+`T_001_r1c1`, never a chunk id), `citation_required`, and a short
+deterministic `answer_rubric`. `src/ingestion_bench/retrieval_benchmark/resolver.py`
+resolves a SINGLE fixture's required/forbidden facts against a
+single-fixture-scoped Stage 6A catalog into one of four states
+(`available_with_chunks`/`ingested_without_chunks`/`missing_from_ingestion`/
+`not_applicable`) — this vocabulary is reused unchanged by Stage 7A.1's
+own corpus-level resolver (D-054).
+
+## Stage 7A.1 findings — regular vector retrieval baseline
+
+Real, measured results from `reports/stage7a_vector_retrieval_scorecard.md`
+(regenerate via `python scripts/run_stage7a_retrieval_baseline.py`, which
+needs a reachable `DATABASE_URL`/Postgres+pgvector instance). Embedding
+model: `sentence-transformers/all-MiniLM-L6-v2` (local, 384-dim, no
+per-token cost). Vector store: real Postgres + pgvector, in this
+package's own table (`ingestion_bench_stage7a_vectors`), never the
+GraphRAG POC's own tables (D-052). Corpus evaluated:
+`baseline_demo` (PARITY_001.pdf + all 6 stress fixtures, 11 indexed
+chunks; `contracts/corpus_profiles_v1.json`, D-053). The other 3
+`format_comparison` indexes (`parity_pdf`/`parity_docx`/`parity_pptx`,
+3/5/4 chunks respectively) were built and idempotency-tested but not
+run through the full 12-question scorecard in this baseline snapshot.
+
+| K | Mean required-fact coverage@K | Mean Recall@K | All-required-retrieved rate@K | Mean forbidden-fact hit rate@K |
+|---|---:|---:|---:|---:|
+| 1 | 83.3% | 83.3% | 75.0% | 45.8% |
+| 3 | 95.8% | 95.8% | 91.7% | 54.2% |
+| 5 | 95.8% | 95.8% | 91.7% | 54.2% |
+
+Mean reciprocal rank of the first relevant chunk: 0.944. Mean retrieval
+latency: 34.6ms. `excluded_required_fact_count` was 0 for all 12
+questions against `baseline_demo` — every required fact this benchmark
+references was actually available in this corpus (no question was
+scored on a smaller, silently-shrunk denominator).
+
+**Two genuine, measured findings, not defects in the evaluator:**
+
+- **The forbidden-fact hit rate is high (46–54%) because Stage 4's
+  default chunker packs required and forbidden (distractor) facts into
+  the SAME chunk.** E.g. `P_001` (required, "Application APP-224510...")
+  and `D_001` (forbidden, the decommissioned predecessor) both live in
+  one packed "text" chunk for `PARITY_001.pdf` — retrieving the right
+  chunk for the required fact necessarily also retrieves the distractor
+  sentence in the same chunk. This is a real property of this
+  benchmark's coarse default chunking (`max_chars=1200`), not a
+  retrieval-quality failure or a scoring bug — D-055's exclusion rule
+  correctly still counts this against `forbidden_hit_rate`, since the
+  forbidden evidence genuinely IS retrievable in this corpus.
+- **`Q_CONSOLIDATION_001` (coverage@5 = 50%) shows a real chunk-vs-query
+  semantic-similarity gap.** Its 8 required facts span TWO chunks: a
+  narrative "text" chunk (4 facts) and a terse table chunk holding the
+  RTO/RPO rows (4 facts). Only the narrative chunk was retrieved in the
+  top 5 — a short "Metric/Value/RTO/4 hours" table chunk scores lower
+  semantic similarity against a long natural-language summarization
+  query than prose does, even though it is fully indexed and available.
+  A real, honest finding about embedding-based retrieval over tabular
+  content, not an artifact of this stage's own code.
+
 ## Known non-goals (see also "Explicitly deferred scope" below)
 
-Retrieval relevance, answer quality, ROI, and production deployment
-readiness remain explicitly out of scope for what exists today — no
-retrieval layer has been built or measured yet (Stages 6B–9). Path A
+Answer quality, ROI, and production deployment readiness remain
+explicitly out of scope for what exists today — no answer-generation
+layer has been built (Stages 9+, and never within Stage 7A.1 itself,
+which stops after retrieval evaluation). Path A
 (`DOCLING_STANDARD_LOCAL`) ingestion-fidelity accuracy against the frozen
-manifest **has** now been measured (Stage 6A, above) — this is the one
-extraction-accuracy claim this repository can currently substantiate;
-paths B/C/D ingestion accuracy remain unmeasured (not implemented).
+manifest **has** been measured (Stage 6A, above), and regular vector
+retrieval quality against the frozen Stage 6B benchmark **has** now also
+been measured for one corpus/embedding/vector-store configuration
+(Stage 7A.1, above) — these are the two extraction/retrieval-accuracy
+claims this repository can currently substantiate. Graph-enriched and
+wiki retrieval (Stages 7B/7C) and paths B/C/D ingestion accuracy remain
+unmeasured (not implemented); cross-projection/cross-lane comparison
+(Stage 9) has not been attempted.
 
 ## Pending Stage 4.x corrections
 
@@ -385,25 +479,27 @@ canonical element's own text) has a corresponding fix and test — see
 
 ## Next critical implementation step
 
-Per the corrected roadmap above, the next step is **Stage 6B — the
-retrieval benchmark contract and gold evidence set**, building directly on
-the now-complete, hardened, and FROZEN Stage 6A/6A.1/6A.2/6A.2a/6A.2b
-evaluator and its `artifacts/stage6a/evidence_alignment.json` catalog
-(D-042/D-044). Vision enrichment (previously described as "Stage 6"
-earlier in this project's history) remains Stage 8A — see D-040 for why
-the evaluator and the retrieval-projection work come first. Stage
-5A/5A.1/5A.2 is complete and frozen: `docling==2.114.0` is installed and
-pinned, the adapter converts all 9 generated fixtures to a valid
-`CanonicalDocument` (7 `success`, 2 `partial` — DOCX, per D-037), its
-output chunks through the existing frozen `chunk_document()` unmodified,
-and conversion determinism is backed by five independent component-level
-comparisons (D-039). **Stage 6A/6A.1/6A.2/6A.2a/6A.2b is now complete and
-frozen** (`EVALUATOR_VERSION` `1.2.1`, verified deterministic across real
-`PYTHONHASHSEED` variation, D-051): the evaluator scores Stage 5A output
-against the frozen manifest (see "Stage 6A.2b findings" above) and
-produces the reusable, complete gold evidence-alignment catalog Stage 6B
-needs. No further changes to `src/ingestion_bench/evaluation/` are
-expected outside of what Stage 6B's own retrieval-contract work requires.
+Per the corrected roadmap above, the next step is **Stage 7B —
+graph-enriched RAG projection**, independently derived from the SAME
+frozen `CanonicalDocument`/`CanonicalChunk` corpus and the SAME Stage 6A
+gold evidence-alignment catalog Stage 7A.1 already consumed (D-040),
+scored against the SAME frozen Stage 6B 12-question benchmark contract
+(never modified by Stage 7A.1, D-054) so its results are directly
+comparable to Stage 7A.1's. Vision enrichment (previously described as
+"Stage 6" earlier in this project's history) remains Stage 8A — see
+D-040 for why the evaluator and the retrieval-projection work come
+first. Stage 5A/5A.1/5A.2 is complete and frozen. **Stage
+6A/6A.1/6A.2/6A.2a/6A.2b is complete and frozen** (`EVALUATOR_VERSION`
+`1.2.1`, D-051). **Stage 6B is complete**: 12 frozen questions in
+`contracts/retrieval_benchmark_v1.json`, every required/forbidden fact
+verified real against the Stage 6A catalog. **Stage 7A.1 is complete**:
+real sentence-transformers embeddings, real Postgres/pgvector index (own
+table, D-052), corpus-level scoped gold resolution (D-054), and a real,
+measured K=1/3/5 retrieval scorecard against `baseline_demo` (see "Stage
+7A.1 findings" above). No further changes to
+`src/ingestion_bench/evaluation/` or `src/ingestion_bench/retrieval_benchmark/`
+are expected outside of what Stage 7B's own graph-projection work
+requires.
 
 ---
 

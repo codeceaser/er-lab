@@ -45,17 +45,41 @@ sub-stages changed a single match/miss outcome from Stage 6A.1's baseline
 except the one `mapper_loss` -> `parser_content_loss` reclassification at
 6A.2. See `reports/stage6a_docling_baseline_scorecard.md` for the real,
 measured results and `POC_STATUS_AND_EVIDENCE.md` "Stage 6A.2b findings"
-for their interpretation, including the old-vs-new comparisons. 477 tests
-passing, 3 pre-existing warnings from Docling's own dependencies.
+for their interpretation, including the old-vs-new comparisons.
 
-**Next: Stage 6B — the retrieval benchmark contract**, built on the Stage
-6A/6A.1/6A.2/6A.2a/6A.2b evidence-alignment catalog, not vision
-enrichment. See `POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions
-(corrected roadmap)" for the full corrected stage sequence (Stage
-6A/6A.1/6A.2/6A.2a/6A.2b done → Stage 6B next → Stages 7A/7B/7C
-vector/graph/wiki projections → Stages 8A/8B vision enrichment/OpenAI
-vendor-native → Stage 9 cross-lane comparison) and why vision enrichment
-moved later (decision D-040).
+**Stage 6B — the minimal retrieval benchmark contract — is complete**:
+exactly 12 frozen questions (`contracts/retrieval_benchmark_v1.json`;
+4 direct, 3 distractor_sensitive, 2 relational, 2 multi_hop, 1
+consolidation), every required/forbidden fact id verified real against
+the Stage 6A catalog, plus a single-fixture fact-to-chunk resolver
+(`src/ingestion_bench/retrieval_benchmark/`).
+
+**Stage 7A.1 — the regular vector retrieval baseline — is complete**:
+local `sentence-transformers/all-MiniLM-L6-v2` embeddings, a REAL
+Postgres/pgvector index (its own isolated table, never the separate ER
+GraphRAG POC's tables), 4 corpus profiles
+(`contracts/corpus_profiles_v1.json`), a new corpus-level gold resolver
+scoped by fixture+fact_id+chunk_id, and deterministic K=1/3/5 retrieval
+metrics that exclude ingestion-side gaps from ever being scored as a
+retrieval failure (`src/ingestion_bench/retrieval_baseline/`). Real
+measured baseline against the `baseline_demo` corpus: mean required-fact
+coverage 83.3%/95.8%/95.8% at K=1/3/5, mean reciprocal rank 0.944. See
+`reports/stage7a_vector_retrieval_scorecard.md` for the full scorecard
+and `POC_STATUS_AND_EVIDENCE.md` "Stage 7A.1 findings" for two genuine
+measured findings (a chunk-granularity-driven forbidden-fact hit rate,
+and a narrative-vs-table chunk split on the consolidation question).
+
+**547 tests passing** (3 pre-existing warnings from Docling's own
+dependencies).
+
+**Next: Stage 7B — graph-enriched RAG projection**, scored against the
+SAME frozen Stage 6B benchmark contract Stage 7A.1 used, so results are
+directly comparable. See `POC_STATUS_AND_EVIDENCE.md` "Benchmark
+dimensions (corrected roadmap)" for the full corrected stage sequence
+(Stage 6A/6A.1/6A.2/6A.2a/6A.2b done → Stage 6B done → Stage 7A.1 done →
+Stage 7B next → Stage 7C wiki projection → Stages 8A/8B vision
+enrichment/OpenAI vendor-native → Stage 9 cross-lane comparison) and why
+vision enrichment moved later (decision D-040).
 
 ## Repository root
 
@@ -94,7 +118,7 @@ stage reports):
 .venv/Scripts/python.exe -m pytest -v
 ```
 
-This runs all nineteen test files (`test_canonical_schema.py`,
+This runs all twenty-six test files (`test_canonical_schema.py`,
 `test_canonical_hashing.py`, `test_fixture_generation.py`,
 `test_chunking.py`, `test_docling_standard_mapper.py`,
 `test_docling_standard_adapter.py`, `test_docling_standard_integration.py`,
@@ -103,15 +127,23 @@ This runs all nineteen test files (`test_canonical_schema.py`,
 `test_evaluation_matcher.py`, `test_evaluation_aggregation.py`,
 `test_evaluation_identifier_occurrence.py`, `test_evaluation_table_matching.py`,
 `test_evaluation_visual_claims.py`, `test_evaluation_determinism_subprocess.py`,
-`test_stage6a_integration.py`, `test_stage6a_report_generation.py`) — 477
-tests as of Stage 6A.2b, the evaluator's frozen state (3 pre-existing
-warnings from Docling's own dependencies, not this project's code). The
-three `test_docling_standard_*` files run the real Docling
+`test_stage6a_integration.py`, `test_stage6a_report_generation.py`,
+`test_retrieval_benchmark_contract.py`, `test_retrieval_baseline_corpus.py`,
+`test_retrieval_baseline_indexing.py`, `test_retrieval_baseline_retrieval.py`,
+`test_retrieval_baseline_gold.py`, `test_retrieval_baseline_metrics.py`,
+`test_retrieval_baseline_integration.py`) — 547 tests as of Stage 7A.1 (3
+pre-existing warnings from Docling's own dependencies, not this project's
+code). The three `test_docling_standard_*` files run the real Docling
 adapter (not mocked) against the generated fixtures; the
-`test_evaluation_*`/`test_stage6a_*` files run the real, now-frozen,
-Stage 6A.2b evaluator against real Stage 5A output. It does **not**
-exercise embedding or retrieval code, because none of that exists yet
-(Stage 6B onward).
+`test_evaluation_*`/`test_stage6a_*` files run the real, frozen Stage
+6A.2b evaluator against real Stage 5A output; the `test_retrieval_*`
+files run the real, frozen Stage 6B benchmark contract and the real
+Stage 7A.1 retrieval baseline (real sentence-transformers embeddings,
+real Postgres/pgvector for one test, otherwise deterministic fake
+embeddings/an in-memory vector store) against real Stage 5A/6A
+artifacts. It does **not** exercise answer generation, Graph RAG, wiki
+generation, or vision enrichment, because none of that exists yet
+(Stage 7B onward).
 
 To reproduce the Stage 5A baseline conversion of every fixture (not just
 run the test suite): `python scripts/run_docling_standard.py` — writes
@@ -121,7 +153,13 @@ output against the manifest: `python scripts/run_stage6a_evaluation.py`
 — writes `artifacts/stage6a/` (gitignored, regenerable),
 `reports/stage6a_docling_baseline_scorecard.md`,
 `reports/stage6a_docling_baseline_results.json`, and
-`reports/stage6a_docling_miss_ledger.json`.
+`reports/stage6a_docling_miss_ledger.json`. To then build the Stage
+7A.1 vector indexes and run the frozen Stage 6B benchmark against them:
+`python scripts/run_stage7a_retrieval_baseline.py` — requires a
+reachable `DATABASE_URL` (Postgres + pgvector; the real, configured
+vector store) and writes `artifacts/stage7a/` (gitignored, regenerable),
+`reports/stage7a_vector_retrieval_scorecard.md`, and
+`reports/stage7a_vector_retrieval_results.json`.
 
 Regenerating the benchmark fixtures (`fixtures/generated/` is gitignored,
 not committed) requires running the generator directly, e.g.:

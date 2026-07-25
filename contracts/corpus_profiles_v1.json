@@ -1,0 +1,30 @@
+{
+  "corpus_profiles_version": "1.0.0",
+  "profiles": {
+    "baseline_demo": {
+      "description": "PARITY_001.pdf plus every unique stress fixture. Excludes PARITY_001.docx/.pptx: the PDF/DOCX/PPTX parity documents contain duplicate logical knowledge, so indexing all three together would distort retrieval scores.",
+      "fixtures": [
+        "parity/PARITY_001.pdf",
+        "stress/STRESS_DOCX_001.docx",
+        "stress/STRESS_PDF_001.pdf",
+        "stress/STRESS_PPTX_001.pptx",
+        "stress/STRESS_PPTX_002.pptx",
+        "stress/STRESS_CHART_001.pdf",
+        "stress/STRESS_SCANNED_001.pdf"
+      ]
+    },
+    "parity_pdf": {
+      "description": "format_comparison: PARITY_001 rendered as PDF only. Never combined with parity_docx/parity_pptx into one index.",
+      "fixtures": ["parity/PARITY_001.pdf"]
+    },
+    "parity_docx": {
+      "description": "format_comparison: PARITY_001 rendered as DOCX only. Never combined with parity_pdf/parity_pptx into one index.",
+      "fixtures": ["parity/PARITY_001.docx"]
+    },
+    "parity_pptx": {
+      "description": "format_comparison: PARITY_001 rendered as PPTX only. Never combined with parity_pdf/parity_docx into one index.",
+      "fixtures": ["parity/PARITY_001.pptx"]
+    }
+  },
+  "format_comparison_group": ["parity_pdf", "parity_docx", "parity_pptx"]
+}

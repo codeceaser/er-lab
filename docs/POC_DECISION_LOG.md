@@ -2601,3 +2601,290 @@ records, before being fixed) and
 (integration, real Stage 5A artifacts, compares `evaluation_content_hash`/
 `input_bundle_hash`/stable fixture-result JSON/`unexpected_observations`
 across the same two hash seeds).
+
+---
+
+## D-052 — Stage 7A.1's one configured embedding model and one configured vector store are local sentence-transformers and real Postgres/pgvector, in an isolated table
+
+**Status:** Accepted
+**Stage:** Stage 7A.1
+**Date/commit:** Needs confirmation (assigned at Stage 7A.1 implementation time)
+
+### Problem
+Stage 7A.1 required exactly ONE configured real embedding model and ONE
+configured real vector-store implementation (no provider/plugin
+framework), with credentials from environment variables, a
+deterministic-fake substitute for the default unit-test suite, and an
+explicit (skippable) integration test for the real pair. The repository
+already has a working embedding+vector-store stack for the separate ER
+GraphRAG POC (`sentence-transformers/all-MiniLM-L6-v2` + Postgres/
+pgvector via `docker-compose.yml`), but that POC's own code/tables must
+never be reused or touched directly (`docs/POC_ARCHITECTURE.md` rule C
+-- "the two are not wired together").
+
+### Alternatives considered
+For the embedding model: (a) OpenAI's hosted embeddings (real per-token
+cost, needs network + `OPENAI_API_KEY`, already present in `.env`). (b)
+The same local `sentence-transformers/all-MiniLM-L6-v2` model the
+GraphRAG POC already uses (free, no ongoing cost, one-time model
+download, already proven to work in this environment).
+For the vector store: (a) A local, file-persisted flat index (no
+external dependency at all, but a materially weaker "vertical slice"
+claim than a real production-shaped vector database). (b) Real Postgres
++ pgvector, via the SAME already-running database instance the GraphRAG
+POC uses, but in a NEW, independent table this package owns exclusively
+(`ingestion_bench_stage7a_vectors`), reachable via the same
+`DATABASE_URL` convention, using an independent connection (never
+importing `src/db.py`/`src/config.py`).
+
+### Decision
+(b) for both: local `sentence-transformers/all-MiniLM-L6-v2` and real
+Postgres/pgvector in an isolated table.
+
+### Rationale
+A local embedding model avoids introducing a real per-token API cost
+into a benchmark whose numbers should be reproducible without spending
+money on every re-run, and reuses proven, already-installed
+infrastructure. Real pgvector (rather than a local flat-file store)
+makes this genuinely "the first visible, provenance-backed semantic
+retrieval vertical slice" the stage objective asked for -- a real
+production-shaped index, not a toy substitute -- while the dedicated,
+independently-owned table keeps the "not wired together" boundary
+intact: this package creates its own table (`CREATE TABLE IF NOT
+EXISTS`, never `DROP`), never references `document_chunks`/`documents`/
+`kg_*` anywhere in code (enforced by
+`tests/test_retrieval_baseline_integration.py`), and never imports the
+GraphRAG POC's own `db.py`/`config.py` modules.
+
+### Trade-offs and consequences
+Real pgvector requires a reachable `DATABASE_URL` for the CLI script and
+the one explicit integration test; both fail closed with a clear
+`PgVectorStoreUnavailable` rather than silently falling back to a
+different store. The default unit-test suite instead uses
+`InMemoryVectorStore` (pure Python, no external dependency) and
+`FakeEmbeddingProvider` (deterministic SHA-256-derived vectors), so
+`pytest` never requires network or database access by default.
+Discovered mid-implementation: creating the real table with
+`CREATE TABLE IF NOT EXISTS` before the embedding dimension is known
+(e.g. from an earlier smoke test using a throwaway 4-dimension vector)
+silently freezes the column at the WRONG dimension for every subsequent
+real run, since `IF NOT EXISTS` never alters an existing table -- this
+bit twice during development (once via a manual smoke test, once via
+the integration test's own availability probe) before the probe was
+rewritten to check connectivity only, never creating a table at all.
+
+### Deferred questions or reconsideration trigger
+None -- both choices satisfy "one embedding model, one vector store, no
+plugin framework" for this stage; a future stage adding a second
+embedding model or vector-store backend would need its own decision, not
+a silent extension of this one.
+
+### Implementation and evidence
+`src/ingestion_bench/retrieval_baseline/embeddings.py`
+(`SentenceTransformerEmbeddingProvider`, `FakeEmbeddingProvider`),
+`pgvector_store.py` (`PgVectorStore`, own table, idempotent upsert via
+`ON CONFLICT`), `vector_store.py` (`InMemoryVectorStore`, the shared
+reference implementation both the unit-test suite and the `VectorStore`
+Protocol are defined against); real measured results in
+`reports/stage7a_vector_retrieval_scorecard.md`;
+`tests/test_retrieval_baseline_integration.py::test_real_embedding_and_real_pgvector_end_to_end`
+(skips gracefully if unavailable) and its isolation tests (no
+`document_chunks`/`kg_*` reference in code, no import of the GraphRAG
+POC's own modules).
+
+---
+
+## D-053 — Corpus profiles are a small, frozen, literal fixture-list configuration -- never a generic profile framework
+
+**Status:** Accepted
+**Stage:** Stage 7A.1
+**Date/commit:** Needs confirmation (assigned at Stage 7A.1 implementation time)
+
+### Problem
+Indexing all three PARITY_001 format variants (PDF/DOCX/PPTX) together
+in one corpus would index the SAME logical knowledge three times,
+distorting retrieval scores (three near-identical chunks competing for
+the same query, none more "correct" than another). Stage 7A.1 needed
+`baseline_demo` (one deduplicated demo corpus) and a `format_comparison`
+group of three independently-built, single-format indexes -- without
+building a generic, rule-based corpus-composition engine for what is, in
+this POC, a fixed and small set of fixtures.
+
+### Alternatives considered
+(a) A rule-based profile engine (e.g. "include suite X, exclude format Y
+for doc Z") that could express arbitrary future compositions. (b) A
+small, versioned JSON file (`contracts/corpus_profiles_v1.json`) listing
+each profile's fixtures as a literal array, validated by a handful of
+Pydantic model validators (fixtures must be real/unique;
+`baseline_demo` must exclude `PARITY_001.docx`/`.pptx`; every
+`format_comparison` profile must index exactly one fixture).
+
+### Decision
+(b).
+
+### Rationale
+This POC's fixture set is small and frozen (Stage 3, frozen); a rule
+engine would be speculative infrastructure for compositions that do not
+exist yet, violating this project's standing "no premature abstraction"
+discipline -- the same "narrow implementation, no plug-in framework"
+instruction Stage 6B's own benchmark contract was built under. A literal, versioned list is
+trivially auditable (the whole corpus composition is visible in one
+small JSON file) and the validators catch the exact mistakes that would
+matter -- an accidental duplicate-parity inclusion, or a
+`format_comparison` profile accidentally spanning more than one format --
+at construction time, not at query time.
+
+### Trade-offs and consequences
+Adding a new profile means editing the JSON file directly, not calling a
+configuration API -- acceptable for this stage's scope. The validators
+are the actual guardrails project-wide review (Stage 7A.1's own
+validation section) required: proven by
+`tests/test_retrieval_baseline_corpus.py`'s explicit negative tests
+(a `baseline_demo` including a duplicate parity variant, or a
+`format_comparison` profile spanning two fixtures, are both rejected at
+construction).
+
+### Deferred questions or reconsideration trigger
+Revisit if a future stage needs many more corpus compositions (e.g.
+per-suite ablations) -- at that point a small rule layer may earn its
+complexity; not before.
+
+### Implementation and evidence
+`contracts/corpus_profiles_v1.json`;
+`src/ingestion_bench/retrieval_baseline/corpus.py::CorpusProfile`,
+`CorpusProfileSet` (validators); real measured index-build counts in
+`artifacts/stage7a/index_manifest.json` (`baseline_demo`: 11 chunks
+across 7 fixtures; `parity_pdf`/`parity_docx`/`parity_pptx`: 3/5/4
+chunks respectively, each a single-fixture index).
+
+---
+
+## D-054 — Corpus-level gold-evidence resolution is scoped by fixture + fact_id + chunk_id, added alongside (never modifying) Stage 6B's single-fixture resolver
+
+**Status:** Accepted
+**Stage:** Stage 7A.1
+**Date/commit:** Needs confirmation (assigned at Stage 7A.1 implementation time)
+
+### Problem
+Stage 6B's resolver (`ingestion_bench.retrieval_benchmark.resolver`) is
+scoped to ONE fixture and raises if a fact_id isn't declared for it --
+correct for a single-lane benchmark, but Stage 7A.1's corpora span
+MULTIPLE fixtures (e.g. `baseline_demo` mixes the parity PDF with six
+stress fixtures), and the SAME fact_id (e.g. `"P_001"`) legitimately
+resolves to a DIFFERENT chunk_id in each PARITY_001 format variant --
+verified directly: all three formats declare `P_001`, but each one's
+`matched_chunk_ids` value is different. A resolver keyed on fact_id
+alone would silently collide across formats.
+
+### Alternatives considered
+(a) Modify Stage 6B's resolver to accept a multi-fixture catalog. (b)
+Add a NEW, corpus-scoped resolver (`ingestion_bench.retrieval_baseline.gold`)
+that reuses Stage 6B's `FactResolutionStatus` vocabulary unchanged but
+keys its lookup by `(fixture, fact_id)`, and additionally intersects
+each fact's `matched_chunk_ids` against the chunk ids actually present
+in the CALLER'S built vector index (never simply against Stage 6A's
+catalog) -- treating a chunk absent from a given corpus profile's index
+(whether because its fixture was excluded from the profile, or a
+genuine ingestion-side chunk_projection_loss) as
+`"ingested_without_chunks"` for that corpus, the same status Stage 6B
+already uses.
+
+### Decision
+(b) -- Stage 7A.1's task explicitly forbade modifying Stage 6B's
+contract or resolver; a new, additive module was required regardless of
+which design was cleaner in isolation, and (b) is also the more correct
+design on its own merits (a resolver's answer must depend on what a
+GIVEN corpus actually indexed, not only on what Stage 6A/5A produced
+globally).
+
+### Rationale
+An unknown-fact_id-for-this-fixture case is normal in a multi-suite
+corpus (a stress-only fact checked against a parity fixture, say) --
+this is why the corpus-level resolver silently skips it per fixture
+(returns an empty entry list) rather than raising, unlike Stage 6B's
+single-fixture resolver, where the same absence is always a caller
+mistake. Reusing the exact same `FactResolutionStatus` values keeps
+"available/missing/not_applicable/ingested-without-chunks" meaning
+identical at both scopes, so a reader who understands Stage 6B's
+resolver already understands this one.
+
+### Trade-offs and consequences
+Every fact's gold `chunk_ids` are computed as the intersection of Stage
+6A's `matched_chunk_ids` and "what this corpus profile's vector index
+actually contains" -- proven with `set()` as the indexed set (forcing
+every real `available_with_chunks` fact down to
+`ingested_without_chunks`) and with the real `baseline_demo` index (the
+same fact resolves `available_with_chunks` once its chunk is actually
+indexed).
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/retrieval_baseline/gold.py::resolve_corpus_gold_evidence`,
+`ScopedFactEvidence`, `gold_chunk_ids`;
+`tests/test_retrieval_baseline_gold.py::test_fact_id_alone_is_not_globally_unique_across_parity_formats`
+(real Stage 6A data: `P_001` resolves to 3 different real chunk_ids
+across the 3 parity formats) and
+`test_a_fact_not_declared_for_a_fixture_is_silently_skipped_not_an_error`.
+
+---
+
+## D-055 — Only "retrieval failed to return available evidence" counts as a retrieval miss; every ingestion-side exclusion is removed from the denominator entirely
+
+**Status:** Accepted
+**Stage:** Stage 7A.1
+**Date/commit:** Needs confirmation (assigned at Stage 7A.1 implementation time)
+
+### Problem
+A required fact can fail to appear in retrieved results for reasons that
+have NOTHING to do with retrieval quality: Stage 5A never ingested it at
+all (`missing_from_ingestion`), it is structurally not applicable to
+this ingestion lane (`not_applicable`), or it was ingested but no chunk
+currently carries it in this corpus (`ingested_without_chunks`). Naively
+scoring "required fact not in top-K" as a retrieval failure in all four
+cases would blame the retrieval layer for ingestion-side gaps it cannot
+possibly fix -- exactly the mistake Stage 6A's own `excluded_not_applicable`
+discipline (D-041 onward) already exists to prevent at the ingestion
+layer.
+
+### Alternatives considered
+(a) Score every required fact not found in top-K as a miss, regardless
+of why. (b) Exclude a required fact from the coverage/recall denominator
+ENTIRELY unless its status is `available_with_chunks` -- only a fact
+Stage 5A/6A/this corpus's index genuinely made retrievable, and that
+retrieval still failed to surface, counts against the metric.
+
+### Decision
+(b).
+
+### Rationale
+This is the same "never silently blame the wrong layer" discipline this
+project has applied at every stage boundary so far (Stage 6A's
+parser-vs-mapper attribution, D-045/D-047; Stage 6A's
+`excluded_not_applicable`, D-041). A benchmark that conflates "the
+answer wasn't retrieved" with "the answer was never even ingested" would
+make Stage 7A's own retrieval quality look worse (or better) for reasons
+having nothing to do with retrieval.
+
+### Trade-offs and consequences
+`coverage_at_k`/`recall_at_k`/`all_required_retrieved_at_k` are `None`
+(never a misleading `0.0`) for a question whose required facts are ALL
+excluded in a given corpus -- the same "never silently 0%" convention
+Stage 6A's `MetricResult.score` already established.
+`excluded_required_fact_count` is reported explicitly per question so
+the exclusion is always visible, never silently hidden inside a smaller
+denominator.
+
+### Deferred questions or reconsideration trigger
+None.
+
+### Implementation and evidence
+`src/ingestion_bench/retrieval_baseline/metrics.py::compute_question_metrics`
+(`required_gold_by_fact` only ever includes `available_with_chunks`
+facts); `tests/test_retrieval_baseline_metrics.py::test_missing_from_ingestion_facts_excluded_never_a_retrieval_failure`
+and `test_coverage_is_none_when_zero_required_facts_are_available`; real
+measured baseline: 0 questions had `excluded_required_fact_count > 0`
+against `baseline_demo` (every required fact across all 12 questions was
+available in this corpus), confirmed in
+`reports/stage7a_vector_retrieval_results.json`.

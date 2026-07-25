@@ -9,8 +9,10 @@ features, and any claim not verifiable from the repository itself.
 
 Source of truth: `docs/POC_ARCHITECTURE.md`, `docs/POC_DECISION_LOG.md`,
 `docs/IMPLEMENTATION_WALKTHROUGH.md`, `docs/POC_STATUS_AND_EVIDENCE.md`,
-and the repository at Stage 6A.2b (see `git log` for the exact commit).
-**Stage 6A/6A.1/6A.2/6A.2a/6A.2b is complete and frozen.**
+and the repository at Stage 7A.1 (see `git log` for the exact commit).
+**Stage 6A/6A.1/6A.2/6A.2a/6A.2b is complete and frozen. Stage 6B
+(retrieval benchmark contract) and Stage 7A.1 (regular vector retrieval
+baseline) are both complete.**
 
 ---
 
@@ -23,13 +25,15 @@ Source documents (DOCX/PDF/PPTX)
   -> DocumentRevisionContext            [implemented — supplied by caller]
   -> chunk_document(...)                [implemented — do not redesign]
   -> CanonicalChunk[]                   [common evidence substrate — D-040]
-  -> Ingestion-fidelity evaluator vs. reference_manifest.json  [DONE — Stage 6A]
+  -> Ingestion-fidelity evaluator vs. reference_manifest.json  [DONE — Stage 6A, FROZEN]
   -> Gold fact-to-chunk evidence-alignment catalog              [DONE — Stage 6A output,
                                                                      artifacts/stage6a/evidence_alignment.json]
-  -> Retrieval benchmark contract + gold evidence set            [not implemented — Stage 6B, NEXT]
+  -> Retrieval benchmark contract + gold evidence set            [DONE — Stage 6B,
+                                                                     contracts/retrieval_benchmark_v1.json]
   -> Knowledge Projections (vector / graph / wiki), independently
      derived from the SAME CanonicalDocument/CanonicalChunk corpus
-     and the SAME Stage 6A evidence-alignment catalog (D-040)      [not implemented — Stage 7A/7B/7C]
+     and the SAME Stage 6A evidence-alignment catalog (D-040)      [vector DONE — Stage 7A.1;
+                                                                     graph/wiki not implemented — Stage 7B/7C, NEXT]
   -> Agent                              [out of scope]
   -> Cross-lane quality/cost/latency/ROI comparison               [not implemented — Stage 9]
 ```
@@ -77,11 +81,44 @@ Final module boundaries:
   rendering). **The only package in the repository allowed to read
   `reference_manifest.json`** — verified by
   `tests/test_stage6a_integration.py::test_evaluation_package_is_the_only_package_referencing_the_manifest`.
+- `src/ingestion_bench/retrieval_benchmark/` — **Stage 6B implemented.**
+  `model.py` (`BenchmarkQuestion`, `RetrievalBenchmarkContract` --
+  exactly 12 questions, 4/3/2/2/1 difficulty split, no required/forbidden
+  overlap), `resolver.py` (`resolve_question_facts`, single-fixture
+  `FactResolutionStatus` resolution: `available_with_chunks`/
+  `ingested_without_chunks`/`missing_from_ingestion`/`not_applicable`).
+  Reads `contracts/retrieval_benchmark_v1.json` (frozen, 12 questions);
+  never reads `reference_manifest.json` directly (that stays
+  `evaluation/`'s exclusive privilege, D-042) -- it consumes the Stage 6A
+  catalog only.
+- `src/ingestion_bench/retrieval_baseline/` — **Stage 7A.1 implemented.**
+  `config.py`, `corpus.py` (`CorpusProfile(Set)`, reads
+  `contracts/corpus_profiles_v1.json`), `embeddings.py`
+  (`SentenceTransformerEmbeddingProvider` -- the one real, configured
+  model; `FakeEmbeddingProvider` -- unit tests only), `vector_store.py`
+  (`VectorRecord`, `VectorStore` protocol, `InMemoryVectorStore` --
+  reference/test implementation), `pgvector_store.py` (`PgVectorStore` --
+  the one real, configured vector store, Postgres + pgvector, its OWN
+  table `ingestion_bench_stage7a_vectors`, never the GraphRAG POC's own
+  tables, D-052), `indexer.py` (`build_index`, idempotent), `retrieval.py`
+  (`RetrievalResult`, provenance-rich, `search()`), `gold.py`
+  (`resolve_corpus_gold_evidence` -- fixture+fact_id+chunk_id SCOPED,
+  added alongside Stage 6B's own resolver, never modifying it, D-054),
+  `metrics.py` (coverage@K/Recall@K/forbidden-hit-rate@K/reciprocal rank
+  -- only `available_with_chunks` facts ever count against a metric,
+  D-055), `evaluation.py`/`report.py` (orchestration, single-object
+  JSON+Markdown rendering). Never imports `src/db.py`/`src/config.py`
+  (the GraphRAG POC's own code); never modifies
+  `ingestion_bench.evaluation`/`ingestion_bench.retrieval_benchmark`.
 - `fixtures/` — `reference_manifest.json` (frozen), `BENCHMARK_CONTRACT.md`
   (frozen), `manifest_schema.py`, `generate_fixtures.py`, `diagram_image.py`.
+- `contracts/` — `retrieval_benchmark_v1.json` (frozen, Stage 6B, 12
+  questions), `corpus_profiles_v1.json` (Stage 7A.1, 4 corpus profiles).
 - `src/` (repository root, outside `ingestion_bench/`) — the **separate**
   hand-seeded ER GraphRAG POC. Do not conflate it with this pipeline; do
-  not modify it as part of ingestion-bench work.
+  not modify it as part of ingestion-bench work. Stage 7A.1's real vector
+  store reuses the SAME Postgres instance (`DATABASE_URL`) but writes
+  only to its own table, never `document_chunks`/`documents`/`kg_*`.
 
 ## Existing contracts that must be preserved
 
@@ -190,9 +227,29 @@ more *ingestion* lane, not a prerequisite for retrieval work.
    inference (D-051). One manifest-contract gap recorded, not invented
    around (chart OCR tokens undeclared).
 7. Stage 6B — retrieval benchmark contract + gold evidence set, built on
-   the Stage 6A/6A.1/6A.2/6A.2a/6A.2b alignment catalog. **Next.**
-8. Stage 7A — regular vector RAG projection + retrieval baseline.
-9. Stage 7B — graph-enriched RAG projection.
+   the Stage 6A/6A.1/6A.2/6A.2a/6A.2b alignment catalog. **Done.**
+   `src/ingestion_bench/retrieval_benchmark/`; exactly 12 frozen
+   questions in `contracts/retrieval_benchmark_v1.json` (4 direct, 3
+   distractor_sensitive, 2 relational, 2 multi_hop, 1 consolidation);
+   every required/forbidden fact id verified real against the Stage 6A
+   catalog; a single-fixture resolver (`resolver.py`).
+8. Stage 7A.1 — regular vector RAG projection + retrieval baseline.
+   **Done.** `src/ingestion_bench/retrieval_baseline/`; local
+   `sentence-transformers/all-MiniLM-L6-v2` embeddings + real Postgres/
+   pgvector index in an isolated table (D-052); 4 corpus profiles
+   (`contracts/corpus_profiles_v1.json`, D-053); a NEW corpus-level gold
+   resolver scoped by fixture+fact_id+chunk_id (`gold.py`, D-054, never
+   modifying Stage 6B's own resolver); deterministic K=1/3/5 metrics that
+   exclude ingestion-side gaps from the retrieval-miss denominator
+   entirely (D-055). Real measured baseline against `baseline_demo`: mean
+   coverage 83.3%/95.8%/95.8% at K=1/3/5; see
+   `docs/POC_STATUS_AND_EVIDENCE.md` "Stage 7A.1 findings" for the full
+   scorecard and two genuine findings (chunk-granularity-driven forbidden-
+   fact hit rate; a narrative-vs-table chunk split on the consolidation
+   question). **Next.**
+9. Stage 7B — graph-enriched RAG projection, scored against the SAME
+   frozen Stage 6B contract so results are directly comparable to Stage
+   7A.1's.
 10. Stage 7C — wiki page/link projection.
 11. Stage 8A — selective OpenAI vision enrichment, `VisionEnricher`
     framework + `OpenAIVisionEnricher` (path B).
@@ -221,10 +278,19 @@ At minimum, the full existing suite must continue to pass unmodified:
 `tests/test_evaluation_visual_claims.py` (6),
 `tests/test_evaluation_determinism_subprocess.py` (2),
 `tests/test_stage6a_integration.py` (25),
-`tests/test_stage6a_report_generation.py` (8) — 477 total, 3 warnings
-(pre-existing Docling-dependency deprecation warnings, not this project's
-own code). A new adapter/retrieval-projection implementation must add its
-own test files following the same pattern (one file per concern, `pytest`,
+`tests/test_stage6a_report_generation.py` (8),
+`tests/test_retrieval_benchmark_contract.py` (24),
+`tests/test_retrieval_baseline_corpus.py` (11),
+`tests/test_retrieval_baseline_indexing.py` (7),
+`tests/test_retrieval_baseline_retrieval.py` (4),
+`tests/test_retrieval_baseline_gold.py` (7),
+`tests/test_retrieval_baseline_metrics.py` (9),
+`tests/test_retrieval_baseline_integration.py` (8, includes one real
+sentence-transformers + real Postgres/pgvector integration test, skipped
+gracefully if unavailable) — 547 total, 3 warnings (pre-existing
+Docling-dependency deprecation warnings, not this project's own code). A
+new adapter/retrieval-projection implementation must add its own test
+files following the same pattern (one file per concern, `pytest`,
 `pythonpath = src fixtures` per `pytest.ini`) rather than modifying the
 existing ones.
 
@@ -430,8 +496,15 @@ required of any future adapter (path B/C/D) too:
 - Any UI.
 - A production document-revision registry or `ChunkIndexRecord`
   implementation (only the model semantics that anticipate it).
-- A production vector/graph/wiki store or index.
-- Retrieval-relevance or answer-quality evaluation.
+- A PRODUCTION-GRADE vector/graph/wiki store or index (migrations,
+  connection pooling, schema versioning, multi-tenant isolation, etc.).
+  Stage 7A.1's real pgvector index (`src/ingestion_bench/retrieval_baseline/pgvector_store.py`)
+  is a genuine, working, non-mocked vector store -- but a narrow vertical
+  slice in its own isolated table, not production infrastructure.
+- Answer-quality evaluation (Stage 9+, never attempted by Stage 7A.1,
+  which stops after retrieval evaluation) — retrieval RELEVANCE, however,
+  HAS now been measured for one configuration (Stage 7A.1's K=1/3/5
+  scorecard against the frozen Stage 6B contract).
 - Production scalability, load testing, or cost optimization.
 - OpenShift or any deployment target.
 - Local Granite Vision (path D) unless a concrete local-only-deployment
@@ -525,7 +598,23 @@ set-derived iteration order that feeds persisted evaluator output is
 sorted, never raw `set` iteration order, which is a function of
 `PYTHONHASHSEED` and therefore not reproducible across processes;
 `unexpected_observations` is canonically ordered before serialization;
-verified by real cross-process `PYTHONHASHSEED` subprocess tests).
+verified by real cross-process `PYTHONHASHSEED` subprocess tests), D-052
+(Stage 7A.1's one configured embedding model is local
+`sentence-transformers/all-MiniLM-L6-v2`, and its one configured vector
+store is real Postgres/pgvector in an isolated, independently-owned
+table — never the GraphRAG POC's own tables/code), D-053 (corpus
+profiles are a small, frozen, literal fixture-list configuration in
+`contracts/corpus_profiles_v1.json` — never a generic profile
+framework; `baseline_demo` excludes duplicate parity variants;
+`format_comparison` profiles are never combined), D-054 (corpus-level
+gold-evidence resolution is scoped by fixture + fact_id + chunk_id,
+in a NEW module (`retrieval_baseline/gold.py`) added alongside — never
+modifying — Stage 6B's own single-fixture resolver), D-055 (only
+"retrieval failed to return AVAILABLE evidence" counts as a retrieval
+miss — a required fact that is missing-from-ingestion/not-applicable/
+ingested-without-chunks is excluded from the coverage/recall denominator
+entirely, never scored as a failure; `None`, never a misleading `0.0`,
+when every required fact for a question is excluded).
 
 D-009 (Granite Vision optional/deferred), D-022 (effective-revision
 retrieval policy), D-023 (upstream duplicate-upload rejection policy) are

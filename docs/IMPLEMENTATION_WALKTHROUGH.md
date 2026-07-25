@@ -1176,7 +1176,158 @@ expected outside of what Stage 6B's own retrieval-contract work requires.
 
 ---
 
-## Corrected roadmap (Stage 5A.2, updated Stage 6A)
+## Stage 6B — Minimal, Deterministic Retrieval Benchmark Contract `[IMPLEMENTED]`
+
+New package `src/ingestion_bench/retrieval_benchmark/`, new frozen data
+file `contracts/retrieval_benchmark_v1.json`. Never a plug-in framework,
+generic rule engine, configurable grading system, or retrieval runtime
+-- a closed, versioned data contract plus a small resolver.
+
+1. **`model.py`** -- `BenchmarkQuestion` (question_id, question,
+   difficulty, required_fact_ids, forbidden_fact_ids, citation_required,
+   answer_rubric) and `RetrievalBenchmarkContract` (exactly 12
+   questions). Model validators enforce: exactly 12 questions; unique
+   question_ids; the fixed 4/3/2/2/1 difficulty distribution
+   (`direct`/`distractor_sensitive`/`relational`/`multi_hop`/`consolidation`
+   -- reusing the exact `RetrievalDifficulty` vocabulary Stage 6A's
+   `EvidenceAlignment.expected_retrieval_difficulty` already reserved a
+   field for, D-046); no overlap between a question's own
+   required/forbidden fact ids.
+2. **`contracts/retrieval_benchmark_v1.json`** -- the 12 frozen
+   questions, every `required_fact_ids`/`forbidden_fact_ids` entry a REAL
+   manifest fact id (`P_001`) or the evaluator's own derived compound id
+   (`T_001_r1c1` for a table cell, `ID_001_occ_0` for an identifier
+   occurrence) -- verified to exist in the real
+   `artifacts/stage6a/evidence_alignment.json` catalog by
+   `tests/test_retrieval_benchmark_contract.py`, never invented.
+3. **`resolver.py`** -- `resolve_question_facts(fact_ids, catalog)`,
+   scoped to ONE fixture's own `EvidenceAlignment` catalog (the caller
+   pre-filters). Returns one of four `FactResolutionStatus` values per
+   fact id: `available_with_chunks` (matched/partial + >=1
+   `matched_chunk_id`), `ingested_without_chunks` (matched/partial + zero
+   chunk ids), `missing_from_ingestion` (Stage 6A `match_status ==
+   "missing"`), `not_applicable` (Stage 6A `match_status ==
+   "not_applicable"`). Raises `KeyError` on a fact id the catalog never
+   declares at all -- a caller/benchmark-authoring error, never silently
+   mapped to one of the four real states.
+
+24 tests in `tests/test_retrieval_benchmark_contract.py` -- contract-
+shape validation (positive and negative), real-catalog fact-id
+existence, all four resolver states proven against real Stage 6A data
+(plus one hand-built `ingested_without_chunks` case, since the real
+baseline's `chunk_availability` is 100% everywhere), and isolation
+checks (no network/LLM/vector-database/Graph-RAG/wiki/ADK dependency).
+
+## Stage 7A.1 — Regular Vector Retrieval Baseline `[IMPLEMENTED]`
+
+New package `src/ingestion_bench/retrieval_baseline/` (10 modules), new
+frozen data file `contracts/corpus_profiles_v1.json`, new script
+`scripts/run_stage7a_retrieval_baseline.py`. Retrieval only -- no answer
+generation, no ADK, no Graph RAG, no wiki generation, no vision
+enrichment, no changes to Stage 5A/6A/6B.
+
+1. **`config.py`** -- every credential-shaped or environment-specific
+   value from an environment variable (`INGESTION_BENCH_EMBEDDING_MODEL`,
+   `DATABASE_URL`, `INGESTION_BENCH_VECTOR_TABLE`), never hardcoded,
+   never logged.
+2. **`corpus.py`** -- `CorpusProfile`/`CorpusProfileSet` (validated
+   against `contracts/corpus_profiles_v1.json`: `baseline_demo` must
+   exclude `PARITY_001.docx`/`.pptx`; every `format_comparison` profile
+   must index exactly one fixture, D-053) and `load_corpus_chunks()`
+   (reads Stage 5A's own `canonical_chunks.jsonl` verbatim, tags each
+   `CanonicalChunk` with its fixture/doc_id/source_format via the frozen
+   `FIXTURES` registry -- read-only reuse from
+   `ingestion_bench.evaluation.evaluator`, never a redefinition).
+3. **`embeddings.py`** -- `EmbeddingProvider` protocol,
+   `FakeEmbeddingProvider` (deterministic SHA-256-derived vectors, unit
+   tests only), `SentenceTransformerEmbeddingProvider` (the one
+   configured real model, `sentence-transformers/all-MiniLM-L6-v2`,
+   local, 384-dim, no per-token cost, loaded lazily).
+4. **`vector_store.py`** -- `VectorRecord` (every provenance field
+   copied from `CanonicalChunk`/`TaggedChunk`, never a new field added to
+   `CanonicalChunk` itself), `VectorStore` protocol, `InMemoryVectorStore`
+   (the unit-test/reference implementation, no external dependency).
+5. **`pgvector_store.py`** -- `PgVectorStore`, the one configured real
+   vector store: Postgres + pgvector, in this package's OWN table
+   (`ingestion_bench_stage7a_vectors`), primary keyed on
+   `(corpus_profile, chunk_id, embedding_model)` with `ON CONFLICT ...
+   DO UPDATE` -- idempotent by construction, never a duplicate row for
+   the same key. Never imports `src/db.py`/`src/config.py` (the separate
+   GraphRAG POC's own code); never references `document_chunks`/`kg_*`
+   anywhere in code (D-052).
+6. **`indexer.py`** -- `build_index()`: embeds ONLY
+   `CanonicalChunk.retrieval_text` (never `source_text`/
+   `model_derived_text` directly), skips chunks with empty/whitespace-only
+   `retrieval_text` entirely, and pre-filters against
+   `existing_content_hashes()` so an unchanged chunk is never re-embedded
+   -- `indexed_count`/`skipped_unchanged_count` are always in lockstep
+   with what was actually sent to the embedding model.
+7. **`retrieval.py`** -- `RetrievalResult` (rank, score, chunk_id,
+   content_sha256, retrieval_text, fixture, doc_id, source_format,
+   unit_indices, source_element_ids, heading_source_element_ids,
+   annotation_ids, source_refs, heading_path) and `search()` -- every
+   result is provenance-rich, never bare text + a similarity number.
+8. **`gold.py`** -- `resolve_corpus_gold_evidence()`, the corpus-level
+   resolver Stage 7A.1's task required ALONGSIDE (never inside) Stage
+   6B's own single-fixture resolver, scoped by `(fixture, fact_id)` and
+   additionally intersected against the chunk ids actually present in
+   the CALLER'S built index (D-054). Reuses Stage 6B's
+   `FactResolutionStatus` vocabulary unchanged. Verified against real
+   data: the SAME fact id (`"P_001"`) resolves to three DIFFERENT real
+   chunk ids across the PDF/DOCX/PPTX parity variants -- proving fact id
+   alone is not a valid corpus-wide key.
+9. **`metrics.py`** -- `compute_question_metrics()`: coverage@K
+   (fact-level), Recall@K (chunk-level), all-required-retrieved rate@K,
+   forbidden-fact hit rate@K, reciprocal rank, retrieved chunk count@K.
+   Only a required fact with status `available_with_chunks` ever counts
+   against coverage/recall -- `missing_from_ingestion`/`not_applicable`/
+   `ingested_without_chunks` facts are excluded from the denominator
+   entirely, never scored as a retrieval failure (D-055, the same
+   "never blame the wrong layer" discipline as Stage 6A's
+   `excluded_not_applicable`). `None`, never a misleading `0.0`, when a
+   question's required facts are ALL excluded in a given corpus.
+10. **`evaluation.py`** / **`report.py`** -- orchestrates all 12 Stage 6B
+    questions against one built index, computes per-question and
+    aggregate metrics, and renders the Markdown scorecard and JSON
+    results from the SAME in-memory `RetrievalEvaluationRun` object (same
+    discipline as Stage 5A.1/D-039 and every stage since).
+
+`scripts/run_stage7a_retrieval_baseline.py` builds all 4 corpus profiles
+(`baseline_demo`, `parity_pdf`, `parity_docx`, `parity_pptx`) with the
+real embedding model and real pgvector, writes
+`artifacts/stage7a/index_manifest.json`, runs the full 12-question
+evaluation against `baseline_demo`, and writes
+`reports/stage7a_vector_retrieval_{results.json,scorecard.md}` and
+`artifacts/stage7a/question_results/<question_id>.json`.
+
+**Real measured baseline** (`baseline_demo`, K=1/3/5): mean required-fact
+coverage 83.3%/95.8%/95.8%; mean forbidden-fact hit rate 45.8%/54.2%/54.2%
+(a real finding -- Stage 4's default chunker packs required and
+forbidden/distractor facts into the SAME chunk in this small corpus, so
+retrieving the right chunk necessarily also retrieves the distractor
+sentence beside it); mean reciprocal rank 0.944; mean latency 34.6ms. See
+`docs/POC_STATUS_AND_EVIDENCE.md` "Stage 7A.1 findings" for the full
+scorecard and the `Q_CONSOLIDATION_001` narrative-vs-table chunk-split
+finding.
+
+46 tests across 6 files
+(`test_retrieval_baseline_{corpus,indexing,retrieval,gold,metrics,integration}.py`)
+-- corpus-profile validation, idempotent indexing with zero duplicate
+rows (proven at the store level, independent of the indexer's own
+pre-filter), retrieval-result provenance completeness, deterministic
+ranking across repeated calls, the scoped fixture+fact_id+chunk_id gold
+identity, the missing-ingestion-is-never-a-retrieval-miss exclusion
+rule, coverage@K/forbidden-hit-rate arithmetic, and isolation (no
+Stage 5A/6A/6B modification; no Graph RAG/wiki/vision/ADK/answer-
+generation dependency; no import of the GraphRAG POC's own code; no
+reference to its tables). One test
+(`test_real_embedding_and_real_pgvector_end_to_end`) exercises the ACTUAL
+configured stack -- real sentence-transformers, real Postgres/pgvector --
+skipped gracefully (never a hard failure) when either is unavailable; it
+is never required for the default `pytest` run, which uses
+`FakeEmbeddingProvider`/`InMemoryVectorStore` throughout.
+
+## Corrected roadmap (Stage 5A.2, updated Stage 6A, updated Stage 7A.1)
 
 Vision enrichment is **not** the next stage. An earlier framing of this
 project's plan (visible in older commit history and in decision D-009)
@@ -1187,21 +1338,21 @@ before retrieval projections are worth comparing, and vision enrichment
 is one more *ingestion* lane, not a retrieval concern):
 
 ```
-Stage 6A  Deterministic ingestion-fidelity evaluator          <- DONE
-Stage 6B  Retrieval benchmark contract + gold evidence set     <- NEXT
-Stage 7A  Regular vector RAG projection + retrieval baseline
-Stage 7B  Graph-enriched RAG projection
-Stage 7C  Wiki page/link projection
-Stage 8A  Selective OpenAI vision enrichment (path B)
-Stage 8B  OpenAI vendor-native ingestion (path C)
-Stage 9   Cross-lane quality, cost, latency, and ROI comparison
+Stage 6A   Deterministic ingestion-fidelity evaluator          <- DONE, FROZEN
+Stage 6B   Retrieval benchmark contract + gold evidence set     <- DONE
+Stage 7A.1 Regular vector RAG projection + retrieval baseline   <- DONE
+Stage 7B   Graph-enriched RAG projection                        <- NEXT
+Stage 7C   Wiki page/link projection
+Stage 8A   Selective OpenAI vision enrichment (path B)
+Stage 8B   OpenAI vendor-native ingestion (path C)
+Stage 9    Cross-lane quality, cost, latency, and ROI comparison
 ```
 
 See `docs/POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions (corrected
 roadmap)" for the full two-dimension framing (ingestion approach ×
 retrieval projection) this sequence is derived from.
 
-## Future walkthrough (Stage 6B+) — `[PLANNED, none of this exists yet]`
+## Future walkthrough (Stage 7B+) — `[PLANNED, none of this exists yet]`
 
 ```
 CanonicalPicture (already extracted, path A)
@@ -1229,16 +1380,23 @@ Evaluation against reference_manifest.json, comparing path A vs. path B  [PLANNE
 artifacts/stage6a/evidence_alignment.json (already produced, D-042)     [IMPLEMENTED]
         |
         v
-Stage 6B retrieval benchmark contract + gold evidence set              [PLANNED --
-        |                                                                 NEXT]
+Stage 6B retrieval benchmark contract + gold evidence set              [IMPLEMENTED]
+   (contracts/retrieval_benchmark_v1.json, 12 frozen questions)
+        |
         v
-Stage 7A/7B/7C vector/graph/wiki projections, scored against the        [PLANNED]
-   SAME evidence-alignment catalog (D-040)
+Stage 7A.1 regular vector RAG projection, scored against the SAME       [IMPLEMENTED]
+   evidence-alignment catalog (D-040) via a NEW corpus-level resolver
+   (D-054, never modifying Stage 6B's own single-fixture resolver)
+        |
+        v
+Stage 7B/7C graph/wiki projections, scored against the SAME             [PLANNED --
+   evidence-alignment catalog and the SAME Stage 6B benchmark contract     NEXT]
 ```
 
 Every step marked `[PLANNED]` above is planned, not implemented. No
 `vision/` package exists; no `OpenAIVisionEnricher`, no OpenAI
-vendor-native adapter (path C), no retrieval benchmark contract, no
-vector/graph/wiki projection. The Stage 6A evaluator and its evidence-
-alignment catalog ARE implemented (see the Stage 6A section above) — treat
-any claim beyond that, in this document or elsewhere, as inaccurate.
+vendor-native adapter (path C), no graph/wiki projection. The Stage 6A
+evaluator, its evidence-alignment catalog, the Stage 6B benchmark
+contract, and the Stage 7A.1 vector retrieval baseline ARE implemented
+(see their respective sections above) — treat any claim beyond that, in
+this document or elsewhere, as inaccurate.
