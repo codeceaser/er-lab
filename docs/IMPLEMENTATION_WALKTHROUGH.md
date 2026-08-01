@@ -1339,21 +1339,25 @@ before retrieval projections are worth comparing, and vision enrichment
 is one more *ingestion* lane, not a retrieval concern):
 
 ```
-Stage 6A   Deterministic ingestion-fidelity evaluator          <- DONE, FROZEN
-Stage 6B   Retrieval benchmark contract + gold evidence set     <- DONE
-Stage 7A.1 Regular vector RAG projection + retrieval baseline   <- DONE
-Stage 7B   Graph-enriched RAG projection                        <- NEXT
-Stage 7C   Wiki page/link projection
-Stage 8A   Selective OpenAI vision enrichment (path B)
-Stage 8B   OpenAI vendor-native ingestion (path C)
-Stage 9    Cross-lane quality, cost, latency, and ROI comparison
+Stage 6A       Deterministic ingestion-fidelity evaluator          <- DONE, FROZEN
+Stage 6B       Retrieval benchmark contract + gold evidence set     <- DONE
+Stage 7A.1     Regular vector RAG projection + retrieval baseline   <- DONE, FROZEN
+Stage 7A.2/2a  Auditable Vector-RAG answer baseline                 <- DONE, FROZEN
+Stage 7A.3     Local auditable-semantic-search demo                 <- DONE
+Stage 7R.1     Revision authority registry + resolver               <- DONE
+Stage 7R.2     Authority-aware vector retrieval (Stage 7A.1 wiring)  <- NEXT, after 7R.1 review
+Stage 7B       Graph-enriched RAG projection
+Stage 7C       Wiki page/link projection
+Stage 8A       Selective OpenAI vision enrichment (path B)
+Stage 8B       OpenAI vendor-native ingestion (path C)
+Stage 9        Cross-lane quality, cost, latency, and ROI comparison
 ```
 
 See `docs/POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions (corrected
 roadmap)" for the full two-dimension framing (ingestion approach ×
 retrieval projection) this sequence is derived from.
 
-## Future walkthrough (Stage 7B+) — `[PLANNED, none of this exists yet]`
+## Future walkthrough (Stage 7R+) — `[PLANNED, except where marked IMPLEMENTED]`
 
 ```
 CanonicalPicture (already extracted, path A)
@@ -1390,8 +1394,25 @@ Stage 7A.1 regular vector RAG projection, scored against the SAME       [IMPLEME
    (D-054, never modifying Stage 6B's own single-fixture resolver)
         |
         v
-Stage 7B/7C graph/wiki projections, scored against the SAME             [PLANNED --
-   evidence-alignment catalog and the SAME Stage 6B benchmark contract     NEXT]
+Stage 7A.2/7A.2a auditable answer-generation layer over Stage 7A.1's    [IMPLEMENTED]
+   own frozen retrieval, plus Stage 7A.3's local demo viewer
+        |
+        v
+Stage 7R.1 revision-authority registry + deterministic resolver         [IMPLEMENTED]
+   (src/ingestion_bench/revision_authority/) -- persists authoritative
+   revision metadata and resolves eligible revision IDs per query
+   intent; does NOT touch retrieval yet
+        |
+        v
+Stage 7R.2 wires the Stage 7R.1 resolver into Stage 7A.1 retrieval       [PLANNED --
+   (filter eligible revision IDs before similarity ranking) -- after       NEXT, after
+   Stage 7R.1 review                                                       7R.1 review]
+        |
+        v
+Stage 7B/7C graph/wiki projections, scored against the SAME             [PLANNED]
+   evidence-alignment catalog and the SAME Stage 6B benchmark contract,
+   both consuming the Stage 7R resolver to scope eligible revisions
+   before their own traversal/page-resolution work
 ```
 
 Every step marked `[PLANNED]` above is planned, not implemented. No

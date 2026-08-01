@@ -1,0 +1,526 @@
+{
+  "contract_version": "revision_authority_scenarios_v1",
+  "description": "Deterministic Stage 7R.1 authority-resolution contract -- not a replacement for source-document fixtures. Every 'symbol' below is a local alias the runner resolves to a real compute_document_revision_id() hash after replaying registry_setup; scenarios reference revisions by symbol.",
+  "logical_documents": [
+    {
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "description": "One resilience/retention policy document with a full v1-v6 revision history: superseded, historical, current, draft, approved-future, and a rollback-corrected candidate.",
+      "revisions": [
+        {
+          "symbol": "v1",
+          "source_document_sha256": "e033e48d1e76cad26603f74c4f8de4b669eadb02c0643ccb194a2fa2e2432812",
+          "version_label": null,
+          "revision_number": 1,
+          "note": "retention period 3 years"
+        },
+        {
+          "symbol": "v2",
+          "source_document_sha256": "108d7cd40dd67a0bdbc5dcb80361c8fae1c705fdb3aabeb9b1521ef1e281b232",
+          "version_label": null,
+          "revision_number": 2,
+          "note": "retention period 5 years"
+        },
+        {
+          "symbol": "v3",
+          "source_document_sha256": "d56264d996753a49feae9f5d6dfbc188fa4cb23b0daaa1842be682183989f60d",
+          "version_label": null,
+          "revision_number": 3,
+          "note": "retention period 7 years"
+        },
+        {
+          "symbol": "v3_duplicate",
+          "source_document_sha256": "d56264d996753a49feae9f5d6dfbc188fa4cb23b0daaa1842be682183989f60d",
+          "version_label": null,
+          "revision_number": 3,
+          "note": "exact duplicate registration of v3 (Scenario A)"
+        },
+        {
+          "symbol": "v4",
+          "source_document_sha256": "5f736041b1e87a7255d7cacf15e1cbe00d526eaaeab1dcc49fb0e709ba086365",
+          "version_label": null,
+          "revision_number": 4,
+          "note": "draft, proposed retention period 10 years"
+        },
+        {
+          "symbol": "v5",
+          "source_document_sha256": "51a0b90e61273710977d2168c10c3465aab539c95e137c0168f4abfab70935e3",
+          "version_label": null,
+          "revision_number": 5,
+          "note": "approved future, retention period 8 years"
+        },
+        {
+          "symbol": "v0_late_upload",
+          "source_document_sha256": "eebf3c3ac0ec0969f40b7f28ea71c40e374347477979cc5b79639c22b134165f",
+          "version_label": null,
+          "revision_number": 0,
+          "note": "Scenario F: registered very late (2026), never activated -- must not become current merely by existing"
+        },
+        {
+          "symbol": "v6_rollback_demo",
+          "source_document_sha256": "842c632f2bb39f06d2c09df75e1c82ca3b478847207f5c6003bf21039cdc2063",
+          "version_label": null,
+          "revision_number": 6,
+          "note": "Scenario M: approved-future then rolled back to draft"
+        }
+      ],
+      "registry_setup": [
+        {
+          "step_id": "reg_v1",
+          "op": "register",
+          "symbol": "v1",
+          "scenario_id": "B_changed_content",
+          "expected_is_new": true,
+          "recorded_at": "2014-11-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_v1",
+          "op": "activate",
+          "new": "v1",
+          "old": null,
+          "effective_from": "2015-01-01",
+          "recorded_at": "2015-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v2",
+          "op": "register",
+          "symbol": "v2",
+          "scenario_id": "B_changed_content",
+          "expected_is_new": true,
+          "recorded_at": "2018-11-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_v2",
+          "op": "activate",
+          "new": "v2",
+          "old": "v1",
+          "effective_from": "2019-01-01",
+          "recorded_at": "2019-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v3",
+          "op": "register",
+          "symbol": "v3",
+          "expected_is_new": true,
+          "recorded_at": "2022-11-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_v3",
+          "op": "activate",
+          "new": "v3",
+          "old": "v2",
+          "effective_from": "2023-01-01",
+          "recorded_at": "2023-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v3_dup",
+          "op": "register",
+          "symbol": "v3_duplicate",
+          "scenario_id": "A_exact_duplicate_upload",
+          "expected_is_new": false,
+          "recorded_at": "2023-02-15T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v4",
+          "op": "register",
+          "symbol": "v4",
+          "scenario_id": "C_newer_draft_does_not_replace",
+          "expected_is_new": true,
+          "recorded_at": "2024-09-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v5",
+          "op": "register",
+          "symbol": "v5",
+          "expected_is_new": true,
+          "recorded_at": "2024-10-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_v5",
+          "op": "activate",
+          "new": "v5",
+          "old": "v3",
+          "effective_from": "2028-01-01",
+          "recorded_at": "2024-10-15T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v0",
+          "op": "register",
+          "symbol": "v0_late_upload",
+          "scenario_id": "F_late_upload_old_revision",
+          "expected_is_new": true,
+          "recorded_at": "2026-06-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v6",
+          "op": "register",
+          "symbol": "v6_rollback_demo",
+          "expected_is_new": true,
+          "recorded_at": "2024-11-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "decide_v6_approve",
+          "op": "decide",
+          "symbol": "v6_rollback_demo",
+          "scenario_id": "M_authority_correction_rollback",
+          "publication_status": "approved",
+          "effective_from": "2029-01-01",
+          "effective_to": null,
+          "approved_at": "2024-11-05T00:00:00+00:00",
+          "recorded_at": "2024-11-05T00:00:00+00:00"
+        },
+        {
+          "step_id": "decide_v6_rollback",
+          "op": "decide",
+          "symbol": "v6_rollback_demo",
+          "scenario_id": "M_authority_correction_rollback",
+          "publication_status": "draft",
+          "effective_from": null,
+          "effective_to": null,
+          "approved_at": null,
+          "recorded_at": "2024-11-20T00:00:00+00:00",
+          "detail_note": "rolled back -- retention period 12yr proposal withdrawn before taking effect"
+        }
+      ]
+    },
+    {
+      "logical_document_id": "POLICY-WITHDRAWN-DEMO-001",
+      "description": "Scenario K: a document whose only effective revision is withdrawn with no replacement registered.",
+      "revisions": [
+        {
+          "symbol": "w1",
+          "source_document_sha256": "e09d124ee5980161000f4eb9724699570272b29e6e1644e0ceedde74af2d62d8",
+          "version_label": null,
+          "revision_number": 1,
+          "note": "the only revision; later withdrawn"
+        }
+      ],
+      "registry_setup": [
+        {
+          "step_id": "reg_w1",
+          "op": "register",
+          "symbol": "w1",
+          "expected_is_new": true,
+          "recorded_at": "2020-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_w1",
+          "op": "activate",
+          "new": "w1",
+          "old": null,
+          "effective_from": "2020-01-01",
+          "recorded_at": "2020-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "withdraw_w1",
+          "op": "withdraw",
+          "symbol": "w1",
+          "scenario_id": "K_withdrawn_no_replacement",
+          "recorded_at": "2024-01-01T00:00:00+00:00"
+        }
+      ]
+    },
+    {
+      "logical_document_id": "POLICY-CONFLICT-DEMO-001",
+      "description": "Scenario L: two revisions independently activated with old=None, producing simultaneously-effective (overlapping) authority -- a real operator-misuse case, not a hand-corrupted one.",
+      "revisions": [
+        {
+          "symbol": "c1",
+          "source_document_sha256": "06436174a6bccfbd7394500fe24f4811ae5601da163e45de9f99aad90027a8ff",
+          "version_label": null,
+          "revision_number": 1,
+          "note": ""
+        },
+        {
+          "symbol": "c2",
+          "source_document_sha256": "5f58936d13ddc6c70df49850933818a8e0f176a33d3eeb8da5532e839578f4a7",
+          "version_label": null,
+          "revision_number": 2,
+          "note": ""
+        }
+      ],
+      "registry_setup": [
+        {
+          "step_id": "reg_c1",
+          "op": "register",
+          "symbol": "c1",
+          "expected_is_new": true,
+          "recorded_at": "2020-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_c1",
+          "op": "activate",
+          "new": "c1",
+          "old": null,
+          "effective_from": "2020-01-01",
+          "recorded_at": "2020-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_c2",
+          "op": "register",
+          "symbol": "c2",
+          "expected_is_new": true,
+          "recorded_at": "2021-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_c2",
+          "op": "activate",
+          "new": "c2",
+          "old": null,
+          "effective_from": "2021-01-01",
+          "scenario_id": "L_overlapping_effective_revisions",
+          "recorded_at": "2021-01-01T00:00:00+00:00"
+        }
+      ]
+    },
+    {
+      "logical_document_id": "POLICY-SHARED-TEXT-DEMO-001",
+      "description": "Scenario N: identical textual content (source_document_sha256) reused under a DIFFERENT logical_document_id -- must get a fully independent revision identity, never conflated with POLICY-RESILIENCE-001's v2.",
+      "revisions": [
+        {
+          "symbol": "n1_shares_v2_text",
+          "source_document_sha256": "108d7cd40dd67a0bdbc5dcb80361c8fae1c705fdb3aabeb9b1521ef1e281b232",
+          "version_label": null,
+          "revision_number": 1,
+          "note": "byte-identical content to POLICY-RESILIENCE-001's v2, different logical_document_id"
+        }
+      ],
+      "registry_setup": [
+        {
+          "step_id": "reg_n1",
+          "op": "register",
+          "symbol": "n1_shares_v2_text",
+          "scenario_id": "N_same_text_different_identity",
+          "expected_is_new": true,
+          "recorded_at": "2019-06-01T00:00:00+00:00"
+        }
+      ]
+    }
+  ],
+  "query_scenarios": [
+    {
+      "scenario_id": "C_newer_draft_does_not_replace",
+      "description": "A newer draft (v4) exists but must not replace the current effective revision (v3).",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "current",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v3"
+      ],
+      "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
+        "v3": "effective",
+        "v4": "draft",
+        "v5": "approved_future",
+        "v0_late_upload": "draft",
+        "v6_rollback_demo": "draft"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "D_approved_future_not_early",
+      "description": "v5 is approved with a future effective_from (2028-01-01); as of 2027-12-31 it must NOT be current.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "current",
+      "as_of_date": "2027-12-31",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v3"
+      ],
+      "expected_states": {
+        "v3": "effective",
+        "v5": "approved_future"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "E_supersession_boundary_on",
+      "description": "On the exact effective_from boundary (2028-01-01), v5 becomes effective and v3 becomes superseded in the SAME atomic transition (effective_from <= as_of_date < effective_to).",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "current",
+      "as_of_date": "2028-01-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v5"
+      ],
+      "expected_states": {
+        "v3": "superseded",
+        "v5": "effective"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "O_boundary_day_before",
+      "description": "One day before the boundary (2027-12-31), the OLD revision (v3) is still effective -- end-exclusive interval semantics.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "current",
+      "as_of_date": "2027-12-31",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v3"
+      ],
+      "expected_states": {
+        "v3": "effective",
+        "v5": "approved_future"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "F_late_upload_old_revision",
+      "description": "v0 is registered very late (2026) but never approved/activated -- late upload alone must never grant currency.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "current",
+      "as_of_date": "2026-06-02",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v3"
+      ],
+      "expected_states": {
+        "v3": "effective",
+        "v0_late_upload": "draft"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "G_current_authoritative_query",
+      "description": "Plain current-authoritative query -- exactly one eligible revision.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "current",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v3"
+      ],
+      "expected_states": {
+        "v3": "effective"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "H_historical_as_of_query",
+      "description": "Historical as-of query resolves the revision that was effective THEN, not now.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "as_of",
+      "as_of_date": "2020-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v2"
+      ],
+      "expected_states": {
+        "v1": "superseded",
+        "v2": "effective",
+        "v3": "approved_future"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "I_explicit_comparison_query",
+      "description": "Comparison permits superseded/current/future revisions together, retaining their own labels -- never silently picking one.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "comparison",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [
+        "v1",
+        "v3",
+        "v5"
+      ],
+      "expected_eligible_symbols": [
+        "v1",
+        "v3",
+        "v5"
+      ],
+      "expected_states": {
+        "v1": "superseded",
+        "v3": "effective",
+        "v5": "approved_future"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "J_explicit_draft_query",
+      "description": "Draft intent returns only the explicitly requested draft/under_review revisions -- v3 (effective, not draft) is excluded even though explicitly requested, never silently mixed in.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "draft",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [
+        "v4",
+        "v3"
+      ],
+      "expected_eligible_symbols": [
+        "v4"
+      ],
+      "expected_states": {
+        "v4": "draft"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "K_withdrawn_no_replacement",
+      "description": "The only revision was withdrawn and no replacement was ever activated -- fails closed, never silently returns nothing as if that were a normal empty result.",
+      "logical_document_id": "POLICY-WITHDRAWN-DEMO-001",
+      "query_intent": "current",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [],
+      "expected_states": {
+        "w1": "withdrawn"
+      },
+      "integrity_error_expected": true
+    },
+    {
+      "scenario_id": "L_overlapping_effective_revisions",
+      "description": "Two revisions independently activated with old=None end up simultaneously effective -- fails closed rather than silently choosing one.",
+      "logical_document_id": "POLICY-CONFLICT-DEMO-001",
+      "query_intent": "current",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [],
+      "expected_states": {
+        "c1": "effective",
+        "c2": "effective"
+      },
+      "integrity_error_expected": true
+    },
+    {
+      "scenario_id": "M_authority_correction_rollback",
+      "description": "v6 was approved-future then rolled back to draft via a second authority decision -- the correction is visible in the audit trail and never touches v3/v5's own effective windows.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "comparison",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [
+        "v6_rollback_demo",
+        "v3",
+        "v5"
+      ],
+      "expected_eligible_symbols": [
+        "v6_rollback_demo",
+        "v3",
+        "v5"
+      ],
+      "expected_states": {
+        "v6_rollback_demo": "draft",
+        "v3": "effective",
+        "v5": "approved_future"
+      },
+      "integrity_error_expected": false
+    },
+    {
+      "scenario_id": "N_same_text_different_identity",
+      "description": "Byte-identical content under a DIFFERENT logical_document_id gets a fully independent revision identity -- proven by resolving it on its own document, unaffected by POLICY-RESILIENCE-001's v2 authority.",
+      "logical_document_id": "POLICY-SHARED-TEXT-DEMO-001",
+      "query_intent": "draft",
+      "as_of_date": "2019-06-02",
+      "requested_symbols": [
+        "n1_shares_v2_text"
+      ],
+      "expected_eligible_symbols": [
+        "n1_shares_v2_text"
+      ],
+      "expected_states": {
+        "n1_shares_v2_text": "draft"
+      },
+      "integrity_error_expected": false
+    }
+  ]
+}

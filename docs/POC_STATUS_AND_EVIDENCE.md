@@ -89,6 +89,7 @@ snapshot):
 | 7A.2 | Auditable Vector-RAG answer baseline: one configured OpenAI answer model over Stage 7A.1's own frozen top-5 retrieval, minimal LLM output schema, deterministic (non-LLM) citation validation, real 12-question run | **Completed, superseded by 7A.2a, frozen with 7A.2a** | `src/ingestion_bench/answer_baseline/*.py`, `scripts/run_stage7a2_vector_answer_baseline.py` | `tests/test_answer_baseline_*.py` (40, new); `reports/stage7a2_vector_answer_scorecard.md`, `reports/stage7a2_vector_answer_results.json`, `artifacts/stage7a2/question_answers/` | See "Stage 7A.2/7A.2a findings" below |
 | 7A.2a | Answer-baseline closure: manual human review of all 12 answers (answer-text correctness + citation support), `forbidden_fact_citation_rate` renamed to `cited_chunk_forbidden_evidence_exposure_rate` (accurate semantics), `citation_support_human_review` field added, repo-relative `retrieval_source`, `retrieval_results_sha256`/`answer_prompt_version`/`answer_prompt_sha256`/`answer_temperature` recorded | **Completed, frozen** | Same files as Stage 7A.2, patched; `scripts/apply_stage7a2a_closure.py` (new, one-off migration, never re-runs retrieval or the answer model) | Same test files as Stage 7A.2, updated for the rename; `reports/stage7a2_vector_answer_{results.json,scorecard.md}` regenerated from the SAME committed answer data | None known — see "Stage 7A.2/7A.2a findings" below. **Stage 7A.2/7A.2a is now frozen** |
 | 7A.3 | Minimal local auditable-semantic-search demo over the frozen Stage 7A.2/7A.2a answer results: single self-contained static HTML viewer, explicit-text-label status badges, cross-document citation warnings | **Completed** | `src/ingestion_bench/demo/*.py`, `scripts/run_stage7a3_demo.py` | `tests/test_stage7a3_demo_{view_model,render,integration}.py` (19, new); `reports/stage7a3_demo.html` | None known |
+| 7R.1 | Revision Authority Registry and Effective-Knowledge Resolution: narrow registry reusing Stage 4.1's own chunk-lineage identity fields, mutable authority metadata kept separately, deterministic query-time resolver (current/as_of/comparison/draft), atomic supersession, append-only audit log, real Postgres + in-memory repositories | **Completed** | `src/ingestion_bench/revision_authority/*.py`, `contracts/revision_authority_scenarios_v1.json`, `scripts/run_stage7r1_revision_scenarios.py` | `tests/test_revision_authority_*.py` (58, new; includes one skippable real-Postgres test); `reports/stage7r1_revision_authority_{results.json,scorecard.md}` | Not yet wired into retrieval -- that is Stage 7R.2, after review. See `docs/REVISION_AUTHORITY_SCENARIOS.md` |
 | 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
 | 7C | Wiki page/link projection | **Not started** | — | — | — |
 | 8A | Selective OpenAI vision enrichment (`VisionEnricher` framework + `OpenAIVisionEnricher`, path B) | **Not started** | — | — | No `vision/` package. Corrected roadmap position — no longer "Stage 6"; see D-040 and "Corrected roadmap" below |
@@ -153,8 +154,10 @@ combination yet:
 
 **Dimension 2 — retrieval projection:**
 - Regular vector RAG (Stage 7A.1 — **implemented**, path-A-corpus baseline only; still not combined with a second ingestion approach)
-- Graph-enriched RAG (Stage 7B, not started)
-- Wiki page/link retrieval (Stage 7C, not started)
+- Auditable answer-generation layer over Stage 7A.1 (Stage 7A.2/7A.2a — **implemented, frozen**) plus a local demo viewer (Stage 7A.3 — **implemented**)
+- Revision authority registry and effective-knowledge resolution (Stage 7R.1 — **implemented**; a narrow registry/resolver, not yet wired into retrieval; that wiring is Stage 7R.2, after review)
+- Graph-enriched RAG (Stage 7B, not started — will consume Stage 7R's resolver)
+- Wiki page/link retrieval (Stage 7C, not started — will consume Stage 7R's resolver)
 
 Per D-040, every retrieval projection is independently derived from the
 same `CanonicalDocument`/`CanonicalChunk` corpus and the same Stage 6A
@@ -166,14 +169,18 @@ state may enter `CanonicalDocument`/`CanonicalChunk`.
 framing in this project's history — vision enrichment moved to Stage 8A):
 
 ```
-Stage 6A   Deterministic ingestion-fidelity evaluator          <- DONE, FROZEN
-Stage 6B   Retrieval benchmark contract + gold evidence set     <- DONE
-Stage 7A.1 Regular vector RAG projection + retrieval baseline   <- DONE
-Stage 7B   Graph-enriched RAG projection                        <- NEXT
-Stage 7C   Wiki page/link projection
-Stage 8A   Selective OpenAI vision enrichment (path B)
-Stage 8B   OpenAI vendor-native ingestion (path C)
-Stage 9    Cross-lane quality, cost, latency, and ROI comparison
+Stage 6A       Deterministic ingestion-fidelity evaluator          <- DONE, FROZEN
+Stage 6B       Retrieval benchmark contract + gold evidence set     <- DONE
+Stage 7A.1     Regular vector RAG projection + retrieval baseline   <- DONE, FROZEN
+Stage 7A.2/2a  Auditable Vector-RAG answer baseline                 <- DONE, FROZEN
+Stage 7A.3     Local auditable-semantic-search demo                 <- DONE
+Stage 7R.1     Revision authority registry + resolver               <- DONE
+Stage 7R.2     Authority-aware vector retrieval (Stage 7A.1 wiring)  <- NEXT, after 7R.1 review
+Stage 7B       Graph-enriched RAG projection
+Stage 7C       Wiki page/link projection
+Stage 8A       Selective OpenAI vision enrichment (path B)
+Stage 8B       OpenAI vendor-native ingestion (path C)
+Stage 9        Cross-lane quality, cost, latency, and ROI comparison
 ```
 
 ## Current limitations
@@ -507,6 +514,40 @@ citations. Two genuine, measured findings, not defects:
   Settlement, which only a human reading the actual chunk text can
   catch.
 
+## Stage 7R.1 summary — revision authority registry and resolver
+
+Real, measured results from
+`reports/stage7r1_revision_authority_scorecard.md` (regenerate via
+`python scripts/run_stage7r1_revision_scenarios.py`, in-memory only,
+never requires Postgres). Full detail (per-scenario business situation,
+registry precondition, event, resulting state, query behavior for all
+four intents, expected index behavior, audit evidence, and what each
+scenario does NOT imply) lives in `docs/REVISION_AUTHORITY_SCENARIOS.md`
+— 15 scenarios (A–O), all passing: 12/12 registration checks, 13/13
+query scenarios.
+
+This is explicitly **not** a document-management/version-control
+system — it never stores document binaries, never provides check-in/
+check-out or approval workflows, and never infers authority from
+filenames, upload time, or document text. Revision **identity** is
+reused verbatim from Stage 4.1's own `DocumentRevisionContext`/
+`compute_document_revision_id` (never reinvented); authority/
+effective-period/supersession **metadata** is new, mutable, and lives
+only in this package's own tables
+(`edib_document_revision_registry`, `edib_authority_decision_event`),
+never on `CanonicalChunk`. Exactly four query intents (`current`,
+`as_of`, `comparison`, `draft`); six derived authority states (`draft`,
+`under_review`, `approved_future`, `effective`, `superseded`,
+`withdrawn`), computed at query time, never stored. Fails closed (never
+silently picks one) on: overlapping simultaneously-effective revisions,
+inconsistent supersession links, an "effective" revision that isn't
+approved, and a logical document with no authoritative effective
+revision at all.
+
+Not yet wired into retrieval — Stage 7R.2, after review, will make
+Stage 7A.1's own search filter candidate chunks by
+`eligible_revision_ids` before ranking.
+
 ## Known non-goals (see also "Explicitly deferred scope" below)
 
 Answer quality, ROI, and production deployment readiness remain
@@ -537,16 +578,28 @@ canonical element's own text) has a corresponding fix and test — see
 
 ## Next critical implementation step
 
-Per the corrected roadmap above, the next step after Stage 7A.3 is
-**Stage 7B — graph-enriched RAG projection**, independently derived from
-the SAME frozen `CanonicalDocument`/`CanonicalChunk` corpus and the SAME
-Stage 6A gold evidence-alignment catalog Stage 7A.1 already consumed
-(D-040), scored against the SAME frozen Stage 6B 12-question benchmark
-contract (never modified by Stage 7A.1, D-054) so its results are
+Per the corrected roadmap above, the next step after Stage 7R.1 is
+**Stage 7R.2 — authority-aware vector retrieval**, wiring the now-complete
+Stage 7R.1 resolver into Stage 7A.1's own search (filter
+`eligible_revision_ids` before similarity ranking) — deferred until
+after explicit review of Stage 7R.1, per instruction. **Stage 7B —
+graph-enriched RAG projection — and Stage 7C — wiki page/link
+projection — follow Stage 7R**, not Stage 7A.3 directly: both will consume Stage 7R's
+resolver to scope eligible revisions (Graph RAG: revision-scoped
+nodes/edges before traversal, never merging superseded and current
+edges into one timeless fact; wiki retrieval: current-page resolution
+from the effective revision, with revision history separately
+navigable) before doing their own projection-specific work, independently
+derived from the SAME frozen `CanonicalDocument`/`CanonicalChunk` corpus
+and the SAME Stage 6A gold evidence-alignment catalog Stage 7A.1 already
+consumed (D-040), scored against the SAME frozen Stage 6B 12-question
+benchmark contract (never modified by Stage 7A.1, D-054) so results stay
 directly comparable to Stage 7A.1's. Vision enrichment (previously
 described as "Stage 6" earlier in this project's history) remains Stage
 8A — see D-040 for why the evaluator and the retrieval-projection work
-come first. Stage 5A/5A.1/5A.2 is complete and frozen. **Stage
+come first.
+
+Stage 5A/5A.1/5A.2 is complete and frozen. **Stage
 6A/6A.1/6A.2/6A.2a/6A.2b is complete and frozen** (`EVALUATOR_VERSION`
 `1.2.1`, D-051). **Stage 6B is complete**: 12 frozen questions in
 `contracts/retrieval_benchmark_v1.json`, every required/forbidden fact
@@ -556,18 +609,24 @@ index (own table, D-052), corpus-level scoped gold resolution (D-054),
 and a real, measured K=1/3/5 retrieval scorecard against `baseline_demo`
 (see "Stage 7A.1 findings" above) -- `src/ingestion_bench/retrieval_baseline/`'s
 indexing, retrieval, and metrics code (`indexer.py`, `retrieval.py`,
-`metrics.py`) must not change for Stage 7A.2/7A.2a/7A.3's own
-answer-generation and demo work to build on top of it. No further
-changes to `src/ingestion_bench/evaluation/` or
-`src/ingestion_bench/retrieval_benchmark/` are expected outside of what
-Stage 7B's own graph-projection work requires. **Stage 7A.2/7A.2a is
-complete and FROZEN**: one configured OpenAI answer model, minimal LLM
-output schema, deterministic (non-LLM) citation validation, a real
+`metrics.py`) must not change for Stage 7A.2/7A.2a/7A.3/7R's own work to
+build on top of it. No further changes to `src/ingestion_bench/evaluation/`
+or `src/ingestion_bench/retrieval_benchmark/` are expected outside of
+what Stage 7B's own graph-projection work requires. **Stage 7A.2/7A.2a
+is complete and FROZEN**: one configured OpenAI answer model, minimal
+LLM output schema, deterministic (non-LLM) citation validation, a real
 12-question run, and a full manual review of every answer (see "Stage
 7A.2/7A.2a findings" above) -- `src/ingestion_bench/answer_baseline/`
-must not change for Stage 7A.3's demo viewer or Stage 7B's own work.
+must not change for Stage 7A.3's demo viewer or Stage 7R/7B's own work.
 **Stage 7A.3 — a minimal local auditable-semantic-search demo over this
-same frozen answer baseline — is in progress**, followed by Stage 7B.
+same frozen answer baseline — is complete**: a single self-contained
+static HTML viewer (`reports/stage7a3_demo.html`,
+`src/ingestion_bench/demo/`). **Stage 7R.1 — the revision authority
+registry and effective-knowledge resolver — is now also complete** (see
+"Stage 7R.1 summary" above and `docs/REVISION_AUTHORITY_SCENARIOS.md`)
+-- `src/ingestion_bench/revision_authority/` must not change for Stage
+7R.2's retrieval wiring (deferred pending review) or Stage 7B/7C's own
+work.
 
 ---
 

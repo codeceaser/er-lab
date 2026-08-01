@@ -33,7 +33,13 @@ Source documents (DOCX/PDF/PPTX)
   -> Knowledge Projections (vector / graph / wiki), independently
      derived from the SAME CanonicalDocument/CanonicalChunk corpus
      and the SAME Stage 6A evidence-alignment catalog (D-040)      [vector DONE — Stage 7A.1;
-                                                                     graph/wiki not implemented — Stage 7B/7C, NEXT]
+                                                                     answer-generation + demo DONE —
+                                                                     Stage 7A.2/7A.2a/7A.3;
+                                                                     graph/wiki not implemented — Stage 7B/7C]
+  -> Revision authority registry + effective-knowledge resolver     [DONE — Stage 7R.1,
+     (src/ingestion_bench/revision_authority/) -- reuses Stage 4.1's   src/ingestion_bench/revision_authority/;
+     own chunk-lineage identity fields; NOT yet wired into retrieval   wiring is Stage 7R.2, NEXT,
+     (see docs/REVISION_AUTHORITY_SCENARIOS.md)                        after review]
   -> Agent                              [out of scope]
   -> Cross-lane quality/cost/latency/ROI comparison               [not implemented — Stage 9]
 ```

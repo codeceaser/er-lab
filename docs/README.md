@@ -73,7 +73,7 @@ and a narrative-vs-table chunk split on the consolidation question).
 
 **Stage 7A.2/7A.2a — the auditable Vector-RAG answer baseline — is
 complete and FROZEN** (`src/ingestion_bench/answer_baseline/` must not
-change for Stage 7A.3's demo viewer or Stage 7B's own work): one
+change for Stage 7A.3's demo viewer or Stage 7R/7B's own work): one
 configured OpenAI answer model (`gpt-4o-mini`, `temperature=0`) over
 Stage 7A.1's own frozen top-5 retrieval, a deliberately minimal LLM
 output schema (every provenance/token/cost/latency field resolved by
@@ -101,18 +101,44 @@ and an informational cross-document warning when a citation's fixture
 differs from the question's principal evidence. No server, no build
 step, no new dependency — open the file directly in a browser.
 
-**606 tests passing** as of Stage 7A.3 (3 pre-existing warnings from
+**Stage 7R.1 — Revision Authority Registry and Effective-Knowledge
+Resolution — is complete**: a narrow registry
+(`src/ingestion_bench/revision_authority/`) that reuses Stage 4.1's own
+chunk-lineage identity fields (`logical_document_id`,
+`document_revision_id`, `source_document_sha256`, `version_label`,
+`revision_number` — never reinvented) and adds new, separate, mutable
+authority metadata (`publication_status`, `effective_from`/`effective_to`,
+supersession links) that a governance source supplies explicitly — never
+inferred from upload time, revision number, filename, or embedding
+similarity. A deterministic resolver supports exactly four query
+intents (`current`, `as_of`, `comparison`, `draft`), fails closed (never
+silently picks one) on overlapping effective revisions, inconsistent
+supersession links, or an unapproved "effective" revision, and computes
+six derived authority states at query time (never stored). This is
+explicitly **not** a document-management/version-control system — see
+`docs/REVISION_AUTHORITY_SCENARIOS.md` for the full 15-scenario (A–O)
+business-behavior spec and `reports/stage7r1_revision_authority_scorecard.md`
+for the real, measured, all-passing scenario run (12/12 registration
+checks, 13/13 query scenarios). Real Postgres persistence (its own two
+isolated tables) plus a deterministic in-memory repository for the
+default test suite. **Not yet wired into retrieval** — that is Stage
+7R.2, deferred pending review.
+
+**664 tests passing** as of Stage 7R.1 (3 pre-existing warnings from
 Docling's own dependencies).
 
-**Next after Stage 7A.3: Stage 7B — graph-enriched RAG projection**,
-scored against the SAME frozen Stage 6B benchmark contract Stage 7A.1
-used, so results are directly comparable. See
-`POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions (corrected roadmap)"
-for the full corrected stage sequence (Stage 6A/6A.1/6A.2/6A.2a/6A.2b
-done → Stage 6B done → Stage 7A.1 done → Stage 7A.2/7A.2a done → Stage
-7A.3 in progress → Stage 7B next → Stage 7C wiki projection → Stages
-8A/8B vision enrichment/OpenAI vendor-native → Stage 9 cross-lane
-comparison) and why vision enrichment moved later (decision D-040).
+**Next after Stage 7R.1: Stage 7R.2 — authority-aware vector retrieval**
+(filtering Stage 7A.1's own search by `eligible_revision_ids` before
+ranking — deferred pending review of Stage 7R.1), **then** Stage 7B
+graph-enriched RAG projection and Stage 7C wiki retrieval, both of which
+will consume the SAME Stage 7R resolver to scope eligible revisions
+before traversal/ranking. See `POC_STATUS_AND_EVIDENCE.md` "Benchmark
+dimensions (corrected roadmap)" for the full corrected stage sequence
+(Stage 6A/6A.1/6A.2/6A.2a/6A.2b done → Stage 6B done → Stage 7A.1 done →
+Stage 7A.2/7A.2a done → Stage 7A.3 done → Stage 7R.1 done → Stage 7R.2
+next → Stage 7B → Stage 7C wiki projection → Stages 8A/8B vision
+enrichment/OpenAI vendor-native → Stage 9 cross-lane comparison) and why
+vision enrichment moved later (decision D-040).
 
 ## Repository root
 
@@ -174,9 +200,12 @@ files run the real, frozen Stage 6B benchmark contract and the real
 Stage 7A.1 retrieval baseline (real sentence-transformers embeddings,
 real Postgres/pgvector for one test, otherwise deterministic fake
 embeddings/an in-memory vector store) against real Stage 5A/6A
-artifacts. It does **not** exercise answer generation, Graph RAG, wiki
-generation, or vision enrichment, because none of that exists yet
-(Stage 7B onward).
+artifacts. `test_answer_baseline_*.py` and `test_stage7a3_demo_*.py`
+(added at Stage 7A.2/7A.2a/7A.3) additionally exercise the auditable
+answer-generation layer and its static demo viewer, real answer model
+included (one skippable live-OpenAI test). It does **not** exercise
+Graph RAG, wiki generation, or vision enrichment, because none of that
+exists yet (Stage 7R/7B/7C onward).
 
 To reproduce the Stage 5A baseline conversion of every fixture (not just
 run the test suite): `python scripts/run_docling_standard.py` — writes
@@ -219,6 +248,7 @@ architectural rule.
 | `POC_DECISION_LOG.md` | Durable, sequential (`D-001`, `D-002`, ...) record of why each significant architectural decision was made, including alternatives considered and reconsideration triggers. Never silently rewritten — superseded entries are marked, not deleted. |
 | `POC_STATUS_AND_EVIDENCE.md` | Current, accurate implementation status per stage, test evidence, what the tests do and do not prove, and explicitly deferred scope. Updated at the end of every stage. |
 | `DEVIN_HANDOFF_SEED.md` | Concise, validated-only seed for reproducing this implementation elsewhere — module boundaries, contracts, stage order, acceptance tests, constraints, and which decisions must not be reopened. Not a final handoff prompt by itself. |
+| `REVISION_AUTHORITY_SCENARIOS.md` | Stage 7R.1's full 15-scenario (A–O) business-behavior spec for the revision-authority registry and resolver, plus how each retrieval projection (Vector RAG/Graph RAG/wiki) will later consume it. |
 
 ## Recommended reading order
 
@@ -227,6 +257,7 @@ architectural rule.
 3. `POC_DECISION_LOG.md`
 4. `POC_STATUS_AND_EVIDENCE.md`
 5. `DEVIN_HANDOFF_SEED.md`
+6. `REVISION_AUTHORITY_SCENARIOS.md` (Stage 7R.1 onward)
 
 ## Maintenance rules
 
