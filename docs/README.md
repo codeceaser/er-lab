@@ -54,7 +54,9 @@ consolidation), every required/forbidden fact id verified real against
 the Stage 6A catalog, plus a single-fixture fact-to-chunk resolver
 (`src/ingestion_bench/retrieval_benchmark/`).
 
-**Stage 7A.1 — the regular vector retrieval baseline — is complete**:
+**Stage 7A.1 — the regular vector retrieval baseline — is complete and
+FROZEN** (indexing/retrieval/metrics code must not change for Stage
+7A.2's answer-generation layer to build on top of it):
 local `sentence-transformers/all-MiniLM-L6-v2` embeddings, a REAL
 Postgres/pgvector index (its own isolated table, never the separate ER
 GraphRAG POC's tables), 4 corpus profiles

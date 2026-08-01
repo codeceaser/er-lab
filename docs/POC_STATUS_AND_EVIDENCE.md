@@ -85,7 +85,7 @@ snapshot):
 | 6A.2a | Closure patch (complete structured chart-fact contract, structured `EvidenceAlignment.expected_value`, real-manifest CU_001 integration test, `EVALUATOR_VERSION` 1.2.0, corrected duplicate-fixture test, Stage 7A/8A documentation mislabel fix) | **Completed, superseded by 6A.2b, frozen with the whole 6A line** | Same files as Stage 6A/6A.1/6A.2, patched | `tests/test_evaluation_visual_claims.py` (+3 real-manifest tests), corrected `tests/test_evaluation_models.py::test_evaluation_run_rejects_duplicate_fixtures` | Fixed a real bug: `_stress_chart_facts()` was silently truncating every structured field the Stage 6A.2 per-claim matcher depended on — see the commit and this document's history |
 | 6A.2b | Deterministic serialized-output closure (sorted identifier iteration, canonically-ordered `unexpected_observations`, cross-process `PYTHONHASHSEED` determinism tests, `EVALUATOR_VERSION` 1.2.1) | **Completed, frozen** | Same files as Stage 6A/6A.1/6A.2/6A.2a, patched | `tests/test_evaluation_determinism_subprocess.py` (2, new) | None known — see decision D-051. **Stage 6A/6A.1/6A.2/6A.2a/6A.2b is now frozen** |
 | 6B | Minimal, deterministic retrieval benchmark contract: 12 frozen questions (4 direct, 3 distractor_sensitive, 2 relational, 2 multi_hop, 1 consolidation) over real Stage 6A catalog facts, plus a single-fixture fact-to-chunk resolver | **Completed** | `contracts/retrieval_benchmark_v1.json`, `src/ingestion_bench/retrieval_benchmark/{model,resolver}.py` | `tests/test_retrieval_benchmark_contract.py` (24, new) | None known — see D-055's reuse of this contract's vocabulary |
-| 7A.1 | Regular vector retrieval baseline: local sentence-transformers embeddings + real Postgres/pgvector index (own table, isolated from the GraphRAG POC), 4 corpus profiles, corpus-level scoped gold resolution, deterministic K=1/3/5 metrics | **Completed** | `contracts/corpus_profiles_v1.json`, `src/ingestion_bench/retrieval_baseline/*.py`, `scripts/run_stage7a_retrieval_baseline.py` | `tests/test_retrieval_baseline_*.py` (46, new); `reports/stage7a_vector_retrieval_scorecard.md`, `reports/stage7a_vector_retrieval_results.json`, `artifacts/stage7a/index_manifest.json` | See "Stage 7A.1 findings" below — see decisions D-052 through D-055 |
+| 7A.1 | Regular vector retrieval baseline: local sentence-transformers embeddings + real Postgres/pgvector index (own table, isolated from the GraphRAG POC), 4 corpus profiles, corpus-level scoped gold resolution, deterministic K=1/3/5 metrics | **Completed, frozen** | `contracts/corpus_profiles_v1.json`, `src/ingestion_bench/retrieval_baseline/*.py`, `scripts/run_stage7a_retrieval_baseline.py` | `tests/test_retrieval_baseline_*.py` (46, new); `reports/stage7a_vector_retrieval_scorecard.md`, `reports/stage7a_vector_retrieval_results.json`, `artifacts/stage7a/index_manifest.json` | None known — see "Stage 7A.1 findings" below and decisions D-052 through D-055. Indexing/retrieval/metrics code frozen for Stage 7A.2 |
 | 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
 | 7C | Wiki page/link projection | **Not started** | — | — | — |
 | 8A | Selective OpenAI vision enrichment (`VisionEnricher` framework + `OpenAIVisionEnricher`, path B) | **Not started** | — | — | No `vision/` package. Corrected roadmap position — no longer "Stage 6"; see D-040 and "Corrected roadmap" below |
@@ -421,7 +421,11 @@ run through the full 12-question scorecard in this baseline snapshot.
 | 5 | 95.8% | 95.8% | 91.7% | 54.2% |
 
 Mean reciprocal rank of the first relevant chunk: 0.944. Mean retrieval
-latency: 34.6ms. `excluded_required_fact_count` was 0 for all 12
+latency: 27.8ms (source of truth:
+`reports/stage7a_vector_retrieval_scorecard.md`, regenerated in place
+from the same run object as `reports/stage7a_vector_retrieval_results.json`
+-- never a manually preserved value from an earlier run).
+`excluded_required_fact_count` was 0 for all 12
 questions against `baseline_demo` — every required fact this benchmark
 references was actually available in this corpus (no question was
 scored on a smaller, silently-shrunk denominator).
@@ -492,14 +496,18 @@ first. Stage 5A/5A.1/5A.2 is complete and frozen. **Stage
 6A/6A.1/6A.2/6A.2a/6A.2b is complete and frozen** (`EVALUATOR_VERSION`
 `1.2.1`, D-051). **Stage 6B is complete**: 12 frozen questions in
 `contracts/retrieval_benchmark_v1.json`, every required/forbidden fact
-verified real against the Stage 6A catalog. **Stage 7A.1 is complete**:
-real sentence-transformers embeddings, real Postgres/pgvector index (own
-table, D-052), corpus-level scoped gold resolution (D-054), and a real,
-measured K=1/3/5 retrieval scorecard against `baseline_demo` (see "Stage
-7A.1 findings" above). No further changes to
+verified real against the Stage 6A catalog. **Stage 7A.1 is complete and
+FROZEN**: real sentence-transformers embeddings, real Postgres/pgvector
+index (own table, D-052), corpus-level scoped gold resolution (D-054),
+and a real, measured K=1/3/5 retrieval scorecard against `baseline_demo`
+(see "Stage 7A.1 findings" above) -- `src/ingestion_bench/retrieval_baseline/`'s
+indexing, retrieval, and metrics code (`indexer.py`, `retrieval.py`,
+`metrics.py`) must not change for Stage 7A.2's own answer-generation work
+to build on top of it. No further changes to
 `src/ingestion_bench/evaluation/` or `src/ingestion_bench/retrieval_benchmark/`
 are expected outside of what Stage 7B's own graph-projection work
-requires.
+requires. **Stage 7A.2 — an auditable answer-generation layer over this
+same frozen retrieval baseline — is next**, followed by Stage 7B.
 
 ---
 

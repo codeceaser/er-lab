@@ -1305,7 +1305,8 @@ coverage 83.3%/95.8%/95.8%; mean forbidden-fact hit rate 45.8%/54.2%/54.2%
 (a real finding -- Stage 4's default chunker packs required and
 forbidden/distractor facts into the SAME chunk in this small corpus, so
 retrieving the right chunk necessarily also retrieves the distractor
-sentence beside it); mean reciprocal rank 0.944; mean latency 34.6ms. See
+sentence beside it); mean reciprocal rank 0.944; mean latency 27.8ms
+(source of truth: `reports/stage7a_vector_retrieval_scorecard.md`). See
 `docs/POC_STATUS_AND_EVIDENCE.md` "Stage 7A.1 findings" for the full
 scorecard and the `Q_CONSOLIDATION_001` narrative-vs-table chunk-split
 finding.
