@@ -5,19 +5,30 @@ and `reports/stage7a2_vector_answer_results.json` come from the SAME
 execution, never two separate runs.
 
 `answer_model`: `gpt-4o-mini`
+`answer_temperature`: `0.0`
+`answer_prompt_version`: `stage7a2-v1`
+`answer_prompt_sha256`: `f7e757134eb57672f273ac8de51784c51dfa8298c1a78a843966533cf94c5c51`
 `generated_at`: `2026-08-01T19:16:53.495446+00:00`
-`retrieval_source`: `C:\Users\Admin\dev\er-lab\reports\stage7a_vector_retrieval_results.json` (Stage 7A.1's own frozen,
-committed output -- retrieval was never re-run for this stage)
+`retrieval_source`: `reports/stage7a_vector_retrieval_results.json` (repository-relative;
+Stage 7A.1's own frozen, committed output -- retrieval was never re-run
+for this stage)
+`retrieval_results_sha256`: `e1b76f1bb4f6c07eceb8b656b8f10fe52193ac5c4ae7c2964d93222970445f26`
 `retrieval_corpus_profile`: `baseline_demo`
 `retrieval_embedding_model`: `sentence-transformers/all-MiniLM-L6-v2`
 
 This report validates citations MECHANICALLY -- exact chunk_id set
 membership against the Stage 7A.1 retrieval context and the Stage 6A/6B
 gold evidence catalog. No LLM or semantic judge scores anything here.
-Answer-TEXT correctness is a separate, explicitly human-review field on
-every question result (`answer_text_correctness_human_review`,
-currently `"not_reviewed"` for all 12 questions in this baseline run) --
-never silently assumed or auto-graded.
+Answer-TEXT correctness and citation SUPPORT (whether a cited chunk's
+own text actually backs its claim, as opposed to the mechanical
+retrieval/coverage checks above) are separate, explicitly human-review
+fields on every question result (`answer_text_correctness_human_review`,
+`citation_support_human_review`) -- never silently assumed or
+auto-graded. `cited_chunk_forbidden_evidence_exposure_rate` measures
+only whether a CITED CHUNK CONTAINS forbidden evidence -- it does not by
+itself prove the answer text presented that evidence as current or
+correct; that judgment is exactly what `citation_support_human_review`
+records.
 
 ## Aggregate scorecard (across 12 questions)
 
@@ -26,7 +37,7 @@ never silently assumed or auto-graded.
 | Total invalid citations | 0 |
 | Total unresolved-provenance citations | 0 |
 | Mean required-fact citation coverage rate | 95.8% |
-| Mean forbidden-fact citation rate | 54.2% |
+| Mean cited-chunk forbidden-evidence exposure rate | 54.2% |
 | Uncited / total claims | 0 / 26 |
 | Mean citation completeness | 100.0% |
 | Evidence-sufficiency accuracy (scored questions) | 100.0% (1 of 12 questions had incomplete retrieval, the only case this accuracy is scored) |
@@ -46,20 +57,20 @@ the two real Stage 7A.1 findings (required/forbidden evidence
 co-located in the same chunk; the RTO/RPO table chunk absent from top-5
 for the consolidation question).
 
-| Question | Difficulty | Evidence sufficient | Req. fact coverage | Forbidden cited | Invalid citations | Uncited/total claims | Sufficiency accuracy | Latency |
-|---|---|---|---:|---:|---:|---:|---|---:|
-| Q_DIRECT_001 ★ | direct | yes | 100.0% | 100.0% | 0 | 0/1 | n/a | 2.939s |
-| Q_DIRECT_002 | direct | yes | 100.0% | 0.0% | 0 | 0/2 | n/a | 1.538s |
-| Q_DIRECT_003 ★ | direct | yes | 100.0% | 100.0% | 0 | 0/1 | n/a | 1.852s |
-| Q_DIRECT_004 | direct | yes | 100.0% | 0.0% | 0 | 0/1 | n/a | 1.230s |
-| Q_DISTRACTOR_001 ★ | distractor_sensitive | yes | 100.0% | 100.0% | 0 | 0/2 | n/a | 2.517s |
-| Q_DISTRACTOR_002 ★ | distractor_sensitive | yes | 100.0% | 100.0% | 0 | 0/2 | n/a | 2.061s |
-| Q_DISTRACTOR_003 ★ | distractor_sensitive | yes | 100.0% | 100.0% | 0 | 0/1 | n/a | 1.252s |
-| Q_RELATIONAL_001 | relational | yes | 100.0% | 0.0% | 0 | 0/2 | n/a | 1.803s |
-| Q_RELATIONAL_002 | relational | yes | 100.0% | 0.0% | 0 | 0/2 | n/a | 2.131s |
-| Q_MULTIHOP_001 ★ | multi_hop | yes | 100.0% | 100.0% | 0 | 0/5 | n/a | 4.145s |
-| Q_MULTIHOP_002 | multi_hop | yes | 100.0% | 0.0% | 0 | 0/2 | n/a | 2.473s |
-| Q_CONSOLIDATION_001 ★ | consolidation | no | 50.0% | 50.0% | 0 | 0/5 | yes | 4.693s |
+| Question | Difficulty | Evidence sufficient | Req. fact coverage | Cited-chunk forbidden exposure | Invalid citations | Uncited/total claims | Sufficiency accuracy | Latency | Answer-text review | Citation-support review |
+|---|---|---|---:|---:|---:|---:|---|---:|---|---|
+| Q_DIRECT_001 ★ | direct | yes | 100.0% | 100.0% | 0 | 0/1 | n/a | 2.939s | correct | fully_supported |
+| Q_DIRECT_002 | direct | yes | 100.0% | 0.0% | 0 | 0/2 | n/a | 1.538s | correct | fully_supported |
+| Q_DIRECT_003 ★ | direct | yes | 100.0% | 100.0% | 0 | 0/1 | n/a | 1.852s | correct | partially_supported |
+| Q_DIRECT_004 | direct | yes | 100.0% | 0.0% | 0 | 0/1 | n/a | 1.230s | correct | fully_supported |
+| Q_DISTRACTOR_001 ★ | distractor_sensitive | yes | 100.0% | 100.0% | 0 | 0/2 | n/a | 2.517s | correct | fully_supported |
+| Q_DISTRACTOR_002 ★ | distractor_sensitive | yes | 100.0% | 100.0% | 0 | 0/2 | n/a | 2.061s | correct | fully_supported |
+| Q_DISTRACTOR_003 ★ | distractor_sensitive | yes | 100.0% | 100.0% | 0 | 0/1 | n/a | 1.252s | correct | fully_supported |
+| Q_RELATIONAL_001 | relational | yes | 100.0% | 0.0% | 0 | 0/2 | n/a | 1.803s | correct | fully_supported |
+| Q_RELATIONAL_002 | relational | yes | 100.0% | 0.0% | 0 | 0/2 | n/a | 2.131s | correct | fully_supported |
+| Q_MULTIHOP_001 ★ | multi_hop | yes | 100.0% | 100.0% | 0 | 0/5 | n/a | 4.145s | correct | fully_supported |
+| Q_MULTIHOP_002 | multi_hop | yes | 100.0% | 0.0% | 0 | 0/2 | n/a | 2.473s | correct | fully_supported |
+| Q_CONSOLIDATION_001 ★ | consolidation | no | 50.0% | 50.0% | 0 | 0/5 | yes | 4.693s | partially_correct | partially_supported |
 
 ## Highlighted questions (detail)
 
@@ -83,6 +94,10 @@ for the consolidation question).
 
 **Evidence-sufficiency accuracy:** n/a (scored only when retrieval did not return all required facts)
 
+**Answer-text correctness (human review):** correct
+
+**Citation-support (human review):** fully_supported
+
 ### Q_DIRECT_003 (direct)
 
 **Question:** What Recovery Time Objective (RTO) is documented for Payment Settlement?
@@ -102,6 +117,12 @@ for the consolidation question).
 **Invalid citations:** 0
 
 **Evidence-sufficiency accuracy:** n/a (scored only when retrieval did not return all required facts)
+
+**Answer-text correctness (human review):** correct
+
+**Citation-support (human review):** partially_supported
+
+**Citation-support review notes:** Cites the correct Payment Settlement RTO table chunk (29ec1f09e064...) AND an unrelated STRESS_PPTX_001 4-hour annotation chunk (39f484de8715...) for the same claim. The answer text itself is correct, but one of its two supporting citations is not actually about Payment Settlement.
 
 ### Q_DISTRACTOR_001 (distractor_sensitive)
 
@@ -123,6 +144,10 @@ for the consolidation question).
 
 **Evidence-sufficiency accuracy:** n/a (scored only when retrieval did not return all required facts)
 
+**Answer-text correctness (human review):** correct
+
+**Citation-support (human review):** fully_supported
+
 ### Q_DISTRACTOR_002 (distractor_sensitive)
 
 **Question:** Which control currently satisfies Regulatory Obligation O-31: C-88 or C-88a?
@@ -142,6 +167,10 @@ for the consolidation question).
 **Invalid citations:** 0
 
 **Evidence-sufficiency accuracy:** n/a (scored only when retrieval did not return all required facts)
+
+**Answer-text correctness (human review):** correct
+
+**Citation-support (human review):** fully_supported
 
 ### Q_DISTRACTOR_003 (distractor_sensitive)
 
@@ -163,6 +192,10 @@ for the consolidation question).
 
 **Evidence-sufficiency accuracy:** n/a (scored only when retrieval did not return all required facts)
 
+**Answer-text correctness (human review):** correct
+
+**Citation-support (human review):** fully_supported
+
 ### Q_MULTIHOP_001 (multi_hop)
 
 **Question:** Trace the full chain from the payment application to the recovery procedure it must follow: which application, which regulatory obligation, which control, and which recovery procedure?
@@ -182,6 +215,10 @@ for the consolidation question).
 **Invalid citations:** 0
 
 **Evidence-sufficiency accuracy:** n/a (scored only when retrieval did not return all required facts)
+
+**Answer-text correctness (human review):** correct
+
+**Citation-support (human review):** fully_supported
 
 ### Q_CONSOLIDATION_001 (consolidation)
 
@@ -210,13 +247,23 @@ However, the evidence does not provide information about the RPO (Recovery Point
 
 **Evidence-sufficiency accuracy:** yes (scored only when retrieval did not return all required facts)
 
+**Answer-text correctness (human review):** partially_correct
+
+**Citation-support (human review):** partially_supported
+
+**Citation-support review notes:** The RTO=4h claim is supported ONLY by the unrelated STRESS_PPTX_001 annotation chunk (39f484de8715...); the actual Payment Settlement RTO/RPO table chunk (29ec1f09e064...) was not in this question's top-5 retrieval at all -- the same real Stage 7A.1 narrative-vs-table-chunk finding surfacing at the answer layer.
+
 
 ## What this report does NOT establish
 
-- Answer-text correctness of any kind -- see
-  `answer_text_correctness_human_review` on each question result
-  (`"not_reviewed"` for this baseline run); this report never invents a
-  semantic judge for it.
+- Any automatic/semantic grading of answer-text correctness or citation
+  support -- both `answer_text_correctness_human_review` and
+  `citation_support_human_review` are filled in by a HUMAN reading the
+  committed answers, never by a second LLM or inferred classifier.
+- That a chunk's forbidden-evidence content was actually presented as
+  current by the answer text -- `cited_chunk_forbidden_evidence_exposure_rate`
+  is a mechanical, chunk-membership-only signal (see above); read it
+  together with `citation_support_human_review`, never alone.
 - Any retrieval-quality claim beyond what `reports/stage7a_vector_retrieval_scorecard.md`
   already establishes -- retrieval itself was not re-run or re-scored here.
 - Graph RAG, wiki retrieval, vision-enriched ingestion, reranking, hybrid

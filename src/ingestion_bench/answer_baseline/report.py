@@ -39,16 +39,19 @@ def render_scorecard_markdown(run: AnswerEvaluationRun) -> str:
             f"| {qr.question_id}{highlight} | {qr.difficulty} | "
             f"{_fmt_bool(qr.answer.evidence_sufficient)} | "
             f"{_fmt_pct(qr.validation.required_fact_citation_coverage_rate)} | "
-            f"{_fmt_pct(qr.validation.forbidden_fact_citation_rate)} | "
+            f"{_fmt_pct(qr.validation.cited_chunk_forbidden_evidence_exposure_rate)} | "
             f"{qr.validation.invalid_citation_count} | "
             f"{qr.validation.uncited_claim_count}/{qr.validation.total_claim_count} | "
             f"{_fmt_bool(qr.validation.evidence_sufficiency_accuracy)} | "
-            f"{qr.answer.answer_latency_seconds:.3f}s |"
+            f"{qr.answer.answer_latency_seconds:.3f}s | "
+            f"{qr.answer_text_correctness_human_review} | "
+            f"{qr.citation_support_human_review} |"
         )
     question_table = (
-        "| Question | Difficulty | Evidence sufficient | Req. fact coverage | Forbidden cited | "
-        "Invalid citations | Uncited/total claims | Sufficiency accuracy | Latency |\n"
-        "|---|---|---|---:|---:|---:|---:|---|---:|\n" + "\n".join(question_rows)
+        "| Question | Difficulty | Evidence sufficient | Req. fact coverage | Cited-chunk forbidden exposure | "
+        "Invalid citations | Uncited/total claims | Sufficiency accuracy | Latency | "
+        "Answer-text review | Citation-support review |\n"
+        "|---|---|---|---:|---:|---:|---:|---|---:|---|---|\n" + "\n".join(question_rows)
     )
 
     highlighted_section_rows = []
@@ -62,6 +65,7 @@ def render_scorecard_markdown(run: AnswerEvaluationRun) -> str:
             fact_id for fact_id, covered in qr.validation.required_fact_citation_coverage.items() if not covered
         ) or "(none)"
         forbidden = ", ".join(qr.validation.forbidden_cited_fact_ids) or "(none)"
+        notes = f"\n\n**Citation-support review notes:** {qr.citation_support_notes}" if qr.citation_support_notes else ""
         highlighted_section_rows.append(
             f"### {qr.question_id} ({qr.difficulty})\n\n"
             f"**Question:** {qr.question}\n\n"
@@ -73,7 +77,9 @@ def render_scorecard_markdown(run: AnswerEvaluationRun) -> str:
             f"**Forbidden facts cited (should be empty):** {forbidden}\n\n"
             f"**Invalid citations:** {qr.validation.invalid_citation_count}\n\n"
             f"**Evidence-sufficiency accuracy:** {_fmt_bool(qr.validation.evidence_sufficiency_accuracy)} "
-            f"(scored only when retrieval did not return all required facts)\n"
+            f"(scored only when retrieval did not return all required facts)\n\n"
+            f"**Answer-text correctness (human review):** {qr.answer_text_correctness_human_review}\n\n"
+            f"**Citation-support (human review):** {qr.citation_support_human_review}{notes}\n"
         )
     highlighted_section = "\n".join(highlighted_section_rows)
 
@@ -84,19 +90,30 @@ and `reports/stage7a2_vector_answer_results.json` come from the SAME
 execution, never two separate runs.
 
 `answer_model`: `{run.answer_model}`
+`answer_temperature`: `{run.answer_temperature}`
+`answer_prompt_version`: `{run.answer_prompt_version}`
+`answer_prompt_sha256`: `{run.answer_prompt_sha256}`
 `generated_at`: `{run.generated_at}`
-`retrieval_source`: `{run.retrieval_source}` (Stage 7A.1's own frozen,
-committed output -- retrieval was never re-run for this stage)
+`retrieval_source`: `{run.retrieval_source}` (repository-relative;
+Stage 7A.1's own frozen, committed output -- retrieval was never re-run
+for this stage)
+`retrieval_results_sha256`: `{run.retrieval_results_sha256}`
 `retrieval_corpus_profile`: `{run.retrieval_corpus_profile}`
 `retrieval_embedding_model`: `{run.retrieval_embedding_model}`
 
 This report validates citations MECHANICALLY -- exact chunk_id set
 membership against the Stage 7A.1 retrieval context and the Stage 6A/6B
 gold evidence catalog. No LLM or semantic judge scores anything here.
-Answer-TEXT correctness is a separate, explicitly human-review field on
-every question result (`answer_text_correctness_human_review`,
-currently `"not_reviewed"` for all 12 questions in this baseline run) --
-never silently assumed or auto-graded.
+Answer-TEXT correctness and citation SUPPORT (whether a cited chunk's
+own text actually backs its claim, as opposed to the mechanical
+retrieval/coverage checks above) are separate, explicitly human-review
+fields on every question result (`answer_text_correctness_human_review`,
+`citation_support_human_review`) -- never silently assumed or
+auto-graded. `cited_chunk_forbidden_evidence_exposure_rate` measures
+only whether a CITED CHUNK CONTAINS forbidden evidence -- it does not by
+itself prove the answer text presented that evidence as current or
+correct; that judgment is exactly what `citation_support_human_review`
+records.
 
 ## Aggregate scorecard (across {run.aggregate.question_count} questions)
 
@@ -105,7 +122,7 @@ never silently assumed or auto-graded.
 | Total invalid citations | {run.aggregate.total_invalid_citations} |
 | Total unresolved-provenance citations | {run.aggregate.total_unresolved_provenance_citations} |
 | Mean required-fact citation coverage rate | {_fmt_pct(run.aggregate.mean_required_fact_citation_coverage_rate)} |
-| Mean forbidden-fact citation rate | {_fmt_pct(run.aggregate.mean_forbidden_fact_citation_rate)} |
+| Mean cited-chunk forbidden-evidence exposure rate | {_fmt_pct(run.aggregate.mean_cited_chunk_forbidden_evidence_exposure_rate)} |
 | Uncited / total claims | {run.aggregate.total_uncited_claims} / {run.aggregate.total_claims} |
 | Mean citation completeness | {_fmt_pct(run.aggregate.mean_citation_completeness)} |
 | Evidence-sufficiency accuracy (scored questions) | {_fmt_pct(run.aggregate.evidence_sufficiency_accuracy_rate)} ({run.aggregate.evidence_sufficiency_scored_question_count} of {run.aggregate.question_count} questions had incomplete retrieval, the only case this accuracy is scored) |
@@ -133,10 +150,14 @@ for the consolidation question).
 
 ## What this report does NOT establish
 
-- Answer-text correctness of any kind -- see
-  `answer_text_correctness_human_review` on each question result
-  (`"not_reviewed"` for this baseline run); this report never invents a
-  semantic judge for it.
+- Any automatic/semantic grading of answer-text correctness or citation
+  support -- both `answer_text_correctness_human_review` and
+  `citation_support_human_review` are filled in by a HUMAN reading the
+  committed answers, never by a second LLM or inferred classifier.
+- That a chunk's forbidden-evidence content was actually presented as
+  current by the answer text -- `cited_chunk_forbidden_evidence_exposure_rate`
+  is a mechanical, chunk-membership-only signal (see above); read it
+  together with `citation_support_human_review`, never alone.
 - Any retrieval-quality claim beyond what `reports/stage7a_vector_retrieval_scorecard.md`
   already establishes -- retrieval itself was not re-run or re-scored here.
 - Graph RAG, wiki retrieval, vision-enriched ingestion, reranking, hybrid

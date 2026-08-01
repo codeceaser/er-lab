@@ -86,6 +86,9 @@ snapshot):
 | 6A.2b | Deterministic serialized-output closure (sorted identifier iteration, canonically-ordered `unexpected_observations`, cross-process `PYTHONHASHSEED` determinism tests, `EVALUATOR_VERSION` 1.2.1) | **Completed, frozen** | Same files as Stage 6A/6A.1/6A.2/6A.2a, patched | `tests/test_evaluation_determinism_subprocess.py` (2, new) | None known — see decision D-051. **Stage 6A/6A.1/6A.2/6A.2a/6A.2b is now frozen** |
 | 6B | Minimal, deterministic retrieval benchmark contract: 12 frozen questions (4 direct, 3 distractor_sensitive, 2 relational, 2 multi_hop, 1 consolidation) over real Stage 6A catalog facts, plus a single-fixture fact-to-chunk resolver | **Completed** | `contracts/retrieval_benchmark_v1.json`, `src/ingestion_bench/retrieval_benchmark/{model,resolver}.py` | `tests/test_retrieval_benchmark_contract.py` (24, new) | None known — see D-055's reuse of this contract's vocabulary |
 | 7A.1 | Regular vector retrieval baseline: local sentence-transformers embeddings + real Postgres/pgvector index (own table, isolated from the GraphRAG POC), 4 corpus profiles, corpus-level scoped gold resolution, deterministic K=1/3/5 metrics | **Completed, frozen** | `contracts/corpus_profiles_v1.json`, `src/ingestion_bench/retrieval_baseline/*.py`, `scripts/run_stage7a_retrieval_baseline.py` | `tests/test_retrieval_baseline_*.py` (46, new); `reports/stage7a_vector_retrieval_scorecard.md`, `reports/stage7a_vector_retrieval_results.json`, `artifacts/stage7a/index_manifest.json` | None known — see "Stage 7A.1 findings" below and decisions D-052 through D-055. Indexing/retrieval/metrics code frozen for Stage 7A.2 |
+| 7A.2 | Auditable Vector-RAG answer baseline: one configured OpenAI answer model over Stage 7A.1's own frozen top-5 retrieval, minimal LLM output schema, deterministic (non-LLM) citation validation, real 12-question run | **Completed, superseded by 7A.2a, frozen with 7A.2a** | `src/ingestion_bench/answer_baseline/*.py`, `scripts/run_stage7a2_vector_answer_baseline.py` | `tests/test_answer_baseline_*.py` (40, new); `reports/stage7a2_vector_answer_scorecard.md`, `reports/stage7a2_vector_answer_results.json`, `artifacts/stage7a2/question_answers/` | See "Stage 7A.2/7A.2a findings" below |
+| 7A.2a | Answer-baseline closure: manual human review of all 12 answers (answer-text correctness + citation support), `forbidden_fact_citation_rate` renamed to `cited_chunk_forbidden_evidence_exposure_rate` (accurate semantics), `citation_support_human_review` field added, repo-relative `retrieval_source`, `retrieval_results_sha256`/`answer_prompt_version`/`answer_prompt_sha256`/`answer_temperature` recorded | **Completed, frozen** | Same files as Stage 7A.2, patched; `scripts/apply_stage7a2a_closure.py` (new, one-off migration, never re-runs retrieval or the answer model) | Same test files as Stage 7A.2, updated for the rename; `reports/stage7a2_vector_answer_{results.json,scorecard.md}` regenerated from the SAME committed answer data | None known — see "Stage 7A.2/7A.2a findings" below. **Stage 7A.2/7A.2a is now frozen** |
+| 7A.3 | Minimal local auditable-semantic-search demo over the frozen Stage 7A.2/7A.2a answer results: single self-contained static HTML viewer, explicit-text-label status badges, cross-document citation warnings | **Completed** | `src/ingestion_bench/demo/*.py`, `scripts/run_stage7a3_demo.py` | `tests/test_stage7a3_demo_{view_model,render,integration}.py` (19, new); `reports/stage7a3_demo.html` | None known |
 | 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
 | 7C | Wiki page/link projection | **Not started** | — | — | — |
 | 8A | Selective OpenAI vision enrichment (`VisionEnricher` framework + `OpenAIVisionEnricher`, path B) | **Not started** | — | — | No `vision/` package. Corrected roadmap position — no longer "Stage 6"; see D-040 and "Corrected roadmap" below |
@@ -453,6 +456,57 @@ scored on a smaller, silently-shrunk denominator).
   A real, honest finding about embedding-based retrieval over tabular
   content, not an artifact of this stage's own code.
 
+## Stage 7A.2/7A.2a findings — auditable Vector-RAG answer baseline
+
+Real, measured results from `reports/stage7a2_vector_answer_scorecard.md`
+(regenerate via `python scripts/apply_stage7a2a_closure.py`, which
+migrates the already-committed 12-answer run rather than re-invoking the
+answer model or re-running retrieval). Answer model: `gpt-4o-mini`
+(`answer_temperature=0`, `answer_prompt_version="stage7a2-v1"`, exact
+prompt/retrieval-snapshot hashes recorded on every run object). All 12
+Stage 6B questions answered against Stage 7A.1's own frozen top-5
+`baseline_demo` retrieval: 0 invalid citations, 0 unresolved-provenance
+citations, 95.8% mean required-fact citation coverage, 54.2% mean
+`cited_chunk_forbidden_evidence_exposure_rate`, 100% evidence-sufficiency
+accuracy on the one question retrieval left genuinely incomplete.
+
+**`forbidden_fact_citation_rate` was renamed to
+`cited_chunk_forbidden_evidence_exposure_rate` at Stage 7A.2a** because
+the original name overclaimed: the metric only proves a CITED CHUNK
+contains forbidden evidence (exact chunk-id set membership, same
+mechanical discipline as everywhere else in this project) — it does
+**not** prove the answer TEXT presented that forbidden evidence as
+current or correct. Stage 7A.1's own documented chunk-colocation finding
+(required and forbidden facts often share one packed chunk) means a
+correct, well-cited answer can legitimately register non-zero exposure.
+Whether the forbidden evidence was actually mispresented is exactly what
+the new `citation_support_human_review` field (below) judges — never
+inferred automatically.
+
+**Manual review of all 12 committed answers** (`answer_text_correctness_human_review`
++ `citation_support_human_review`, both human-filled, never a second
+LLM/semantic judge): 11 of 12 answers `correct` with `fully_supported`
+citations. Two genuine, measured findings, not defects:
+
+- **`Q_DIRECT_003`** (`partially_supported`): the answer text is correct
+  ("RTO is 4 hours"), but the model cited BOTH the correct Payment
+  Settlement RTO table chunk AND an unrelated `STRESS_PPTX_001`
+  4-hour annotation chunk for the same claim — a citation-precision gap
+  invisible to the mechanical validator (both cited chunks are
+  individually "valid" — retrieved and not forbidden — so nothing there
+  flags it).
+- **`Q_CONSOLIDATION_001`** (`partially_correct` / `partially_supported`):
+  the same real Stage 7A.1 narrative-vs-table-chunk finding (see above)
+  surfaces at the answer layer. The actual Payment Settlement RTO/RPO
+  table chunk was not in this question's top-5 retrieval at all, so the
+  model's (textually correct) "RTO is 4 hours" claim is supported ONLY
+  by the unrelated `STRESS_PPTX_001` annotation chunk. The model
+  correctly declined to claim the RPO value (not retrieved at all) and
+  set `evidence_sufficient=false` — validated as accurate by
+  `validation.py` — but its RTO citation is not actually about Payment
+  Settlement, which only a human reading the actual chunk text can
+  catch.
+
 ## Known non-goals (see also "Explicitly deferred scope" below)
 
 Answer quality, ROI, and production deployment readiness remain
@@ -483,16 +537,16 @@ canonical element's own text) has a corresponding fix and test — see
 
 ## Next critical implementation step
 
-Per the corrected roadmap above, the next step is **Stage 7B —
-graph-enriched RAG projection**, independently derived from the SAME
-frozen `CanonicalDocument`/`CanonicalChunk` corpus and the SAME Stage 6A
-gold evidence-alignment catalog Stage 7A.1 already consumed (D-040),
-scored against the SAME frozen Stage 6B 12-question benchmark contract
-(never modified by Stage 7A.1, D-054) so its results are directly
-comparable to Stage 7A.1's. Vision enrichment (previously described as
-"Stage 6" earlier in this project's history) remains Stage 8A — see
-D-040 for why the evaluator and the retrieval-projection work come
-first. Stage 5A/5A.1/5A.2 is complete and frozen. **Stage
+Per the corrected roadmap above, the next step after Stage 7A.3 is
+**Stage 7B — graph-enriched RAG projection**, independently derived from
+the SAME frozen `CanonicalDocument`/`CanonicalChunk` corpus and the SAME
+Stage 6A gold evidence-alignment catalog Stage 7A.1 already consumed
+(D-040), scored against the SAME frozen Stage 6B 12-question benchmark
+contract (never modified by Stage 7A.1, D-054) so its results are
+directly comparable to Stage 7A.1's. Vision enrichment (previously
+described as "Stage 6" earlier in this project's history) remains Stage
+8A — see D-040 for why the evaluator and the retrieval-projection work
+come first. Stage 5A/5A.1/5A.2 is complete and frozen. **Stage
 6A/6A.1/6A.2/6A.2a/6A.2b is complete and frozen** (`EVALUATOR_VERSION`
 `1.2.1`, D-051). **Stage 6B is complete**: 12 frozen questions in
 `contracts/retrieval_benchmark_v1.json`, every required/forbidden fact
@@ -502,12 +556,18 @@ index (own table, D-052), corpus-level scoped gold resolution (D-054),
 and a real, measured K=1/3/5 retrieval scorecard against `baseline_demo`
 (see "Stage 7A.1 findings" above) -- `src/ingestion_bench/retrieval_baseline/`'s
 indexing, retrieval, and metrics code (`indexer.py`, `retrieval.py`,
-`metrics.py`) must not change for Stage 7A.2's own answer-generation work
-to build on top of it. No further changes to
-`src/ingestion_bench/evaluation/` or `src/ingestion_bench/retrieval_benchmark/`
-are expected outside of what Stage 7B's own graph-projection work
-requires. **Stage 7A.2 — an auditable answer-generation layer over this
-same frozen retrieval baseline — is next**, followed by Stage 7B.
+`metrics.py`) must not change for Stage 7A.2/7A.2a/7A.3's own
+answer-generation and demo work to build on top of it. No further
+changes to `src/ingestion_bench/evaluation/` or
+`src/ingestion_bench/retrieval_benchmark/` are expected outside of what
+Stage 7B's own graph-projection work requires. **Stage 7A.2/7A.2a is
+complete and FROZEN**: one configured OpenAI answer model, minimal LLM
+output schema, deterministic (non-LLM) citation validation, a real
+12-question run, and a full manual review of every answer (see "Stage
+7A.2/7A.2a findings" above) -- `src/ingestion_bench/answer_baseline/`
+must not change for Stage 7A.3's demo viewer or Stage 7B's own work.
+**Stage 7A.3 — a minimal local auditable-semantic-search demo over this
+same frozen answer baseline — is in progress**, followed by Stage 7B.
 
 ---
 

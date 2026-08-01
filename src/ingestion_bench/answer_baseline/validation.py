@@ -46,14 +46,27 @@ class CitationValidationResult(BaseModel):
     required_fact_citation_coverage: dict[str, bool] = Field(default_factory=dict)
     required_fact_citation_coverage_rate: float | None = None
 
-    # Forbidden-fact citation rate (item 4, requirement 4): same validly-
-    # cited-chunk membership test against forbidden gold chunk sets. 0.0
-    # when there is no available forbidden evidence in this corpus to
-    # leak is a real, meaningful zero (same precedent as
+    # Cited-chunk forbidden-evidence exposure rate (Stage 7A.2a renamed
+    # from forbidden_fact_citation_rate to accurately describe its actual
+    # semantics -- see docstring on the field's computation below). Same
+    # validly-cited-chunk membership test against forbidden gold chunk
+    # sets. 0.0 when there is no available forbidden evidence in this
+    # corpus to leak is a real, meaningful zero (same precedent as
     # retrieval_baseline.metrics.forbidden_hit_rate_at_k), never None.
+    #
+    # IMPORTANT: this measures only whether a CITED CHUNK CONTAINS
+    # forbidden evidence. It does NOT prove the answer TEXT presented
+    # that evidence as current/correct -- a chunk can legitimately
+    # contain both a required fact and a forbidden distractor fact
+    # side-by-side (Stage 7A.1's own documented chunk-colocation
+    # finding), and the answer may correctly cite that chunk while
+    # correctly describing only the required fact as current. Whether the
+    # forbidden evidence was actually presented as current is exactly
+    # what citation_support_human_review (evaluation.py) exists to judge
+    # -- never inferred automatically here.
     forbidden_fact_citation_count: int
     forbidden_cited_fact_ids: list[str] = Field(default_factory=list)
-    forbidden_fact_citation_rate: float
+    cited_chunk_forbidden_evidence_exposure_rate: float
 
     # Uncited substantive claim count, "where structurally detectable"
     # (item 4, requirement 5): a claim_citations entry with an EMPTY
@@ -112,7 +125,7 @@ def validate_answer(
     forbidden_cited_fact_ids = sorted(
         fact_id for fact_id, gold in forbidden_gold_by_fact.items() if valid_cited_ids & gold
     )
-    forbidden_rate = (
+    cited_chunk_forbidden_evidence_exposure_rate = (
         len(forbidden_cited_fact_ids) / len(forbidden_gold_by_fact) if forbidden_gold_by_fact else 0.0
     )
 
@@ -133,7 +146,7 @@ def validate_answer(
         required_fact_citation_coverage_rate=coverage_rate,
         forbidden_fact_citation_count=len(forbidden_cited_fact_ids),
         forbidden_cited_fact_ids=forbidden_cited_fact_ids,
-        forbidden_fact_citation_rate=forbidden_rate,
+        cited_chunk_forbidden_evidence_exposure_rate=cited_chunk_forbidden_evidence_exposure_rate,
         uncited_claim_count=uncited_claims,
         total_claim_count=total_claims,
         citation_completeness=completeness,

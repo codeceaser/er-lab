@@ -11,7 +11,16 @@ trusted from the model's own output.
 
 from __future__ import annotations
 
+import hashlib
+import json
+
 from ingestion_bench.retrieval_baseline.retrieval import RetrievalResult
+
+# Bumped whenever SYSTEM_PROMPT or ANSWER_JSON_SCHEMA changes meaningfully
+# -- a short, human-assigned label, never auto-derived from the hash
+# below (the hash already captures exact content; the version captures
+# intent/history at a glance).
+PROMPT_VERSION = "stage7a2-v1"
 
 SYSTEM_PROMPT = """You are an auditable evidence-grounded question-answering system for an \
 enterprise document corpus. You will be given a question and a fixed list of retrieved \
@@ -92,3 +101,13 @@ ANSWER_JSON_SCHEMA: dict = {
     "required": ["evidence_sufficient", "claims", "answer_text"],
     "additionalProperties": False,
 }
+
+
+def prompt_sha256() -> str:
+    """Hash of the exact prompt CONTRACT sent to the answer model --
+    SYSTEM_PROMPT plus the canonical (sorted-key) JSON of
+    ANSWER_JSON_SCHEMA -- so a change to either is detectable even if
+    PROMPT_VERSION is forgotten. build_user_prompt's per-question text is
+    deliberately excluded (it varies by question/retrieval by design)."""
+    payload = SYSTEM_PROMPT + json.dumps(ANSWER_JSON_SCHEMA, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()

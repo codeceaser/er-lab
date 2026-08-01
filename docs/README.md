@@ -55,8 +55,8 @@ the Stage 6A catalog, plus a single-fixture fact-to-chunk resolver
 (`src/ingestion_bench/retrieval_benchmark/`).
 
 **Stage 7A.1 — the regular vector retrieval baseline — is complete and
-FROZEN** (indexing/retrieval/metrics code must not change for Stage
-7A.2's answer-generation layer to build on top of it):
+FROZEN** (indexing/retrieval/metrics code must not change for
+Stage 7A.2/7A.2a/7A.3's own work to build on top of it):
 local `sentence-transformers/all-MiniLM-L6-v2` embeddings, a REAL
 Postgres/pgvector index (its own isolated table, never the separate ER
 GraphRAG POC's tables), 4 corpus profiles
@@ -71,17 +71,48 @@ and `POC_STATUS_AND_EVIDENCE.md` "Stage 7A.1 findings" for two genuine
 measured findings (a chunk-granularity-driven forbidden-fact hit rate,
 and a narrative-vs-table chunk split on the consolidation question).
 
-**547 tests passing** (3 pre-existing warnings from Docling's own
-dependencies).
+**Stage 7A.2/7A.2a — the auditable Vector-RAG answer baseline — is
+complete and FROZEN** (`src/ingestion_bench/answer_baseline/` must not
+change for Stage 7A.3's demo viewer or Stage 7B's own work): one
+configured OpenAI answer model (`gpt-4o-mini`, `temperature=0`) over
+Stage 7A.1's own frozen top-5 retrieval, a deliberately minimal LLM
+output schema (every provenance/token/cost/latency field resolved by
+this project's own code, never trusted from the model), and mechanical
+(non-LLM) citation validation. Real 12-question run: 0 invalid
+citations, 95.8% mean required-fact citation coverage, 54.2% mean
+`cited_chunk_forbidden_evidence_exposure_rate`. Stage 7A.2a added a full
+manual human review of every answer (11/12 `correct`/`fully_supported`;
+`Q_DIRECT_003` and `Q_CONSOLIDATION_001` `partially_supported` — see
+`POC_STATUS_AND_EVIDENCE.md` "Stage 7A.2/7A.2a findings" for the two
+genuine findings this exposed), corrected the forbidden-evidence metric's
+name to match its actual semantics, and recorded prompt/retrieval-
+snapshot provenance hashes. See `reports/stage7a2_vector_answer_scorecard.md`.
 
-**Next: Stage 7B — graph-enriched RAG projection**, scored against the
-SAME frozen Stage 6B benchmark contract Stage 7A.1 used, so results are
-directly comparable. See `POC_STATUS_AND_EVIDENCE.md` "Benchmark
-dimensions (corrected roadmap)" for the full corrected stage sequence
-(Stage 6A/6A.1/6A.2/6A.2a/6A.2b done → Stage 6B done → Stage 7A.1 done →
-Stage 7B next → Stage 7C wiki projection → Stages 8A/8B vision
-enrichment/OpenAI vendor-native → Stage 9 cross-lane comparison) and why
-vision enrichment moved later (decision D-040).
+**Stage 7A.3 — a minimal local auditable-semantic-search demo over this
+same frozen answer baseline — is complete**: a single, self-contained
+static HTML file (`reports/stage7a3_demo.html`, `src/ingestion_bench/demo/`)
+with a question selector, the generated answer, a visible evidence-
+sufficient/insufficient indicator, full claim-level citation provenance
+(chunk_id, fixture/document, unit/page/slide, source references,
+canonical element ids, exact retrieved chunk text), explicit-text-label
+status badges (current/retired/historical/superseded/draft/decommissioned
+— literal substring detection only, never inferred), latency/token/cost,
+and an informational cross-document warning when a citation's fixture
+differs from the question's principal evidence. No server, no build
+step, no new dependency — open the file directly in a browser.
+
+**606 tests passing** as of Stage 7A.3 (3 pre-existing warnings from
+Docling's own dependencies).
+
+**Next after Stage 7A.3: Stage 7B — graph-enriched RAG projection**,
+scored against the SAME frozen Stage 6B benchmark contract Stage 7A.1
+used, so results are directly comparable. See
+`POC_STATUS_AND_EVIDENCE.md` "Benchmark dimensions (corrected roadmap)"
+for the full corrected stage sequence (Stage 6A/6A.1/6A.2/6A.2a/6A.2b
+done → Stage 6B done → Stage 7A.1 done → Stage 7A.2/7A.2a done → Stage
+7A.3 in progress → Stage 7B next → Stage 7C wiki projection → Stages
+8A/8B vision enrichment/OpenAI vendor-native → Stage 9 cross-lane
+comparison) and why vision enrichment moved later (decision D-040).
 
 ## Repository root
 

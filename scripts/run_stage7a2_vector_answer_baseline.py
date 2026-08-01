@@ -59,7 +59,10 @@ def main() -> None:
     print(f"  total_invalid_citations={run.aggregate.total_invalid_citations}")
     print(f"  total_unresolved_provenance_citations={run.aggregate.total_unresolved_provenance_citations}")
     print(f"  mean_required_fact_citation_coverage_rate={run.aggregate.mean_required_fact_citation_coverage_rate}")
-    print(f"  mean_forbidden_fact_citation_rate={run.aggregate.mean_forbidden_fact_citation_rate}")
+    print(
+        "  mean_cited_chunk_forbidden_evidence_exposure_rate="
+        f"{run.aggregate.mean_cited_chunk_forbidden_evidence_exposure_rate}"
+    )
     print(f"  uncited/total claims={run.aggregate.total_uncited_claims}/{run.aggregate.total_claims}")
     print(
         f"  evidence_sufficiency_accuracy_rate={run.aggregate.evidence_sufficiency_accuracy_rate} "

@@ -1,7 +1,11 @@
 {
   "answer_model": "gpt-4o-mini",
+  "answer_temperature": 0.0,
+  "answer_prompt_version": "stage7a2-v1",
+  "answer_prompt_sha256": "f7e757134eb57672f273ac8de51784c51dfa8298c1a78a843966533cf94c5c51",
   "generated_at": "2026-08-01T19:16:53.495446+00:00",
-  "retrieval_source": "C:\\Users\\Admin\\dev\\er-lab\\reports\\stage7a_vector_retrieval_results.json",
+  "retrieval_source": "reports/stage7a_vector_retrieval_results.json",
+  "retrieval_results_sha256": "e1b76f1bb4f6c07eceb8b656b8f10fe52193ac5c4ae7c2964d93222970445f26",
   "retrieval_corpus_profile": "baseline_demo",
   "retrieval_embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
   "question_results": [
@@ -639,7 +643,7 @@
         "forbidden_cited_fact_ids": [
           "D_001"
         ],
-        "forbidden_fact_citation_rate": 1.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 1.0,
         "uncited_claim_count": 0,
         "total_claim_count": 1,
         "citation_completeness": 1.0,
@@ -650,8 +654,10 @@
         "estimated_cost_usd": 0.0002736,
         "answer_latency_seconds": 2.9386127996258438
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_DIRECT_002",
@@ -1440,7 +1446,7 @@
         "required_fact_citation_coverage_rate": 1.0,
         "forbidden_fact_citation_count": 0,
         "forbidden_cited_fact_ids": [],
-        "forbidden_fact_citation_rate": 0.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 0.0,
         "uncited_claim_count": 0,
         "total_claim_count": 2,
         "citation_completeness": 1.0,
@@ -1451,8 +1457,10 @@
         "estimated_cost_usd": 0.00031529999999999997,
         "answer_latency_seconds": 1.538045299705118
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_DIRECT_003",
@@ -1998,7 +2006,7 @@
           "T_001_r3c0",
           "T_001_r3c1"
         ],
-        "forbidden_fact_citation_rate": 1.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 1.0,
         "uncited_claim_count": 0,
         "total_claim_count": 1,
         "citation_completeness": 1.0,
@@ -2009,8 +2017,10 @@
         "estimated_cost_usd": 0.0003213,
         "answer_latency_seconds": 1.851897600106895
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "partially_supported",
+      "citation_support_notes": "Cites the correct Payment Settlement RTO table chunk (29ec1f09e064...) AND an unrelated STRESS_PPTX_001 4-hour annotation chunk (39f484de8715...) for the same claim. The answer text itself is correct, but one of its two supporting citations is not actually about Payment Settlement."
     },
     {
       "question_id": "Q_DIRECT_004",
@@ -2479,7 +2489,7 @@
         "required_fact_citation_coverage_rate": 1.0,
         "forbidden_fact_citation_count": 0,
         "forbidden_cited_fact_ids": [],
-        "forbidden_fact_citation_rate": 0.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 0.0,
         "uncited_claim_count": 0,
         "total_claim_count": 1,
         "citation_completeness": 1.0,
@@ -2490,8 +2500,10 @@
         "estimated_cost_usd": 0.00027405,
         "answer_latency_seconds": 1.2301688003353775
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_DISTRACTOR_001",
@@ -3273,7 +3285,7 @@
         "forbidden_cited_fact_ids": [
           "D_001"
         ],
-        "forbidden_fact_citation_rate": 1.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 1.0,
         "uncited_claim_count": 0,
         "total_claim_count": 2,
         "citation_completeness": 1.0,
@@ -3284,8 +3296,10 @@
         "estimated_cost_usd": 0.0003315,
         "answer_latency_seconds": 2.516664800234139
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_DISTRACTOR_002",
@@ -4086,7 +4100,7 @@
         "forbidden_cited_fact_ids": [
           "D_002"
         ],
-        "forbidden_fact_citation_rate": 1.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 1.0,
         "uncited_claim_count": 0,
         "total_claim_count": 2,
         "citation_completeness": 1.0,
@@ -4097,8 +4111,10 @@
         "estimated_cost_usd": 0.00032984999999999997,
         "answer_latency_seconds": 2.061180700082332
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_DISTRACTOR_003",
@@ -4522,7 +4538,7 @@
         "forbidden_cited_fact_ids": [
           "SB_002"
         ],
-        "forbidden_fact_citation_rate": 1.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 1.0,
         "uncited_claim_count": 0,
         "total_claim_count": 1,
         "citation_completeness": 1.0,
@@ -4533,8 +4549,10 @@
         "estimated_cost_usd": 0.00028305,
         "answer_latency_seconds": 1.2516526002436876
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_RELATIONAL_001",
@@ -5328,7 +5346,7 @@
         "required_fact_citation_coverage_rate": 1.0,
         "forbidden_fact_citation_count": 0,
         "forbidden_cited_fact_ids": [],
-        "forbidden_fact_citation_rate": 0.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 0.0,
         "uncited_claim_count": 0,
         "total_claim_count": 2,
         "citation_completeness": 1.0,
@@ -5339,8 +5357,10 @@
         "estimated_cost_usd": 0.00033825,
         "answer_latency_seconds": 1.8034626999869943
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_RELATIONAL_002",
@@ -5834,7 +5854,7 @@
         "required_fact_citation_coverage_rate": 1.0,
         "forbidden_fact_citation_count": 0,
         "forbidden_cited_fact_ids": [],
-        "forbidden_fact_citation_rate": 0.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 0.0,
         "uncited_claim_count": 0,
         "total_claim_count": 2,
         "citation_completeness": 1.0,
@@ -5845,8 +5865,10 @@
         "estimated_cost_usd": 0.00032369999999999995,
         "answer_latency_seconds": 2.131109799724072
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_MULTIHOP_001",
@@ -7038,7 +7060,7 @@
           "D_001",
           "D_002"
         ],
-        "forbidden_fact_citation_rate": 1.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 1.0,
         "uncited_claim_count": 0,
         "total_claim_count": 5,
         "citation_completeness": 1.0,
@@ -7049,8 +7071,10 @@
         "estimated_cost_usd": 0.00044985,
         "answer_latency_seconds": 4.1445972002111375
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_MULTIHOP_002",
@@ -7745,7 +7769,7 @@
         "required_fact_citation_coverage_rate": 1.0,
         "forbidden_fact_citation_count": 0,
         "forbidden_cited_fact_ids": [],
-        "forbidden_fact_citation_rate": 0.0,
+        "cited_chunk_forbidden_evidence_exposure_rate": 0.0,
         "uncited_claim_count": 0,
         "total_claim_count": 2,
         "citation_completeness": 1.0,
@@ -7756,8 +7780,10 @@
         "estimated_cost_usd": 0.00031649999999999994,
         "answer_latency_seconds": 2.472878700122237
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "correct",
+      "answer_text_correctness_notes": null,
+      "citation_support_human_review": "fully_supported",
+      "citation_support_notes": null
     },
     {
       "question_id": "Q_CONSOLIDATION_001",
@@ -8970,7 +8996,7 @@
           "D_001",
           "D_002"
         ],
-        "forbidden_fact_citation_rate": 0.5,
+        "cited_chunk_forbidden_evidence_exposure_rate": 0.5,
         "uncited_claim_count": 0,
         "total_claim_count": 5,
         "citation_completeness": 1.0,
@@ -8981,8 +9007,10 @@
         "estimated_cost_usd": 0.0005103,
         "answer_latency_seconds": 4.692758199758828
       },
-      "answer_text_correctness_human_review": "not_reviewed",
-      "answer_text_correctness_notes": null
+      "answer_text_correctness_human_review": "partially_correct",
+      "answer_text_correctness_notes": "Application/ownership/control/obligation/recovery-procedure facts are correct and RPO is correctly flagged insufficient; the RTO=4h claim is textually correct but its citation is not (see citation-support notes).",
+      "citation_support_human_review": "partially_supported",
+      "citation_support_notes": "The RTO=4h claim is supported ONLY by the unrelated STRESS_PPTX_001 annotation chunk (39f484de8715...); the actual Payment Settlement RTO/RPO table chunk (29ec1f09e064...) was not in this question's top-5 retrieval at all -- the same real Stage 7A.1 narrative-vs-table-chunk finding surfacing at the answer layer."
     }
   ],
   "aggregate": {
@@ -8990,7 +9018,7 @@
     "total_invalid_citations": 0,
     "total_unresolved_provenance_citations": 0,
     "mean_required_fact_citation_coverage_rate": 0.9583333333333334,
-    "mean_forbidden_fact_citation_rate": 0.5416666666666666,
+    "mean_cited_chunk_forbidden_evidence_exposure_rate": 0.5416666666666666,
     "total_claims": 26,
     "total_uncited_claims": 0,
     "mean_citation_completeness": 1.0,

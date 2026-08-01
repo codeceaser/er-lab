@@ -89,8 +89,8 @@ def test_forbidden_fact_citation_detected_only_via_a_valid_citation():
 
     assert leaked_result.forbidden_fact_citation_count == 1
     assert leaked_result.forbidden_cited_fact_ids == ["D1"]
-    assert leaked_result.forbidden_fact_citation_rate == 1.0
-    assert clean_result.forbidden_fact_citation_rate == 0.0
+    assert leaked_result.cited_chunk_forbidden_evidence_exposure_rate == 1.0
+    assert clean_result.cited_chunk_forbidden_evidence_exposure_rate == 0.0
 
 
 def test_forbidden_fact_citation_via_unretrieved_chunk_id_does_not_count_as_a_leak():
@@ -104,11 +104,11 @@ def test_forbidden_fact_citation_via_unretrieved_chunk_id_does_not_count_as_a_le
     assert result.invalid_citation_count == 1
 
 
-def test_forbidden_fact_citation_rate_is_zero_not_none_with_no_available_forbidden_evidence():
+def test_cited_chunk_forbidden_evidence_exposure_rate_is_zero_not_none_with_no_available_forbidden_evidence():
     forbidden = {"D1": [ScopedFactEvidence(fixture="x", fact_id="D1", status="not_applicable")]}
     answer = _answer(claims=[])
     result = validate_answer(answer, {}, forbidden, all_required_retrieved_at_max_k=True)
-    assert result.forbidden_fact_citation_rate == 0.0
+    assert result.cited_chunk_forbidden_evidence_exposure_rate == 0.0
 
 
 def test_uncited_claim_count_and_citation_completeness():

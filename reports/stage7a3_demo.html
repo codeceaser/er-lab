@@ -1,0 +1,1188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stage 7A.3 -- Auditable Semantic-Search Demo</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --paper: #f7f5ee;
+  --ink: #23261f;
+  --ink-muted: #6b6a5c;
+  --hairline: #ddd8c7;
+  --surface: #efece0;
+  --code-surface: #e9e5d3;
+  --accent: #1d5c5a;
+  --good: #2f7a4d;
+  --warn: #a3521a;
+  --critical: #a3311f;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #151813; --ink: #e8e4d6; --ink-muted: #a19d89; --hairline: #34382c;
+    --surface: #1e2119; --code-surface: #262a1f;
+    --accent: #59b3ac; --good: #5fbb84; --warn: #e0954f; --critical: #e2695a;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #151813; --ink: #e8e4d6; --ink-muted: #a19d89; --hairline: #34382c;
+  --surface: #1e2119; --code-surface: #262a1f;
+  --accent: #59b3ac; --good: #5fbb84; --warn: #e0954f; --critical: #e2695a;
+}
+:root[data-theme="light"] {
+  --paper: #f7f5ee; --ink: #23261f; --ink-muted: #6b6a5c; --hairline: #ddd8c7;
+  --surface: #efece0; --code-surface: #e9e5d3;
+  --accent: #1d5c5a; --good: #2f7a4d; --warn: #a3521a; --critical: #a3311f;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: var(--sans); background: var(--paper); color: var(--ink);
+  max-width: 760px; margin: 2.5rem auto; padding: 0 1.25rem 4rem; line-height: 1.55;
+}
+h1 { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; margin: 0 0 0.4rem; text-wrap: balance; }
+h2 { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; margin: 0 0 0.6rem; text-wrap: balance; }
+h3 { font-family: var(--serif); font-size: 1rem; font-weight: 600; color: var(--ink-muted); margin: 1.4rem 0 0.5rem; letter-spacing: 0.01em; }
+.subtitle { color: var(--ink-muted); font-size: 0.92rem; max-width: 60ch; }
+.subtitle code { font-family: var(--mono); font-size: 0.85em; }
+label { font-family: var(--sans); font-size: 0.9rem; }
+select {
+  font-family: var(--sans); font-size: 0.95rem; padding: 0.5rem 0.7rem; margin: 0.5rem 0 1.75rem;
+  max-width: 100%; width: 100%; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--hairline); border-radius: 6px;
+}
+select:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.question-section { border-top: 1px solid var(--hairline); padding-top: 1.5rem; margin-top: 1.5rem; }
+.difficulty {
+  font-family: var(--sans); font-size: 0.68rem; color: var(--ink-muted); font-weight: 600;
+  border: 1px solid var(--hairline); border-radius: 999px; padding: 0.15rem 0.55rem;
+  text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle;
+}
+.question-text, .answer-text { margin: 0.6rem 0; }
+.answer-text { padding: 0.75rem 0.9rem; background: var(--surface); border-radius: 8px; white-space: pre-wrap; }
+.sufficiency-badge {
+  display: inline-block; padding: 0.3rem 0.7rem; border-radius: 999px; font-weight: 600;
+  font-size: 0.85rem; margin: 0.6rem 0; color: #fff;
+}
+.sufficiency-badge.sufficient { background: var(--good); }
+.sufficiency-badge.insufficient { background: var(--critical); }
+.metrics-row, .human-review-row {
+  font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 0.78rem;
+  color: var(--ink-muted); display: flex; gap: 0 1.1rem; flex-wrap: wrap; margin: 0.4rem 0;
+}
+.human-review-row { font-family: var(--sans); }
+.human-review-row strong { color: var(--ink); }
+.claim {
+  border: 1px solid var(--hairline); border-radius: 8px; padding: 0.75rem 0.9rem;
+  margin: 0.75rem 0; background: color-mix(in srgb, var(--surface) 35%, transparent);
+}
+.claim-text { font-family: var(--serif); font-size: 1.02rem; margin-bottom: 0.5rem; }
+.cited-chunk { border-left: 3px solid var(--accent); padding-left: 0.75rem; margin: 0.65rem 0; }
+.cited-chunk-header { display: flex; gap: 0.6rem; flex-wrap: wrap; font-size: 0.8rem; align-items: baseline; color: var(--ink-muted); }
+.chunk-id { font-family: var(--mono); background: var(--code-surface); padding: 0.1rem 0.4rem; border-radius: 4px; color: var(--ink); }
+.provenance-grid { font-family: var(--mono); font-size: 0.74rem; color: var(--ink-muted); margin: 0.4rem 0; display: grid; gap: 0.2rem; }
+.provenance-grid strong { color: var(--ink); font-family: var(--sans); font-weight: 600; }
+.chunk-text {
+  font-family: var(--mono); background: var(--code-surface); padding: 0.6rem 0.7rem; border-radius: 6px;
+  white-space: pre-wrap; font-size: 0.82rem; margin-top: 0.4rem; border: 1px solid var(--hairline);
+}
+.status-badges { margin: 0.4rem 0; }
+.badge {
+  display: inline-block; font-family: var(--sans); font-size: 0.66rem; font-weight: 700;
+  padding: 0.12rem 0.45rem; border-radius: 4px; margin-right: 0.3rem; text-transform: uppercase;
+  letter-spacing: 0.03em; color: #fff;
+}
+.badge-current { background: var(--good); }
+.badge-retired, .badge-historical, .badge-superseded, .badge-draft, .badge-decommissioned { background: var(--critical); }
+.badge-other { background: var(--ink-muted); }
+.warning { font-size: 0.82rem; padding: 0.5rem 0.7rem; border-radius: 6px; margin: 0.45rem 0; border: 1px solid; }
+.cross-doc-warning, .unresolved-warning {
+  background: color-mix(in srgb, var(--warn) 14%, var(--paper)); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+}
+.no-citation { font-size: 0.85rem; color: var(--ink-muted); font-style: italic; }
+</style>
+</head>
+<body>
+<h1>Stage 7A.3 -- Auditable Vector-RAG Semantic-Search Demo</h1>
+<p class="subtitle">A read-only viewer over the frozen Stage 7A.2/7A.2a answer baseline
+(<code>reports/stage7a2_vector_answer_results.json</code>) -- no live retrieval, no live
+inference. Generated 2026-08-01T21:19:02.619919+00:00.</p>
+<label for="question-select"><strong>Question:</strong></label><br>
+<select id="question-select" onchange="document.querySelectorAll('.question-section').forEach(function(s){s.style.display='none';});document.getElementById(this.value).style.display='block';">
+<option value="q-Q_DIRECT_001">Q_DIRECT_001 -- Which application supports the Payment Settlement business service?</option><option value="q-Q_DIRECT_002">Q_DIRECT_002 -- Which team owns the Payment Settlement service, and in which region does it operate?</option><option value="q-Q_DIRECT_003">Q_DIRECT_003 -- What Recovery Time Objective (RTO) is documented for Payment Settlement?</option><option value="q-Q_DIRECT_004">Q_DIRECT_004 -- According to the scanned procedure page, what must be tested quarterly?</option><option value="q-Q_DISTRACTOR_001">Q_DISTRACTOR_001 -- Which application is currently in scope for Regulatory Obligation O-31: APP-224510 or APP-224499?</option><option value="q-Q_DISTRACTOR_002">Q_DISTRACTOR_002 -- Which control currently satisfies Regulatory Obligation O-31: C-88 or C-88a?</option><option value="q-Q_DISTRACTOR_003">Q_DISTRACTOR_003 -- In the overlapping-annotation stress fixture, which RTO annotation is the current, primary value: 4h or 6h?</option><option value="q-Q_RELATIONAL_001">Q_RELATIONAL_001 -- Which regulatory obligation does Control C-88 satisfy, and which application is that obligation associated with?</option><option value="q-Q_RELATIONAL_002">Q_RELATIONAL_002 -- What does the figure caption say the escalation diagram depicts, and which picture does that caption belong to?</option><option value="q-Q_MULTIHOP_001">Q_MULTIHOP_001 -- Trace the full chain from the payment application to the recovery procedure it must follow: which application, which regulatory obligation, which control, and which recovery procedure?</option><option value="q-Q_MULTIHOP_002">Q_MULTIHOP_002 -- Starting from the escalation diagram&#x27;s caption, what recovery procedure does the escalation flow activate, and what does the body text say Control C-88 mandates for that same procedure?</option><option value="q-Q_CONSOLIDATION_001">Q_CONSOLIDATION_001 -- Summarize the Payment Settlement service&#x27;s resilience posture: application identity, ownership, governing control/obligation, mandated recovery procedure, and documented RTO/RPO.</option>
+</select>
+<section id="q-Q_DIRECT_001" class="question-section" style="display:block">
+  <h2>Q_DIRECT_001 <span class="difficulty">direct</span></h2>
+  <div class="question-text"><strong>Question:</strong> Which application supports the Payment Settlement business service?</div>
+  <div class="answer-text"><strong>Answer:</strong> The application that supports the Payment Settlement business service is APP-224510.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 2.939s</span>
+    <span>input tokens: 1480</span>
+    <span>output tokens: 86</span>
+    <span>estimated cost: $0.000274</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">Application APP-224510 supports the Payment Settlement business service.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div>
+</section><section id="q-Q_DIRECT_002" class="question-section" style="display:none">
+  <h2>Q_DIRECT_002 <span class="difficulty">direct</span></h2>
+  <div class="question-text"><strong>Question:</strong> Which team owns the Payment Settlement service, and in which region does it operate?</div>
+  <div class="answer-text"><strong>Answer:</strong> The Payment Settlement service is owned by the Resilience Engineering Team and operates in the EMEA region.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 1.538s</span>
+    <span>input tokens: 1534</span>
+    <span>output tokens: 142</span>
+    <span>estimated cost: $0.000315</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">Payment Settlement is owned by the Resilience Engineering Team.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Payment Settlement operates in the EMEA region.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div>
+</section><section id="q-Q_DIRECT_003" class="question-section" style="display:none">
+  <h2>Q_DIRECT_003 <span class="difficulty">direct</span></h2>
+  <div class="question-text"><strong>Question:</strong> What Recovery Time Objective (RTO) is documented for Payment Settlement?</div>
+  <div class="answer-text"><strong>Answer:</strong> The Recovery Time Objective (RTO) for Payment Settlement is documented as 4 hours.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 1.852s</span>
+    <span>input tokens: 1606</span>
+    <span>output tokens: 134</span>
+    <span>estimated cost: $0.000321</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>partially_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">The Recovery Time Objective (RTO) for Payment Settlement is 4 hours.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">29ec1f09e064264ccdaaa439b8c93f3bdb3599f080455d6ec7276a31e9333431</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;d970148620b5a24de203347fd3cfa317d04c5709d3affee270ae84607ff8c664&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;2de7ccf9053ce3c5747fedec53d6f0b187fa8c36e03c7164d043ddeb2d176833&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;d970148620b5a24de203347fd3cfa317d04c5709d3affee270ae84607ff8c664&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 9, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 212.61557006835938, &#x27;y0&#x27;: 318.59033203125, &#x27;x1&#x27;: 398.8501281738281, &#x27;y1&#x27;: 392.35736083984375, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;table&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Recovery Objectives
+
+Table (4x2):
+| **Metric** [row=0,col=0,header=true,rowspan=1,colspan=1] | **Value** [row=0,col=1,header=true,rowspan=1,colspan=1] |
+| RTO [row=1,col=0,header=false,rowspan=1,colspan=1] | 4 hours [row=1,col=1,header=false,rowspan=1,colspan=1] |
+| RPO [row=2,col=0,header=false,rowspan=1,colspan=1] | 1 hour [row=2,col=1,header=false,rowspan=1,colspan=1] |
+| Legacy RPO (C-88a, retired) [row=3,col=0,header=false,rowspan=1,colspan=1] | N/A [row=3,col=1,header=false,rowspan=1,colspan=1] |</pre>
+</div><div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">39f484de87156d9cf83e218c84a6c304918aa341e10fd6d57ba33316f0f6f8cf</code>
+    <span class="fixture">stress/STRESS_PPTX_001.pptx</span>
+    <span class="doc-id">doc_id: STRESS_PPTX_001</span>
+    <span class="source-format">pptx</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-superseded">superseded</span><span class="badge badge-draft">draft</span></div>
+  <div class="warning cross-doc-warning">&#9888; This citation comes from a different document/fixture (<code>stress/STRESS_PPTX_001.pptx</code>) than the principal evidence used by this answer. Shown for audit purposes -- evidence is never removed.</div>
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;50c6854a4b4e88d5e6e9a3b27dbb20910ded9cdfbf4b53bca3fc9cc4512bddd1&#x27;, &#x27;ef82311834b63959c84de35f4f03f3013e517ca3e08e8e922865bcf4c88f03c4&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: []</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;50c6854a4b4e88d5e6e9a3b27dbb20910ded9cdfbf4b53bca3fc9cc4512bddd1&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 0, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 914400.0, &#x27;y0&#x27;: 4846320.0, &#x27;x1&#x27;: 6400800.0, &#x27;y1&#x27;: 5943600.0, &#x27;coordinate_unit&#x27;: &#x27;emu&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;ef82311834b63959c84de35f4f03f3013e517ca3e08e8e922865bcf4c88f03c4&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 1645920.0, &#x27;y0&#x27;: 4389120.0, &#x27;x1&#x27;: 7132320.0, &#x27;y1&#x27;: 5486400.0, &#x27;coordinate_unit&#x27;: &#x27;emu&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Superseded annotation: RTO target 6h (draft, do not use)
+
+Primary annotation: RTO target 4h</pre>
+</div>
+</div>
+</section><section id="q-Q_DIRECT_004" class="question-section" style="display:none">
+  <h2>Q_DIRECT_004 <span class="difficulty">direct</span></h2>
+  <div class="question-text"><strong>Question:</strong> According to the scanned procedure page, what must be tested quarterly?</div>
+  <div class="answer-text"><strong>Answer:</strong> According to the scanned procedure page, Recovery Procedure P-205 must be tested quarterly.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 1.230s</span>
+    <span>input tokens: 1463</span>
+    <span>output tokens: 91</span>
+    <span>estimated cost: $0.000274</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">Recovery Procedure P-205 must be tested quarterly.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">9e9f2e4afc5d228815256423c8c770a8b6408ce4aa86ff006cd0c4046010acd5</code>
+    <span class="fixture">stress/STRESS_SCANNED_001.pdf</span>
+    <span class="doc-id">doc_id: STRESS_SCANNED_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;d399caacb2bf842d7a92af8f248d7fa9e6760e820eb76d77ea99ba080ac4c394&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: []</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;d399caacb2bf842d7a92af8f248d7fa9e6760e820eb76d77ea99ba080ac4c394&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 0, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 98.0, &#x27;y0&#x27;: 117.33333333333337, &#x27;x1&#x27;: 325.0, &#x27;y1&#x27;: 145.66666666666663, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">This page intentionally contains no digital text layer. Recovery Procedure P-205 must be tested quarterly.</pre>
+</div>
+</div>
+</section><section id="q-Q_DISTRACTOR_001" class="question-section" style="display:none">
+  <h2>Q_DISTRACTOR_001 <span class="difficulty">distractor_sensitive</span></h2>
+  <div class="question-text"><strong>Question:</strong> Which application is currently in scope for Regulatory Obligation O-31: APP-224510 or APP-224499?</div>
+  <div class="answer-text"><strong>Answer:</strong> The application currently in scope for Regulatory Obligation O-31 is APP-224510. APP-224499 was the predecessor system for payment settlement and has been decommissioned.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 2.517s</span>
+    <span>input tokens: 1498</span>
+    <span>output tokens: 178</span>
+    <span>estimated cost: $0.000331</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">Application APP-224510 is currently in scope for Regulatory Obligation O-31.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Application APP-224499 was decommissioned in 2024 and is superseded by APP-224510.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div>
+</section><section id="q-Q_DISTRACTOR_002" class="question-section" style="display:none">
+  <h2>Q_DISTRACTOR_002 <span class="difficulty">distractor_sensitive</span></h2>
+  <div class="question-text"><strong>Question:</strong> Which control currently satisfies Regulatory Obligation O-31: C-88 or C-88a?</div>
+  <div class="answer-text"><strong>Answer:</strong> Control C-88 currently satisfies Regulatory Obligation O-31. Control C-88a has been retired and replaced by Control C-88.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 2.061s</span>
+    <span>input tokens: 1503</span>
+    <span>output tokens: 174</span>
+    <span>estimated cost: $0.000330</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">Regulatory Obligation O-31 is satisfied by Control C-88.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div>
+</section><section id="q-Q_DISTRACTOR_003" class="question-section" style="display:none">
+  <h2>Q_DISTRACTOR_003 <span class="difficulty">distractor_sensitive</span></h2>
+  <div class="question-text"><strong>Question:</strong> In the overlapping-annotation stress fixture, which RTO annotation is the current, primary value: 4h or 6h?</div>
+  <div class="answer-text"><strong>Answer:</strong> The current, primary RTO annotation is 4 hours.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 1.252s</span>
+    <span>input tokens: 1539</span>
+    <span>output tokens: 87</span>
+    <span>estimated cost: $0.000283</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">The current, primary RTO annotation is 4 hours.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">39f484de87156d9cf83e218c84a6c304918aa341e10fd6d57ba33316f0f6f8cf</code>
+    <span class="fixture">stress/STRESS_PPTX_001.pptx</span>
+    <span class="doc-id">doc_id: STRESS_PPTX_001</span>
+    <span class="source-format">pptx</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-superseded">superseded</span><span class="badge badge-draft">draft</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;50c6854a4b4e88d5e6e9a3b27dbb20910ded9cdfbf4b53bca3fc9cc4512bddd1&#x27;, &#x27;ef82311834b63959c84de35f4f03f3013e517ca3e08e8e922865bcf4c88f03c4&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: []</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;50c6854a4b4e88d5e6e9a3b27dbb20910ded9cdfbf4b53bca3fc9cc4512bddd1&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 0, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 914400.0, &#x27;y0&#x27;: 4846320.0, &#x27;x1&#x27;: 6400800.0, &#x27;y1&#x27;: 5943600.0, &#x27;coordinate_unit&#x27;: &#x27;emu&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;ef82311834b63959c84de35f4f03f3013e517ca3e08e8e922865bcf4c88f03c4&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 1645920.0, &#x27;y0&#x27;: 4389120.0, &#x27;x1&#x27;: 7132320.0, &#x27;y1&#x27;: 5486400.0, &#x27;coordinate_unit&#x27;: &#x27;emu&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Superseded annotation: RTO target 6h (draft, do not use)
+
+Primary annotation: RTO target 4h</pre>
+</div>
+</div>
+</section><section id="q-Q_RELATIONAL_001" class="question-section" style="display:none">
+  <h2>Q_RELATIONAL_001 <span class="difficulty">relational</span></h2>
+  <div class="question-text"><strong>Question:</strong> Which regulatory obligation does Control C-88 satisfy, and which application is that obligation associated with?</div>
+  <div class="answer-text"><strong>Answer:</strong> Control C-88 satisfies Regulatory Obligation O-31, which is associated with application APP-224510.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 1.803s</span>
+    <span>input tokens: 1647</span>
+    <span>output tokens: 152</span>
+    <span>estimated cost: $0.000338</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">Control C-88 satisfies Regulatory Obligation O-31.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Regulatory Obligation O-31 is associated with application APP-224510.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div>
+</section><section id="q-Q_RELATIONAL_002" class="question-section" style="display:none">
+  <h2>Q_RELATIONAL_002 <span class="difficulty">relational</span></h2>
+  <div class="question-text"><strong>Question:</strong> What does the figure caption say the escalation diagram depicts, and which picture does that caption belong to?</div>
+  <div class="answer-text"><strong>Answer:</strong> The figure caption states that the escalation diagram depicts the escalation flow from incident detection to activation of Recovery Procedure P-205. This caption belongs to Figure 1.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 2.131s</span>
+    <span>input tokens: 1482</span>
+    <span>output tokens: 169</span>
+    <span>estimated cost: $0.000324</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">The escalation diagram depicts the escalation flow from incident detection to activation of Recovery Procedure P-205.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">f34dc47096a4207f19c3212b67cdb9cc6bd20b957fbf387c65bd06596d0d99fa</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [1]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;5053d459d47d50863c833764056c2d5614b98c561e3e46d342bcb9189e1abb9c&#x27;, &#x27;e3d44d40b2c0c20a1e8771cd56a5e72e554e5d8299a8dbe3c4c5d5efbab11b5a&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;421ab950a14cc6b9d5983914efb011906e6f65f4c88f45e53ec4bec4e17ca57e&#x27;]</div>
+    <div><strong>annotation_ids</strong>: [&#x27;19d92a304432f3d893293d83118064bb1b502843a3b056215d320152b5971840&#x27;, &#x27;5bc7c823bbc788e450c1709fa12770fe7a6135307d2471d7a50b7fbde4aa9786&#x27;, &#x27;a7755949a49f35f2fc2d25faa5e0e609ca81eb0b3d72a240dca70baa1af2e403&#x27;]</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;5053d459d47d50863c833764056c2d5614b98c561e3e46d342bcb9189e1abb9c&#x27;, &#x27;unit_index&#x27;: 1, &#x27;order_index&#x27;: None, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 101.5489273071289, &#x27;y0&#x27;: 119.09098815917969, &#x27;x1&#x27;: 510.7641296386719, &#x27;y1&#x27;: 164.96652221679688, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;picture&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e3d44d40b2c0c20a1e8771cd56a5e72e554e5d8299a8dbe3c4c5d5efbab11b5a&#x27;, &#x27;unit_index&#x27;: 1, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 221.5629, &#x27;x1&#x27;: 483.72999999999996, &#x27;y1&#x27;: 230.8129, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;caption&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Escalation Flow
+
+Figure 1: Escalation flow from incident detection to activation of Recovery Procedure P-205.
+OCR: Activate Procedure P-205
+OCR: Escalate to Resilience Team
+OCR: Incident Detected</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">The caption belongs to Figure 1.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">f34dc47096a4207f19c3212b67cdb9cc6bd20b957fbf387c65bd06596d0d99fa</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [1]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;5053d459d47d50863c833764056c2d5614b98c561e3e46d342bcb9189e1abb9c&#x27;, &#x27;e3d44d40b2c0c20a1e8771cd56a5e72e554e5d8299a8dbe3c4c5d5efbab11b5a&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;421ab950a14cc6b9d5983914efb011906e6f65f4c88f45e53ec4bec4e17ca57e&#x27;]</div>
+    <div><strong>annotation_ids</strong>: [&#x27;19d92a304432f3d893293d83118064bb1b502843a3b056215d320152b5971840&#x27;, &#x27;5bc7c823bbc788e450c1709fa12770fe7a6135307d2471d7a50b7fbde4aa9786&#x27;, &#x27;a7755949a49f35f2fc2d25faa5e0e609ca81eb0b3d72a240dca70baa1af2e403&#x27;]</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;5053d459d47d50863c833764056c2d5614b98c561e3e46d342bcb9189e1abb9c&#x27;, &#x27;unit_index&#x27;: 1, &#x27;order_index&#x27;: None, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 101.5489273071289, &#x27;y0&#x27;: 119.09098815917969, &#x27;x1&#x27;: 510.7641296386719, &#x27;y1&#x27;: 164.96652221679688, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;picture&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e3d44d40b2c0c20a1e8771cd56a5e72e554e5d8299a8dbe3c4c5d5efbab11b5a&#x27;, &#x27;unit_index&#x27;: 1, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 221.5629, &#x27;x1&#x27;: 483.72999999999996, &#x27;y1&#x27;: 230.8129, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;caption&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Escalation Flow
+
+Figure 1: Escalation flow from incident detection to activation of Recovery Procedure P-205.
+OCR: Activate Procedure P-205
+OCR: Escalate to Resilience Team
+OCR: Incident Detected</pre>
+</div>
+</div>
+</section><section id="q-Q_MULTIHOP_001" class="question-section" style="display:none">
+  <h2>Q_MULTIHOP_001 <span class="difficulty">multi_hop</span></h2>
+  <div class="question-text"><strong>Question:</strong> Trace the full chain from the payment application to the recovery procedure it must follow: which application, which regulatory obligation, which control, and which recovery procedure?</div>
+  <div class="answer-text"><strong>Answer:</strong> The full chain from the payment application to the recovery procedure is as follows: The application is APP-224510, which supports the Payment Settlement business service. It is in scope for Regulatory Obligation O-31, which is satisfied by Control C-88. Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications. Upon incident detection, Recovery Procedure P-205 must be activated.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 4.145s</span>
+    <span>input tokens: 1427</span>
+    <span>output tokens: 393</span>
+    <span>estimated cost: $0.000450</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">The application supporting the Payment Settlement business service is APP-224510.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">APP-224510 is in scope for Regulatory Obligation O-31.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Regulatory Obligation O-31 is satisfied by Control C-88.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Recovery Procedure P-205 must be activated upon incident detection as per the escalation flow.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">f34dc47096a4207f19c3212b67cdb9cc6bd20b957fbf387c65bd06596d0d99fa</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [1]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;5053d459d47d50863c833764056c2d5614b98c561e3e46d342bcb9189e1abb9c&#x27;, &#x27;e3d44d40b2c0c20a1e8771cd56a5e72e554e5d8299a8dbe3c4c5d5efbab11b5a&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;421ab950a14cc6b9d5983914efb011906e6f65f4c88f45e53ec4bec4e17ca57e&#x27;]</div>
+    <div><strong>annotation_ids</strong>: [&#x27;19d92a304432f3d893293d83118064bb1b502843a3b056215d320152b5971840&#x27;, &#x27;5bc7c823bbc788e450c1709fa12770fe7a6135307d2471d7a50b7fbde4aa9786&#x27;, &#x27;a7755949a49f35f2fc2d25faa5e0e609ca81eb0b3d72a240dca70baa1af2e403&#x27;]</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;5053d459d47d50863c833764056c2d5614b98c561e3e46d342bcb9189e1abb9c&#x27;, &#x27;unit_index&#x27;: 1, &#x27;order_index&#x27;: None, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 101.5489273071289, &#x27;y0&#x27;: 119.09098815917969, &#x27;x1&#x27;: 510.7641296386719, &#x27;y1&#x27;: 164.96652221679688, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;picture&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e3d44d40b2c0c20a1e8771cd56a5e72e554e5d8299a8dbe3c4c5d5efbab11b5a&#x27;, &#x27;unit_index&#x27;: 1, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 221.5629, &#x27;x1&#x27;: 483.72999999999996, &#x27;y1&#x27;: 230.8129, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;caption&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Escalation Flow
+
+Figure 1: Escalation flow from incident detection to activation of Recovery Procedure P-205.
+OCR: Activate Procedure P-205
+OCR: Escalate to Resilience Team
+OCR: Incident Detected</pre>
+</div>
+</div>
+</section><section id="q-Q_MULTIHOP_002" class="question-section" style="display:none">
+  <h2>Q_MULTIHOP_002 <span class="difficulty">multi_hop</span></h2>
+  <div class="question-text"><strong>Question:</strong> Starting from the escalation diagram&#x27;s caption, what recovery procedure does the escalation flow activate, and what does the body text say Control C-88 mandates for that same procedure?</div>
+  <div class="answer-text"><strong>Answer:</strong> The escalation flow activates Recovery Procedure P-205. Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.</div>
+  <div class="sufficiency-badge sufficient">✓ Evidence sufficient</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 2.473s</span>
+    <span>input tokens: 1478</span>
+    <span>output tokens: 158</span>
+    <span>estimated cost: $0.000316</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>correct</strong></span>
+    <span>citation-support review: <strong>fully_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">The escalation flow activates Recovery Procedure P-205.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">f34dc47096a4207f19c3212b67cdb9cc6bd20b957fbf387c65bd06596d0d99fa</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [1]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;5053d459d47d50863c833764056c2d5614b98c561e3e46d342bcb9189e1abb9c&#x27;, &#x27;e3d44d40b2c0c20a1e8771cd56a5e72e554e5d8299a8dbe3c4c5d5efbab11b5a&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;421ab950a14cc6b9d5983914efb011906e6f65f4c88f45e53ec4bec4e17ca57e&#x27;]</div>
+    <div><strong>annotation_ids</strong>: [&#x27;19d92a304432f3d893293d83118064bb1b502843a3b056215d320152b5971840&#x27;, &#x27;5bc7c823bbc788e450c1709fa12770fe7a6135307d2471d7a50b7fbde4aa9786&#x27;, &#x27;a7755949a49f35f2fc2d25faa5e0e609ca81eb0b3d72a240dca70baa1af2e403&#x27;]</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;5053d459d47d50863c833764056c2d5614b98c561e3e46d342bcb9189e1abb9c&#x27;, &#x27;unit_index&#x27;: 1, &#x27;order_index&#x27;: None, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 101.5489273071289, &#x27;y0&#x27;: 119.09098815917969, &#x27;x1&#x27;: 510.7641296386719, &#x27;y1&#x27;: 164.96652221679688, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;picture&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e3d44d40b2c0c20a1e8771cd56a5e72e554e5d8299a8dbe3c4c5d5efbab11b5a&#x27;, &#x27;unit_index&#x27;: 1, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 221.5629, &#x27;x1&#x27;: 483.72999999999996, &#x27;y1&#x27;: 230.8129, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;caption&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Escalation Flow
+
+Figure 1: Escalation flow from incident detection to activation of Recovery Procedure P-205.
+OCR: Activate Procedure P-205
+OCR: Escalate to Resilience Team
+OCR: Incident Detected</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div>
+</section><section id="q-Q_CONSOLIDATION_001" class="question-section" style="display:none">
+  <h2>Q_CONSOLIDATION_001 <span class="difficulty">consolidation</span></h2>
+  <div class="question-text"><strong>Question:</strong> Summarize the Payment Settlement service&#x27;s resilience posture: application identity, ownership, governing control/obligation, mandated recovery procedure, and documented RTO/RPO.</div>
+  <div class="answer-text"><strong>Answer:</strong> The Payment Settlement service&#x27;s resilience posture includes the following elements: 
+- **Application Identity**: The service is supported by application APP-224510.
+- **Ownership**: It is owned by the Resilience Engineering Team and operates in EMEA.
+- **Governing Control/Obligation**: The service is in scope for Regulatory Obligation O-31, satisfied by Control C-88.
+- **Mandated Recovery Procedure**: Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+- **Documented RTO**: The documented RTO target is 4 hours. 
+
+However, the evidence does not provide information about the RPO (Recovery Point Objective), making it insufficient for that part of the answer.</div>
+  <div class="sufficiency-badge insufficient">⚠ Evidence INSUFFICIENT</div>
+  <div class="metrics-row">
+    <span>model: gpt-4o-mini</span>
+    <span>latency: 4.693s</span>
+    <span>input tokens: 1486</span>
+    <span>output tokens: 479</span>
+    <span>estimated cost: $0.000510</span>
+  </div>
+  <div class="human-review-row">
+    <span>answer-text review: <strong>partially_correct</strong></span>
+    <span>citation-support review: <strong>partially_supported</strong></span>
+  </div>
+  <h3>Claim-level citations</h3>
+  <div class="claim">
+  <div class="claim-text">The Payment Settlement service is supported by application APP-224510.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">APP-224510 is owned by the Resilience Engineering Team and operates in EMEA.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">The Payment Settlement service is in scope for Regulatory Obligation O-31, which is satisfied by Control C-88.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">3b9af06de431aff68a3db44bfa6096a81ec1537aa413503cfdb0e289fd669069</code>
+    <span class="fixture">parity/PARITY_001.pdf</span>
+    <span class="doc-id">doc_id: PARITY_001</span>
+    <span class="source-format">pdf</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-retired">retired</span><span class="badge badge-historical">historical</span><span class="badge badge-superseded">superseded</span><span class="badge badge-decommissioned">decommissioned</span></div>
+  
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: [&#x27;5121032979f7a411d68e9d979fa46df54f5884a1b6b3ffc53fc2f8da061bf0ed&#x27;]</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;59d185d239e1802334590ed7b1507128f8c2fd3a952d6eb09fbc52c63b54afa7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 130.82000000000005, &#x27;x1&#x27;: 416.49, &#x27;y1&#x27;: 140.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;0e59cfa9681288e646ed6b60a8f8dad1d275d87b18bf64428b256d0d33a96311&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 2, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 148.82000000000005, &#x27;x1&#x27;: 325.8900000000001, &#x27;y1&#x27;: 158.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;a019f37a5c11db0912999b2a53872086ec1d88af0d554fad57f907ef59ac59b7&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 3, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 166.82000000000005, &#x27;x1&#x27;: 324.20000000000005, &#x27;y1&#x27;: 176.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;1431b8bfd022bee24597d2df2c68c21af87cac2999e2b51749c1977d60bda9c5&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 4, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 184.82000000000005, &#x27;x1&#x27;: 501.4800000000001, &#x27;y1&#x27;: 194.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;970ea98178c294481f1c334b3a7adbb0f789baf2bd1c685dab64ee7625d0b883&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 5, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 202.82000000000005, &#x27;x1&#x27;: 479.28999999999996, &#x27;y1&#x27;: 212.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;e18d31ead6d31a78dea6ecb36a598fcc6306654758436315b09983228643e60d&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 6, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 220.82000000000005, &#x27;x1&#x27;: 532.64, &#x27;y1&#x27;: 242.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;9a9cb56d31682ced5d4ee8e78f164ba45c13f3b642e09ab0014d8f485f8e8cee&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 7, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 78.0, &#x27;y0&#x27;: 250.82000000000005, &#x27;x1&#x27;: 489.8299999999999, &#x27;y1&#x27;: 272.07000000000005, &#x27;coordinate_unit&#x27;: &#x27;pt&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Enterprise Resilience Overview: Payment Settlement Service
+
+Application APP-224510 supports the Payment Settlement business service.
+
+APP-224510 is in scope for Regulatory Obligation O-31.
+
+Regulatory Obligation O-31 is satisfied by Control C-88.
+
+Control C-88 mandates Recovery Procedure P-205 for critical payment-processing applications.
+
+Payment Settlement is owned by the Resilience Engineering Team and operates in EMEA.
+
+APP-224499 was the predecessor system for payment settlement and was decommissioned in 2024; it is superseded by APP-224510.
+
+Legacy Control C-88a was retired and replaced by Control C-88; references to C-88a in older documents are historical only.</pre>
+</div>
+</div><div class="claim">
+  <div class="claim-text">The documented RTO target for the Payment Settlement service is 4 hours.</div>
+  
+  <div class="cited-chunk">
+  <div class="cited-chunk-header">
+    <code class="chunk-id">39f484de87156d9cf83e218c84a6c304918aa341e10fd6d57ba33316f0f6f8cf</code>
+    <span class="fixture">stress/STRESS_PPTX_001.pptx</span>
+    <span class="doc-id">doc_id: STRESS_PPTX_001</span>
+    <span class="source-format">pptx</span>
+  </div>
+  <div class="status-badges"><span class="badge badge-superseded">superseded</span><span class="badge badge-draft">draft</span></div>
+  <div class="warning cross-doc-warning">&#9888; This citation comes from a different document/fixture (<code>stress/STRESS_PPTX_001.pptx</code>) than the principal evidence used by this answer. Shown for audit purposes -- evidence is never removed.</div>
+  <div class="provenance-grid">
+    <div><strong>unit_indices</strong>: [0]</div>
+    <div><strong>source_element_ids</strong>: [&#x27;50c6854a4b4e88d5e6e9a3b27dbb20910ded9cdfbf4b53bca3fc9cc4512bddd1&#x27;, &#x27;ef82311834b63959c84de35f4f03f3013e517ca3e08e8e922865bcf4c88f03c4&#x27;]</div>
+    <div><strong>heading_source_element_ids</strong>: []</div>
+    <div><strong>annotation_ids</strong>: []</div>
+    <div><strong>source_refs</strong>: [{&#x27;element_id&#x27;: &#x27;50c6854a4b4e88d5e6e9a3b27dbb20910ded9cdfbf4b53bca3fc9cc4512bddd1&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 0, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 914400.0, &#x27;y0&#x27;: 4846320.0, &#x27;x1&#x27;: 6400800.0, &#x27;y1&#x27;: 5943600.0, &#x27;coordinate_unit&#x27;: &#x27;emu&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}, {&#x27;element_id&#x27;: &#x27;ef82311834b63959c84de35f4f03f3013e517ca3e08e8e922865bcf4c88f03c4&#x27;, &#x27;unit_index&#x27;: 0, &#x27;order_index&#x27;: 1, &#x27;bbox&#x27;: {&#x27;x0&#x27;: 1645920.0, &#x27;y0&#x27;: 4389120.0, &#x27;x1&#x27;: 7132320.0, &#x27;y1&#x27;: 5486400.0, &#x27;coordinate_unit&#x27;: &#x27;emu&#x27;, &#x27;coordinate_origin&#x27;: &#x27;top-left&#x27;, &#x27;rotation&#x27;: 0.0, &#x27;normalized&#x27;: None}, &#x27;element_type&#x27;: &#x27;paragraph&#x27;, &#x27;fragment_index&#x27;: None, &#x27;start_char&#x27;: None, &#x27;end_char&#x27;: None}]</div>
+  </div>
+  <pre class="chunk-text">Superseded annotation: RTO target 6h (draft, do not use)
+
+Primary annotation: RTO target 4h</pre>
+</div>
+</div>
+</section>
+</body>
+</html>
