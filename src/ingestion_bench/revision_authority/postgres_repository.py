@@ -1,4 +1,4 @@
-"""Stage 7R.1: the ONE real, persisted repository implementation --
+"""Stage 7R.1/7R.1a: the ONE real, persisted repository implementation --
 Postgres, using this package's own isolated tables (schema.sql).
 
 Connection string comes from `DATABASE_URL`, an environment variable --
@@ -9,6 +9,13 @@ the SAME database instance, against this package's own tables only.
 
 The default unit-test suite never depends on this module -- see
 `repository.InMemoryRevisionAuthorityRepository` for that.
+
+`transaction()` wraps a REAL Postgres transaction (BEGIN/COMMIT/
+ROLLBACK) -- any exception raised inside the `with` block rolls back
+every write performed since it opened, giving the exact same
+"no partial mutation" guarantee `service.activate_revision`'s multi-step
+write relies on, backed by the database engine itself rather than an
+in-process snapshot.
 """
 
 from __future__ import annotations
@@ -21,7 +28,12 @@ from typing import Iterator
 from sqlalchemy import Connection, Engine, create_engine, text
 
 from ingestion_bench.revision_authority import config
-from ingestion_bench.revision_authority.model import AuthorityDecisionEvent, AuthorityMetadata, RevisionIdentity
+from ingestion_bench.revision_authority.model import (
+    AuthorityDecisionEvent,
+    AuthorityMetadata,
+    AuthorityPeriod,
+    RevisionIdentity,
+)
 
 _SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
 
@@ -50,12 +62,13 @@ def _to_datetime(value: object) -> datetime | None:
 
 class PostgresRevisionAuthorityRepository:
     """The one real, persisted repository implementation configured for
-    Stage 7R.1."""
+    Stage 7R.1/7R.1a."""
 
     def __init__(
         self,
         database_url: str | None = None,
         registry_table: str | None = None,
+        period_table: str | None = None,
         event_table: str | None = None,
     ) -> None:
         self._database_url = database_url or config.DATABASE_URL
@@ -64,6 +77,7 @@ class PostgresRevisionAuthorityRepository:
                 "DATABASE_URL is not set -- copy .env.example to .env and set it, or pass database_url= explicitly"
             )
         self._registry_table = registry_table or config.REVISION_REGISTRY_TABLE
+        self._period_table = period_table or config.AUTHORITY_PERIOD_TABLE
         self._event_table = event_table or config.AUTHORITY_EVENT_TABLE
         self._engine: Engine | None = None
         self._schema_ready = False
@@ -87,17 +101,14 @@ class PostgresRevisionAuthorityRepository:
 
     def _create_schema_if_needed(self) -> None:
         """Applies schema.sql idempotently (CREATE TABLE/INDEX IF NOT
-        EXISTS) -- never DROPs, never touches any other table. No
-        migration framework: this file IS the schema, re-applied
-        harmlessly on every startup.
-
-        Comment LINES are stripped entirely before splitting on ';' --
-        splitting first and filtering chunks that merely START with '--'
-        is not enough, since a '--' comment line can itself contain a
-        literal ';' (as several lines in schema.sql's own prose do),
-        which would otherwise chop a comment in half and leave a
-        non-comment-looking remainder that reaches the database as if it
-        were real SQL."""
+        EXISTS) -- never DROPs, never touches any other table (including
+        any Stage 7R.1-era columns already present in an existing
+        edib_document_revision_registry table from before this stage's
+        period-table split -- no migration framework, those columns
+        simply go unused going forward, harmlessly). Comment LINES are
+        stripped entirely before splitting on ';' -- splitting first and
+        filtering chunks that merely START with '--' is not enough,
+        since a '--' comment line can itself contain a literal ';'."""
         assert self._engine is not None
         raw = _SCHEMA_PATH.read_text(encoding="utf-8")
         without_comments = "\n".join(
@@ -210,8 +221,7 @@ class PostgresRevisionAuthorityRepository:
         with self._conn_scope() as conn:
             row = conn.execute(
                 text(
-                    f"SELECT publication_status, approved_at, effective_from, effective_to, "
-                    f"supersedes_revision_id, superseded_by_revision_id, authority_source, "
+                    f"SELECT publication_status, approved_at, authority_source, "
                     f"authority_reference, authority_recorded_at, authority_recorded_by "
                     f"FROM {self._registry_table} WHERE document_revision_id = :id"
                 ),
@@ -222,10 +232,6 @@ class PostgresRevisionAuthorityRepository:
         return AuthorityMetadata(
             publication_status=row["publication_status"],
             approved_at=_to_datetime(row["approved_at"]),
-            effective_from=_to_date(row["effective_from"]),
-            effective_to=_to_date(row["effective_to"]),
-            supersedes_revision_id=row["supersedes_revision_id"],
-            superseded_by_revision_id=row["superseded_by_revision_id"],
             authority_source=row["authority_source"],
             authority_reference=row["authority_reference"],
             authority_recorded_at=_to_datetime(row["authority_recorded_at"]),
@@ -240,10 +246,6 @@ class PostgresRevisionAuthorityRepository:
                     UPDATE {self._registry_table} SET
                         publication_status = :publication_status,
                         approved_at = :approved_at,
-                        effective_from = :effective_from,
-                        effective_to = :effective_to,
-                        supersedes_revision_id = :supersedes_revision_id,
-                        superseded_by_revision_id = :superseded_by_revision_id,
                         authority_source = :authority_source,
                         authority_reference = :authority_reference,
                         authority_recorded_at = :authority_recorded_at,
@@ -256,10 +258,6 @@ class PostgresRevisionAuthorityRepository:
                     "id": document_revision_id,
                     "publication_status": metadata.publication_status,
                     "approved_at": metadata.approved_at,
-                    "effective_from": metadata.effective_from,
-                    "effective_to": metadata.effective_to,
-                    "supersedes_revision_id": metadata.supersedes_revision_id,
-                    "superseded_by_revision_id": metadata.superseded_by_revision_id,
                     "authority_source": metadata.authority_source,
                     "authority_reference": metadata.authority_reference,
                     "authority_recorded_at": metadata.authority_recorded_at,
@@ -293,6 +291,85 @@ class PostgresRevisionAuthorityRepository:
                 for row in rows
             ]
 
+    def save_period(self, period: AuthorityPeriod) -> AuthorityPeriod:
+        with self._conn_scope() as conn:
+            if period.authority_period_id == 0:
+                row = conn.execute(
+                    text(
+                        f"""
+                        INSERT INTO {self._period_table} (
+                            logical_document_id, document_revision_id, effective_from, effective_to,
+                            predecessor_revision_id, opening_event_id, closing_event_id, closure_reason,
+                            authority_source, authority_reference, recorded_at, recorded_by
+                        ) VALUES (
+                            :ldid, :rid, :ef, :et, :pred, :open_ev, :close_ev, :reason,
+                            :src, :ref, :rec_at, :rec_by
+                        ) RETURNING authority_period_id
+                        """
+                    ),
+                    {
+                        "ldid": period.logical_document_id, "rid": period.document_revision_id,
+                        "ef": period.effective_from, "et": period.effective_to,
+                        "pred": period.predecessor_revision_id, "open_ev": period.opening_event_id,
+                        "close_ev": period.closing_event_id, "reason": period.closure_reason,
+                        "src": period.authority_source, "ref": period.authority_reference,
+                        "rec_at": period.recorded_at, "rec_by": period.recorded_by,
+                    },
+                ).mappings().first()
+                return period.model_copy(update={"authority_period_id": row["authority_period_id"]})
+
+            conn.execute(
+                text(
+                    f"""
+                    UPDATE {self._period_table} SET
+                        effective_to = :et, closing_event_id = :close_ev, closure_reason = :reason
+                    WHERE authority_period_id = :pid
+                    """
+                ),
+                {
+                    "pid": period.authority_period_id, "et": period.effective_to,
+                    "close_ev": period.closing_event_id, "reason": period.closure_reason,
+                },
+            )
+            return period
+
+    def list_periods_for_revision(self, document_revision_id: str) -> list[AuthorityPeriod]:
+        with self._conn_scope() as conn:
+            rows = conn.execute(
+                text(f"SELECT * FROM {self._period_table} WHERE document_revision_id = :rid ORDER BY effective_from ASC"),
+                {"rid": document_revision_id},
+            ).mappings()
+            return [self._period_from_row(row) for row in rows]
+
+    def list_periods_for_document(self, logical_document_id: str) -> list[AuthorityPeriod]:
+        with self._conn_scope() as conn:
+            rows = conn.execute(
+                text(
+                    f"SELECT * FROM {self._period_table} WHERE logical_document_id = :ldid "
+                    "ORDER BY document_revision_id ASC, effective_from ASC"
+                ),
+                {"ldid": logical_document_id},
+            ).mappings()
+            return [self._period_from_row(row) for row in rows]
+
+    @staticmethod
+    def _period_from_row(row) -> AuthorityPeriod:
+        return AuthorityPeriod(
+            authority_period_id=row["authority_period_id"],
+            logical_document_id=row["logical_document_id"],
+            document_revision_id=row["document_revision_id"],
+            effective_from=_to_date(row["effective_from"]),
+            effective_to=_to_date(row["effective_to"]),
+            predecessor_revision_id=row["predecessor_revision_id"],
+            opening_event_id=row["opening_event_id"],
+            closing_event_id=row["closing_event_id"],
+            closure_reason=row["closure_reason"],
+            authority_source=row["authority_source"],
+            authority_reference=row["authority_reference"],
+            recorded_at=_to_datetime(row["recorded_at"]),
+            recorded_by=row["recorded_by"],
+        )
+
     def append_event(self, event: AuthorityDecisionEvent) -> AuthorityDecisionEvent:
         with self._conn_scope() as conn:
             row = conn.execute(
@@ -300,9 +377,11 @@ class PostgresRevisionAuthorityRepository:
                     f"""
                     INSERT INTO {self._event_table} (
                         event_type, logical_document_id, revision_id, related_revision_id,
+                        decision_effective_date, closure_reason,
                         recorded_at, authority_source, authority_reference, recorded_by, detail
                     ) VALUES (
                         :event_type, :logical_document_id, :revision_id, :related_revision_id,
+                        :decision_effective_date, :closure_reason,
                         :recorded_at, :authority_source, :authority_reference, :recorded_by, :detail
                     ) RETURNING event_id
                     """
@@ -312,6 +391,8 @@ class PostgresRevisionAuthorityRepository:
                     "logical_document_id": event.logical_document_id,
                     "revision_id": event.revision_id,
                     "related_revision_id": event.related_revision_id,
+                    "decision_effective_date": event.decision_effective_date,
+                    "closure_reason": event.closure_reason,
                     "recorded_at": event.recorded_at,
                     "authority_source": event.authority_source,
                     "authority_reference": event.authority_reference,
@@ -337,6 +418,8 @@ class PostgresRevisionAuthorityRepository:
                     logical_document_id=row["logical_document_id"],
                     revision_id=row["revision_id"],
                     related_revision_id=row["related_revision_id"],
+                    decision_effective_date=_to_date(row["decision_effective_date"]),
+                    closure_reason=row["closure_reason"],
                     recorded_at=_to_datetime(row["recorded_at"]),
                     authority_source=row["authority_source"],
                     authority_reference=row["authority_reference"],

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 
-from ingestion_bench.revision_authority.model import AuthorityMetadata, RevisionIdentity
+from ingestion_bench.revision_authority.model import AuthorityMetadata, AuthorityPeriod
 from ingestion_bench.revision_authority.repository import InMemoryRevisionAuthorityRepository
 from ingestion_bench.revision_authority.resolver import resolve_query_scope
 from ingestion_bench.revision_authority.service import RevisionAuthorityService
@@ -128,72 +128,116 @@ def test_withdrawn_current_without_replacement_fails_closed():
     service, _ = _service()
     only = _register(service, "a" * 64)
     service.activate_revision(new_revision_id=only.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
-    service.withdraw_revision(document_revision_id=only.document_revision_id, authority_source="gov", authority_reference="W1", authority_recorded_by="alice", recorded_at=NOW)
+    service.withdraw_revision(document_revision_id=only.document_revision_id, withdrawal_effective_date=date(2023, 1, 1), authority_source="gov", authority_reference="W1", authority_recorded_by="alice", recorded_at=NOW)
 
     result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2024, 1, 1))
     assert result.eligible_revision_ids == []
     assert result.integrity_error is not None
+    assert result.integrity_error_code == "no_effective_revision"
     assert "no authoritative effective revision" in result.integrity_error
+
+
+def test_withdrawal_before_and_after_date_resolves_differently():
+    """Business nuance (Stage 7R.1a item 2's core fix): withdrawal takes
+    effect on withdrawal_effective_date, never recorded_at -- an as_of
+    date BEFORE withdrawal, still within the old (now-closed) period,
+    must resolve effective; on/after withdrawal, ineligible. Failure
+    this guards against: conflating 'when the decision was recorded'
+    with 'when it takes effect', which would corrupt every historical
+    query touching a withdrawn revision. Affects: historical search
+    directly."""
+    service, _ = _service()
+    only = _register(service, "a" * 64)
+    service.activate_revision(new_revision_id=only.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
+    # Recorded in 2025, but takes effect 2023-01-01 -- recorded_at must
+    # never be consulted for date resolution.
+    service.withdraw_revision(
+        document_revision_id=only.document_revision_id, withdrawal_effective_date=date(2023, 1, 1),
+        authority_source="gov", authority_reference="W1", authority_recorded_by="alice",
+        recorded_at=datetime(2025, 6, 1, tzinfo=timezone.utc),
+    )
+
+    before = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="as_of", as_of_date=date(2021, 1, 1))
+    after = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="as_of", as_of_date=date(2023, 1, 1))
+    assert before.eligible_revision_ids == [only.document_revision_id]
+    assert after.eligible_revision_ids == []
+    assert after.integrity_error_code == "no_effective_revision"
 
 
 def test_overlapping_effective_revisions_fail_closed():
     """Business nuance: two revisions of ONE logical document must never
-    both be 'effective' at once -- if the registry ends up in that state
-    (a real operator-misuse case: activating two revisions independently
-    with old=None), the resolver must refuse to guess which one is
-    right. Failure this guards against: silently picking the
+    both be 'effective' at once. This precondition can no longer be
+    reached through ordinary service usage (Stage 7R.1a's own
+    pre-activation overlap validation rejects a second independent
+    activate_revision(old=None) call while a first period is still
+    open) -- so it is constructed here the same way the contract's own
+    Scenario L does: one legitimate activation plus one raw,
+    low-level repository write, simulating pre-existing inconsistent
+    data. Failure this guards against: silently picking the
     higher-hashed / most-recently-written / arbitrary revision, which
-    would make search results non-deterministic and unauditable. Affects:
-    current search directly -- this is Scenario L."""
-    service, _ = _service()
+    would make search results non-deterministic and unauditable.
+    Affects: current search directly -- this is Scenario L."""
+    service, repo = _service()
     a = _register(service, "a" * 64, revision_number=1)
     b = _register(service, "b" * 64, revision_number=2)
     service.activate_revision(new_revision_id=a.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
-    service.activate_revision(new_revision_id=b.document_revision_id, old_revision_id=None, effective_from=date(2021, 1, 1), authority_source="gov", authority_reference="A2", authority_recorded_by="alice", recorded_at=NOW)
+    repo.save_metadata(b.document_revision_id, AuthorityMetadata(
+        publication_status="approved", authority_source="gov", authority_reference="R2",
+        authority_recorded_at=NOW, authority_recorded_by="alice",
+    ))
+    repo.save_period(AuthorityPeriod(
+        authority_period_id=0, logical_document_id="DOC-1", document_revision_id=b.document_revision_id,
+        effective_from=date(2021, 1, 1), effective_to=None, opening_event_id=1,
+        authority_source="gov", authority_reference="RAW", recorded_at=NOW, recorded_by="alice",
+    ))
 
     result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2024, 1, 1))
     assert result.eligible_revision_ids == []
     assert result.integrity_error is not None
+    assert result.integrity_error_code == "overlapping_effective_revisions"
     assert "simultaneously effective" in result.integrity_error
 
 
 def test_inconsistent_supersession_links_fail_closed():
-    """Business nuance: supersedes_revision_id/superseded_by_revision_id
-    must always be mutual and point at a revision that actually exists
-    -- this can never happen via activate_revision's own atomic
-    transition, so this test constructs a corrupted state directly via
-    the repository's low-level save_metadata (simulating a bad manual
-    edit or a bug elsewhere) to prove the RESOLVER, not just the
-    service, is the real safety net. Failure this guards against: a
+    """Business nuance: a period closed as 'superseded'/'rollback' must
+    always have a matching successor period (predecessor_revision_id
+    pointing back, effective_from matching the closed period's own
+    effective_to) -- this can never happen via activate_revision's own
+    atomic transition, so this test constructs a corrupted state
+    directly via the repository's low-level save_period (simulating a
+    bad manual edit or a bug elsewhere) to prove the RESOLVER, not just
+    the service, is the real safety net. Failure this guards against: a
     broken link silently being ignored, which could hide a genuine
     registry corruption from an auditor. Affects: current search
     (refuses to resolve at all) and auditability (surfaces the exact
     inconsistency)."""
     service, repo = _service()
     a = _register(service, "a" * 64, revision_number=1)
-    b = _register(service, "b" * 64, revision_number=2)
-    # a claims to be superseded by b, but b does NOT claim to supersede a.
     repo.save_metadata(a.document_revision_id, AuthorityMetadata(
-        publication_status="approved", effective_from=date(2020, 1, 1), effective_to=date(2023, 1, 1),
-        superseded_by_revision_id=b.document_revision_id,
-        authority_source="gov", authority_reference="R1", authority_recorded_at=NOW, authority_recorded_by="alice",
+        publication_status="approved", authority_source="gov", authority_reference="R1",
+        authority_recorded_at=NOW, authority_recorded_by="alice",
     ))
-    repo.save_metadata(b.document_revision_id, AuthorityMetadata(
-        publication_status="approved", effective_from=date(2023, 1, 1), effective_to=None,
-        authority_source="gov", authority_reference="R2", authority_recorded_at=NOW, authority_recorded_by="alice",
+    # a's period claims to have been superseded (closed) but NO other
+    # revision's period has a matching predecessor_revision_id/effective_from.
+    repo.save_period(AuthorityPeriod(
+        authority_period_id=0, logical_document_id="DOC-1", document_revision_id=a.document_revision_id,
+        effective_from=date(2020, 1, 1), effective_to=date(2023, 1, 1), opening_event_id=1,
+        closing_event_id=2, closure_reason="superseded",
+        authority_source="gov", authority_reference="RAW", recorded_at=NOW, recorded_by="alice",
     ))
 
     result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2024, 1, 1))
     assert result.eligible_revision_ids == []
     assert result.integrity_error is not None
-    assert "supersession" in result.integrity_error
+    assert result.integrity_error_code == "inconsistent_period_link"
+    assert "successor" in result.integrity_error
 
 
 def test_effective_revision_must_be_approved():
     """Business nuance: only publication_status='approved' may ever
     resolve to derived state 'effective' -- constructed here via a
-    direct repository write (a draft record with effective_from
-    populated, impossible through normal service calls) to prove the
+    direct repository write (a draft record with a REAL, non-zero-width
+    period, impossible through normal service calls) to prove the
     resolver treats this as a hard integrity error, never as a silently
     'effective' or silently 'draft' outcome. Failure this guards
     against: an authority-bypass bug granting current status to
@@ -201,15 +245,66 @@ def test_effective_revision_must_be_approved():
     violation if it ever happened for real) and auditability."""
     service, repo = _service()
     corrupted = _register(service, "a" * 64)
-    repo.save_metadata(corrupted.document_revision_id, AuthorityMetadata(
-        publication_status="draft", effective_from=date(2020, 1, 1), effective_to=None,
-        authority_source="gov", authority_reference="R1", authority_recorded_at=NOW, authority_recorded_by="alice",
+    repo.save_period(AuthorityPeriod(
+        authority_period_id=0, logical_document_id="DOC-1", document_revision_id=corrupted.document_revision_id,
+        effective_from=date(2020, 1, 1), effective_to=None, opening_event_id=1,
+        authority_source="gov", authority_reference="R1", recorded_at=NOW, recorded_by="alice",
     ))
 
     result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2024, 1, 1))
     assert result.eligible_revision_ids == []
     assert result.integrity_error is not None
+    assert result.integrity_error_code == "malformed_authority_record"
     assert "not approved" in result.integrity_error.lower()
+
+
+def test_malformed_record_excluded_individually_under_comparison_never_fatal():
+    """Business nuance (item 6): comparison/draft intents must NEVER
+    hard-fail the whole query because ONE requested revision's record is
+    malformed -- it is excluded individually, with the integrity error
+    as its own exclusion reason. Failure this guards against: one bad
+    record silently making an entire comparison/audit view unusable.
+    Affects: auditability directly (comparison mode exists precisely to
+    inspect a registry, including a broken one)."""
+    service, repo = _service()
+    good = _register(service, "a" * 64, revision_number=1)
+    service.activate_revision(new_revision_id=good.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
+    bad = _register(service, "b" * 64, revision_number=2)
+    repo.save_period(AuthorityPeriod(
+        authority_period_id=0, logical_document_id="DOC-1", document_revision_id=bad.document_revision_id,
+        effective_from=date(2020, 1, 1), effective_to=None, opening_event_id=1,
+        authority_source="gov", authority_reference="RAW", recorded_at=NOW, recorded_by="alice",
+    ))
+
+    result = service.resolve_query_scope(
+        logical_document_id="DOC-1", query_intent="comparison", as_of_date=date(2024, 1, 1),
+        requested_revision_ids=[good.document_revision_id, bad.document_revision_id],
+    )
+    assert result.integrity_error is None
+    assert result.eligible_revision_ids == [good.document_revision_id]
+    excluded = {e.revision_id: e.reason_code for e in result.excluded}
+    assert excluded[bad.document_revision_id] == "malformed_authority_record"
+
+
+def test_duplicate_requested_revision_ids_deduplicated_not_doubled():
+    """Business nuance (item 6): requesting the same revision id twice
+    must never produce two eligible entries -- the second occurrence is
+    rejected deterministically (an explicit duplicate_request exclusion)
+    rather than silently ignored or silently duplicated. Affects:
+    auditability (a caller bug must be visible, not silently
+    absorbed)."""
+    service, _ = _service()
+    a = _register(service, "a" * 64, revision_number=1)
+    service.activate_revision(new_revision_id=a.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
+
+    result = service.resolve_query_scope(
+        logical_document_id="DOC-1", query_intent="comparison", as_of_date=date(2024, 1, 1),
+        requested_revision_ids=[a.document_revision_id, a.document_revision_id],
+    )
+    assert result.eligible_revision_ids == [a.document_revision_id]
+    duplicate_exclusions = [e for e in result.excluded if e.reason_code == "duplicate_request"]
+    assert len(duplicate_exclusions) == 1
+    assert duplicate_exclusions[0].revision_id == a.document_revision_id
 
 
 def test_effective_interval_is_start_inclusive_end_exclusive():

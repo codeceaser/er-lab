@@ -114,13 +114,19 @@ def test_new_effective_revision_supersedes_old_atomically():
         authority_recorded_by="alice", recorded_at=NOW,
     )
 
-    old_metadata = service._repository.get_metadata(old.identity.document_revision_id)
+    # Stage 7R.1a: effective dates/supersession links live in
+    # AuthorityPeriod now, never AuthorityMetadata.
+    old_period = service._repository.list_periods_for_revision(old.identity.document_revision_id)[0]
+    new_period = service._repository.list_periods_for_revision(new.identity.document_revision_id)[0]
     new_metadata = service._repository.get_metadata(new.identity.document_revision_id)
-    assert old_metadata.effective_to == date(2023, 1, 1)
-    assert old_metadata.superseded_by_revision_id == new.identity.document_revision_id
+    assert old_period.effective_to == date(2023, 1, 1)
+    assert old_period.closure_reason == "superseded"
     assert new_metadata.publication_status == "approved"
-    assert new_metadata.effective_from == date(2023, 1, 1)
-    assert new_metadata.supersedes_revision_id == old.identity.document_revision_id
+    assert new_period.effective_from == date(2023, 1, 1)
+    assert new_period.predecessor_revision_id == old.identity.document_revision_id
+    # Both periods reference the SAME event -- "the corresponding
+    # authority decision event" (singular) covers the whole transition.
+    assert old_period.closing_event_id == new_period.opening_event_id
 
     before = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2021, 1, 1))
     after = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2023, 1, 1))

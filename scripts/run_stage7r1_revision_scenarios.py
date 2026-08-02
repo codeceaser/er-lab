@@ -35,6 +35,7 @@ def main() -> None:
     )
 
     print(f"Registration checks: {result.registration_checks_passed}/{result.registration_checks_total} passed")
+    print(f"Transition checks: {result.transition_checks_passed}/{result.transition_checks_total} passed")
     print(f"Query scenarios: {result.query_scenarios_passed}/{result.query_scenarios_total} passed")
     print(f"All passed: {result.all_passed}")
     if not result.all_passed:
@@ -44,6 +45,9 @@ def main() -> None:
         for c in result.registration_checks:
             if not c.passed:
                 print(f"  FAILED: {c.step_id} -- expected is_new={c.expected_is_new}, got {c.actual_is_new}")
+        for t in result.transition_checks:
+            if not t.passed:
+                print(f"  FAILED: {t.step_id} -- expect_error={t.expect_error}, raised={t.raised}, error={t.error_message}")
     print(f"\nScorecard: {config.REPORTS_ROOT / 'stage7r1_revision_authority_scorecard.md'}")
     print(f"Results: {config.REPORTS_ROOT / 'stage7r1_revision_authority_results.json'}")
 

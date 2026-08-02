@@ -77,12 +77,12 @@ def test_old_canonical_chunk_content_and_hash_remain_unchanged():
         authority_source="gov", authority_reference="ACT", authority_recorded_by="alice", recorded_at=NOW,
     )
     service.record_authority_decision(
-        document_revision_id=document_revision_id, publication_status="approved", effective_from=date(2023, 1, 1),
+        document_revision_id=document_revision_id, publication_status="approved",
         authority_source="gov", authority_reference="CORR", authority_recorded_by="alice", recorded_at=NOW,
     )
     service.withdraw_revision(
-        document_revision_id=document_revision_id, authority_source="gov", authority_reference="W",
-        authority_recorded_by="alice", recorded_at=NOW,
+        document_revision_id=document_revision_id, withdrawal_effective_date=date(2024, 6, 1),
+        authority_source="gov", authority_reference="W", authority_recorded_by="alice", recorded_at=NOW,
     )
 
     after = [c.model_dump_json() for c in chunks]
@@ -93,14 +93,15 @@ def test_old_canonical_chunk_content_and_hash_remain_unchanged():
 
 def test_authority_correction_requires_no_chunk_mutation():
     """Business nuance: correcting/rolling back an authority decision
-    (Scenario M) must be achievable purely through this package's own
-    tables -- never by touching a chunk. Failure this guards against: a
-    'fix the metadata' operation escalating into 'reprocess the
-    document', which would be far more expensive and could silently
-    change chunk_ids that Stage 7A.2 citations already reference. Affects:
-    auditability (Stage 7A.2 citations must remain valid across authority
-    corrections) and benchmark fairness (correcting a mistake must be
-    cheap and side-effect-free)."""
+    (pre_effective_authority_correction) must be achievable purely
+    through this package's own tables -- never by touching a chunk.
+    Failure this guards against: a 'fix the metadata' operation
+    escalating into 'reprocess the document', which would be far more
+    expensive and could silently change chunk_ids that Stage 7A.2
+    citations already reference. Affects: auditability (Stage 7A.2
+    citations must remain valid across authority corrections) and
+    benchmark fairness (correcting a mistake must be cheap and
+    side-effect-free)."""
     chunks, document_revision_id = _real_canonical_chunks()
     original_chunk_ids = [c.chunk_id for c in chunks]
 
@@ -109,8 +110,14 @@ def test_authority_correction_requires_no_chunk_mutation():
         logical_document_id="POLICY-DOC", source_document_sha256="c" * 64, version_label=None, revision_number=3,
         authority_source="gov", authority_reference="REF", authority_recorded_by="alice", recorded_at=NOW,
     )
-    service.record_authority_decision(document_revision_id=document_revision_id, publication_status="approved", effective_from=date(2029, 1, 1), authority_source="gov", authority_reference="D1", authority_recorded_by="alice", recorded_at=NOW)
-    service.record_authority_decision(document_revision_id=document_revision_id, publication_status="draft", authority_source="gov", authority_reference="D2-rollback", authority_recorded_by="alice", recorded_at=NOW)
+    service.activate_revision(
+        new_revision_id=document_revision_id, old_revision_id=None, effective_from=date(2029, 1, 1),
+        authority_source="gov", authority_reference="D1", authority_recorded_by="alice", recorded_at=NOW,
+    )
+    service.withdraw_revision(
+        document_revision_id=document_revision_id, withdrawal_effective_date=date(2029, 1, 1), closure_reason="correction",
+        authority_source="gov", authority_reference="D2-rollback", authority_recorded_by="alice", recorded_at=NOW,
+    )
 
     assert [c.chunk_id for c in chunks] == original_chunk_ids
 
@@ -155,6 +162,15 @@ def _real_postgres_available() -> bool:
         return False
 
 
+def _cleanup_postgres_document(repo, conn, logical_document_id: str) -> None:
+    from sqlalchemy import text
+
+    conn.execute(text(f"DELETE FROM {repo._period_table} WHERE logical_document_id = :d"), {"d": logical_document_id})
+    conn.execute(text(f"DELETE FROM {repo._registry_table} WHERE logical_document_id = :d"), {"d": logical_document_id})
+    conn.execute(text(f"DELETE FROM {repo._event_table} WHERE logical_document_id = :d"), {"d": logical_document_id})
+    conn.commit()
+
+
 @pytest.mark.skipif(not _real_postgres_available(), reason="DATABASE_URL not set or Postgres not reachable")
 def test_real_postgres_revision_authority_repository():
     """Proves the ACTUAL configured Postgres repository works end to end
@@ -167,14 +183,10 @@ def test_real_postgres_revision_authority_repository():
     service = RevisionAuthorityService(repo)
     logical_document_id = "_pytest_stage7r1_selftest"
 
-    from sqlalchemy import text
-
     engine = repo._ensure_ready()
     try:
         with engine.connect() as conn:
-            conn.execute(text(f"DELETE FROM {repo._registry_table} WHERE logical_document_id = :d"), {"d": logical_document_id})
-            conn.execute(text(f"DELETE FROM {repo._event_table} WHERE logical_document_id = :d"), {"d": logical_document_id})
-            conn.commit()
+            _cleanup_postgres_document(repo, conn, logical_document_id)
 
         result = service.register_revision(
             logical_document_id=logical_document_id, source_document_sha256="d" * 64, version_label=None, revision_number=1,
@@ -199,9 +211,65 @@ def test_real_postgres_revision_authority_repository():
         assert len(events) >= 3  # register, duplicate attempt, activate
     finally:
         with engine.connect() as conn:
-            conn.execute(text(f"DELETE FROM {repo._registry_table} WHERE logical_document_id = :d"), {"d": logical_document_id})
-            conn.execute(text(f"DELETE FROM {repo._event_table} WHERE logical_document_id = :d"), {"d": logical_document_id})
-            conn.commit()
+            _cleanup_postgres_document(repo, conn, logical_document_id)
+
+
+@pytest.mark.skipif(not _real_postgres_available(), reason="DATABASE_URL not set or Postgres not reachable")
+def test_real_postgres_failed_activation_rolls_back_completely():
+    """Business nuance (Stage 7R.1a item 4): the Postgres repository's
+    transaction() wraps a REAL database transaction -- this test proves
+    a failed activate_revision() (a genuine validation rejection, not an
+    injected fault) leaves NO trace in the real database: no new period
+    row, no new event row, the old revision's own period/metadata
+    completely untouched. Failure this guards against: the in-memory
+    repository's snapshot/restore giving a false sense of atomicity that
+    the REAL persisted backend doesn't actually share. Affects: current
+    search and auditability against the real, persisted registry."""
+    from ingestion_bench.revision_authority.postgres_repository import PostgresRevisionAuthorityRepository
+    from ingestion_bench.revision_authority.service import ActivationValidationError
+
+    repo = PostgresRevisionAuthorityRepository()
+    service = RevisionAuthorityService(repo)
+    logical_document_id = "_pytest_stage7r1a_rollback_selftest"
+
+    engine = repo._ensure_ready()
+    try:
+        with engine.connect() as conn:
+            _cleanup_postgres_document(repo, conn, logical_document_id)
+
+        only = service.register_revision(
+            logical_document_id=logical_document_id, source_document_sha256="e" * 64, version_label=None, revision_number=1,
+            authority_source="gov", authority_reference="REF", authority_recorded_by="alice", recorded_at=NOW,
+        )
+        service.activate_revision(
+            new_revision_id=only.identity.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1),
+            authority_source="gov", authority_reference="ACT", authority_recorded_by="alice", recorded_at=NOW,
+        )
+
+        events_before = repo.list_events(logical_document_id)
+        periods_before = repo.list_periods_for_revision(only.identity.document_revision_id)
+        metadata_before = repo.get_metadata(only.identity.document_revision_id)
+
+        # A genuinely invalid transition (self-supersession) -- rejected
+        # by _validate_activation BEFORE any write, so this proves the
+        # pre-validation itself, not just the transaction() rollback path.
+        with pytest.raises(ActivationValidationError):
+            service.activate_revision(
+                new_revision_id=only.identity.document_revision_id, old_revision_id=only.identity.document_revision_id,
+                effective_from=date(2023, 1, 1), authority_source="gov", authority_reference="X",
+                authority_recorded_by="alice", recorded_at=NOW,
+            )
+
+        assert repo.list_events(logical_document_id) == events_before
+        assert repo.list_periods_for_revision(only.identity.document_revision_id) == periods_before
+        assert repo.get_metadata(only.identity.document_revision_id) == metadata_before
+
+        resolution = service.resolve_query_scope(logical_document_id=logical_document_id, query_intent="current", as_of_date=date(2024, 6, 1))
+        assert resolution.eligible_revision_ids == [only.identity.document_revision_id]
+        assert resolution.integrity_error is None
+    finally:
+        with engine.connect() as conn:
+            _cleanup_postgres_document(repo, conn, logical_document_id)
 
 
 # --- isolation: no frozen package modified, no forbidden dependency ----------

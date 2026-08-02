@@ -1,4 +1,4 @@
-"""Stage 7R.1: deterministic effective-knowledge resolver.
+"""Stage 7R.1/7R.1a: deterministic effective-knowledge resolver.
 
 Exactly four query intents (current, as_of, comparison, draft) -- never
 a generic query DSL. The pure resolver function below NEVER defaults
@@ -9,12 +9,18 @@ today vs. an explicit historical date) -- kept as separate intents only
 to preserve the caller's stated purpose in the result for audit
 readability, never duplicated logic.
 
-Never silently chooses one conflicting revision: every fail-closed
-condition below returns a result with `integrity_error` populated and
-`eligible_revision_ids == []`, rather than guessing or raising -- so a
-caller (and the Stage 7R.1 scenario report) can inspect WHY, the same
-"report findings as data, never crash the whole run" discipline used
-throughout this project.
+Stage 7R.1a: integrity validation (per-record metadata/period
+self-consistency, authority-period overlap, cross-document transition
+consistency, period/link consistency) now applies to ALL FOUR intents,
+not just current/as_of -- but the CONSEQUENCE differs by intent.
+current/as_of "pick" exactly one revision, so a registry-wide integrity
+problem (or the absence of any effective revision at all) fails the
+WHOLE query closed -- never silently choosing one conflicting revision.
+comparison/draft never "pick" anything (the caller names exact ids), so
+a malformed record is EXCLUDED individually (with the integrity error as
+its exclusion reason) rather than aborting the whole query -- the
+absence of any effective revision is never a hard error for these two
+intents.
 """
 
 from __future__ import annotations
@@ -28,6 +34,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ingestion_bench.revision_authority.model import (
     AuthorityMetadata,
+    AuthorityPeriod,
     DerivedAuthorityState,
     PublicationStatus,
     derive_authority_state,
@@ -43,11 +50,11 @@ class RevisionAuthorityLabel(BaseModel):
     revision_id: str
     publication_status: PublicationStatus | None = None
     derived_state: DerivedAuthorityState | None = None
-    effective_from: date | None = None
-    effective_to: date | None = None
+    period_count: int = 0
     # Populated only when this single record's own derivation failed
-    # (e.g. a non-approved revision with effective_from populated) --
-    # None does not mean "no error occurred elsewhere in the query", see
+    # (e.g. a non-approved revision with a period recorded, or a
+    # revision's own periods overlap each other) -- None does not mean
+    # "no error occurred elsewhere in the query", see
     # QueryResolutionResult.integrity_error for that.
     error: str | None = None
 
@@ -75,75 +82,71 @@ class QueryResolutionResult(BaseModel):
     resolution_explanation: str
     registry_snapshot_hash: str
     integrity_error: str | None = None
+    integrity_error_code: str | None = None
 
 
 def _registry_snapshot_hash(
-    logical_document_id: str, revisions: list[tuple[str, AuthorityMetadata | None]]
+    logical_document_id: str,
+    metadata_by_id: dict[str, AuthorityMetadata | None],
+    periods_by_id: dict[str, list[AuthorityPeriod]],
 ) -> str:
     """SHA-256 over a canonical JSON dump of every revision_id + its
-    CURRENT AuthorityMetadata for this logical document, sorted by
-    revision_id -- changes whenever ANY authority fact for this document
-    changes (new revision, decision, activation, withdrawal, correction),
-    never when canonical chunk content changes (this registry never reads
-    chunk content)."""
+    CURRENT AuthorityMetadata + ALL of its AuthorityPeriods for this
+    logical document, sorted by revision_id -- changes whenever ANY
+    authority fact for this document changes (new revision, decision,
+    activation, withdrawal, reinstatement, correction), never when
+    canonical chunk content changes (this registry never reads chunk
+    content)."""
     payload = {
         "logical_document_id": logical_document_id,
         "revisions": {
-            revision_id: (metadata.model_dump(mode="json") if metadata is not None else None)
-            for revision_id, metadata in sorted(revisions, key=lambda pair: pair[0])
+            revision_id: {
+                "metadata": metadata_by_id[revision_id].model_dump(mode="json") if metadata_by_id.get(revision_id) else None,
+                "periods": [p.model_dump(mode="json") for p in sorted(periods_by_id.get(revision_id, []), key=lambda p: p.authority_period_id)],
+            }
+            for revision_id in sorted(metadata_by_id)
         },
     }
     blob = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     return hashlib.sha256(blob).hexdigest()
 
 
-def _label_for(revision_id: str, metadata: AuthorityMetadata | None, as_of_date: date) -> RevisionAuthorityLabel:
+def _label_for(revision_id: str, metadata: AuthorityMetadata | None, periods: list[AuthorityPeriod], as_of_date: date) -> RevisionAuthorityLabel:
     if metadata is None:
-        return RevisionAuthorityLabel(revision_id=revision_id, error="revision has no authority metadata recorded")
-    state, error = derive_authority_state(metadata, as_of_date)
+        return RevisionAuthorityLabel(revision_id=revision_id, period_count=len(periods), error="revision has no authority metadata recorded")
+    state, error = derive_authority_state(metadata.publication_status, periods, as_of_date)
     return RevisionAuthorityLabel(
         revision_id=revision_id,
         publication_status=metadata.publication_status,
         derived_state=state,
-        effective_from=metadata.effective_from,
-        effective_to=metadata.effective_to,
+        period_count=len(periods),
         error=error,
     )
 
 
-def _supersession_inconsistencies(
-    identities_and_metadata: list[tuple[str, AuthorityMetadata]],
-) -> list[str]:
-    """Cross-revision structural check: every supersedes/superseded_by
-    link must be mutual and point at a revision that actually exists in
-    this document's revision set."""
-    by_id = {revision_id: metadata for revision_id, metadata in identities_and_metadata}
+def _period_link_inconsistencies(periods: list[AuthorityPeriod]) -> list[str]:
+    """Cross-revision structural check: every period CLOSED with
+    closure_reason in (superseded, rollback) -- meaning "some other
+    revision's period picked up where this one left off" -- must have a
+    matching successor period (predecessor_revision_id pointing back at
+    THIS revision, effective_from equal to THIS period's own
+    effective_to) somewhere in the same document's period set. A period
+    closed for withdrawn/correction has no such requirement (nothing
+    picks up after a genuine withdrawal/correction)."""
     problems: list[str] = []
-    for revision_id, metadata in identities_and_metadata:
-        if metadata.superseded_by_revision_id is not None:
-            target = by_id.get(metadata.superseded_by_revision_id)
-            if target is None:
-                problems.append(
-                    f"{revision_id}.superseded_by_revision_id={metadata.superseded_by_revision_id!r} "
-                    "does not exist in this document's revision set"
-                )
-            elif target.supersedes_revision_id != revision_id:
-                problems.append(
-                    f"{revision_id}.superseded_by_revision_id={metadata.superseded_by_revision_id!r} but "
-                    f"that revision's supersedes_revision_id={target.supersedes_revision_id!r} does not point back"
-                )
-        if metadata.supersedes_revision_id is not None:
-            target = by_id.get(metadata.supersedes_revision_id)
-            if target is None:
-                problems.append(
-                    f"{revision_id}.supersedes_revision_id={metadata.supersedes_revision_id!r} "
-                    "does not exist in this document's revision set"
-                )
-            elif target.superseded_by_revision_id != revision_id:
-                problems.append(
-                    f"{revision_id}.supersedes_revision_id={metadata.supersedes_revision_id!r} but "
-                    f"that revision's superseded_by_revision_id={target.superseded_by_revision_id!r} does not point back"
-                )
+    for period in periods:
+        if period.closure_reason not in ("superseded", "rollback"):
+            continue
+        successor_exists = any(
+            other.predecessor_revision_id == period.document_revision_id and other.effective_from == period.effective_to
+            for other in periods
+            if other.authority_period_id != period.authority_period_id
+        )
+        if not successor_exists:
+            problems.append(
+                f"period {period.authority_period_id} (revision {period.document_revision_id!r}, closed "
+                f"{period.closure_reason!r} at {period.effective_to}) has no matching successor period"
+            )
     return problems
 
 
@@ -158,20 +161,28 @@ def resolve_query_scope(
         raise ValueError("as_of_date must be supplied explicitly by the caller -- this resolver never defaults it")
 
     identities = repository.list_revisions_for_document(logical_document_id)
-    metadata_by_id = {i.document_revision_id: repository.get_metadata(i.document_revision_id) for i in identities}
-    snapshot_hash = _registry_snapshot_hash(logical_document_id, list(metadata_by_id.items()))
+    metadata_by_id: dict[str, AuthorityMetadata | None] = {i.document_revision_id: repository.get_metadata(i.document_revision_id) for i in identities}
+    all_periods = repository.list_periods_for_document(logical_document_id)
+    periods_by_id: dict[str, list[AuthorityPeriod]] = {i.document_revision_id: [] for i in identities}
+    for period in all_periods:
+        periods_by_id.setdefault(period.document_revision_id, []).append(period)
+
+    snapshot_hash = _registry_snapshot_hash(logical_document_id, metadata_by_id, periods_by_id)
+    labels = {
+        rid: _label_for(rid, metadata_by_id.get(rid), periods_by_id.get(rid, []), as_of_date) for rid in metadata_by_id
+    }
 
     if query_intent in ("current", "as_of"):
-        return _resolve_current_or_as_of(
-            logical_document_id, query_intent, as_of_date, identities, metadata_by_id, snapshot_hash
-        )
+        return _resolve_current_or_as_of(logical_document_id, query_intent, as_of_date, labels, all_periods, snapshot_hash)
     if query_intent == "comparison":
-        return _resolve_comparison(
-            logical_document_id, as_of_date, requested_revision_ids or [], metadata_by_id, snapshot_hash
+        return _resolve_explicit(
+            logical_document_id, "comparison", as_of_date, requested_revision_ids or [], labels, snapshot_hash,
+            allowed_states=("effective", "superseded", "approved_future", "draft", "under_review", "withdrawn"),
         )
     if query_intent == "draft":
-        return _resolve_draft(
-            logical_document_id, as_of_date, requested_revision_ids or [], metadata_by_id, snapshot_hash
+        return _resolve_explicit(
+            logical_document_id, "draft", as_of_date, requested_revision_ids or [], labels, snapshot_hash,
+            allowed_states=("draft", "under_review"),
         )
     raise ValueError(f"unknown query_intent: {query_intent!r}")
 
@@ -180,41 +191,43 @@ def _resolve_current_or_as_of(
     logical_document_id: str,
     query_intent: QueryIntent,
     as_of_date: date,
-    identities,
-    metadata_by_id: dict[str, AuthorityMetadata | None],
+    labels: dict[str, "RevisionAuthorityLabel"],
+    all_periods: list[AuthorityPeriod],
     snapshot_hash: str,
 ) -> QueryResolutionResult:
-    all_ids = [i.document_revision_id for i in identities]
-    labels = {rid: _label_for(rid, metadata_by_id[rid], as_of_date) for rid in all_ids}
-
-    def _fail(message: str) -> QueryResolutionResult:
+    def _fail(message: str, code: str) -> QueryResolutionResult:
         return QueryResolutionResult(
             logical_document_id=logical_document_id, query_intent=query_intent, as_of_date=as_of_date,
             requested_revision_ids=[], eligible_revision_ids=[], excluded=[], authority_labels=labels,
-            resolution_explanation=message, registry_snapshot_hash=snapshot_hash, integrity_error=message,
+            resolution_explanation=message, registry_snapshot_hash=snapshot_hash,
+            integrity_error=message, integrity_error_code=code,
         )
 
-    if not all_ids:
-        return _fail(f"logical_document_id={logical_document_id!r} has no registered revisions at all")
+    if not labels:
+        return _fail(f"logical_document_id={logical_document_id!r} has no registered revisions at all", "no_revisions_registered")
 
     per_record_errors = [f"{rid}: {label.error}" for rid, label in labels.items() if label.error is not None]
     if per_record_errors:
-        return _fail("revision authority data is internally inconsistent -- " + "; ".join(per_record_errors))
+        return _fail(
+            "revision authority data is internally inconsistent -- " + "; ".join(per_record_errors),
+            "malformed_authority_record",
+        )
 
-    present = [(rid, metadata_by_id[rid]) for rid in all_ids if metadata_by_id[rid] is not None]
-    inconsistencies = _supersession_inconsistencies(present)
-    if inconsistencies:
-        return _fail("inconsistent supersession link(s): " + "; ".join(inconsistencies))
+    link_problems = _period_link_inconsistencies(all_periods)
+    if link_problems:
+        return _fail("inconsistent supersession/rollback link(s): " + "; ".join(link_problems), "inconsistent_period_link")
 
     effective_ids = [rid for rid, label in labels.items() if label.derived_state == "effective"]
     if len(effective_ids) > 1:
         return _fail(
             f"{len(effective_ids)} revisions of {logical_document_id!r} are simultaneously effective as of "
-            f"{as_of_date}: {sorted(effective_ids)} -- refusing to silently choose one"
+            f"{as_of_date}: {sorted(effective_ids)} -- refusing to silently choose one",
+            "overlapping_effective_revisions",
         )
     if not effective_ids:
         return _fail(
-            f"logical_document_id={logical_document_id!r} has no authoritative effective revision as of {as_of_date}"
+            f"logical_document_id={logical_document_id!r} has no authoritative effective revision as of {as_of_date}",
+            "no_effective_revision",
         )
 
     eligible = effective_ids
@@ -224,100 +237,85 @@ def _resolve_current_or_as_of(
         if rid not in eligible
     ]
     explanation = (
-        f"{query_intent} query for {logical_document_id!r} as of {as_of_date}: 1 of {len(all_ids)} "
+        f"{query_intent} query for {logical_document_id!r} as of {as_of_date}: 1 of {len(labels)} "
         f"revision(s) effective -- {eligible[0]}"
     )
     return QueryResolutionResult(
         logical_document_id=logical_document_id, query_intent=query_intent, as_of_date=as_of_date,
         requested_revision_ids=[], eligible_revision_ids=eligible, excluded=excluded, authority_labels=labels,
-        resolution_explanation=explanation, registry_snapshot_hash=snapshot_hash, integrity_error=None,
+        resolution_explanation=explanation, registry_snapshot_hash=snapshot_hash,
+        integrity_error=None, integrity_error_code=None,
     )
 
 
 def _exclusion_detail(label: RevisionAuthorityLabel, as_of_date: date) -> str:
     if label.derived_state == "approved_future":
-        return f"effective_from={label.effective_from} is after as_of_date={as_of_date}"
+        return f"has a future authority period not yet effective as of as_of_date={as_of_date}"
     if label.derived_state == "superseded":
-        return f"effective_to={label.effective_to} is on or before as_of_date={as_of_date}"
+        return f"authority period(s) closed on or before as_of_date={as_of_date}"
     if label.derived_state in ("draft", "under_review", "withdrawn"):
-        return f"publication_status={label.derived_state} is never eligible for current/as_of intent"
+        return f"derived_state={label.derived_state} is never eligible for current/as_of intent"
     return f"derived_state={label.derived_state}"
 
 
-def _resolve_comparison(
+def _resolve_explicit(
     logical_document_id: str,
+    query_intent: QueryIntent,
     as_of_date: date,
     requested_revision_ids: list[str],
-    metadata_by_id: dict[str, AuthorityMetadata | None],
+    labels: dict[str, RevisionAuthorityLabel],
     snapshot_hash: str,
+    allowed_states: tuple[str, ...],
 ) -> QueryResolutionResult:
     if not requested_revision_ids:
-        raise ValueError("comparison intent requires at least one requested_revision_ids entry")
+        raise ValueError(f"{query_intent} intent requires at least one requested_revision_ids entry")
 
     eligible: list[str] = []
     excluded: list[ExclusionReason] = []
-    labels: dict[str, RevisionAuthorityLabel] = {}
+    result_labels: dict[str, RevisionAuthorityLabel] = {}
+    seen: set[str] = set()
+
     for rid in requested_revision_ids:
-        if rid not in metadata_by_id:
-            excluded.append(ExclusionReason(revision_id=rid, reason_code="revision_not_found", detail=f"{rid!r} is not a registered revision of {logical_document_id!r}"))
-            labels[rid] = RevisionAuthorityLabel(revision_id=rid, error="revision not found")
+        if rid in seen:
+            excluded.append(
+                ExclusionReason(revision_id=rid, reason_code="duplicate_request", detail=f"{rid!r} was requested more than once -- only the first occurrence is considered")
+            )
             continue
-        label = _label_for(rid, metadata_by_id[rid], as_of_date)
-        labels[rid] = label
-        # Comparison PERMITS superseded/draft/under_review/withdrawn --
-        # every explicitly requested, existing revision is eligible,
-        # retaining its own authority label (never silently coerced).
+        seen.add(rid)
+
+        label = labels.get(rid)
+        if label is None:
+            excluded.append(ExclusionReason(revision_id=rid, reason_code="revision_not_found", detail=f"{rid!r} is not a registered revision of {logical_document_id!r}"))
+            result_labels[rid] = RevisionAuthorityLabel(revision_id=rid, error="revision not found")
+            continue
+        result_labels[rid] = label
+
+        if label.error is not None:
+            # Never returned as eligible -- a label containing an
+            # integrity error is excluded individually, never silently
+            # included and never enough to abort the whole
+            # comparison/draft query (item 6).
+            excluded.append(ExclusionReason(revision_id=rid, reason_code="malformed_authority_record", detail=label.error))
+            continue
+
+        if label.derived_state not in allowed_states:
+            excluded.append(
+                ExclusionReason(
+                    revision_id=rid, reason_code=f"not_eligible_for_{query_intent}_intent",
+                    detail=f"derived_state={label.derived_state!r} is not permitted under {query_intent} intent",
+                )
+            )
+            continue
+
         eligible.append(rid)
 
     explanation = (
-        f"comparison query for {logical_document_id!r}: {len(eligible)} of {len(requested_revision_ids)} "
-        f"requested revision(s) found and returned with their own authority labels"
+        f"{query_intent} query for {logical_document_id!r}: {len(eligible)} of {len(requested_revision_ids)} "
+        f"requested revision(s) eligible"
     )
     return QueryResolutionResult(
-        logical_document_id=logical_document_id, query_intent="comparison", as_of_date=as_of_date,
+        logical_document_id=logical_document_id, query_intent=query_intent, as_of_date=as_of_date,
         requested_revision_ids=requested_revision_ids, eligible_revision_ids=eligible, excluded=excluded,
-        authority_labels=labels, resolution_explanation=explanation, registry_snapshot_hash=snapshot_hash,
-        integrity_error=None,
-    )
-
-
-def _resolve_draft(
-    logical_document_id: str,
-    as_of_date: date,
-    requested_revision_ids: list[str],
-    metadata_by_id: dict[str, AuthorityMetadata | None],
-    snapshot_hash: str,
-) -> QueryResolutionResult:
-    if not requested_revision_ids:
-        raise ValueError("draft intent requires at least one requested_revision_ids entry")
-
-    eligible: list[str] = []
-    excluded: list[ExclusionReason] = []
-    labels: dict[str, RevisionAuthorityLabel] = {}
-    for rid in requested_revision_ids:
-        if rid not in metadata_by_id:
-            excluded.append(ExclusionReason(revision_id=rid, reason_code="revision_not_found", detail=f"{rid!r} is not a registered revision of {logical_document_id!r}"))
-            labels[rid] = RevisionAuthorityLabel(revision_id=rid, error="revision not found")
-            continue
-        label = _label_for(rid, metadata_by_id[rid], as_of_date)
-        labels[rid] = label
-        if label.derived_state in ("draft", "under_review"):
-            eligible.append(rid)
-        else:
-            excluded.append(
-                ExclusionReason(
-                    revision_id=rid, reason_code="not_draft_or_under_review",
-                    detail=f"derived_state={label.derived_state!r} -- draft intent never mixes non-draft revisions in",
-                )
-            )
-
-    explanation = (
-        f"draft query for {logical_document_id!r}: {len(eligible)} of {len(requested_revision_ids)} requested "
-        f"revision(s) are draft/under_review and eligible"
-    )
-    return QueryResolutionResult(
-        logical_document_id=logical_document_id, query_intent="draft", as_of_date=as_of_date,
-        requested_revision_ids=requested_revision_ids, eligible_revision_ids=eligible, excluded=excluded,
-        authority_labels=labels, resolution_explanation=explanation, registry_snapshot_hash=snapshot_hash,
-        integrity_error=None,
+        authority_labels=result_labels, resolution_explanation=explanation, registry_snapshot_hash=snapshot_hash,
+        integrity_error=None, integrity_error_code=None,
     )

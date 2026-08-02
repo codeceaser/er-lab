@@ -89,7 +89,8 @@ snapshot):
 | 7A.2 | Auditable Vector-RAG answer baseline: one configured OpenAI answer model over Stage 7A.1's own frozen top-5 retrieval, minimal LLM output schema, deterministic (non-LLM) citation validation, real 12-question run | **Completed, superseded by 7A.2a, frozen with 7A.2a** | `src/ingestion_bench/answer_baseline/*.py`, `scripts/run_stage7a2_vector_answer_baseline.py` | `tests/test_answer_baseline_*.py` (40, new); `reports/stage7a2_vector_answer_scorecard.md`, `reports/stage7a2_vector_answer_results.json`, `artifacts/stage7a2/question_answers/` | See "Stage 7A.2/7A.2a findings" below |
 | 7A.2a | Answer-baseline closure: manual human review of all 12 answers (answer-text correctness + citation support), `forbidden_fact_citation_rate` renamed to `cited_chunk_forbidden_evidence_exposure_rate` (accurate semantics), `citation_support_human_review` field added, repo-relative `retrieval_source`, `retrieval_results_sha256`/`answer_prompt_version`/`answer_prompt_sha256`/`answer_temperature` recorded | **Completed, frozen** | Same files as Stage 7A.2, patched; `scripts/apply_stage7a2a_closure.py` (new, one-off migration, never re-runs retrieval or the answer model) | Same test files as Stage 7A.2, updated for the rename; `reports/stage7a2_vector_answer_{results.json,scorecard.md}` regenerated from the SAME committed answer data | None known — see "Stage 7A.2/7A.2a findings" below. **Stage 7A.2/7A.2a is now frozen** |
 | 7A.3 | Minimal local auditable-semantic-search demo over the frozen Stage 7A.2/7A.2a answer results: single self-contained static HTML viewer, explicit-text-label status badges, cross-document citation warnings | **Completed** | `src/ingestion_bench/demo/*.py`, `scripts/run_stage7a3_demo.py` | `tests/test_stage7a3_demo_{view_model,render,integration}.py` (19, new); `reports/stage7a3_demo.html` | None known |
-| 7R.1 | Revision Authority Registry and Effective-Knowledge Resolution: narrow registry reusing Stage 4.1's own chunk-lineage identity fields, mutable authority metadata kept separately, deterministic query-time resolver (current/as_of/comparison/draft), atomic supersession, append-only audit log, real Postgres + in-memory repositories | **Completed** | `src/ingestion_bench/revision_authority/*.py`, `contracts/revision_authority_scenarios_v1.json`, `scripts/run_stage7r1_revision_scenarios.py` | `tests/test_revision_authority_*.py` (58, new; includes one skippable real-Postgres test); `reports/stage7r1_revision_authority_{results.json,scorecard.md}` | Not yet wired into retrieval -- that is Stage 7R.2, after review. See `docs/REVISION_AUTHORITY_SCENARIOS.md` |
+| 7R.1 | Revision Authority Registry and Effective-Knowledge Resolution: narrow registry reusing Stage 4.1's own chunk-lineage identity fields, mutable authority metadata kept separately, deterministic query-time resolver (current/as_of/comparison/draft), atomic supersession, append-only audit log, real Postgres + in-memory repositories | **Completed, superseded by 7R.1a, frozen with 7R.1a** | `src/ingestion_bench/revision_authority/*.py`, `scripts/run_stage7r1_revision_scenarios.py` | `tests/test_revision_authority_*.py` | Corrected by 7R.1a -- see below |
+| 7R.1a | Effective-period, historical-withdrawal, and atomicity closure: `AuthorityPeriod` (own table, `edib_revision_authority_period`) is now the SOLE source for effective dates -- `AuthorityMetadata` no longer carries them; withdrawal now takes an explicit `withdrawal_effective_date` (never `recorded_at`) and is period-aware (historical dates before withdrawal still resolve effective); `reinstate_revision()` supports a second, disjoint period after a post-effective rollback; `activate_revision`/`reinstate_revision` fully validate (existence, same document, no self-supersession, exactly one open period, no overlap) before any write, with real snapshot/rollback (in-memory) and a real transaction (Postgres) proven by fault-injection tests; integrity validation now applies to all four query intents (comparison/draft exclude a malformed record individually, never hard-fail); duplicate requested revision IDs rejected deterministically; structured `decision_effective_date`/`closure_reason` on audit events | **Completed, frozen** | Same files as Stage 7R.1, patched; `contracts/revision_authority_scenarios_v1.json` (`contract_version: revision_authority_scenarios_v2`) | `tests/test_revision_authority_*.py` (86, new/updated; includes two skippable real-Postgres tests, one proving a failed activation rolls back completely); `reports/stage7r1_revision_authority_{results.json,scorecard.md}` (regenerated from the same contract, never a second, independently-drifting copy) | None known -- see `docs/REVISION_AUTHORITY_SCENARIOS.md`. **Stage 7R.1/7R.1a is now frozen** |
 | 7B | Graph-enriched RAG projection | **Not started** | — | — | — |
 | 7C | Wiki page/link projection | **Not started** | — | — | — |
 | 8A | Selective OpenAI vision enrichment (`VisionEnricher` framework + `OpenAIVisionEnricher`, path B) | **Not started** | — | — | No `vision/` package. Corrected roadmap position — no longer "Stage 6"; see D-040 and "Corrected roadmap" below |
@@ -174,8 +175,8 @@ Stage 6B       Retrieval benchmark contract + gold evidence set     <- DONE
 Stage 7A.1     Regular vector RAG projection + retrieval baseline   <- DONE, FROZEN
 Stage 7A.2/2a  Auditable Vector-RAG answer baseline                 <- DONE, FROZEN
 Stage 7A.3     Local auditable-semantic-search demo                 <- DONE
-Stage 7R.1     Revision authority registry + resolver               <- DONE
-Stage 7R.2     Authority-aware vector retrieval (Stage 7A.1 wiring)  <- NEXT, after 7R.1 review
+Stage 7R.1/7R.1a Revision authority registry + resolver, frozen        <- DONE
+Stage 7R.2       Authority-aware vector retrieval (Stage 7A.1 wiring)  <- NEXT, after 7R.1a review
 Stage 7B       Graph-enriched RAG projection
 Stage 7C       Wiki page/link projection
 Stage 8A       Selective OpenAI vision enrichment (path B)
@@ -514,7 +515,7 @@ citations. Two genuine, measured findings, not defects:
   Settlement, which only a human reading the actual chunk text can
   catch.
 
-## Stage 7R.1 summary — revision authority registry and resolver
+## Stage 7R.1/7R.1a summary — revision authority registry and resolver
 
 Real, measured results from
 `reports/stage7r1_revision_authority_scorecard.md` (regenerate via
@@ -523,26 +524,38 @@ never requires Postgres). Full detail (per-scenario business situation,
 registry precondition, event, resulting state, query behavior for all
 four intents, expected index behavior, audit evidence, and what each
 scenario does NOT imply) lives in `docs/REVISION_AUTHORITY_SCENARIOS.md`
-— 15 scenarios (A–O), all passing: 12/12 registration checks, 13/13
-query scenarios.
+— 15+ scenarios (A–O plus the 7R.1a additions: H2, E2, J2, malformed-
+record, duplicate-request, cross-document/self-supersession rejection),
+all passing against `contract_version: revision_authority_scenarios_v2`:
+17/17 registration checks, 2/2 transition checks, 21/21 query scenarios.
 
 This is explicitly **not** a document-management/version-control
 system — it never stores document binaries, never provides check-in/
 check-out or approval workflows, and never infers authority from
 filenames, upload time, or document text. Revision **identity** is
 reused verbatim from Stage 4.1's own `DocumentRevisionContext`/
-`compute_document_revision_id` (never reinvented); authority/
-effective-period/supersession **metadata** is new, mutable, and lives
-only in this package's own tables
-(`edib_document_revision_registry`, `edib_authority_decision_event`),
-never on `CanonicalChunk`. Exactly four query intents (`current`,
-`as_of`, `comparison`, `draft`); six derived authority states (`draft`,
-`under_review`, `approved_future`, `effective`, `superseded`,
-`withdrawn`), computed at query time, never stored. Fails closed (never
-silently picks one) on: overlapping simultaneously-effective revisions,
-inconsistent supersession links, an "effective" revision that isn't
-approved, and a logical document with no authoritative effective
-revision at all.
+`compute_document_revision_id` (never reinvented). Stage 7R.1a's core
+correction: `AuthorityMetadata` (governance status only) and
+`AuthorityPeriod` (the SOLE authoritative source for effective dates,
+multiple non-overlapping periods per revision permitted) are now
+cleanly split — Stage 7R.1's original single effective_from/effective_to
+pair directly on the revision row could not represent a historical
+revision before a later withdrawal, or a revision reinstated after a
+rollback. Three tables total
+(`edib_document_revision_registry`, `edib_revision_authority_period`,
+`edib_authority_decision_event`), never on `CanonicalChunk`. Exactly
+four query intents (`current`, `as_of`, `comparison`, `draft`); six
+derived authority states, computed at query time, never stored. Fails
+closed (never silently picks one) on: overlapping simultaneously-
+effective revisions, inconsistent supersession/rollback links, an
+"effective" revision that isn't approved, and (for `current`/`as_of`
+only) a logical document with no authoritative effective revision at
+all — `comparison`/`draft` intents instead exclude a malformed record
+individually, never hard-failing the whole query (Stage 7R.1a item 6).
+`activate_revision`/`reinstate_revision` fully validate every structural
+precondition before any write, with real snapshot-and-restore (in-memory)
+or a real database transaction (Postgres) proven to roll back completely
+under injected mid-write faults.
 
 Not yet wired into retrieval — Stage 7R.2, after review, will make
 Stage 7A.1's own search filter candidate chunks by
@@ -621,12 +634,12 @@ must not change for Stage 7A.3's demo viewer or Stage 7R/7B's own work.
 **Stage 7A.3 — a minimal local auditable-semantic-search demo over this
 same frozen answer baseline — is complete**: a single self-contained
 static HTML viewer (`reports/stage7a3_demo.html`,
-`src/ingestion_bench/demo/`). **Stage 7R.1 — the revision authority
-registry and effective-knowledge resolver — is now also complete** (see
-"Stage 7R.1 summary" above and `docs/REVISION_AUTHORITY_SCENARIOS.md`)
--- `src/ingestion_bench/revision_authority/` must not change for Stage
-7R.2's retrieval wiring (deferred pending review) or Stage 7B/7C's own
-work.
+`src/ingestion_bench/demo/`). **Stage 7R.1/7R.1a — the revision
+authority registry and effective-knowledge resolver — is now complete
+and FROZEN** (see "Stage 7R.1/7R.1a summary" above and
+`docs/REVISION_AUTHORITY_SCENARIOS.md`) -- `src/ingestion_bench/revision_authority/`
+must not change for Stage 7R.2's retrieval wiring (deferred pending
+review) or Stage 7B/7C's own work.
 
 ---
 

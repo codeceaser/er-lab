@@ -1,10 +1,10 @@
 {
-  "contract_version": "revision_authority_scenarios_v1",
-  "description": "Deterministic Stage 7R.1 authority-resolution contract -- not a replacement for source-document fixtures. Every 'symbol' below is a local alias the runner resolves to a real compute_document_revision_id() hash after replaying registry_setup; scenarios reference revisions by symbol.",
+  "contract_version": "revision_authority_scenarios_v2",
+  "description": "Deterministic Stage 7R.1/7R.1a authority-resolution contract -- not a replacement for source-document fixtures. Every 'symbol' below is a local alias the runner resolves to a real compute_document_revision_id() hash after replaying registry_setup; scenarios reference revisions by symbol. Stage 7R.1a: effective dates now live SOLELY in AuthorityPeriod, opened/closed via activate/reinstate/withdraw -- 'decide' registry_setup steps are pure publication_status changes, never dates.",
   "logical_documents": [
     {
       "logical_document_id": "POLICY-RESILIENCE-001",
-      "description": "One resilience/retention policy document with a full v1-v6 revision history: superseded, historical, current, draft, approved-future, and a rollback-corrected candidate.",
+      "description": "One resilience/retention policy document: superseded, historical, current, draft, under_review, approved-future, a rollback-corrected candidate, and a late-uploaded draft.",
       "revisions": [
         {
           "symbol": "v1",
@@ -42,6 +42,13 @@
           "note": "draft, proposed retention period 10 years"
         },
         {
+          "symbol": "v4_under_review",
+          "source_document_sha256": "04df1e255f3a41e504e7a8722dfff8c57d6d83fa9ff638bf857fff1863efb4f9",
+          "version_label": null,
+          "revision_number": 41,
+          "note": "under_review, never a period"
+        },
+        {
           "symbol": "v5",
           "source_document_sha256": "51a0b90e61273710977d2168c10c3465aab539c95e137c0168f4abfab70935e3",
           "version_label": null,
@@ -54,13 +61,6 @@
           "version_label": null,
           "revision_number": 0,
           "note": "Scenario F: registered very late (2026), never activated -- must not become current merely by existing"
-        },
-        {
-          "symbol": "v6_rollback_demo",
-          "source_document_sha256": "842c632f2bb39f06d2c09df75e1c82ca3b478847207f5c6003bf21039cdc2063",
-          "version_label": null,
-          "revision_number": 6,
-          "note": "Scenario M: approved-future then rolled back to draft"
         }
       ],
       "registry_setup": [
@@ -128,6 +128,22 @@
           "recorded_at": "2024-09-01T00:00:00+00:00"
         },
         {
+          "step_id": "reg_v4ur",
+          "op": "register",
+          "symbol": "v4_under_review",
+          "scenario_id": "J2_under_review_via_draft_intent",
+          "expected_is_new": true,
+          "recorded_at": "2024-09-15T00:00:00+00:00"
+        },
+        {
+          "step_id": "decide_v4ur",
+          "op": "decide",
+          "symbol": "v4_under_review",
+          "scenario_id": "J2_under_review_via_draft_intent",
+          "publication_status": "under_review",
+          "recorded_at": "2024-09-16T00:00:00+00:00"
+        },
+        {
           "step_id": "reg_v5",
           "op": "register",
           "symbol": "v5",
@@ -149,42 +165,12 @@
           "scenario_id": "F_late_upload_old_revision",
           "expected_is_new": true,
           "recorded_at": "2026-06-01T00:00:00+00:00"
-        },
-        {
-          "step_id": "reg_v6",
-          "op": "register",
-          "symbol": "v6_rollback_demo",
-          "expected_is_new": true,
-          "recorded_at": "2024-11-01T00:00:00+00:00"
-        },
-        {
-          "step_id": "decide_v6_approve",
-          "op": "decide",
-          "symbol": "v6_rollback_demo",
-          "scenario_id": "M_authority_correction_rollback",
-          "publication_status": "approved",
-          "effective_from": "2029-01-01",
-          "effective_to": null,
-          "approved_at": "2024-11-05T00:00:00+00:00",
-          "recorded_at": "2024-11-05T00:00:00+00:00"
-        },
-        {
-          "step_id": "decide_v6_rollback",
-          "op": "decide",
-          "symbol": "v6_rollback_demo",
-          "scenario_id": "M_authority_correction_rollback",
-          "publication_status": "draft",
-          "effective_from": null,
-          "effective_to": null,
-          "approved_at": null,
-          "recorded_at": "2024-11-20T00:00:00+00:00",
-          "detail_note": "rolled back -- retention period 12yr proposal withdrawn before taking effect"
         }
       ]
     },
     {
       "logical_document_id": "POLICY-WITHDRAWN-DEMO-001",
-      "description": "Scenario K: a document whose only effective revision is withdrawn with no replacement registered.",
+      "description": "Scenario K: a document whose only effective revision is withdrawn (at an explicit withdrawal_effective_date, never recorded_at) with no replacement registered.",
       "revisions": [
         {
           "symbol": "w1",
@@ -214,14 +200,16 @@
           "step_id": "withdraw_w1",
           "op": "withdraw",
           "symbol": "w1",
+          "withdrawal_effective_date": "2024-01-01",
+          "closure_reason": "withdrawn",
           "scenario_id": "K_withdrawn_no_replacement",
-          "recorded_at": "2024-01-01T00:00:00+00:00"
+          "recorded_at": "2025-03-01T00:00:00+00:00"
         }
       ]
     },
     {
       "logical_document_id": "POLICY-CONFLICT-DEMO-001",
-      "description": "Scenario L: two revisions independently activated with old=None, producing simultaneously-effective (overlapping) authority -- a real operator-misuse case, not a hand-corrupted one.",
+      "description": "Scenario L: two revisions simultaneously effective. Stage 7R.1a's own pre-activation overlap validation now correctly PREVENTS this via ordinary service calls -- so this precondition is constructed via one legitimate activation plus one raw, low-level repository write (op=corrupt_period), simulating pre-existing inconsistent data (e.g. from before this validation existed) rather than a mistake the service itself could still be tricked into making.",
       "revisions": [
         {
           "symbol": "c1",
@@ -262,11 +250,18 @@
           "recorded_at": "2021-01-01T00:00:00+00:00"
         },
         {
-          "step_id": "act_c2",
-          "op": "activate",
-          "new": "c2",
-          "old": null,
+          "step_id": "corrupt_c2_metadata",
+          "op": "corrupt_metadata",
+          "symbol": "c2",
+          "publication_status": "approved",
+          "recorded_at": "2021-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "corrupt_c2",
+          "op": "corrupt_period",
+          "symbol": "c2",
           "effective_from": "2021-01-01",
+          "effective_to": null,
           "scenario_id": "L_overlapping_effective_revisions",
           "recorded_at": "2021-01-01T00:00:00+00:00"
         }
@@ -274,7 +269,7 @@
     },
     {
       "logical_document_id": "POLICY-SHARED-TEXT-DEMO-001",
-      "description": "Scenario N: identical textual content (source_document_sha256) reused under a DIFFERENT logical_document_id -- must get a fully independent revision identity, never conflated with POLICY-RESILIENCE-001's v2.",
+      "description": "Scenario N: identical textual content (source_document_sha256) reused under a DIFFERENT logical_document_id -- must get a fully independent revision identity.",
       "revisions": [
         {
           "symbol": "n1_shares_v2_text",
@@ -294,6 +289,191 @@
           "recorded_at": "2019-06-01T00:00:00+00:00"
         }
       ]
+    },
+    {
+      "logical_document_id": "POLICY-ROLLBACK-DEMO-001",
+      "description": "Stage 7R.1a item 3: v3 effective from 2023-01-01, v5 effective from 2028-01-01 (supersedes v3), v5 rolled back on 2028-06-01, v3 reinstated from 2028-06-01 -- a SECOND, disjoint authority period for v3.",
+      "revisions": [
+        {
+          "symbol": "rv3",
+          "source_document_sha256": "56621f5404a32e53964995ac083677df8c4a9c551205be893d7089fde2d76a94",
+          "version_label": null,
+          "revision_number": 3,
+          "note": ""
+        },
+        {
+          "symbol": "rv5",
+          "source_document_sha256": "ce6c741bbabf926e04b6eae437016d51b95286a209107eae05e53c21d6083cb3",
+          "version_label": null,
+          "revision_number": 5,
+          "note": ""
+        }
+      ],
+      "registry_setup": [
+        {
+          "step_id": "reg_rv3",
+          "op": "register",
+          "symbol": "rv3",
+          "expected_is_new": true,
+          "recorded_at": "2022-11-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_rv3",
+          "op": "activate",
+          "new": "rv3",
+          "old": null,
+          "effective_from": "2023-01-01",
+          "recorded_at": "2023-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_rv5",
+          "op": "register",
+          "symbol": "rv5",
+          "expected_is_new": true,
+          "recorded_at": "2027-11-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_rv5",
+          "op": "activate",
+          "new": "rv5",
+          "old": "rv3",
+          "effective_from": "2028-01-01",
+          "scenario_id": "E2_post_effective_rollback",
+          "recorded_at": "2027-11-15T00:00:00+00:00"
+        },
+        {
+          "step_id": "reinstate_rv3",
+          "op": "reinstate",
+          "new": "rv3",
+          "old": "rv5",
+          "effective_from": "2028-06-01",
+          "scenario_id": "E2_post_effective_rollback",
+          "recorded_at": "2028-06-01T00:00:00+00:00"
+        }
+      ]
+    },
+    {
+      "logical_document_id": "POLICY-MALFORMED-DEMO-001",
+      "description": "A revision left in publication_status='draft' but given a REAL (non-zero-width) authority period via a raw repository write -- the exact 'effective revision is not approved' integrity violation, constructed directly (never reachable via normal service calls) to prove comparison/draft intents exclude it individually rather than aborting the whole query.",
+      "revisions": [
+        {
+          "symbol": "m1",
+          "source_document_sha256": "30b13bc89a54ccf3e57ec6f8ccda4266d820ee467d133cfd9fcd0906b159566c",
+          "version_label": null,
+          "revision_number": 1,
+          "note": ""
+        }
+      ],
+      "registry_setup": [
+        {
+          "step_id": "reg_m1",
+          "op": "register",
+          "symbol": "m1",
+          "expected_is_new": true,
+          "recorded_at": "2024-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "corrupt_m1",
+          "op": "corrupt_period",
+          "symbol": "m1",
+          "effective_from": "2024-01-01",
+          "effective_to": null,
+          "scenario_id": "malformed_record_excluded_not_fatal",
+          "recorded_at": "2024-01-01T00:00:00+00:00"
+        }
+      ]
+    },
+    {
+      "logical_document_id": "POLICY-VALIDATION-DEMO-001",
+      "description": "Item 5: activation validation rejections, proven directly against the service (each step below is EXPECTED to raise).",
+      "revisions": [
+        {
+          "symbol": "val1",
+          "source_document_sha256": "4892300f8fae9cfc908cf92ea9004333e77fa0161646c633b7088fcfd957e078",
+          "version_label": null,
+          "revision_number": 1,
+          "note": ""
+        }
+      ],
+      "registry_setup": [
+        {
+          "step_id": "reg_val1",
+          "op": "register",
+          "symbol": "val1",
+          "expected_is_new": true,
+          "recorded_at": "2024-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_val1",
+          "op": "activate",
+          "new": "val1",
+          "old": null,
+          "effective_from": "2024-01-01",
+          "recorded_at": "2024-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "self_supersede_val1",
+          "op": "activate",
+          "new": "val1",
+          "old": "val1",
+          "effective_from": "2025-01-01",
+          "expect_error": true,
+          "expect_error_substring": "cannot supersede itself",
+          "scenario_id": "self_supersession_rejected",
+          "recorded_at": "2025-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "cross_doc_val1",
+          "op": "activate",
+          "new": "val1",
+          "old": "v3",
+          "effective_from": "2025-01-01",
+          "expect_error": true,
+          "expect_error_substring": "SAME logical document",
+          "scenario_id": "cross_document_activation_rejected",
+          "recorded_at": "2025-01-01T00:00:00+00:00"
+        }
+      ]
+    },
+    {
+      "logical_document_id": "POLICY-CORRECTION-DEMO-001",
+      "description": "pre_effective_authority_correction, isolated: v6 approved-future then retracted before it ever took effect (closure_reason=correction, zero-width period) -- kept in its own document since it never needs to interact with any other revision's own period.",
+      "revisions": [
+        {
+          "symbol": "v6_rollback_demo",
+          "source_document_sha256": "ec5ed26679117a0391cb2d21c9bda36492b9a5c57c6215c35a679eea6c1f1f98",
+          "version_label": null,
+          "revision_number": 6,
+          "note": "pre_effective_authority_correction: approved-future then retracted before it ever took effect"
+        }
+      ],
+      "registry_setup": [
+        {
+          "step_id": "reg_v6",
+          "op": "register",
+          "symbol": "v6_rollback_demo",
+          "expected_is_new": true,
+          "recorded_at": "2024-11-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_v6",
+          "op": "activate",
+          "new": "v6_rollback_demo",
+          "old": null,
+          "effective_from": "2029-01-01",
+          "scenario_id": "M_pre_effective_authority_correction",
+          "recorded_at": "2024-11-05T00:00:00+00:00"
+        },
+        {
+          "step_id": "correct_v6",
+          "op": "withdraw",
+          "symbol": "v6_rollback_demo",
+          "withdrawal_effective_date": "2029-01-01",
+          "closure_reason": "correction",
+          "scenario_id": "M_pre_effective_authority_correction",
+          "recorded_at": "2024-11-20T00:00:00+00:00"
+        }
+      ]
     }
   ],
   "query_scenarios": [
@@ -307,16 +487,43 @@
       "expected_eligible_symbols": [
         "v3"
       ],
+      "expected_excluded": [
+        {
+          "symbol": "v1",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v2",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v4",
+          "reason_code": "not_effective_draft"
+        },
+        {
+          "symbol": "v4_under_review",
+          "reason_code": "not_effective_under_review"
+        },
+        {
+          "symbol": "v5",
+          "reason_code": "not_effective_approved_future"
+        },
+        {
+          "symbol": "v0_late_upload",
+          "reason_code": "not_effective_draft"
+        }
+      ],
       "expected_states": {
         "v1": "superseded",
         "v2": "superseded",
         "v3": "effective",
         "v4": "draft",
+        "v4_under_review": "under_review",
         "v5": "approved_future",
-        "v0_late_upload": "draft",
-        "v6_rollback_demo": "draft"
+        "v0_late_upload": "draft"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "D_approved_future_not_early",
@@ -328,15 +535,22 @@
       "expected_eligible_symbols": [
         "v3"
       ],
+      "expected_excluded": [
+        {
+          "symbol": "v5",
+          "reason_code": "not_effective_approved_future"
+        }
+      ],
       "expected_states": {
         "v3": "effective",
         "v5": "approved_future"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "E_supersession_boundary_on",
-      "description": "On the exact effective_from boundary (2028-01-01), v5 becomes effective and v3 becomes superseded in the SAME atomic transition (effective_from <= as_of_date < effective_to).",
+      "description": "On the exact effective_from boundary (2028-01-01), v5 becomes effective and v3 becomes superseded in the SAME atomic transition.",
       "logical_document_id": "POLICY-RESILIENCE-001",
       "query_intent": "current",
       "as_of_date": "2028-01-01",
@@ -344,11 +558,18 @@
       "expected_eligible_symbols": [
         "v5"
       ],
+      "expected_excluded": [
+        {
+          "symbol": "v3",
+          "reason_code": "not_effective_superseded"
+        }
+      ],
       "expected_states": {
         "v3": "superseded",
         "v5": "effective"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "O_boundary_day_before",
@@ -360,11 +581,18 @@
       "expected_eligible_symbols": [
         "v3"
       ],
+      "expected_excluded": [
+        {
+          "symbol": "v5",
+          "reason_code": "not_effective_approved_future"
+        }
+      ],
       "expected_states": {
         "v3": "effective",
         "v5": "approved_future"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "F_late_upload_old_revision",
@@ -376,11 +604,18 @@
       "expected_eligible_symbols": [
         "v3"
       ],
+      "expected_excluded": [
+        {
+          "symbol": "v0_late_upload",
+          "reason_code": "not_effective_draft"
+        }
+      ],
       "expected_states": {
         "v3": "effective",
         "v0_late_upload": "draft"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "G_current_authoritative_query",
@@ -392,10 +627,37 @@
       "expected_eligible_symbols": [
         "v3"
       ],
+      "expected_excluded": [
+        {
+          "symbol": "v1",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v2",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v4",
+          "reason_code": "not_effective_draft"
+        },
+        {
+          "symbol": "v4_under_review",
+          "reason_code": "not_effective_under_review"
+        },
+        {
+          "symbol": "v5",
+          "reason_code": "not_effective_approved_future"
+        },
+        {
+          "symbol": "v0_late_upload",
+          "reason_code": "not_effective_draft"
+        }
+      ],
       "expected_states": {
         "v3": "effective"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "H_historical_as_of_query",
@@ -407,12 +669,40 @@
       "expected_eligible_symbols": [
         "v2"
       ],
+      "expected_excluded": [
+        {
+          "symbol": "v1",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v3",
+          "reason_code": "not_effective_approved_future"
+        }
+      ],
       "expected_states": {
         "v1": "superseded",
         "v2": "effective",
         "v3": "approved_future"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
+    },
+    {
+      "scenario_id": "H2_historical_as_of_before_withdrawal",
+      "description": "Item 2: as_of BEFORE the withdrawal date, within the old (now-closed) period, must still resolve effective.",
+      "logical_document_id": "POLICY-WITHDRAWN-DEMO-001",
+      "query_intent": "as_of",
+      "as_of_date": "2022-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "w1"
+      ],
+      "expected_excluded": [],
+      "expected_states": {
+        "w1": "effective"
+      },
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "I_explicit_comparison_query",
@@ -430,12 +720,14 @@
         "v3",
         "v5"
       ],
+      "expected_excluded": [],
       "expected_states": {
         "v1": "superseded",
         "v3": "effective",
         "v5": "approved_future"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "J_explicit_draft_query",
@@ -450,64 +742,90 @@
       "expected_eligible_symbols": [
         "v4"
       ],
+      "expected_excluded": [
+        {
+          "symbol": "v3",
+          "reason_code": "not_eligible_for_draft_intent"
+        }
+      ],
       "expected_states": {
         "v4": "draft"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
+    },
+    {
+      "scenario_id": "J2_under_review_via_draft_intent",
+      "description": "under_review is ALSO a legitimate draft-intent result -- v4_under_review must be eligible.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "draft",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [
+        "v4_under_review"
+      ],
+      "expected_eligible_symbols": [
+        "v4_under_review"
+      ],
+      "expected_excluded": [],
+      "expected_states": {
+        "v4_under_review": "under_review"
+      },
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "K_withdrawn_no_replacement",
-      "description": "The only revision was withdrawn and no replacement was ever activated -- fails closed, never silently returns nothing as if that were a normal empty result.",
+      "description": "current/as_of ON/AFTER the withdrawal date: fails closed, never silently returns nothing as if that were a normal empty result.",
       "logical_document_id": "POLICY-WITHDRAWN-DEMO-001",
       "query_intent": "current",
       "as_of_date": "2025-06-01",
       "requested_symbols": [],
       "expected_eligible_symbols": [],
+      "expected_excluded": [],
       "expected_states": {
         "w1": "withdrawn"
       },
-      "integrity_error_expected": true
+      "integrity_error_expected": true,
+      "expected_integrity_error_code": "no_effective_revision"
     },
     {
       "scenario_id": "L_overlapping_effective_revisions",
-      "description": "Two revisions independently activated with old=None end up simultaneously effective -- fails closed rather than silently choosing one.",
+      "description": "Two revisions simultaneously effective -- fails closed rather than silently choosing one.",
       "logical_document_id": "POLICY-CONFLICT-DEMO-001",
       "query_intent": "current",
       "as_of_date": "2025-06-01",
       "requested_symbols": [],
       "expected_eligible_symbols": [],
+      "expected_excluded": [],
       "expected_states": {
         "c1": "effective",
         "c2": "effective"
       },
-      "integrity_error_expected": true
+      "integrity_error_expected": true,
+      "expected_integrity_error_code": "overlapping_effective_revisions"
     },
     {
-      "scenario_id": "M_authority_correction_rollback",
-      "description": "v6 was approved-future then rolled back to draft via a second authority decision -- the correction is visible in the audit trail and never touches v3/v5's own effective windows.",
-      "logical_document_id": "POLICY-RESILIENCE-001",
+      "scenario_id": "M_pre_effective_authority_correction",
+      "description": "v6 was approved-future then RETRACTED (closure_reason=correction) before it ever took effect -- comparison shows it back in draft, and the correction never touches v3/v5's own effective windows.",
+      "logical_document_id": "POLICY-CORRECTION-DEMO-001",
       "query_intent": "comparison",
       "as_of_date": "2025-06-01",
       "requested_symbols": [
-        "v6_rollback_demo",
-        "v3",
-        "v5"
+        "v6_rollback_demo"
       ],
       "expected_eligible_symbols": [
-        "v6_rollback_demo",
-        "v3",
-        "v5"
+        "v6_rollback_demo"
       ],
+      "expected_excluded": [],
       "expected_states": {
-        "v6_rollback_demo": "draft",
-        "v3": "effective",
-        "v5": "approved_future"
+        "v6_rollback_demo": "draft"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     },
     {
       "scenario_id": "N_same_text_different_identity",
-      "description": "Byte-identical content under a DIFFERENT logical_document_id gets a fully independent revision identity -- proven by resolving it on its own document, unaffected by POLICY-RESILIENCE-001's v2 authority.",
+      "description": "Byte-identical content under a DIFFERENT logical_document_id gets a fully independent revision identity.",
       "logical_document_id": "POLICY-SHARED-TEXT-DEMO-001",
       "query_intent": "draft",
       "as_of_date": "2019-06-02",
@@ -517,10 +835,146 @@
       "expected_eligible_symbols": [
         "n1_shares_v2_text"
       ],
+      "expected_excluded": [],
       "expected_states": {
         "n1_shares_v2_text": "draft"
       },
-      "integrity_error_expected": false
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
+    },
+    {
+      "scenario_id": "E2_post_effective_rollback_before",
+      "description": "Item 3: as_of 2027-12-31 (before rv5 ever existed) -> rv3.",
+      "logical_document_id": "POLICY-ROLLBACK-DEMO-001",
+      "query_intent": "as_of",
+      "as_of_date": "2027-12-31",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "rv3"
+      ],
+      "expected_excluded": [
+        {
+          "symbol": "rv5",
+          "reason_code": "not_effective_approved_future"
+        }
+      ],
+      "expected_states": {
+        "rv3": "effective",
+        "rv5": "approved_future"
+      },
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
+    },
+    {
+      "scenario_id": "E2_post_effective_rollback_during",
+      "description": "Item 3: as_of 2028-03-01 (rv5's own window, before rollback) -> rv5.",
+      "logical_document_id": "POLICY-ROLLBACK-DEMO-001",
+      "query_intent": "as_of",
+      "as_of_date": "2028-03-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "rv5"
+      ],
+      "expected_excluded": [
+        {
+          "symbol": "rv3",
+          "reason_code": "not_effective_approved_future"
+        }
+      ],
+      "expected_states": {
+        "rv3": "approved_future",
+        "rv5": "effective"
+      },
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
+    },
+    {
+      "scenario_id": "E2_post_effective_rollback_after",
+      "description": "Item 3: current/as_of 2028-07-01 (after rollback) -> REINSTATED rv3, rv3's own SECOND authority period.",
+      "logical_document_id": "POLICY-ROLLBACK-DEMO-001",
+      "query_intent": "current",
+      "as_of_date": "2028-07-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "rv3"
+      ],
+      "expected_excluded": [
+        {
+          "symbol": "rv5",
+          "reason_code": "not_effective_superseded"
+        }
+      ],
+      "expected_states": {
+        "rv3": "effective",
+        "rv5": "superseded"
+      },
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
+    },
+    {
+      "scenario_id": "malformed_record_excluded_not_fatal_comparison",
+      "description": "A revision with a genuinely malformed record (draft status + a real, non-zero-width period -- 'effective revision is not approved') is EXCLUDED individually under comparison intent, never aborting the whole query.",
+      "logical_document_id": "POLICY-MALFORMED-DEMO-001",
+      "query_intent": "comparison",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [
+        "m1"
+      ],
+      "expected_eligible_symbols": [],
+      "expected_excluded": [
+        {
+          "symbol": "m1",
+          "reason_code": "malformed_authority_record"
+        }
+      ],
+      "expected_states": {},
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
+    },
+    {
+      "scenario_id": "malformed_record_excluded_not_fatal_draft",
+      "description": "The SAME malformed revision is EXCLUDED individually under draft intent too, never aborting the whole query.",
+      "logical_document_id": "POLICY-MALFORMED-DEMO-001",
+      "query_intent": "draft",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [
+        "m1"
+      ],
+      "expected_eligible_symbols": [],
+      "expected_excluded": [
+        {
+          "symbol": "m1",
+          "reason_code": "malformed_authority_record"
+        }
+      ],
+      "expected_states": {},
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
+    },
+    {
+      "scenario_id": "duplicate_requested_revision_ids_rejected",
+      "description": "Item 6: requesting the same revision id twice under comparison intent deduplicates deterministically -- one eligible entry, one duplicate_request exclusion, never two eligible entries.",
+      "logical_document_id": "POLICY-RESILIENCE-001",
+      "query_intent": "comparison",
+      "as_of_date": "2025-06-01",
+      "requested_symbols": [
+        "v3",
+        "v3"
+      ],
+      "expected_eligible_symbols": [
+        "v3"
+      ],
+      "expected_excluded": [
+        {
+          "symbol": "v3",
+          "reason_code": "duplicate_request"
+        }
+      ],
+      "expected_states": {
+        "v3": "effective"
+      },
+      "integrity_error_expected": false,
+      "expected_integrity_error_code": null
     }
   ]
 }

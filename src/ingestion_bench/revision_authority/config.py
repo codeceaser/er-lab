@@ -26,6 +26,9 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 REVISION_REGISTRY_TABLE = os.environ.get(
     "INGESTION_BENCH_REVISION_REGISTRY_TABLE", "edib_document_revision_registry"
 )
+AUTHORITY_PERIOD_TABLE = os.environ.get(
+    "INGESTION_BENCH_AUTHORITY_PERIOD_TABLE", "edib_revision_authority_period"
+)
 AUTHORITY_EVENT_TABLE = os.environ.get(
     "INGESTION_BENCH_AUTHORITY_EVENT_TABLE", "edib_authority_decision_event"
 )

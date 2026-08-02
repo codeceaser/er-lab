@@ -110,28 +110,101 @@ def test_explicit_draft_query_scenario(scenario_result: ScenarioRunResult):
     assert _scenario(scenario_result, "J_explicit_draft_query").passed
 
 
+def test_historical_as_of_before_withdrawal_still_resolves_effective(scenario_result: ScenarioRunResult):
+    """Business nuance (item 2/7): an as_of date BEFORE the withdrawal
+    date, still within the old (now-closed) period, must resolve
+    effective -- withdrawal is never retroactive. Affects: historical
+    search directly."""
+    scenario = _scenario(scenario_result, "H2_historical_as_of_before_withdrawal")
+    assert scenario.passed
+    assert scenario.actual_eligible_symbols == ["w1"]
+    assert scenario.actual_states["w1"] == "effective"
+
+
 def test_withdrawn_no_replacement_scenario_fails_closed(scenario_result: ScenarioRunResult):
+    """Business nuance (item 2/7): current/as_of ON/AFTER the withdrawal
+    date fails closed -- never a silent empty success. Affects: current
+    search."""
     scenario = _scenario(scenario_result, "K_withdrawn_no_replacement")
     assert scenario.passed
     assert scenario.actual_integrity_error is not None
+    assert scenario.actual_integrity_error_code == "no_effective_revision"
 
 
 def test_overlapping_effective_revisions_scenario_fails_closed(scenario_result: ScenarioRunResult):
     scenario = _scenario(scenario_result, "L_overlapping_effective_revisions")
     assert scenario.passed
     assert scenario.actual_integrity_error is not None
+    assert scenario.actual_integrity_error_code == "overlapping_effective_revisions"
 
 
-def test_authority_correction_rollback_scenario(scenario_result: ScenarioRunResult):
-    """Business nuance: Scenario M -- v6's approval is corrected back to
-    draft via a SECOND authority decision, and the correction is visible
-    purely by re-querying (comparison intent) after the fact; v3/v5's
-    own effective windows are provably untouched (their states are
-    identical to Scenario I/D's own results). Affects: auditability."""
-    scenario = _scenario(scenario_result, "M_authority_correction_rollback")
+def test_pre_effective_authority_correction_scenario(scenario_result: ScenarioRunResult):
+    """Business nuance (item 3, renamed from Stage 7R.1's 'M'): v6 was
+    approved-future then RETRACTED (closure_reason=correction, a
+    zero-width period) before it ever took effect -- comparison shows it
+    back in draft. Affects: auditability."""
+    scenario = _scenario(scenario_result, "M_pre_effective_authority_correction")
     assert scenario.passed
     assert scenario.actual_states["v6_rollback_demo"] == "draft"
-    assert scenario.actual_states["v3"] == "effective"
+
+
+def test_post_effective_rollback_before_during_after(scenario_result: ScenarioRunResult):
+    """Business nuance (item 3): the full post-effective rollback/
+    reinstatement timeline in ONE test -- rv3 effective from 2023,
+    superseded by rv5 from 2028, rv5 rolled back and rv3 REINSTATED
+    (a second, disjoint authority period) from 2028-06-01. Failure this
+    guards against: reinstatement silently overwriting/destroying rv3's
+    EARLIER period, or the resolver being unable to represent a revision
+    effective, then not, then effective again. Affects: current search
+    and historical search (both periods must resolve correctly for
+    their own date ranges)."""
+    before = _scenario(scenario_result, "E2_post_effective_rollback_before")
+    during = _scenario(scenario_result, "E2_post_effective_rollback_during")
+    after = _scenario(scenario_result, "E2_post_effective_rollback_after")
+    assert before.passed and before.actual_eligible_symbols == ["rv3"]
+    assert during.passed and during.actual_eligible_symbols == ["rv5"]
+    assert after.passed and after.actual_eligible_symbols == ["rv3"]
+
+
+def test_under_review_requested_through_draft_intent(scenario_result: ScenarioRunResult):
+    """Business nuance (item 7): under_review is ALSO a legitimate
+    draft-intent result, not just 'draft' itself -- both pre-approval
+    states share the same "never mixed into current results" treatment.
+    Affects: current search (neither state may leak into default
+    results) and auditability (a reviewer's queue should show both)."""
+    scenario = _scenario(scenario_result, "J2_under_review_via_draft_intent")
+    assert scenario.passed
+    assert scenario.actual_eligible_symbols == ["v4_under_review"]
+    assert scenario.actual_states["v4_under_review"] == "under_review"
+
+
+def test_malformed_comparison_record_fails_closed_individually(scenario_result: ScenarioRunResult):
+    """Business nuance (item 6/7): a revision with a genuine integrity
+    violation (draft status + a real period) is EXCLUDED individually
+    under comparison intent -- with reason_code=malformed_authority_record
+    -- never returned as if it had a normal label, and never aborting
+    the whole query. Affects: auditability."""
+    scenario = _scenario(scenario_result, "malformed_record_excluded_not_fatal_comparison")
+    assert scenario.passed
+    assert scenario.actual_eligible_symbols == []
+    assert scenario.actual_integrity_error is None
+
+
+def test_malformed_draft_record_fails_closed_individually(scenario_result: ScenarioRunResult):
+    scenario = _scenario(scenario_result, "malformed_record_excluded_not_fatal_draft")
+    assert scenario.passed
+    assert scenario.actual_eligible_symbols == []
+    assert scenario.actual_integrity_error is None
+
+
+def test_duplicate_requested_revision_ids_rejected_scenario(scenario_result: ScenarioRunResult):
+    """Business nuance (item 6/7): requesting the same revision twice
+    yields exactly one eligible entry plus one duplicate_request
+    exclusion -- never two eligible entries. Affects: auditability (a
+    caller bug must be visible, not silently doubled)."""
+    scenario = _scenario(scenario_result, "duplicate_requested_revision_ids_rejected")
+    assert scenario.passed
+    assert scenario.actual_eligible_symbols == ["v3"]
 
 
 def test_same_text_different_identity_scenario(scenario_result: ScenarioRunResult):
@@ -141,6 +214,35 @@ def test_same_text_different_identity_scenario(scenario_result: ScenarioRunResul
 
 def test_boundary_day_before_scenario(scenario_result: ScenarioRunResult):
     assert _scenario(scenario_result, "O_boundary_day_before").passed
+
+
+def _transition(result: ScenarioRunResult, step_id: str):
+    return next(t for t in result.transition_checks if t.step_id == step_id)
+
+
+def test_self_supersession_rejected_scenario(scenario_result: ScenarioRunResult):
+    """Business nuance (item 5/7): a revision cannot supersede itself --
+    proven here as a contract-driven expected-failure step, the same
+    code path the scorecard itself reports. Affects: current search and
+    auditability."""
+    check = _transition(scenario_result, "self_supersede_val1")
+    assert check.passed
+    assert check.raised
+
+
+def test_cross_document_activation_rejected_scenario(scenario_result: ScenarioRunResult):
+    """Business nuance (item 5/7): activation cannot supersede a
+    revision belonging to another logical document -- proven here as a
+    contract-driven expected-failure step. Affects: current search and
+    auditability."""
+    check = _transition(scenario_result, "cross_doc_val1")
+    assert check.passed
+    assert check.raised
+
+
+def test_all_transition_checks_pass(scenario_result: ScenarioRunResult):
+    failed = [c.step_id for c in scenario_result.transition_checks if not c.passed]
+    assert not failed, f"transition checks failed: {failed}"
 
 
 def test_all_query_scenarios_pass(scenario_result: ScenarioRunResult):

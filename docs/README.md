@@ -101,35 +101,44 @@ and an informational cross-document warning when a citation's fixture
 differs from the question's principal evidence. No server, no build
 step, no new dependency — open the file directly in a browser.
 
-**Stage 7R.1 — Revision Authority Registry and Effective-Knowledge
-Resolution — is complete**: a narrow registry
+**Stage 7R.1/7R.1a — Revision Authority Registry and Effective-Knowledge
+Resolution — is complete and FROZEN**: a narrow registry
 (`src/ingestion_bench/revision_authority/`) that reuses Stage 4.1's own
 chunk-lineage identity fields (`logical_document_id`,
 `document_revision_id`, `source_document_sha256`, `version_label`,
-`revision_number` — never reinvented) and adds new, separate, mutable
-authority metadata (`publication_status`, `effective_from`/`effective_to`,
-supersession links) that a governance source supplies explicitly — never
-inferred from upload time, revision number, filename, or embedding
-similarity. A deterministic resolver supports exactly four query
-intents (`current`, `as_of`, `comparison`, `draft`), fails closed (never
-silently picks one) on overlapping effective revisions, inconsistent
-supersession links, or an unapproved "effective" revision, and computes
-six derived authority states at query time (never stored). This is
-explicitly **not** a document-management/version-control system — see
-`docs/REVISION_AUTHORITY_SCENARIOS.md` for the full 15-scenario (A–O)
-business-behavior spec and `reports/stage7r1_revision_authority_scorecard.md`
-for the real, measured, all-passing scenario run (12/12 registration
-checks, 13/13 query scenarios). Real Postgres persistence (its own two
-isolated tables) plus a deterministic in-memory repository for the
-default test suite. **Not yet wired into retrieval** — that is Stage
-7R.2, deferred pending review.
+`revision_number` — never reinvented). `AuthorityMetadata` (pure
+governance status) and `AuthorityPeriod` (the SOLE authoritative source
+for effective dates, multiple non-overlapping periods per revision
+permitted) are cleanly split — never inferred from upload time, revision
+number, filename, or embedding similarity. A deterministic resolver
+supports exactly four query intents (`current`, `as_of`, `comparison`,
+`draft`), fails closed (never silently picks one) on overlapping
+effective revisions, inconsistent supersession/rollback links, or an
+unapproved "effective" revision for `current`/`as_of`; `comparison`/
+`draft` instead exclude a single malformed record without ever
+hard-failing the whole query. Withdrawal takes an explicit
+`withdrawal_effective_date` (never `recorded_at`) and is period-aware —
+historical dates before withdrawal still correctly resolve effective.
+`activate_revision`/`reinstate_revision` fully validate every structural
+precondition before any write, with real rollback (in-memory snapshot,
+or a real Postgres transaction) proven under injected mid-write faults.
+This is explicitly **not** a document-management/version-control
+system — see `docs/REVISION_AUTHORITY_SCENARIOS.md` for the full
+scenario-by-scenario business-behavior spec and
+`reports/stage7r1_revision_authority_scorecard.md` for the real,
+measured, all-passing scenario run (17/17 registration checks, 2/2
+transition checks, 21/21 query scenarios,
+`contract_version: revision_authority_scenarios_v2`). Real Postgres
+persistence (its own three isolated tables) plus a deterministic
+in-memory repository for the default test suite. **Not yet wired into
+retrieval** — that is Stage 7R.2, deferred pending review.
 
-**664 tests passing** as of Stage 7R.1 (3 pre-existing warnings from
+**692 tests passing** as of Stage 7R.1a (3 pre-existing warnings from
 Docling's own dependencies).
 
-**Next after Stage 7R.1: Stage 7R.2 — authority-aware vector retrieval**
+**Next after Stage 7R.1a: Stage 7R.2 — authority-aware vector retrieval**
 (filtering Stage 7A.1's own search by `eligible_revision_ids` before
-ranking — deferred pending review of Stage 7R.1), **then** Stage 7B
+ranking — deferred pending review of Stage 7R.1a), **then** Stage 7B
 graph-enriched RAG projection and Stage 7C wiki retrieval, both of which
 will consume the SAME Stage 7R resolver to scope eligible revisions
 before traversal/ranking. See `POC_STATUS_AND_EVIDENCE.md` "Benchmark
