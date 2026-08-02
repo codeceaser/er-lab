@@ -1,0 +1,825 @@
+{
+  "contract_version": "cross_document_relationship_benchmark_v1",
+  "description": "Stage 7B.0 -- projection-neutral cross-document relationship holdout. Facts and questions are declared INDEPENDENTLY of any Vector or Graph representation. Ingestion, Vector retrieval, and any future graph-building code must never read `facts[*].expected_supporting_passage`, `questions[*].required_fact_ids`, `questions[*].forbidden_fact_ids`, or `questions[*].expected_relationship_chain` during normal processing -- those are evaluation truth only. The current relationship chain APP-224510 -> Payment Settlement -> O-31 -> C-88 -> P-205 is deliberately distributed one hop per logical document.",
+  "corpus_id": "CROSS-DOC-RELATIONSHIP-001",
+  "logical_documents": {
+    "APP-PORTFOLIO": "Application Portfolio (which application supports which business service)",
+    "SERVICE-CATALOGUE": "Business Service Catalogue (which obligation governs which service)",
+    "OBLIGATION-REGISTER": "Obligation Register (which control satisfies which obligation)",
+    "CONTROL-LIBRARY": "Control Library (which procedure implements which control)",
+    "PROCEDURE-CATALOGUE": "Procedure Catalogue (which procedure is current)",
+    "ADJACENT-DOMAIN": "Adjacent Domain Reference -- an unrelated but lexically similar Payment Reconciliation chain, present only as a distractor"
+  },
+  "fixtures": [
+    {
+      "symbol": "app_rev1",
+      "logical_document_id": "APP-PORTFOLIO",
+      "source_relative_path": "generated/APP_PORTFOLIO_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "historical -- retired application APP-224499"
+    },
+    {
+      "symbol": "app_rev2",
+      "logical_document_id": "APP-PORTFOLIO",
+      "source_relative_path": "generated/APP_PORTFOLIO_rev2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "note": "current -- APP-224510"
+    },
+    {
+      "symbol": "svc_rev1",
+      "logical_document_id": "SERVICE-CATALOGUE",
+      "source_relative_path": "generated/SERVICE_CATALOGUE_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "current -- Payment Settlement governed by O-31"
+    },
+    {
+      "symbol": "obl_rev1",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "source_relative_path": "generated/OBLIGATION_REGISTER_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "historical -- O-31 satisfied by superseded control C-88a"
+    },
+    {
+      "symbol": "obl_rev2",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "source_relative_path": "generated/OBLIGATION_REGISTER_rev2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "note": "current -- O-31 satisfied by C-88"
+    },
+    {
+      "symbol": "ctl_rev1",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "historical -- C-88a implemented through P-204"
+    },
+    {
+      "symbol": "ctl_rev2",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "note": "current -- C-88 implemented through P-205"
+    },
+    {
+      "symbol": "ctl_rev3",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev3.docx",
+      "version_label": null,
+      "revision_number": 3,
+      "note": "draft/proposed -- C-91, registered but never activated"
+    },
+    {
+      "symbol": "prc_rev1",
+      "logical_document_id": "PROCEDURE-CATALOGUE",
+      "source_relative_path": "generated/PROCEDURE_CATALOGUE_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "historical -- P-204 retired"
+    },
+    {
+      "symbol": "prc_rev2",
+      "logical_document_id": "PROCEDURE-CATALOGUE",
+      "source_relative_path": "generated/PROCEDURE_CATALOGUE_rev2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "note": "current -- P-205"
+    },
+    {
+      "symbol": "adj_rev1",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "source_relative_path": "generated/ADJACENT_DOMAIN_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "current -- unrelated Payment Reconciliation chain (distractor only)"
+    }
+  ],
+  "authority_setup": {
+    "description": "Per logical document, replayed through Stage 7R.1's own unmodified contract_runner._run_registry_setup + service. Symbols are globally unique across documents so one shared symbol_to_id map is safe. Every rev1 became effective 2020-01-01; each current successor superseded it effective 2023-01-01; the draft control (ctl_rev3) is registered but never activated (stays draft).",
+    "documents": [
+      {
+        "logical_document_id": "APP-PORTFOLIO",
+        "registry_setup": [
+          {
+            "step_id": "reg_app_rev1",
+            "op": "register",
+            "symbol": "app_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_app_rev1",
+            "op": "activate",
+            "new": "app_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_app_rev2",
+            "op": "register",
+            "symbol": "app_rev2",
+            "expected_is_new": true,
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_app_rev2",
+            "op": "activate",
+            "new": "app_rev2",
+            "old": "app_rev1",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "SERVICE-CATALOGUE",
+        "registry_setup": [
+          {
+            "step_id": "reg_svc_rev1",
+            "op": "register",
+            "symbol": "svc_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_svc_rev1",
+            "op": "activate",
+            "new": "svc_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "OBLIGATION-REGISTER",
+        "registry_setup": [
+          {
+            "step_id": "reg_obl_rev1",
+            "op": "register",
+            "symbol": "obl_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_obl_rev1",
+            "op": "activate",
+            "new": "obl_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_obl_rev2",
+            "op": "register",
+            "symbol": "obl_rev2",
+            "expected_is_new": true,
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_obl_rev2",
+            "op": "activate",
+            "new": "obl_rev2",
+            "old": "obl_rev1",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "CONTROL-LIBRARY",
+        "registry_setup": [
+          {
+            "step_id": "reg_ctl_rev1",
+            "op": "register",
+            "symbol": "ctl_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_ctl_rev1",
+            "op": "activate",
+            "new": "ctl_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_ctl_rev2",
+            "op": "register",
+            "symbol": "ctl_rev2",
+            "expected_is_new": true,
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_ctl_rev2",
+            "op": "activate",
+            "new": "ctl_rev2",
+            "old": "ctl_rev1",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_ctl_rev3",
+            "op": "register",
+            "symbol": "ctl_rev3",
+            "expected_is_new": true,
+            "recorded_at": "2026-05-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "PROCEDURE-CATALOGUE",
+        "registry_setup": [
+          {
+            "step_id": "reg_prc_rev1",
+            "op": "register",
+            "symbol": "prc_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_prc_rev1",
+            "op": "activate",
+            "new": "prc_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_prc_rev2",
+            "op": "register",
+            "symbol": "prc_rev2",
+            "expected_is_new": true,
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_prc_rev2",
+            "op": "activate",
+            "new": "prc_rev2",
+            "old": "prc_rev1",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "ADJACENT-DOMAIN",
+        "registry_setup": [
+          {
+            "step_id": "reg_adj_rev1",
+            "op": "register",
+            "symbol": "adj_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_adj_rev1",
+            "op": "activate",
+            "new": "adj_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          }
+        ]
+      }
+    ]
+  },
+  "facts": [
+    {
+      "fact_id": "F_app_current",
+      "subject": "APP-224510",
+      "predicate": "supports",
+      "object": "Payment Settlement",
+      "supporting_logical_document_id": "APP-PORTFOLIO",
+      "supporting_revision_symbol": "app_rev2",
+      "expected_supporting_passage": "Application APP-224510 supports the Payment Settlement",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_svc",
+      "subject": "Payment Settlement",
+      "predicate": "is_governed_by",
+      "object": "Obligation O-31",
+      "supporting_logical_document_id": "SERVICE-CATALOGUE",
+      "supporting_revision_symbol": "svc_rev1",
+      "expected_supporting_passage": "Payment Settlement business service is governed by Obligation O-31",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_obl_current",
+      "subject": "Obligation O-31",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-88",
+      "supporting_logical_document_id": "OBLIGATION-REGISTER",
+      "supporting_revision_symbol": "obl_rev2",
+      "expected_supporting_passage": "Obligation O-31 is satisfied by Control C-88.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_ctl_current",
+      "subject": "Control C-88",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-205",
+      "supporting_logical_document_id": "CONTROL-LIBRARY",
+      "supporting_revision_symbol": "ctl_rev2",
+      "expected_supporting_passage": "Control C-88 is implemented through Procedure P-205.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_prc_current",
+      "subject": "Procedure P-205",
+      "predicate": "has_status",
+      "object": "current operating procedure",
+      "supporting_logical_document_id": "PROCEDURE-CATALOGUE",
+      "supporting_revision_symbol": "prc_rev2",
+      "expected_supporting_passage": "Procedure P-205 is the current operating procedure.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_app_historical",
+      "subject": "APP-224499",
+      "predicate": "supports",
+      "object": "Payment Settlement",
+      "supporting_logical_document_id": "APP-PORTFOLIO",
+      "supporting_revision_symbol": "app_rev1",
+      "expected_supporting_passage": "Application APP-224499 supports the Payment Settlement",
+      "authority_applicability": "historical",
+      "temporal_classification": "historical",
+      "distractor_status": "retired"
+    },
+    {
+      "fact_id": "F_obl_historical",
+      "subject": "Obligation O-31",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-88a",
+      "supporting_logical_document_id": "OBLIGATION-REGISTER",
+      "supporting_revision_symbol": "obl_rev1",
+      "expected_supporting_passage": "Obligation O-31 is satisfied by Control C-88a.",
+      "authority_applicability": "historical",
+      "temporal_classification": "historical",
+      "distractor_status": "superseded"
+    },
+    {
+      "fact_id": "F_ctl_historical",
+      "subject": "Control C-88a",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-204",
+      "supporting_logical_document_id": "CONTROL-LIBRARY",
+      "supporting_revision_symbol": "ctl_rev1",
+      "expected_supporting_passage": "Control C-88a is implemented through Procedure P-204.",
+      "authority_applicability": "historical",
+      "temporal_classification": "historical",
+      "distractor_status": "superseded"
+    },
+    {
+      "fact_id": "F_prc_historical",
+      "subject": "Procedure P-204",
+      "predicate": "has_status",
+      "object": "retired operating procedure",
+      "supporting_logical_document_id": "PROCEDURE-CATALOGUE",
+      "supporting_revision_symbol": "prc_rev1",
+      "expected_supporting_passage": "Procedure P-204 is a retired operating procedure.",
+      "authority_applicability": "historical",
+      "temporal_classification": "historical",
+      "distractor_status": "retired"
+    },
+    {
+      "fact_id": "F_ctl_draft",
+      "subject": "Control C-91",
+      "predicate": "is_proposed_to_implement",
+      "object": "Procedure P-205",
+      "supporting_logical_document_id": "CONTROL-LIBRARY",
+      "supporting_revision_symbol": "ctl_rev3",
+      "expected_supporting_passage": "Control C-91 is implemented through Procedure P-205.",
+      "authority_applicability": "draft",
+      "temporal_classification": "draft",
+      "distractor_status": "proposed"
+    },
+    {
+      "fact_id": "F_adj_app",
+      "subject": "APP-330012",
+      "predicate": "supports",
+      "object": "Payment Reconciliation",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Application APP-330012 supports the Payment Reconciliation",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    },
+    {
+      "fact_id": "F_adj_svc",
+      "subject": "Payment Reconciliation",
+      "predicate": "is_governed_by",
+      "object": "Obligation O-32",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Payment Reconciliation business service is governed by Obligation O-32",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    },
+    {
+      "fact_id": "F_adj_obl",
+      "subject": "Obligation O-32",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-77",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Obligation O-32 is satisfied by Control C-77.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    },
+    {
+      "fact_id": "F_adj_ctl",
+      "subject": "Control C-77",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-301",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Control C-77 is implemented through Procedure P-301.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    },
+    {
+      "fact_id": "F_adj_prc",
+      "subject": "Procedure P-301",
+      "predicate": "has_status",
+      "object": "current operating procedure for reconciliation",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Procedure P-301 is the current operating procedure for reconciliation.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    }
+  ],
+  "questions": [
+    {
+      "question_id": "Q01_direct_service_of_app",
+      "question_type": "direct_semantic_lookup",
+      "query": "Which business service does application APP-224510 support?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_historical",
+        "F_adj_app"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q02_one_hop_control_of_obligation",
+      "question_type": "one_hop_relationship_lookup",
+      "query": "Which control satisfies Obligation O-31?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_obl_current"
+      ],
+      "required_supporting_document_ids": [
+        "OBLIGATION-REGISTER"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_historical",
+        "F_ctl_draft",
+        "F_adj_obl"
+      ],
+      "expected_relationship_chain": [
+        "F_obl_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q03_two_hop_obligation_of_app",
+      "question_type": "distributed_two_hop_lookup",
+      "query": "Which obligation governs the business service that application APP-224510 supports?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current",
+        "F_svc"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO",
+        "SERVICE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_adj_app",
+        "F_adj_svc"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current",
+        "F_svc"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q04_two_hop_control_of_service",
+      "question_type": "distributed_two_hop_lookup",
+      "query": "Which control satisfies the obligation that governs the Payment Settlement business service?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_svc",
+        "F_obl_current"
+      ],
+      "required_supporting_document_ids": [
+        "SERVICE-CATALOGUE",
+        "OBLIGATION-REGISTER"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_historical",
+        "F_adj_svc",
+        "F_adj_obl"
+      ],
+      "expected_relationship_chain": [
+        "F_svc",
+        "F_obl_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q05_three_hop_procedure_of_obligation",
+      "question_type": "distributed_multi_hop_lookup",
+      "query": "Which currently effective operating procedure implements the control that satisfies Obligation O-31?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "required_supporting_document_ids": [
+        "OBLIGATION-REGISTER",
+        "CONTROL-LIBRARY",
+        "PROCEDURE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical",
+        "F_ctl_draft",
+        "F_adj_obl",
+        "F_adj_ctl",
+        "F_adj_prc"
+      ],
+      "expected_relationship_chain": [
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "top_k": 4
+    },
+    {
+      "question_id": "Q06_four_hop_procedure_of_app",
+      "question_type": "distributed_multi_hop_lookup",
+      "query": "Which operating procedure ultimately supports application APP-224510?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current",
+        "F_svc",
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO",
+        "SERVICE-CATALOGUE",
+        "OBLIGATION-REGISTER",
+        "CONTROL-LIBRARY",
+        "PROCEDURE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_historical",
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical",
+        "F_ctl_draft",
+        "F_adj_app",
+        "F_adj_svc",
+        "F_adj_obl",
+        "F_adj_ctl",
+        "F_adj_prc"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current",
+        "F_svc",
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "top_k": 5
+    },
+    {
+      "question_id": "Q07_consolidation_payment_settlement",
+      "question_type": "relationship_consolidation",
+      "query": "Which current applications, obligations, controls and procedures are connected to the Payment Settlement business service?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current",
+        "F_svc",
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO",
+        "SERVICE-CATALOGUE",
+        "OBLIGATION-REGISTER",
+        "CONTROL-LIBRARY",
+        "PROCEDURE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_historical",
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical",
+        "F_ctl_draft",
+        "F_adj_app",
+        "F_adj_svc",
+        "F_adj_obl",
+        "F_adj_ctl",
+        "F_adj_prc"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current",
+        "F_svc",
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "top_k": 5
+    },
+    {
+      "question_id": "Q08_distractor_resistance_current_control",
+      "question_type": "distractor_resistance",
+      "query": "Which control currently satisfies Obligation O-31, excluding any superseded or proposed controls?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_obl_current"
+      ],
+      "required_supporting_document_ids": [
+        "OBLIGATION-REGISTER"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_historical",
+        "F_ctl_draft",
+        "F_adj_obl"
+      ],
+      "expected_relationship_chain": [
+        "F_obl_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q09_current_authority_app",
+      "question_type": "current_authority_relationship_lookup",
+      "query": "Which application currently supports the Payment Settlement business service?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_historical"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q10_historical_procedure_of_obligation",
+      "question_type": "historical_comparison",
+      "query": "As of 2021, which operating procedure implemented the control that satisfied Obligation O-31?",
+      "query_intent": "as_of",
+      "as_of_date": "2021-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical"
+      ],
+      "required_supporting_document_ids": [
+        "OBLIGATION-REGISTER",
+        "CONTROL-LIBRARY",
+        "PROCEDURE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "expected_relationship_chain": [
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical"
+      ],
+      "top_k": 4
+    },
+    {
+      "question_id": "Q11_historical_app_of_service",
+      "question_type": "historical_comparison",
+      "query": "As of 2021, which application supported the Payment Settlement business service?",
+      "query_intent": "as_of",
+      "as_of_date": "2021-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_historical"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_current"
+      ],
+      "expected_relationship_chain": [
+        "F_app_historical"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q12_draft_proposed_control",
+      "question_type": "draft_lookup",
+      "query": "Which proposed draft control is under consideration in the Control Library?",
+      "query_intent": "draft",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [
+        "ctl_rev3"
+      ],
+      "required_fact_ids": [
+        "F_ctl_draft"
+      ],
+      "required_supporting_document_ids": [
+        "CONTROL-LIBRARY"
+      ],
+      "forbidden_fact_ids": [
+        "F_ctl_current"
+      ],
+      "expected_relationship_chain": [
+        "F_ctl_draft"
+      ],
+      "top_k": 3
+    }
+  ],
+  "fairness_contract": {
+    "description": "Stage 7B.0 item 6 -- frozen conditions under which any FUTURE evidence-backed graph projection must be compared against this Vector baseline. A graph that changes any of these has not been compared fairly.",
+    "conditions": [
+      "same source documents (identical tracked bytes / generation_manifest.json SHA-256 values)",
+      "same canonical chunks (the frozen Stage 4/4.1 chunker over the frozen Stage 5A adapter output -- no re-chunking)",
+      "same Stage 7R authority resolver and the same per-question as_of_date and query_intent",
+      "same question contract (identical question_id set, query text, intents, as_of dates, top-K budgets)",
+      "same required_fact_ids and forbidden_fact_ids per question",
+      "same top-K evidence budget per question",
+      "same provenance requirements on every returned evidence item (logical_document_id, document_revision_id, chunk_id, content_sha256, source_document_sha256, source passage)",
+      "no question-specific precomputed path or answer may be embedded in the projection",
+      "no access to expected_relationship_chain, required_fact_ids, or forbidden_fact_ids during projection construction or retrieval -- only during evaluation",
+      "no bare graph edge is accepted as evidence: every future node and edge must link back to one or more supporting chunk_ids that exist in this same canonical chunk set",
+      "authority filtering must occur before ranking/traversal for the graph side too, using the same resolver -- a graph may not surface a historically/draft-only edge under a current-intent query"
+    ]
+  }
+}

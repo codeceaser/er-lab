@@ -1,0 +1,28 @@
+{
+  "revisions": {
+    "adj_rev1": "generated/ADJACENT_DOMAIN_rev1.docx",
+    "app_rev1": "generated/APP_PORTFOLIO_rev1.docx",
+    "app_rev2": "generated/APP_PORTFOLIO_rev2.docx",
+    "ctl_rev1": "generated/CONTROL_LIBRARY_rev1.docx",
+    "ctl_rev2": "generated/CONTROL_LIBRARY_rev2.docx",
+    "ctl_rev3": "generated/CONTROL_LIBRARY_rev3.docx",
+    "obl_rev1": "generated/OBLIGATION_REGISTER_rev1.docx",
+    "obl_rev2": "generated/OBLIGATION_REGISTER_rev2.docx",
+    "prc_rev1": "generated/PROCEDURE_CATALOGUE_rev1.docx",
+    "prc_rev2": "generated/PROCEDURE_CATALOGUE_rev2.docx",
+    "svc_rev1": "generated/SERVICE_CATALOGUE_rev1.docx"
+  },
+  "source_document_sha256": {
+    "adj_rev1": "19f0adc8e8042ec3b265033fefee51a1be98d4955af08ea96437615ed5315344",
+    "app_rev1": "aa584c4c983661a6962e2e5af8c06499df6f3e40b36b2e67b47bd860d1b419a3",
+    "app_rev2": "69c504e74f62e9418387fcb0c869a18912b8605fdc12c4ada7f55eea9940a887",
+    "ctl_rev1": "8d378619827af6250d3f23347d9d9d255bfef61adc1ef2037539e1e106439c65",
+    "ctl_rev2": "7fb8a0698c64954be7f881c0c3301993a4fdda7e4e60b04971efe050a31bdf02",
+    "ctl_rev3": "041eac0d61ad714f116bf96e8a8748f1cf2d34df676014ef36e7113668ccf349",
+    "obl_rev1": "f448abf11ebfd110cf34e6f1f01ca7d3a93a6e0e6261e0cd79535c568c4c3c8d",
+    "obl_rev2": "4828ed818726684ceabcec55834865ddf809cc2c29adff4b1416bc6d00ddb360",
+    "prc_rev1": "46f354211b3c8af9b9426cb039700917e8912f4e6a7b796f00772865eeb8b898",
+    "prc_rev2": "bb175f1064b36ed4f3bb469c321827eb5836e438e13910cf978c94cb12cc0012",
+    "svc_rev1": "55f7818e3e72f06b2f68ece320353b5a9f6d680b632f5cd097852b9f1c0a4b1c"
+  }
+}
