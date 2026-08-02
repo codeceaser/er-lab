@@ -1,18 +1,24 @@
-"""Stage 7R.2: the declarative benchmark runner.
+"""Stage 7R.2/7R.2a: the declarative benchmark runner.
 
 Reads contracts/revision_search_benchmark_v1.json and:
   1. loads the five real source-document fixtures (fixtures.py, through
-     the frozen Stage 5A adapter + Stage 4/4.1 chunker);
-  2. builds the isolated index ONCE (indexer.py);
+     the frozen Stage 5A adapter + Stage 4/4.1 chunker, verified against
+     generation_manifest.json's recorded SHA-256 values);
+  2. builds the isolated index ONCE (indexer.py), scoped by
+     logical_document_id;
   3. replays the contract's declarative "authority_snapshot" registry
      setup through Stage 7R.1's OWN, unmodified
      `contract_runner._run_registry_setup` (read-only reuse -- never a
      second, independently-drifting registry-setup implementation);
-  4. runs every query scenario through BOTH the authority-aware
-     retriever and an unfiltered comparison search;
+  4. runs every query scenario through the authority-aware retriever
+     (which also runs the unfiltered comparison search internally, from
+     the SAME call -- see retriever.authority_aware_search) and persists
+     the COMPLETE AuthorityAwareSearchResult, never just derived metrics;
   5. runs the authority-switch scenario (E) -- a live activate_revision()
      call between two identical queries -- and proves the index itself
-     never changes.
+     (chunk identity AND the actual stored embedding payload) never
+     changes, and that the resolver's own before/after authority labels
+     match the contract's declared expectations.
 
 Never touches Stage 7A.1's own table/code, Stage 6B's contract, or
 CanonicalDocument/CanonicalChunk.
@@ -30,11 +36,10 @@ from pydantic import BaseModel, ConfigDict
 from ingestion_bench.retrieval_baseline.embeddings import EmbeddingProvider
 from ingestion_bench.revision_authority.contract_runner import _run_registry_setup
 from ingestion_bench.revision_authority.repository import RevisionAuthorityRepository
-from ingestion_bench.revision_authority.resolver import RevisionAuthorityLabel
 from ingestion_bench.revision_authority.service import RevisionAuthorityService
 from ingestion_bench.revision_search_benchmark.fixtures import RevisionFixture, load_all_revision_fixtures
 from ingestion_bench.revision_search_benchmark.indexer import IndexBuildResult, build_index
-from ingestion_bench.revision_search_benchmark.retriever import AuthorityAwareSearchResult, authority_aware_search, unfiltered_search
+from ingestion_bench.revision_search_benchmark.retriever import AuthorityAwareSearchResult, authority_aware_search
 from ingestion_bench.revision_search_benchmark.store import RevisionVectorStore
 
 
@@ -123,19 +128,27 @@ class QueryScenarioResult(BaseModel):
     authority_aware_top_k_symbols: list[str]
     unfiltered_top_k_symbols: list[str]
 
-    ineligible_revision_leakage_at_k: int
-    eligible_revision_precision_at_k: float
+    ineligible_hit_count_at_k: int
+    distinct_ineligible_revision_count_at_k: int
+    eligible_hit_precision_at_k: float
     required_revision_hit_at_k: bool
     expected_value_retrieved: bool
 
-    resolver_latency_seconds: float
-    authority_aware_vector_search_latency_seconds: float
-    unfiltered_vector_search_latency_seconds: float
     total_latency_seconds: float
 
     integrity_error: str | None
     failure_reasons: list[str]
     passed: bool
+
+    # Stage 7R.2a item 2: the COMPLETE AuthorityAwareSearchResult for
+    # this query -- registry_snapshot_hash, eligible_revision_ids,
+    # excluded (+ reason codes), ALL authority_labels, integrity_error(+
+    # code), and every ranked authority-aware AND unfiltered hit with
+    # full provenance. Never discarded after the metrics above are
+    # computed -- this field IS the evidence; the fields above are only
+    # a convenience summary derived from it, never a separate source of
+    # truth.
+    result: AuthorityAwareSearchResult
 
 
 def _symbol_of(id_to_symbol: dict[str, str], document_revision_id: str) -> str:
@@ -151,12 +164,11 @@ def _run_one_query(
     id_to_symbol: dict[str, str],
     symbol_to_id: dict[str, str],
     scenario: dict[str, Any],
-) -> tuple[QueryScenarioResult, AuthorityAwareSearchResult]:
-    total_start_vector = embedding_provider.embed([scenario["query"]])
-    query_vector = total_start_vector.vectors[0]
+) -> QueryScenarioResult:
+    query_vector = embedding_provider.embed([scenario["query"]]).vectors[0]
 
     requested_ids = [symbol_to_id[s] for s in scenario.get("requested_symbols", [])] or None
-    aware = authority_aware_search(
+    result = authority_aware_search(
         service=service,
         store=store,
         logical_document_id=logical_document_id,
@@ -167,18 +179,17 @@ def _run_one_query(
         embedding_model=embedding_provider.model_identity,
         top_k=scenario["top_k"],
     )
-    unfiltered_hits, unfiltered_latency = unfiltered_search(
-        store=store, query_vector=query_vector, embedding_model=embedding_provider.model_identity, top_k=scenario["top_k"]
-    )
 
-    actual_eligible_symbols = sorted(_symbol_of(id_to_symbol, rid) for rid in aware.eligible_revision_ids)
+    actual_eligible_symbols = sorted(_symbol_of(id_to_symbol, rid) for rid in result.eligible_revision_ids)
     expected_eligible_symbols = sorted(scenario["expected_eligible_symbols"])
     forbidden_symbols = set(scenario.get("forbidden_symbols", []))
 
-    aware_top_k_symbols = [_symbol_of(id_to_symbol, h.document_revision_id) for h in aware.hits]
-    unfiltered_top_k_symbols = [_symbol_of(id_to_symbol, h.record.document_revision_id) for h in unfiltered_hits]
+    aware_top_k_symbols = [_symbol_of(id_to_symbol, h.document_revision_id) for h in result.hits]
+    unfiltered_top_k_symbols = [_symbol_of(id_to_symbol, h.document_revision_id) for h in result.unfiltered_hits]
 
-    leakage = sum(1 for s in unfiltered_top_k_symbols if s in forbidden_symbols)
+    ineligible_hits_in_unfiltered = [s for s in unfiltered_top_k_symbols if s in forbidden_symbols]
+    ineligible_hit_count = len(ineligible_hits_in_unfiltered)
+    distinct_ineligible_revision_count = len(set(ineligible_hits_in_unfiltered))
     precision = (
         sum(1 for s in aware_top_k_symbols if s in expected_eligible_symbols) / len(aware_top_k_symbols)
         if aware_top_k_symbols
@@ -190,13 +201,13 @@ def _run_one_query(
     value_found = True
     for symbol, value in expected_values_by_symbol.items():
         found_for_symbol = any(
-            _symbol_of(id_to_symbol, h.document_revision_id) == symbol and value in h.retrieval_text for h in aware.hits
+            _symbol_of(id_to_symbol, h.document_revision_id) == symbol and value in h.retrieval_text for h in result.hits
         )
         value_found = value_found and found_for_symbol
 
     actual_authority_labels = {
         _symbol_of(id_to_symbol, rid): label.derived_state
-        for rid, label in aware.authority_labels.items()
+        for rid, label in result.authority_labels.items()
         if label.derived_state is not None
     }
     expected_authority_labels: dict[str, str] = scenario.get("expected_authority_labels", {})
@@ -213,10 +224,10 @@ def _run_one_query(
         failure_reasons.append(f"expected value(s) {expected_values_by_symbol} not found in authority-aware hits")
     if not labels_match:
         failure_reasons.append(f"authority label mismatch: expected {expected_authority_labels}, got {actual_authority_labels}")
-    if aware.integrity_error is not None:
-        failure_reasons.append(f"unexpected integrity_error: {aware.integrity_error}")
+    if result.integrity_error is not None:
+        failure_reasons.append(f"unexpected integrity_error: {result.integrity_error}")
 
-    result = QueryScenarioResult(
+    return QueryScenarioResult(
         question_id=scenario["question_id"],
         description=scenario["description"],
         query_intent=scenario["query_intent"],
@@ -229,19 +240,21 @@ def _run_one_query(
         actual_authority_labels=actual_authority_labels,
         authority_aware_top_k_symbols=aware_top_k_symbols,
         unfiltered_top_k_symbols=unfiltered_top_k_symbols,
-        ineligible_revision_leakage_at_k=leakage,
-        eligible_revision_precision_at_k=precision,
+        ineligible_hit_count_at_k=ineligible_hit_count,
+        distinct_ineligible_revision_count_at_k=distinct_ineligible_revision_count,
+        eligible_hit_precision_at_k=precision,
         required_revision_hit_at_k=required_hit,
         expected_value_retrieved=value_found,
-        resolver_latency_seconds=aware.resolver_latency_seconds,
-        authority_aware_vector_search_latency_seconds=aware.vector_search_latency_seconds,
-        unfiltered_vector_search_latency_seconds=unfiltered_latency,
-        total_latency_seconds=aware.resolver_latency_seconds + aware.vector_search_latency_seconds + unfiltered_latency,
-        integrity_error=aware.integrity_error,
+        total_latency_seconds=(
+            result.resolver_latency_seconds
+            + result.authority_aware_vector_search_latency_seconds
+            + result.unfiltered_vector_search_latency_seconds
+        ),
+        integrity_error=result.integrity_error,
         failure_reasons=failure_reasons,
         passed=not failure_reasons,
+        result=result,
     )
-    return result, aware
 
 
 # --- authority-switch scenario (E) ------------------------------------------
@@ -256,9 +269,16 @@ class AuthoritySwitchResult(BaseModel):
     before_eligible_symbols: list[str]
     before_top1_symbol: str | None
     before_value_found: bool
+    before_expected_authority_labels: dict[str, str]
+    before_actual_authority_labels: dict[str, str]
+    before_result: AuthorityAwareSearchResult
+
     after_eligible_symbols: list[str]
     after_top1_symbol: str | None
     after_value_found: bool
+    after_expected_authority_labels: dict[str, str]
+    after_actual_authority_labels: dict[str, str]
+    after_result: AuthorityAwareSearchResult
 
     registry_snapshot_hash_before: str
     registry_snapshot_hash_after: str
@@ -267,6 +287,9 @@ class AuthoritySwitchResult(BaseModel):
     index_hash_before: str
     index_hash_after: str
     index_hash_unchanged: bool
+    embedding_payload_sha256_before: str
+    embedding_payload_sha256_after: str
+    embedding_payload_unchanged: bool
     row_count_before: int
     row_count_after: int
     row_count_unchanged: bool
@@ -296,10 +319,11 @@ def _run_authority_switch(
     query_vector = embedding_provider.embed([query_spec["query"]]).vectors[0]
     as_of = date.fromisoformat(query_spec["as_of_date"])
 
-    index_hash_before = store.index_hash(embedding_provider.model_identity)
-    row_count_before = store.record_count(embedding_provider.model_identity)
-    chunk_ids_before = sorted(store.all_chunk_ids(embedding_provider.model_identity))
-    chunk_hashes_before = store.existing_content_hashes(embedding_provider.model_identity)
+    index_hash_before = store.index_hash(logical_document_id, embedding_provider.model_identity)
+    payload_hash_before = store.embedding_payload_sha256(logical_document_id, embedding_provider.model_identity)
+    row_count_before = store.record_count(logical_document_id, embedding_provider.model_identity)
+    chunk_ids_before = sorted(store.all_chunk_ids(logical_document_id, embedding_provider.model_identity))
+    chunk_hashes_before = store.existing_content_hashes(logical_document_id, embedding_provider.model_identity)
 
     before = authority_aware_search(
         service=service, store=store, logical_document_id=logical_document_id, query_intent=query_spec["query_intent"],
@@ -314,6 +338,12 @@ def _run_authority_switch(
     # what matters is that the value is genuinely retrievable within the
     # authority-aware top-K, which top_k is sized to guarantee.
     before_value_found = any(switch["before_expected_value"] in h.retrieval_text for h in before.hits)
+    before_expected_labels: dict[str, str] = switch.get("before_expected_authority_labels", {})
+    before_actual_labels = {
+        _symbol_of(id_to_symbol, rid): label.derived_state
+        for rid, label in before.authority_labels.items()
+        if label.derived_state is not None
+    }
 
     # THE activation itself -- a pure Stage 7R.1 registry write. No
     # fixture is re-loaded, no chunk() call happens, no embedding
@@ -328,10 +358,11 @@ def _run_authority_switch(
     )
     embedded_during_switch = _EmbeddingCallCounter.calls - embed_calls_before
 
-    index_hash_after = store.index_hash(embedding_provider.model_identity)
-    row_count_after = store.record_count(embedding_provider.model_identity)
-    chunk_ids_after = sorted(store.all_chunk_ids(embedding_provider.model_identity))
-    chunk_hashes_after = store.existing_content_hashes(embedding_provider.model_identity)
+    index_hash_after = store.index_hash(logical_document_id, embedding_provider.model_identity)
+    payload_hash_after = store.embedding_payload_sha256(logical_document_id, embedding_provider.model_identity)
+    row_count_after = store.record_count(logical_document_id, embedding_provider.model_identity)
+    chunk_ids_after = sorted(store.all_chunk_ids(logical_document_id, embedding_provider.model_identity))
+    chunk_hashes_after = store.existing_content_hashes(logical_document_id, embedding_provider.model_identity)
 
     after = authority_aware_search(
         service=service, store=store, logical_document_id=logical_document_id, query_intent=query_spec["query_intent"],
@@ -341,12 +372,21 @@ def _run_authority_switch(
     after_symbols = sorted(_symbol_of(id_to_symbol, rid) for rid in after.eligible_revision_ids)
     after_top1 = _symbol_of(id_to_symbol, after.hits[0].document_revision_id) if after.hits else None
     after_value_found = any(switch["after_expected_value"] in h.retrieval_text for h in after.hits)
+    after_expected_labels: dict[str, str] = switch.get("after_expected_authority_labels", {})
+    after_actual_labels = {
+        _symbol_of(id_to_symbol, rid): label.derived_state
+        for rid, label in after.authority_labels.items()
+        if label.derived_state is not None
+    }
 
     reg_hash_changed = before.registry_snapshot_hash != after.registry_snapshot_hash
     index_unchanged = index_hash_before == index_hash_after
+    payload_unchanged = payload_hash_before == payload_hash_after
     rows_unchanged = row_count_before == row_count_after
     chunk_ids_unchanged = chunk_ids_before == chunk_ids_after
     hashes_unchanged = chunk_hashes_before == chunk_hashes_after
+    before_labels_match = all(before_actual_labels.get(sym) == state for sym, state in before_expected_labels.items())
+    after_labels_match = all(after_actual_labels.get(sym) == state for sym, state in after_expected_labels.items())
 
     failure_reasons: list[str] = []
     if before_symbols != sorted(switch["before_expected_eligible_symbols"]):
@@ -354,13 +394,19 @@ def _run_authority_switch(
     if after_symbols != sorted(switch["after_expected_eligible_symbols"]):
         failure_reasons.append(f"after: expected eligible {switch['after_expected_eligible_symbols']}, got {after_symbols}")
     if not before_value_found:
-        failure_reasons.append("before: expected value not found in top-1 hit")
+        failure_reasons.append("before: expected value not found in top-K hits")
     if not after_value_found:
-        failure_reasons.append("after: expected value not found in top-1 hit")
+        failure_reasons.append("after: expected value not found in top-K hits")
+    if not before_labels_match:
+        failure_reasons.append(f"before: authority label mismatch: expected {before_expected_labels}, got {before_actual_labels}")
+    if not after_labels_match:
+        failure_reasons.append(f"after: authority label mismatch: expected {after_expected_labels}, got {after_actual_labels}")
     if not reg_hash_changed:
         failure_reasons.append("registry_snapshot_hash did not change across the authority switch")
     if not index_unchanged:
         failure_reasons.append(f"index_hash changed: {index_hash_before} -> {index_hash_after}")
+    if not payload_unchanged:
+        failure_reasons.append(f"embedding_payload_sha256 changed: {payload_hash_before} -> {payload_hash_after}")
     if not rows_unchanged:
         failure_reasons.append(f"row_count changed: {row_count_before} -> {row_count_after}")
     if not chunk_ids_unchanged:
@@ -376,15 +422,24 @@ def _run_authority_switch(
         before_eligible_symbols=before_symbols,
         before_top1_symbol=before_top1,
         before_value_found=before_value_found,
+        before_expected_authority_labels=before_expected_labels,
+        before_actual_authority_labels=before_actual_labels,
+        before_result=before,
         after_eligible_symbols=after_symbols,
         after_top1_symbol=after_top1,
         after_value_found=after_value_found,
+        after_expected_authority_labels=after_expected_labels,
+        after_actual_authority_labels=after_actual_labels,
+        after_result=after,
         registry_snapshot_hash_before=before.registry_snapshot_hash,
         registry_snapshot_hash_after=after.registry_snapshot_hash,
         registry_snapshot_hash_changed=reg_hash_changed,
         index_hash_before=index_hash_before,
         index_hash_after=index_hash_after,
         index_hash_unchanged=index_unchanged,
+        embedding_payload_sha256_before=payload_hash_before,
+        embedding_payload_sha256_after=payload_hash_after,
+        embedding_payload_unchanged=payload_unchanged,
         row_count_before=row_count_before,
         row_count_after=row_count_after,
         row_count_unchanged=rows_unchanged,
@@ -482,16 +537,16 @@ def run_benchmark(
 
     registry_before = registry_snapshot(repository, logical_document_id, id_to_symbol)
 
-    index_result = build_index(revision_fixtures, counting_provider, store)
+    index_result = build_index(logical_document_id, revision_fixtures, counting_provider, store)
 
-    query_results: list[QueryScenarioResult] = []
-    for scenario in contract["queries"]:
-        result, _aware = _run_one_query(
+    query_results: list[QueryScenarioResult] = [
+        _run_one_query(
             service=service, store=store, embedding_provider=counting_provider,
             logical_document_id=logical_document_id, id_to_symbol=id_to_symbol, symbol_to_id=symbol_to_id,
             scenario=scenario,
         )
-        query_results.append(result)
+        for scenario in contract["queries"]
+    ]
 
     switch_result = _run_authority_switch(
         service=service, store=store, embedding_provider=counting_provider, logical_document_id=logical_document_id,

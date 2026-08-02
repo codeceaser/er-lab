@@ -93,13 +93,13 @@ def test_no_ineligible_revision_leaks_into_any_authority_aware_result(benchmark_
 
 def test_filtering_happens_before_ranking_and_limit(benchmark_result):
     """Every authority-aware hit, across every scenario, belongs ONLY to
-    an eligible revision -- eligible_revision_precision_at_k == 1.0
-    always, proving the restriction happened before the LIMIT, not as a
-    post-hoc filter that could have truncated an eligible hit in favor of
-    a higher-ranked ineligible one."""
+    an eligible revision -- eligible_hit_precision_at_k == 1.0 always,
+    proving the restriction happened before the LIMIT, not as a post-hoc
+    filter that could have truncated an eligible hit in favor of a
+    higher-ranked ineligible one."""
     result, *_ = benchmark_result
     for scenario in result.query_scenarios:
-        assert scenario.eligible_revision_precision_at_k == 1.0, scenario.question_id
+        assert scenario.eligible_hit_precision_at_k == 1.0, scenario.question_id
 
 
 def test_authority_switch_returns_v5_without_reindexing(benchmark_result):
@@ -118,6 +118,60 @@ def test_index_hash_row_count_embeddings_and_chunk_hashes_unchanged_across_switc
     assert switch.chunk_ids_before == switch.chunk_ids_after
     assert switch.chunk_hashes_unchanged is True
     assert switch.embedded_count_during_switch == 0
+
+
+def test_embedding_payload_sha256_unchanged_across_switch(benchmark_result):
+    """Business nuance (Stage 7R.2a item 3): unlike index_hash (chunk
+    identity only), embedding_payload_sha256 covers the ACTUAL stored
+    vector -- proving the stored embedding itself, not just chunk
+    identity, survives the authority switch untouched."""
+    result, *_ = benchmark_result
+    switch = result.authority_switch
+    assert switch.embedding_payload_sha256_before == switch.embedding_payload_sha256_after
+    assert switch.embedding_payload_unchanged is True
+
+
+def test_switch_authority_labels_match_contract_expectations(benchmark_result):
+    """Business nuance (Stage 7R.2a item 4): the contract's declared
+    before/after_expected_authority_labels must match the resolver's
+    ACTUAL labels exactly -- v3 must read 'effective' before the switch
+    and 'superseded' after; v5 must read 'draft' before and 'effective'
+    after."""
+    result, *_ = benchmark_result
+    switch = result.authority_switch
+    assert switch.before_actual_authority_labels["v3"] == "effective"
+    assert switch.before_actual_authority_labels["v5"] == "draft"
+    assert switch.after_actual_authority_labels["v3"] == "superseded"
+    assert switch.after_actual_authority_labels["v5"] == "effective"
+    for symbol, expected_state in switch.before_expected_authority_labels.items():
+        assert switch.before_actual_authority_labels.get(symbol) == expected_state
+    for symbol, expected_state in switch.after_expected_authority_labels.items():
+        assert switch.after_actual_authority_labels.get(symbol) == expected_state
+
+
+def test_query_artifact_persists_complete_authority_aware_search_result(benchmark_result):
+    """Business nuance (Stage 7R.2a item 2): AuthorityAwareSearchResult
+    is never discarded after metric calculation -- the full result
+    (registry_snapshot_hash, eligible_revision_ids, excluded, ALL
+    authority_labels, integrity_error(+code), ranked authority-aware
+    hits, ranked unfiltered hits) is available on every QueryScenarioResult,
+    and every hit carries complete provenance."""
+    result, *_ = benchmark_result
+    for scenario in result.query_scenarios:
+        r = scenario.result
+        assert r.registry_snapshot_hash
+        assert r.eligible_revision_ids == scenario.result.eligible_revision_ids
+        assert isinstance(r.authority_labels, dict) and r.authority_labels
+        assert len(r.unfiltered_hits) > 0
+        for hit in r.hits + r.unfiltered_hits:
+            assert hit.source_relative_path
+            assert len(hit.source_document_sha256) == 64
+            assert len(hit.content_sha256) == 64
+            assert hit.chunk_type
+            assert isinstance(hit.unit_indices, list)
+            assert isinstance(hit.heading_path, list)
+            assert isinstance(hit.source_element_ids, list)
+            assert isinstance(hit.source_refs, list) and len(hit.source_refs) > 0
 
 
 def test_registry_snapshot_hash_changes_across_switch(benchmark_result):
@@ -143,6 +197,55 @@ def test_source_provenance_remains_complete(benchmark_result):
 def test_all_scenarios_and_switch_pass(benchmark_result):
     result, *_ = benchmark_result
     assert result.all_passed is True
+
+
+def test_v4_source_carries_no_authority_leakage(benchmark_result):
+    """Business nuance (Stage 7R.2a item 1): no source document -- v4
+    included -- may carry any draft/effective/superseded/proposed
+    authority signal of its own. v4's 'draft' label in C_draft must come
+    ONLY from the resolver, never from document text. Failure this
+    guards against: a benchmark that only 'passes' because the source
+    text itself gave away the answer, which would prove nothing about
+    the resolver. Affects: the whole benchmark's validity."""
+    result, *_ = benchmark_result
+    forbidden_strings = ("proposed", "pending governance", "not yet in effect", "status:")
+    for scenario in result.query_scenarios:
+        for hit in scenario.result.hits + scenario.result.unfiltered_hits:
+            lowered = hit.retrieval_text.lower()
+            for forbidden in forbidden_strings:
+                assert forbidden not in lowered, f"{hit.chunk_id} retrieval_text leaks authority signal {forbidden!r}: {hit.retrieval_text!r}"
+
+
+def test_fixture_integrity_error_when_tracked_file_diverges_from_manifest(tmp_path, monkeypatch):
+    """Business nuance (Stage 7R.2a item 7): if a tracked DOCX file's
+    on-disk bytes ever diverge from generation_manifest.json's recorded
+    SHA-256 (a bad merge, a manual edit), loading that fixture must fail
+    loudly, never silently proceed with different content than the
+    contract expects."""
+    import json
+    import shutil
+
+    from ingestion_bench.adapters.docling_standard import DoclingStandardAdapter
+    from ingestion_bench.revision_search_benchmark import config
+    from ingestion_bench.revision_search_benchmark.fixtures import FixtureIntegrityError, load_revision_fixture
+
+    fake_fixtures_root = tmp_path / "revision_search"
+    (fake_fixtures_root / "generated").mkdir(parents=True)
+    real_docx = config.GENERATED_FIXTURES_DIR / "POLICY_RETENTION_v1.docx"
+    shutil.copy(real_docx, fake_fixtures_root / "generated" / "POLICY_RETENTION_v1.docx")
+    (fake_fixtures_root / "generation_manifest.json").write_text(
+        json.dumps({"source_document_sha256": {"v1": "0" * 64}}), encoding="utf-8"
+    )
+    monkeypatch.setattr(config, "FIXTURES_ROOT", fake_fixtures_root)
+    import ingestion_bench.revision_search_benchmark.fixtures as fixtures_module
+
+    monkeypatch.setattr(fixtures_module, "_GENERATION_MANIFEST_PATH", fake_fixtures_root / "generation_manifest.json")
+
+    with pytest.raises(FixtureIntegrityError, match="does not match"):
+        load_revision_fixture(
+            symbol="v1", source_relative_path="generated/POLICY_RETENTION_v1.docx", version_label=None,
+            revision_number=1, adapter=DoclingStandardAdapter(),
+        )
 
 
 # --- isolation -----------------------------------------------------------

@@ -5,5 +5,12 @@
     "v3": "generated/POLICY_RETENTION_v3.docx",
     "v4": "generated/POLICY_RETENTION_v4.docx",
     "v5": "generated/POLICY_RETENTION_v5.docx"
+  },
+  "source_document_sha256": {
+    "v1": "ad07edda961b23391ae3358fd382cef81f0091dcaa17eafc3af979ad743b2adf",
+    "v2": "cb8962d0f37323c690fbc1279af1d9075598dd4dbbebb16066c29a036465ce30",
+    "v3": "a41da20acee3878bfdb4f8018efe3e55843ce26988a4db517344657756ad98ef",
+    "v4": "8b29928081c63934730487c6e71bef955414af5a161293489142ab480e4b2c7c",
+    "v5": "f2d23ac23db9c4ffb609cad9adbbfd131a92f7a5c662978fde95c48daf8eadfb"
   }
 }

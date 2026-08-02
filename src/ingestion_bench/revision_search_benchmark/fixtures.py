@@ -1,4 +1,4 @@
-"""Stage 7R.2: loads the five POLICY-RETENTION-001 source documents
+"""Stage 7R.2/7R.2a: loads the five POLICY-RETENTION-001 source documents
 through the FROZEN Stage 5A adapter (DoclingStandardAdapter) and the
 FROZEN Stage 4/4.1 chunker (chunk_document) -- read-only reuse only,
 never a reimplementation, never a modification of either.
@@ -6,10 +6,21 @@ never a reimplementation, never a modification of either.
 Authority facts (draft/effective/superseded/...) are NEVER attached to
 CanonicalChunk here or anywhere else -- those labels come exclusively
 from Stage 7R.1's registry/resolver at query time (see retriever.py).
+
+Stage 7R.2a item 7: the five generated DOCX files are tracked in git (a
+clean checkout never depends on running generate_fixtures.py), but this
+module still re-verifies every file's actual on-disk bytes against the
+SHA-256 values recorded in fixtures/revision_search/generation_manifest.json
+before ever handing it to the adapter -- a tracked file that ever
+silently diverged from the generator (a bad merge, a manual edit) fails
+loudly here instead of silently producing a different
+source_document_sha256/document_revision_id than the contract expects.
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -36,6 +47,36 @@ class FixtureConversionError(RuntimeError):
     fixture -- never silently skipped."""
 
 
+class FixtureIntegrityError(RuntimeError):
+    """Raised when a tracked source fixture's actual on-disk bytes do not
+    match the SHA-256 recorded in generation_manifest.json at the time it
+    was generated -- never silently proceeds with divergent content."""
+
+
+_GENERATION_MANIFEST_PATH = config.FIXTURES_ROOT / "generation_manifest.json"
+
+
+def _expected_source_sha256() -> dict[str, str]:
+    manifest = json.loads(_GENERATION_MANIFEST_PATH.read_text(encoding="utf-8"))
+    return manifest["source_document_sha256"]
+
+
+def _verify_fixture_bytes(symbol: str, source_path: Path) -> None:
+    expected = _expected_source_sha256().get(symbol)
+    if expected is None:
+        raise FixtureIntegrityError(
+            f"generation_manifest.json has no recorded source_document_sha256 for symbol={symbol!r} -- "
+            "run fixtures/revision_search/generate_fixtures.py"
+        )
+    actual = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    if actual != expected:
+        raise FixtureIntegrityError(
+            f"symbol={symbol!r} ({source_path}): on-disk SHA-256 {actual!r} does not match "
+            f"generation_manifest.json's recorded {expected!r} -- the tracked fixture has diverged from its "
+            "generator; re-run fixtures/revision_search/generate_fixtures.py and review the diff before trusting it"
+        )
+
+
 def load_revision_fixture(
     *,
     symbol: str,
@@ -45,6 +86,7 @@ def load_revision_fixture(
     adapter: DoclingStandardAdapter,
 ) -> RevisionFixture:
     source_path = config.FIXTURES_ROOT / source_relative_path
+    _verify_fixture_bytes(symbol, source_path)
     result = adapter.convert(source_path, source_root=config.FIXTURES_ROOT)
     if result.conversion_status == "failed" or result.canonical_document is None:
         raise FixtureConversionError(f"conversion failed for symbol={symbol!r} ({source_relative_path}): {result.errors}")

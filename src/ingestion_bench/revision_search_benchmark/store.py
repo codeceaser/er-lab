@@ -1,4 +1,4 @@
-"""Stage 7R.2: the revision-search vector-record model and store
+"""Stage 7R.2/7R.2a: the revision-search vector-record model and store
 contract -- an ISOLATED index/table, never Stage 7A.1's own frozen
 `ingestion_bench_stage7a_vectors` table or code (see
 retrieval_baseline/vector_store.py, read-only reference only, never
@@ -11,6 +11,12 @@ candidate list before sort/slice for the in-memory reference store) --
 never "fetch top-K unfiltered, then discard ineligible hits after the
 fact." An empty `eligible_revision_ids` always yields zero hits, never
 falls back to "search everything."
+
+Stage 7R.2a item 6: every read/write is scoped by `logical_document_id`
+explicitly (not just embedding_model) -- this benchmark currently indexes
+exactly one logical document, but the contract is written as if it did
+not, so a second logical document could never silently cross-contaminate
+results if one were ever added.
 """
 
 from __future__ import annotations
@@ -35,7 +41,7 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
 
 
 class RevisionVectorRecord(BaseModel):
-    """One indexed chunk of one revision of POLICY-RETENTION-001. Every
+    """One indexed chunk of one revision of one logical document. Every
     field a provenance-rich authority-aware result must expose is carried
     here, copied verbatim from the source CanonicalChunk / its
     DocumentRevisionContext lineage fields -- never re-derived, never
@@ -51,13 +57,16 @@ class RevisionVectorRecord(BaseModel):
     version_label: str | None = None
     revision_number: int | None = None
     source_document_sha256: str
+    source_relative_path: str
 
     chunk_id: str
     content_sha256: str
     retrieval_text: str
     chunk_type: str
+    unit_indices: list[int] = Field(default_factory=list)
     heading_path: list[str] = Field(default_factory=list)
     source_element_ids: list[str] = Field(default_factory=list)
+    source_refs: list[dict] = Field(default_factory=list)
 
     embedding: list[float]
 
@@ -82,11 +91,33 @@ def compute_index_hash(records: list[tuple[str, str]]) -> str:
     return hashlib.sha256(blob).hexdigest()
 
 
+def _vector_literal_for_hash(embedding: list[float]) -> str:
+    """The SAME fixed-precision textual form used for the pgvector
+    CAST(... AS vector) literal (see pgvector_store.py's
+    _to_vector_literal) -- reused here so embedding_payload_sha256 hashes
+    the STORED representation (what Postgres actually persists and
+    returns), not raw Python floats, which would make the in-memory and
+    Postgres stores disagree over floating-point formatting alone."""
+    return "[" + ",".join(f"{value:.8f}" for value in embedding) + "]"
+
+
+def compute_embedding_payload_hash(rows: list[tuple[str, str, str, str]]) -> str:
+    """Stage 7R.2a item 3: rows are (chunk_id, content_sha256,
+    retrieval_text_sha256, stored_vector_literal) tuples for ONE
+    (logical_document_id, embedding_model) scope -- proves the ACTUAL
+    persisted embedding payload (not just chunk identity) is byte-for-
+    byte unchanged across an authority switch. Shared definition so
+    every store implementation means the same thing by it."""
+    payload = sorted(rows)
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
+
+
 class RevisionVectorStore(Protocol):
-    def existing_content_hashes(self, embedding_model: str) -> dict[str, str]:
+    def existing_content_hashes(self, logical_document_id: str, embedding_model: str) -> dict[str, str]:
         """chunk_id -> content_sha256 for every record already stored
-        under this embedding_model -- lets the indexer skip re-embedding
-        unchanged chunks entirely."""
+        under (logical_document_id, embedding_model) -- lets the indexer
+        skip re-embedding unchanged chunks entirely."""
         ...
 
     def upsert(self, records: list[RevisionVectorRecord]) -> UpsertResult:
@@ -95,26 +126,43 @@ class RevisionVectorStore(Protocol):
         ...
 
     def search_eligible(
-        self, *, embedding_model: str, query_vector: list[float], eligible_revision_ids: list[str], top_k: int
+        self,
+        *,
+        logical_document_id: str,
+        embedding_model: str,
+        query_vector: list[float],
+        eligible_revision_ids: list[str],
+        top_k: int,
     ) -> list[SearchHit]:
         """THE authority-aware search primitive: candidates are
-        restricted to `eligible_revision_ids` BEFORE ranking/limiting,
-        never after. An empty eligible_revision_ids list always returns
-        []. Ranked by similarity descending; ties broken by chunk_id
-        ascending, for deterministic, reproducible results."""
+        restricted to (logical_document_id, eligible_revision_ids) BEFORE
+        ranking/limiting, never after. An empty eligible_revision_ids
+        list always returns []. Ranked by similarity descending; ties
+        broken by chunk_id ascending, for deterministic, reproducible
+        results."""
         ...
 
-    def search_unfiltered(self, *, embedding_model: str, query_vector: list[float], top_k: int) -> list[SearchHit]:
+    def search_unfiltered(
+        self, *, logical_document_id: str, embedding_model: str, query_vector: list[float], top_k: int
+    ) -> list[SearchHit]:
         """No revision restriction at all -- used ONLY for the item 5
         unfiltered-vs-authority-aware comparison, never for an actual
         authority-aware result."""
         ...
 
-    def record_count(self, embedding_model: str) -> int: ...
+    def record_count(self, logical_document_id: str, embedding_model: str) -> int: ...
 
-    def all_chunk_ids(self, embedding_model: str) -> set[str]: ...
+    def all_chunk_ids(self, logical_document_id: str, embedding_model: str) -> set[str]: ...
 
-    def index_hash(self, embedding_model: str) -> str: ...
+    def index_hash(self, logical_document_id: str, embedding_model: str) -> str: ...
+
+    def embedding_payload_sha256(self, logical_document_id: str, embedding_model: str) -> str:
+        """Stage 7R.2a item 3: hashes the ordered ACTUAL persisted
+        payload (chunk_id, content_sha256, SHA-256 of retrieval_text, and
+        the stored vector representation) for every record in scope --
+        unlike index_hash (chunk identity only), this proves the stored
+        EMBEDDING itself never silently changed."""
+        ...
 
 
 class InMemoryRevisionVectorStore:
@@ -125,44 +173,59 @@ class InMemoryRevisionVectorStore:
     def __init__(self) -> None:
         self._records: dict[tuple[str, str], RevisionVectorRecord] = {}
 
-    def existing_content_hashes(self, embedding_model: str) -> dict[str, str]:
-        return {
-            chunk_id: record.content_sha256
-            for (model, chunk_id), record in self._records.items()
-            if model == embedding_model
-        }
+    def _candidates(self, logical_document_id: str, embedding_model: str) -> list[RevisionVectorRecord]:
+        return [
+            record
+            for (model, _chunk_id), record in self._records.items()
+            if model == embedding_model and record.logical_document_id == logical_document_id
+        ]
+
+    def existing_content_hashes(self, logical_document_id: str, embedding_model: str) -> dict[str, str]:
+        return {r.chunk_id: r.content_sha256 for r in self._candidates(logical_document_id, embedding_model)}
 
     def upsert(self, records: list[RevisionVectorRecord]) -> UpsertResult:
         for record in records:
             self._records[(record.embedding_model, record.chunk_id)] = record
         return UpsertResult(written_count=len(records))
 
-    def _candidates(self, embedding_model: str) -> list[RevisionVectorRecord]:
-        return [record for (model, _chunk_id), record in self._records.items() if model == embedding_model]
-
     def search_eligible(
-        self, *, embedding_model: str, query_vector: list[float], eligible_revision_ids: list[str], top_k: int
+        self,
+        *,
+        logical_document_id: str,
+        embedding_model: str,
+        query_vector: list[float],
+        eligible_revision_ids: list[str],
+        top_k: int,
     ) -> list[SearchHit]:
         if not eligible_revision_ids:
             return []
         eligible = set(eligible_revision_ids)
         # Restriction happens HERE, before scoring/sorting/slicing --
         # never "score everything, then drop ineligible hits."
-        pool = [r for r in self._candidates(embedding_model) if r.document_revision_id in eligible]
+        pool = [r for r in self._candidates(logical_document_id, embedding_model) if r.document_revision_id in eligible]
         scored = [(r, cosine_similarity(query_vector, r.embedding)) for r in pool]
         scored.sort(key=lambda pair: (-pair[1], pair[0].chunk_id))
         return [SearchHit(record=r, score=s) for r, s in scored[:top_k]]
 
-    def search_unfiltered(self, *, embedding_model: str, query_vector: list[float], top_k: int) -> list[SearchHit]:
-        scored = [(r, cosine_similarity(query_vector, r.embedding)) for r in self._candidates(embedding_model)]
+    def search_unfiltered(
+        self, *, logical_document_id: str, embedding_model: str, query_vector: list[float], top_k: int
+    ) -> list[SearchHit]:
+        scored = [(r, cosine_similarity(query_vector, r.embedding)) for r in self._candidates(logical_document_id, embedding_model)]
         scored.sort(key=lambda pair: (-pair[1], pair[0].chunk_id))
         return [SearchHit(record=r, score=s) for r, s in scored[:top_k]]
 
-    def record_count(self, embedding_model: str) -> int:
-        return len(self._candidates(embedding_model))
+    def record_count(self, logical_document_id: str, embedding_model: str) -> int:
+        return len(self._candidates(logical_document_id, embedding_model))
 
-    def all_chunk_ids(self, embedding_model: str) -> set[str]:
-        return {r.chunk_id for r in self._candidates(embedding_model)}
+    def all_chunk_ids(self, logical_document_id: str, embedding_model: str) -> set[str]:
+        return {r.chunk_id for r in self._candidates(logical_document_id, embedding_model)}
 
-    def index_hash(self, embedding_model: str) -> str:
-        return compute_index_hash([(r.chunk_id, r.content_sha256) for r in self._candidates(embedding_model)])
+    def index_hash(self, logical_document_id: str, embedding_model: str) -> str:
+        return compute_index_hash([(r.chunk_id, r.content_sha256) for r in self._candidates(logical_document_id, embedding_model)])
+
+    def embedding_payload_sha256(self, logical_document_id: str, embedding_model: str) -> str:
+        rows = [
+            (r.chunk_id, r.content_sha256, hashlib.sha256(r.retrieval_text.encode("utf-8")).hexdigest(), _vector_literal_for_hash(r.embedding))
+            for r in self._candidates(logical_document_id, embedding_model)
+        ]
+        return compute_embedding_payload_hash(rows)

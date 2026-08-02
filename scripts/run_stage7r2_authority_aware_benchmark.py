@@ -37,25 +37,26 @@ from ingestion_bench.revision_search_benchmark.pgvector_store import PgVectorRev
 from ingestion_bench.revision_search_benchmark.report import render_results_json, render_scorecard_markdown  # noqa: E402
 
 
-def _cleanup_prior_run(repository: PostgresRevisionAuthorityRepository, vector_store: PgVectorRevisionStore, embedding_model: str) -> None:
+def _cleanup_prior_run(repository: PostgresRevisionAuthorityRepository, vector_store: PgVectorRevisionStore) -> None:
     """Makes this script safely re-runnable against the SAME real
     database: deletes any prior POLICY-RETENTION-001 registry/period/
     event rows (Stage 7R.1's own tables, scoped by logical_document_id --
-    never any OTHER logical document) and any prior rows in this
-    benchmark's OWN isolated vector table (scoped by embedding_model --
-    never Stage 7A.1's table, which this module never even imports)."""
+    never any OTHER logical document), and DROPS this benchmark's OWN
+    isolated vector table outright (never Stage 7A.1's table, which this
+    module never even imports) -- a plain DELETE is not enough once the
+    table's own COLUMNS have evolved (Stage 7R.2a added
+    source_relative_path/unit_indices/source_refs): a prior run's table
+    would otherwise keep its OLD schema forever, since CREATE TABLE IF
+    NOT EXISTS is a no-op against an existing table. This benchmark's
+    table holds no data any other consumer depends on, so a clean drop
+    +recreate is the correct, simplest reproducibility guarantee."""
     engine = repository._ensure_ready()
     with engine.connect() as conn:
         conn.execute(text(f"DELETE FROM {repository._period_table} WHERE logical_document_id = :d"), {"d": config.LOGICAL_DOCUMENT_ID})
         conn.execute(text(f"DELETE FROM {repository._registry_table} WHERE logical_document_id = :d"), {"d": config.LOGICAL_DOCUMENT_ID})
         conn.execute(text(f"DELETE FROM {repository._event_table} WHERE logical_document_id = :d"), {"d": config.LOGICAL_DOCUMENT_ID})
         conn.commit()
-    vector_store._ensure_ready()
-    with vector_store._engine.connect() as conn:  # type: ignore[union-attr]
-        conn.execute(
-            text(f"DELETE FROM {vector_store._table_name} WHERE logical_document_id = :d AND embedding_model = :em"),
-            {"d": config.LOGICAL_DOCUMENT_ID, "em": embedding_model},
-        )
+        conn.execute(text(f"DROP TABLE IF EXISTS {vector_store._table_name} CASCADE"))
         conn.commit()
 
 
@@ -68,7 +69,7 @@ def main() -> None:
     print(f"Vector store: pgvector, table={vector_store._table_name!r} (isolated from Stage 7A.1's own table)")
     print(f"Revision authority repository: Postgres, tables={repository._registry_table!r}/{repository._period_table!r}/{repository._event_table!r}")
 
-    _cleanup_prior_run(repository, vector_store, embedding_provider.model_identity)
+    _cleanup_prior_run(repository, vector_store)
 
     result, id_to_symbol, registry_before, registry_after = run_benchmark(
         config.REVISION_SEARCH_BENCHMARK_CONTRACT_PATH, repository, embedding_provider, vector_store
@@ -102,8 +103,8 @@ def main() -> None:
     print(f"Query scenarios: {result.query_scenarios_passed}/{result.query_scenarios_total} passed")
     for q in result.query_scenarios:
         print(f"  {q.question_id}: {'PASS' if q.passed else 'FAIL ' + str(q.failure_reasons)} "
-              f"(leakage@K={q.ineligible_revision_leakage_at_k}, precision@K={q.eligible_revision_precision_at_k:.2f}, "
-              f"hit@K={q.required_revision_hit_at_k})")
+              f"(ineligible_hits@K={q.ineligible_hit_count_at_k}, distinct_ineligible@K={q.distinct_ineligible_revision_count_at_k}, "
+              f"precision@K={q.eligible_hit_precision_at_k:.2f}, hit@K={q.required_revision_hit_at_k})")
     print(f"Authority switch: {'PASS' if result.authority_switch.passed else 'FAIL ' + str(result.authority_switch.failure_reasons)}")
     print(f"all_passed: {result.all_passed}")
     print(f"\nScorecard: {config.REPORTS_ROOT / 'stage7r2_authority_aware_vector_scorecard.md'}")

@@ -1,23 +1,31 @@
-"""Stage 7R.2: deterministic source-document fixtures for the
+"""Stage 7R.2/7R.2a: deterministic source-document fixtures for the
 POLICY-RETENTION-001 revision-search benchmark.
 
 Five REAL DOCX documents, one format only (this benchmark tests revision
-authority, not format parity -- see Stage 6B/7A.1 for that). All five are
-near-identical (same title, same section structure, same wording) except
-the retention-period sentence itself, so that ordinary unfiltered vector
-retrieval may legitimately rank an ineligible revision highly -- exactly
-the condition Stage 7R.2 exists to prove authority-aware filtering
-handles correctly.
+authority, not format parity -- see Stage 6B/7A.1 for that). All five
+have IDENTICAL structure and wording EXCEPT the retention-period value
+itself -- Stage 7R.2a item 1: no source document may carry any
+draft/effective/superseded/proposed authority signal of its own. Every
+authority fact (draft, effective, superseded, ...) comes exclusively
+from Stage 7R.1's registry/resolver at query time, never from document
+text.
 
 No LLM calls, no network access, no randomness -- fixed timestamps, fixed
 content, so re-running this script byte-for-byte reproduces the same five
-files (and therefore the same source_document_sha256 for each).
+files (and therefore the same source_document_sha256 for each). The
+generated DOCX files are committed to git (Stage 7R.2a item 7) so a clean
+checkout never depends on running this script -- but the benchmark runner
+still re-verifies every tracked file's bytes against the SHA-256 values
+recorded in generation_manifest.json before use (fixtures.py), so a
+tracked file that ever silently diverged from this generator would be
+caught, not trusted blindly.
 
 Run: python fixtures/revision_search/generate_fixtures.py
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import zipfile
@@ -31,13 +39,13 @@ GENERATED_DIR = Path(__file__).resolve().parent / "generated"
 FIXED_DOC_DATETIME = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 FIXED_ZIP_DATETIME = (2026, 1, 1, 0, 0, 0)
 
-# symbol -> (filename stem, retention-period sentence, extra status line or None)
-REVISIONS: dict[str, tuple[str, str, str | None]] = {
-    "v1": ("POLICY_RETENTION_v1", "3 years", None),
-    "v2": ("POLICY_RETENTION_v2", "5 years", None),
-    "v3": ("POLICY_RETENTION_v3", "7 years", None),
-    "v4": ("POLICY_RETENTION_v4", "10 years", "Status: PROPOSED -- pending governance approval, not yet in effect."),
-    "v5": ("POLICY_RETENTION_v5", "8 years", None),
+# symbol -> (filename stem, retention-period value)
+REVISIONS: dict[str, tuple[str, str]] = {
+    "v1": ("POLICY_RETENTION_v1", "3 years"),
+    "v2": ("POLICY_RETENTION_v2", "5 years"),
+    "v3": ("POLICY_RETENTION_v3", "7 years"),
+    "v4": ("POLICY_RETENTION_v4", "10 years"),
+    "v5": ("POLICY_RETENTION_v5", "8 years"),
 }
 
 
@@ -66,7 +74,7 @@ def _set_core_properties(document: Document) -> None:
     props.revision = 1
 
 
-def _build_docx(path: Path, retention_sentence: str, status_line: str | None) -> None:
+def _build_docx(path: Path, retention_sentence: str) -> None:
     document = Document()
     style = document.styles["Normal"]
     style.font.size = Pt(11)
@@ -82,8 +90,6 @@ def _build_docx(path: Path, retention_sentence: str, status_line: str | None) ->
         "from the date of account closure, after which they must be securely destroyed in "
         "accordance with the organization's data disposal procedures."
     )
-    if status_line:
-        document.add_paragraph(status_line)
     document.add_heading("Scope", level=2)
     document.add_paragraph(
         "This policy applies to all customer-facing business units and any third-party "
@@ -104,21 +110,25 @@ def generate_all() -> dict[str, str]:
     """Returns {symbol: relative_path} for the five generated files."""
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     relative_paths: dict[str, str] = {}
-    for symbol, (stem, retention_sentence, status_line) in REVISIONS.items():
+    for symbol, (stem, retention_sentence) in REVISIONS.items():
         path = GENERATED_DIR / f"{stem}.docx"
-        _build_docx(path, retention_sentence, status_line)
+        _build_docx(path, retention_sentence)
         relative_paths[symbol] = f"generated/{stem}.docx"
     return relative_paths
 
 
 def main() -> None:
     relative_paths = generate_all()
-    manifest = {"revisions": relative_paths}
+    source_document_sha256 = {
+        symbol: hashlib.sha256((Path(__file__).resolve().parent / rel).read_bytes()).hexdigest()
+        for symbol, rel in relative_paths.items()
+    }
+    manifest = {"revisions": relative_paths, "source_document_sha256": source_document_sha256}
     (Path(__file__).resolve().parent / "generation_manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    for symbol, rel in sorted(relative_paths.items()):
-        print(f"{symbol}: {rel}")
+    for symbol in sorted(relative_paths):
+        print(f"{symbol}: {relative_paths[symbol]} sha256={source_document_sha256[symbol]}")
 
 
 if __name__ == "__main__":

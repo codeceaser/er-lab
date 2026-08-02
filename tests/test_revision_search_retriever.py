@@ -20,7 +20,8 @@ DOC = "POLICY-RETENTION-001"
 def _record(document_revision_id: str, chunk_id: str, embedding: list[float]) -> RevisionVectorRecord:
     return RevisionVectorRecord(
         embedding_model="fake-v1", logical_document_id=DOC, document_revision_id=document_revision_id,
-        version_label=None, revision_number=1, source_document_sha256="a" * 64, chunk_id=chunk_id,
+        version_label=None, revision_number=1, source_document_sha256="a" * 64,
+        source_relative_path="generated/fake.docx", chunk_id=chunk_id,
         content_sha256="b" * 64, retrieval_text=f"text for {chunk_id}", chunk_type="text", embedding=embedding,
     )
 
@@ -68,6 +69,9 @@ def test_registry_integrity_error_fails_closed_before_any_vector_search():
         def search_eligible(self, **kwargs):
             raise AssertionError("search_eligible() must never be called when the resolver fails closed")
 
+        def search_unfiltered(self, **kwargs):
+            raise AssertionError("search_unfiltered() must never be called when the resolver fails closed either")
+
     result = authority_aware_search(
         service=service, store=_ExplodingStore(), logical_document_id=DOC, query_intent="current",
         as_of_date=date(2024, 1, 1), requested_revision_ids=None, query_vector=[1.0, 0.0],
@@ -100,8 +104,12 @@ def test_current_intent_returns_only_the_effective_revision_with_full_provenance
     assert hit.chunk_id == "chunk-1"
     assert hit.content_sha256 == "b" * 64
     assert hit.source_document_sha256 == "a" * 64
+    assert hit.source_relative_path == "generated/fake.docx"
     assert hit.rank == 1
     assert hit.similarity_score == 1.0
+    # The unfiltered comparison ran too, from the SAME call.
+    assert len(result.unfiltered_hits) == 1
+    assert result.unfiltered_hits[0].document_revision_id == revision_id
 
 
 def test_draft_intent_labels_the_result_draft_never_as_current_authority():
