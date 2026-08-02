@@ -33,8 +33,10 @@ from ingestion_bench.revision_authority.model import (
     AuthorityMetadata,
     AuthorityPeriod,
     ClosureReason,
+    DirectlyAssignableStatus,
     PublicationStatus,
     RevisionIdentity,
+    WithdrawalClosureReason,
     compute_document_revision_id,
     intervals_overlap,
     validate_own_periods_non_overlapping,
@@ -117,32 +119,38 @@ class RevisionAuthorityService:
             version_label=version_label,
             revision_number=revision_number,
         )
-        self._repository.save_identity(identity)
-        # New revisions start as an unreviewed draft, with NO authority
-        # period -- authority is NEVER inferred from registration itself.
-        self._repository.save_metadata(
-            document_revision_id,
-            AuthorityMetadata(
-                publication_status="draft",
-                authority_source=authority_source,
-                authority_reference=authority_reference,
-                authority_recorded_at=recorded_at,
-                authority_recorded_by=authority_recorded_by,
-            ),
-        )
-        event = self._repository.append_event(
-            AuthorityDecisionEvent(
-                event_id=0,
-                event_type="revision_registered",
-                logical_document_id=logical_document_id,
-                revision_id=document_revision_id,
-                recorded_at=recorded_at,
-                authority_source=authority_source,
-                authority_reference=authority_reference,
-                recorded_by=authority_recorded_by,
-                detail="new revision candidate registered as draft",
+        # Stage 7R.1b item 1: identity + metadata + event all inside ONE
+        # transaction -- a new revision must never end up registered
+        # without its matching draft metadata and audit event (or any
+        # subset thereof) if something fails partway through.
+        with self._repository.transaction():
+            self._repository.save_identity(identity)
+            # New revisions start as an unreviewed draft, with NO
+            # authority period -- authority is NEVER inferred from
+            # registration itself.
+            self._repository.save_metadata(
+                document_revision_id,
+                AuthorityMetadata(
+                    publication_status="draft",
+                    authority_source=authority_source,
+                    authority_reference=authority_reference,
+                    authority_recorded_at=recorded_at,
+                    authority_recorded_by=authority_recorded_by,
+                ),
             )
-        )
+            event = self._repository.append_event(
+                AuthorityDecisionEvent(
+                    event_id=0,
+                    event_type="revision_registered",
+                    logical_document_id=logical_document_id,
+                    revision_id=document_revision_id,
+                    recorded_at=recorded_at,
+                    authority_source=authority_source,
+                    authority_reference=authority_reference,
+                    recorded_by=authority_recorded_by,
+                    detail="new revision candidate registered as draft",
+                )
+            )
         return RegisterRevisionResult(identity=identity, is_new_revision=True, event=event)
 
     # --- pure status changes (never touch periods) ----------------------
@@ -151,7 +159,7 @@ class RevisionAuthorityService:
         self,
         *,
         document_revision_id: str,
-        publication_status: PublicationStatus,
+        publication_status: DirectlyAssignableStatus,
         approved_at: datetime | None = None,
         authority_source: str,
         authority_reference: str,
@@ -164,9 +172,33 @@ class RevisionAuthorityService:
         scheduling an effective window (even a future one) always goes
         through `activate_revision`/`reinstate_revision`, and retracting
         one always goes through `withdraw_revision` -- there is exactly
-        one authoritative path to any effective interval, never two."""
+        one authoritative path to any effective interval, never two.
+
+        Stage 7R.1b item 1: may set ONLY "draft" or "under_review" --
+        "approved" always requires a real period backing it (only
+        `activate_revision`/`reinstate_revision` can create one
+        atomically alongside the status change) and "withdrawn" always
+        requires closing a real period (only `withdraw_revision` can do
+        that atomically). Direct "approved"/"withdrawn" here would let a
+        caller create authority metadata with NO period at all --
+        exactly the "effective revision is not approved" integrity
+        violation this package otherwise treats as a hard error --
+        or leave an open, still-effective period behind under a
+        "withdrawn" status the resolver would then have to guess about.
+        Rejected at RUNTIME, not just by the type hint (Python does not
+        enforce type hints)."""
+        if publication_status not in ("draft", "under_review"):
+            raise ValueError(
+                f"record_authority_decision() may only set publication_status to 'draft' or 'under_review', "
+                f"got {publication_status!r} -- use activate_revision()/reinstate_revision() for approved "
+                "authority, or withdraw_revision() for withdrawal"
+            )
+
         current = self._repository.get_metadata(document_revision_id)
         if current is None:
+            raise ValueError(f"no registered revision with document_revision_id={document_revision_id!r}")
+        identity = self._repository.get_identity(document_revision_id)
+        if identity is None:
             raise ValueError(f"no registered revision with document_revision_id={document_revision_id!r}")
 
         updated = AuthorityMetadata(
@@ -177,23 +209,23 @@ class RevisionAuthorityService:
             authority_recorded_at=recorded_at,
             authority_recorded_by=authority_recorded_by,
         )
-        self._repository.save_metadata(document_revision_id, updated)
-
-        identity = self._repository.get_identity(document_revision_id)
-        logical_document_id = identity.logical_document_id if identity is not None else "unknown"
-        self._repository.append_event(
-            AuthorityDecisionEvent(
-                event_id=0,
-                event_type="authority_decision_recorded",
-                logical_document_id=logical_document_id,
-                revision_id=document_revision_id,
-                recorded_at=recorded_at,
-                authority_source=authority_source,
-                authority_reference=authority_reference,
-                recorded_by=authority_recorded_by,
-                detail=f"publication_status={publication_status!r}",
+        # Stage 7R.1b item 1: metadata write + event write, atomic --
+        # neither can leave the other behind if something fails partway.
+        with self._repository.transaction():
+            self._repository.save_metadata(document_revision_id, updated)
+            self._repository.append_event(
+                AuthorityDecisionEvent(
+                    event_id=0,
+                    event_type="authority_decision_recorded",
+                    logical_document_id=identity.logical_document_id,
+                    revision_id=document_revision_id,
+                    recorded_at=recorded_at,
+                    authority_source=authority_source,
+                    authority_reference=authority_reference,
+                    recorded_by=authority_recorded_by,
+                    detail=f"publication_status={publication_status!r}",
+                )
             )
-        )
         return updated
 
     # --- activation / reinstatement (period-opening transitions) --------
@@ -285,9 +317,65 @@ class RevisionAuthorityService:
         authority_reference: str,
         authority_recorded_by: str,
         recorded_at: datetime,
-        closure_reason_for_old: ClosureReason = "superseded",
     ) -> None:
-        """ONE atomic transition. `old_revision_id` is None only for the
+        """ONE atomic transition. Always closes the old revision's period
+        (when supplied) as "superseded" -- Stage 7R.1b item 2: there is
+        no public, generic `closure_reason` parameter here that would
+        let a caller construct a semantically contradictory transition
+        (e.g. calling a forward supersession a "rollback"). Use
+        `reinstate_revision()` for the rollback case."""
+        self._activate(
+            new_revision_id=new_revision_id, old_revision_id=old_revision_id, effective_from=effective_from,
+            authority_source=authority_source, authority_reference=authority_reference,
+            authority_recorded_by=authority_recorded_by, recorded_at=recorded_at, closure_reason_for_old="superseded",
+        )
+
+    def reinstate_revision(
+        self,
+        *,
+        new_revision_id: str,
+        old_revision_id: str | None,
+        effective_from: date,
+        authority_source: str,
+        authority_reference: str,
+        authority_recorded_by: str,
+        recorded_at: datetime,
+    ) -> None:
+        """Opens ANOTHER period for a revision that already has prior
+        history (already-closed periods) -- e.g. rolling back a
+        currently-effective revision to reinstate an earlier one (Stage
+        7R.1a post-effective rollback/reinstatement scenario). Shares
+        the EXACT SAME validated, atomic machinery as
+        `activate_revision` -- the only difference is the old revision's
+        period is always closed as "rollback", never "superseded" (Stage
+        7R.1b item 2 -- no public, generic closure_reason parameter on
+        either method). Never overwrites or destroys `new_revision_id`'s
+        own earlier (already-closed) periods -- this only ever APPENDS a
+        new period row."""
+        self._activate(
+            new_revision_id=new_revision_id, old_revision_id=old_revision_id, effective_from=effective_from,
+            authority_source=authority_source, authority_reference=authority_reference,
+            authority_recorded_by=authority_recorded_by, recorded_at=recorded_at, closure_reason_for_old="rollback",
+        )
+
+    def _activate(
+        self,
+        *,
+        new_revision_id: str,
+        old_revision_id: str | None,
+        effective_from: date,
+        authority_source: str,
+        authority_reference: str,
+        authority_recorded_by: str,
+        recorded_at: datetime,
+        closure_reason_for_old: ClosureReason,
+    ) -> None:
+        """The ONE shared, validated, atomic transition both
+        `activate_revision` (closure_reason_for_old="superseded") and
+        `reinstate_revision` (closure_reason_for_old="rollback") delegate
+        to -- never itself part of this service's public API, so a
+        caller can never pass an arbitrary closure_reason. `old_revision_id`
+        is None only for the
         very first period ever opened for a logical document. Never
         mutates, deletes, rechunks, or re-embeds any canonical chunk of
         either revision -- this method writes only to this package's own
@@ -365,38 +453,6 @@ class RevisionAuthorityService:
                     )
                 )
 
-    def reinstate_revision(
-        self,
-        *,
-        new_revision_id: str,
-        old_revision_id: str | None,
-        effective_from: date,
-        authority_source: str,
-        authority_reference: str,
-        authority_recorded_by: str,
-        recorded_at: datetime,
-    ) -> None:
-        """Opens ANOTHER period for a revision that already has prior
-        history (already-closed periods) -- e.g. rolling back a
-        currently-effective revision to reinstate an earlier one (Stage
-        7R.1a post-effective rollback/reinstatement scenario). Shares
-        the EXACT SAME validated, atomic machinery as
-        `activate_revision` -- the only difference is
-        `closure_reason_for_old` defaults to "rollback" instead of
-        "superseded", for audit clarity. Never overwrites or destroys
-        `new_revision_id`'s own earlier (already-closed) periods -- this
-        only ever APPENDS a new period row."""
-        self.activate_revision(
-            new_revision_id=new_revision_id,
-            old_revision_id=old_revision_id,
-            effective_from=effective_from,
-            authority_source=authority_source,
-            authority_reference=authority_reference,
-            authority_recorded_by=authority_recorded_by,
-            recorded_at=recorded_at,
-            closure_reason_for_old="rollback",
-        )
-
     # --- withdrawal / correction (period-closing-only transitions) ------
 
     def withdraw_revision(
@@ -404,7 +460,7 @@ class RevisionAuthorityService:
         *,
         document_revision_id: str,
         withdrawal_effective_date: date,
-        closure_reason: ClosureReason = "withdrawn",
+        closure_reason: WithdrawalClosureReason = "withdrawn",
         authority_source: str,
         authority_reference: str,
         authority_recorded_by: str,
@@ -422,7 +478,18 @@ class RevisionAuthorityService:
         equal to the open period's own `effective_from` to retract a
         period BEFORE it ever took effect (a zero-width period --
         `pre_effective_authority_correction`) -- publication_status
-        reverts to "draft" in that case, rather than "withdrawn"."""
+        reverts to "draft" in that case, rather than "withdrawn".
+
+        Stage 7R.1b item 2: only "withdrawn"/"correction" are ever
+        accepted here -- "superseded"/"rollback" are producible ONLY by
+        `activate_revision`/`reinstate_revision`, never by this method
+        (rejected at RUNTIME, not just by the type hint)."""
+        if closure_reason not in ("withdrawn", "correction"):
+            raise ValueError(
+                f"withdraw_revision() may only close with closure_reason 'withdrawn' or 'correction', "
+                f"got {closure_reason!r} -- 'superseded'/'rollback' are set only by "
+                "activate_revision()/reinstate_revision()"
+            )
         identity = self._repository.get_identity(document_revision_id)
         if identity is None:
             raise ValueError(f"no registered revision with document_revision_id={document_revision_id!r}")

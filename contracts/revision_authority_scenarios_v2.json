@@ -537,13 +537,38 @@
       ],
       "expected_excluded": [
         {
+          "symbol": "v1",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v2",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v4",
+          "reason_code": "not_effective_draft"
+        },
+        {
+          "symbol": "v4_under_review",
+          "reason_code": "not_effective_under_review"
+        },
+        {
           "symbol": "v5",
           "reason_code": "not_effective_approved_future"
+        },
+        {
+          "symbol": "v0_late_upload",
+          "reason_code": "not_effective_draft"
         }
       ],
       "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
         "v3": "effective",
-        "v5": "approved_future"
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
+        "v0_late_upload": "draft"
       },
       "integrity_error_expected": false,
       "expected_integrity_error_code": null
@@ -560,13 +585,38 @@
       ],
       "expected_excluded": [
         {
+          "symbol": "v1",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v2",
+          "reason_code": "not_effective_superseded"
+        },
+        {
           "symbol": "v3",
           "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v4",
+          "reason_code": "not_effective_draft"
+        },
+        {
+          "symbol": "v4_under_review",
+          "reason_code": "not_effective_under_review"
+        },
+        {
+          "symbol": "v0_late_upload",
+          "reason_code": "not_effective_draft"
         }
       ],
       "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
         "v3": "superseded",
-        "v5": "effective"
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "effective",
+        "v0_late_upload": "draft"
       },
       "integrity_error_expected": false,
       "expected_integrity_error_code": null
@@ -583,13 +633,38 @@
       ],
       "expected_excluded": [
         {
+          "symbol": "v1",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v2",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v4",
+          "reason_code": "not_effective_draft"
+        },
+        {
+          "symbol": "v4_under_review",
+          "reason_code": "not_effective_under_review"
+        },
+        {
           "symbol": "v5",
           "reason_code": "not_effective_approved_future"
+        },
+        {
+          "symbol": "v0_late_upload",
+          "reason_code": "not_effective_draft"
         }
       ],
       "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
         "v3": "effective",
-        "v5": "approved_future"
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
+        "v0_late_upload": "draft"
       },
       "integrity_error_expected": false,
       "expected_integrity_error_code": null
@@ -606,12 +681,37 @@
       ],
       "expected_excluded": [
         {
+          "symbol": "v1",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v2",
+          "reason_code": "not_effective_superseded"
+        },
+        {
+          "symbol": "v4",
+          "reason_code": "not_effective_draft"
+        },
+        {
+          "symbol": "v4_under_review",
+          "reason_code": "not_effective_under_review"
+        },
+        {
+          "symbol": "v5",
+          "reason_code": "not_effective_approved_future"
+        },
+        {
           "symbol": "v0_late_upload",
           "reason_code": "not_effective_draft"
         }
       ],
       "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
         "v3": "effective",
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
         "v0_late_upload": "draft"
       },
       "integrity_error_expected": false,
@@ -654,7 +754,13 @@
         }
       ],
       "expected_states": {
-        "v3": "effective"
+        "v1": "superseded",
+        "v2": "superseded",
+        "v3": "effective",
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
+        "v0_late_upload": "draft"
       },
       "integrity_error_expected": false,
       "expected_integrity_error_code": null
@@ -677,12 +783,32 @@
         {
           "symbol": "v3",
           "reason_code": "not_effective_approved_future"
+        },
+        {
+          "symbol": "v4",
+          "reason_code": "not_effective_draft"
+        },
+        {
+          "symbol": "v4_under_review",
+          "reason_code": "not_effective_under_review"
+        },
+        {
+          "symbol": "v5",
+          "reason_code": "not_effective_approved_future"
+        },
+        {
+          "symbol": "v0_late_upload",
+          "reason_code": "not_effective_draft"
         }
       ],
       "expected_states": {
         "v1": "superseded",
         "v2": "effective",
-        "v3": "approved_future"
+        "v3": "approved_future",
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
+        "v0_late_upload": "draft"
       },
       "integrity_error_expected": false,
       "expected_integrity_error_code": null
@@ -749,7 +875,8 @@
         }
       ],
       "expected_states": {
-        "v4": "draft"
+        "v4": "draft",
+        "v3": "effective"
       },
       "integrity_error_expected": false,
       "expected_integrity_error_code": null
@@ -802,7 +929,7 @@
         "c2": "effective"
       },
       "integrity_error_expected": true,
-      "expected_integrity_error_code": "overlapping_effective_revisions"
+      "expected_integrity_error_code": "cross_revision_period_overlap"
     },
     {
       "scenario_id": "M_pre_effective_authority_correction",

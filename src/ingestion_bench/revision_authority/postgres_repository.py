@@ -44,6 +44,22 @@ class RevisionAuthorityRepositoryUnavailable(RuntimeError):
     gracefully -- never to silently fall back to a different store."""
 
 
+class Stage7RLegacySchemaError(RuntimeError):
+    """Stage 7R.1b item 5: raised when edib_document_revision_registry
+    still carries POPULATED legacy effective_from/effective_to/
+    supersedes_revision_id/superseded_by_revision_id values (the
+    pre-7R.1a shape, before those columns moved to
+    edib_revision_authority_period) for a revision that has NO
+    corresponding row in edib_revision_authority_period -- i.e. data this
+    package cannot deterministically account for. This package has no
+    migration framework and refuses to guess at a translation (which
+    closure_reason? which event caused it?) on the caller's behalf. Run
+    `python scripts/reset_stage7r_tables.py --yes` if this legacy data is
+    disposable POC data (it drops and recreates ONLY this package's own
+    three isolated tables); otherwise write a one-time, reviewed manual
+    migration first."""
+
+
 def _to_date(value: object) -> date | None:
     if value is None:
         return None
@@ -101,14 +117,20 @@ class PostgresRevisionAuthorityRepository:
 
     def _create_schema_if_needed(self) -> None:
         """Applies schema.sql idempotently (CREATE TABLE/INDEX IF NOT
-        EXISTS) -- never DROPs, never touches any other table (including
-        any Stage 7R.1-era columns already present in an existing
-        edib_document_revision_registry table from before this stage's
-        period-table split -- no migration framework, those columns
-        simply go unused going forward, harmlessly). Comment LINES are
-        stripped entirely before splitting on ';' -- splitting first and
-        filtering chunks that merely START with '--' is not enough,
-        since a '--' comment line can itself contain a literal ';'."""
+        EXISTS) -- never DROPs. Comment LINES are stripped entirely
+        before splitting on ';' -- splitting first and filtering chunks
+        that merely START with '--' is not enough, since a '--' comment
+        line can itself contain a literal ';'.
+
+        Stage 7R.1b item 5: an existing Stage 7R.1-era database (from
+        BEFORE the 7R.1a period-table split) is handled explicitly, not
+        silently ignored -- CREATE TABLE IF NOT EXISTS alone would leave
+        such a database with an event table missing decision_effective_date/
+        closure_reason, and would say nothing about legacy effective_from/
+        effective_to/supersession columns still sitting, populated, on
+        edib_document_revision_registry. See
+        _add_stage7r1a_event_columns_if_missing and
+        _reject_if_legacy_registry_data_unaccounted_for below."""
         assert self._engine is not None
         raw = _SCHEMA_PATH.read_text(encoding="utf-8")
         without_comments = "\n".join(
@@ -119,6 +141,72 @@ class PostgresRevisionAuthorityRepository:
             for statement in statements:
                 conn.execute(text(statement))
             conn.commit()
+        with self._engine.connect() as conn:
+            self._add_stage7r1a_event_columns_if_missing(conn)
+            conn.commit()
+        with self._engine.connect() as conn:
+            self._reject_if_legacy_registry_data_unaccounted_for(conn)
+
+    def _add_stage7r1a_event_columns_if_missing(self, conn: Connection) -> None:
+        """decision_effective_date/closure_reason were added to
+        edib_authority_decision_event in the Stage 7R.1a redesign -- a
+        table created by the ORIGINAL Stage 7R.1 schema.sql predates
+        both columns. ALTER TABLE ... ADD COLUMN IF NOT EXISTS is a
+        no-op on an already-current table (including one just created
+        fresh by the CREATE TABLE above), and adds the columns
+        (NULL-filled for existing rows -- never backfilled, since there
+        is no way to deterministically recover a historical event's
+        decision_effective_date/closure_reason after the fact) on an
+        old one."""
+        conn.execute(text(f"ALTER TABLE {self._event_table} ADD COLUMN IF NOT EXISTS decision_effective_date DATE"))
+        conn.execute(text(f"ALTER TABLE {self._event_table} ADD COLUMN IF NOT EXISTS closure_reason TEXT"))
+
+    _LEGACY_REGISTRY_COLUMNS = ("effective_from", "effective_to", "supersedes_revision_id", "superseded_by_revision_id")
+
+    def _reject_if_legacy_registry_data_unaccounted_for(self, conn: Connection) -> None:
+        """Detects the pre-7R.1a shape of edib_document_revision_registry
+        (effective_from/effective_to/supersedes_revision_id/
+        superseded_by_revision_id living directly on the registry row)
+        and, if any of those columns are still POPULATED for a revision
+        that has NO corresponding edib_revision_authority_period row,
+        fails fast with Stage7RLegacySchemaError rather than silently
+        treating that revision as if it had never been activated at
+        all (which is what every current code path would otherwise
+        conclude, having no idea those columns exist)."""
+        existing_columns = {
+            row[0]
+            for row in conn.execute(
+                text("SELECT column_name FROM information_schema.columns WHERE table_name = :t"),
+                {"t": self._registry_table},
+            )
+        }
+        legacy_columns_present = [c for c in self._LEGACY_REGISTRY_COLUMNS if c in existing_columns]
+        if not legacy_columns_present:
+            return
+
+        populated_predicate = " OR ".join(f"r.{c} IS NOT NULL" for c in legacy_columns_present)
+        rows = conn.execute(
+            text(
+                f"""
+                SELECT r.document_revision_id FROM {self._registry_table} r
+                LEFT JOIN {self._period_table} p ON p.document_revision_id = r.document_revision_id
+                WHERE ({populated_predicate}) AND p.authority_period_id IS NULL
+                ORDER BY r.document_revision_id
+                """
+            )
+        ).fetchall()
+        if not rows:
+            return
+
+        affected_ids = [row[0] for row in rows]
+        sample = affected_ids[:5]
+        raise Stage7RLegacySchemaError(
+            f"{len(affected_ids)} revision(s) in {self._registry_table!r} carry populated legacy "
+            f"{legacy_columns_present} data with no corresponding row in {self._period_table!r} -- "
+            f"e.g. {sample}. This package cannot deterministically account for that data. "
+            "Run `python scripts/reset_stage7r_tables.py --yes` if it is disposable POC data, or write "
+            "a one-time, reviewed manual migration first. See Stage7RLegacySchemaError's own docstring."
+        )
 
     @contextmanager
     def _conn_scope(self) -> Iterator[Connection]:

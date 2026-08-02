@@ -14,7 +14,7 @@ from datetime import date, datetime, timezone
 
 import pytest
 
-from ingestion_bench.revision_authority.model import AuthorityPeriod
+from ingestion_bench.revision_authority.model import AuthorityPeriod, compute_document_revision_id
 from ingestion_bench.revision_authority.repository import InMemoryRevisionAuthorityRepository
 from ingestion_bench.revision_authority.service import ActivationValidationError, RevisionAuthorityService
 
@@ -44,6 +44,18 @@ class FaultInjectingRepository:
         result = self._inner.save_period(period)  # the write itself succeeds...
         if self._fault == "after_new_period_before_old_close" and self._save_period_calls == 1:
             raise RuntimeError("injected fault: after new-period write, before old-period close")  # ...then the fault fires
+        return result
+
+    def save_identity(self, identity):
+        result = self._inner.save_identity(identity)
+        if self._fault == "after_identity_before_metadata":
+            raise RuntimeError("injected fault: after identity write, before metadata write")
+        return result
+
+    def save_metadata(self, document_revision_id, metadata):
+        result = self._inner.save_metadata(document_revision_id, metadata)
+        if self._fault == "after_metadata_before_event":
+            raise RuntimeError("injected fault: after metadata write, before event append")
         return result
 
     def __getattr__(self, name):
@@ -283,3 +295,58 @@ def test_activation_rejects_a_new_period_overlapping_a_third_revisions_open_peri
             effective_from=date(2023, 1, 1), authority_source="gov", authority_reference="X",
             authority_recorded_by="alice", recorded_at=NOW,
         )
+
+
+# --- Stage 7R.1b item 1: register_revision / record_authority_decision -----
+# are now wrapped in transaction() too -- fault-injected here the same way.
+
+
+def test_failed_register_revision_leaves_no_partial_identity_metadata_or_event():
+    """Business nuance: register_revision() writes to THREE places
+    (identity, draft metadata, an event) -- Stage 7R.1b item 1 wraps all
+    three in one transaction. Failure this guards against: a torn write
+    leaving an identity row with NO metadata (which every other
+    operation assumes always exists once an identity does), or metadata
+    with no audit event explaining how it got there. Affects: current
+    search (a metadata-less identity would break every subsequent
+    lookup) and auditability."""
+    inner = InMemoryRevisionAuthorityRepository()
+    faulty_service = RevisionAuthorityService(FaultInjectingRepository(inner, fault="after_identity_before_metadata"))
+
+    with pytest.raises(RuntimeError, match="injected fault"):
+        faulty_service.register_revision(
+            logical_document_id="DOC-1", source_document_sha256="a" * 64, version_label=None, revision_number=1,
+            authority_source="gov", authority_reference="REF", authority_recorded_by="alice", recorded_at=NOW,
+        )
+
+    assert inner.list_events() == []
+    document_revision_id = compute_document_revision_id("DOC-1", "a" * 64, None, 1)
+    assert inner.get_identity(document_revision_id) is None
+    assert inner.get_metadata(document_revision_id) is None
+
+
+def test_failed_record_authority_decision_leaves_no_partial_metadata_or_event():
+    """Business nuance: record_authority_decision() writes metadata +
+    an event -- Stage 7R.1b item 1 wraps both in one transaction.
+    Failure this guards against: a status change silently taking effect
+    with no audit trail explaining why, or (the opposite) an audit event
+    describing a status change that never actually applied. Affects:
+    auditability directly."""
+    inner = InMemoryRevisionAuthorityRepository()
+    plain_service = RevisionAuthorityService(inner)
+    only = plain_service.register_revision(
+        logical_document_id="DOC-1", source_document_sha256="a" * 64, version_label=None, revision_number=1,
+        authority_source="gov", authority_reference="REF", authority_recorded_by="alice", recorded_at=NOW,
+    )
+    events_before = inner.list_events()
+    metadata_before = inner.get_metadata(only.identity.document_revision_id)
+
+    faulty_service = RevisionAuthorityService(FaultInjectingRepository(inner, fault="after_metadata_before_event"))
+    with pytest.raises(RuntimeError, match="injected fault"):
+        faulty_service.record_authority_decision(
+            document_revision_id=only.identity.document_revision_id, publication_status="under_review",
+            authority_source="gov", authority_reference="X", authority_recorded_by="alice", recorded_at=NOW,
+        )
+
+    assert inner.list_events() == events_before
+    assert inner.get_metadata(only.identity.document_revision_id) == metadata_before

@@ -21,7 +21,7 @@ source* and uses it to resolve which already-ingested document revisions
 are eligible for a query.
 
 Every scenario below is exercised for real by
-`contracts/revision_authority_scenarios_v1.json` (`contract_version:
+`contracts/revision_authority_scenarios_v2.json` (`contract_version:
 revision_authority_scenarios_v2`) and
 `scripts/run_stage7r1_revision_scenarios.py` — see
 `reports/stage7r1_revision_authority_scorecard.md` for the measured,
@@ -314,10 +314,19 @@ similarity.
   could still be tricked into making.
 - **Default-current query behavior:** `current` as of `2025-06-01`
   (scenario `L_overlapping_effective_revisions`) fails closed:
-  `integrity_error_code=overlapping_effective_revisions`,
+  `integrity_error_code=cross_revision_period_overlap`,
   `eligible_revision_ids=[]`.
-- **Comparison-query behavior:** UNAFFECTED — both `c1`/`c2` can still
-  be explicitly compared (comparison never "picks one").
+- **Comparison/draft-query behavior (Stage 7R.1b):** ALSO fails the
+  whole query closed with the same `cross_revision_period_overlap`
+  code. This is a document-SCOPED problem (the shared timeline between
+  `c1` and `c2` is structurally broken, not a defect of either
+  revision's own record alone), and Stage 7R.1b's central integrity
+  validator (`integrity.py`) treats every document-scoped problem as a
+  hard error for ALL FOUR intents, including comparison/draft — there
+  is nothing trustworthy left to compare or browse. This differs from
+  a REVISION-scoped problem (e.g. one draft revision with a spuriously
+  real period), which comparison/draft still exclude individually
+  without aborting the rest of the query.
 - **What this scenario does NOT imply:** the resolver never attempts
   automatic reconciliation (e.g. "prefer the later effective_from") —
   silently picking one, by any rule, is exactly what this package

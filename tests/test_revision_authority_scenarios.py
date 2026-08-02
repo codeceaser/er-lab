@@ -1,5 +1,5 @@
-"""Stage 7R.1: named scenario tests driven by the REAL, committed
-contract (contracts/revision_authority_scenarios_v1.json) -- the same
+"""Stage 7R.1/7R.1a/7R.1b: named scenario tests driven by the REAL, committed
+contract (contracts/revision_authority_scenarios_v2.json) -- the same
 contract the scorecard (reports/stage7r1_revision_authority_scorecard.md)
 and scripts/run_stage7r1_revision_scenarios.py exercise, via the shared
 contract_runner module. This means the contract, the scorecard, and this
@@ -135,7 +135,7 @@ def test_overlapping_effective_revisions_scenario_fails_closed(scenario_result: 
     scenario = _scenario(scenario_result, "L_overlapping_effective_revisions")
     assert scenario.passed
     assert scenario.actual_integrity_error is not None
-    assert scenario.actual_integrity_error_code == "overlapping_effective_revisions"
+    assert scenario.actual_integrity_error_code == "cross_revision_period_overlap"
 
 
 def test_pre_effective_authority_correction_scenario(scenario_result: ScenarioRunResult):

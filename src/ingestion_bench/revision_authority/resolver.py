@@ -1,4 +1,4 @@
-"""Stage 7R.1/7R.1a: deterministic effective-knowledge resolver.
+"""Stage 7R.1/7R.1a/7R.1b: deterministic effective-knowledge resolver.
 
 Exactly four query intents (current, as_of, comparison, draft) -- never
 a generic query DSL. The pure resolver function below NEVER defaults
@@ -9,18 +9,25 @@ today vs. an explicit historical date) -- kept as separate intents only
 to preserve the caller's stated purpose in the result for audit
 readability, never duplicated logic.
 
-Stage 7R.1a: integrity validation (per-record metadata/period
-self-consistency, authority-period overlap, cross-document transition
-consistency, period/link consistency) now applies to ALL FOUR intents,
-not just current/as_of -- but the CONSEQUENCE differs by intent.
-current/as_of "pick" exactly one revision, so a registry-wide integrity
-problem (or the absence of any effective revision at all) fails the
-WHOLE query closed -- never silently choosing one conflicting revision.
-comparison/draft never "pick" anything (the caller names exact ids), so
-a malformed record is EXCLUDED individually (with the integrity error as
-its exclusion reason) rather than aborting the whole query -- the
-absence of any effective revision is never a hard error for these two
-intents.
+Stage 7R.1b item 3: ALL FOUR intents now run the SAME central
+`integrity.validate_document_integrity` check before eligibility
+selection -- never four separately-maintained validation passes. The
+CONSEQUENCE still differs by intent, by design:
+
+- current/as_of "pick" exactly one revision, so ANY problem (revision-
+  scoped or document-scoped) fails the WHOLE query closed -- never
+  silently choosing one conflicting revision.
+- comparison/draft never "pick" anything (the caller names exact ids).
+  A DOCUMENT-scoped problem (the shared timeline itself is structurally
+  broken -- an orphaned period, a missing predecessor, periods from two
+  revisions overlapping, a supersession with no/ambiguous successor)
+  still fails the WHOLE query closed, even for these two intents,
+  because there is nothing trustworthy left to compare or browse. A
+  REVISION-scoped problem (this one record's own periods overlap, or it
+  is draft/under_review with a real period, or withdrawn with an open
+  one) excludes ONLY that one requested revision, with the problem as
+  its exclusion reason -- never aborting the whole query. The absence of
+  any effective revision is never a hard error for these two intents.
 """
 
 from __future__ import annotations
@@ -32,6 +39,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from ingestion_bench.revision_authority.integrity import DocumentIntegrityReport, validate_document_integrity
 from ingestion_bench.revision_authority.model import (
     AuthorityMetadata,
     AuthorityPeriod,
@@ -51,11 +59,10 @@ class RevisionAuthorityLabel(BaseModel):
     publication_status: PublicationStatus | None = None
     derived_state: DerivedAuthorityState | None = None
     period_count: int = 0
-    # Populated only when this single record's own derivation failed
-    # (e.g. a non-approved revision with a period recorded, or a
-    # revision's own periods overlap each other) -- None does not mean
-    # "no error occurred elsewhere in the query", see
-    # QueryResolutionResult.integrity_error for that.
+    # Populated when EITHER derive_authority_state's own check OR the
+    # central document-integrity validator found a problem specific to
+    # this revision -- None does not mean "no error occurred elsewhere
+    # in the query", see QueryResolutionResult.integrity_error for that.
     error: str | None = None
 
 
@@ -111,43 +118,33 @@ def _registry_snapshot_hash(
     return hashlib.sha256(blob).hexdigest()
 
 
-def _label_for(revision_id: str, metadata: AuthorityMetadata | None, periods: list[AuthorityPeriod], as_of_date: date) -> RevisionAuthorityLabel:
+def _label_for(
+    revision_id: str,
+    metadata: AuthorityMetadata | None,
+    periods: list[AuthorityPeriod],
+    as_of_date: date,
+    integrity_report: DocumentIntegrityReport,
+) -> RevisionAuthorityLabel:
     if metadata is None:
         return RevisionAuthorityLabel(revision_id=revision_id, period_count=len(periods), error="revision has no authority metadata recorded")
-    state, error = derive_authority_state(metadata.publication_status, periods, as_of_date)
+
+    state, derive_error = derive_authority_state(metadata.publication_status, periods, as_of_date)
+    central_problems = integrity_report.revision_problems.get(revision_id, [])
+    # Combine both signals -- derive_authority_state's own check is a
+    # defensive fallback; the central validator is the primary source of
+    # truth used consistently across all four intents.
+    error_parts = [p.message for p in central_problems]
+    if derive_error is not None and derive_error not in error_parts:
+        error_parts.append(derive_error)
+    combined_error = "; ".join(error_parts) if error_parts else None
+
     return RevisionAuthorityLabel(
         revision_id=revision_id,
         publication_status=metadata.publication_status,
-        derived_state=state,
+        derived_state=state if not combined_error else None,
         period_count=len(periods),
-        error=error,
+        error=combined_error,
     )
-
-
-def _period_link_inconsistencies(periods: list[AuthorityPeriod]) -> list[str]:
-    """Cross-revision structural check: every period CLOSED with
-    closure_reason in (superseded, rollback) -- meaning "some other
-    revision's period picked up where this one left off" -- must have a
-    matching successor period (predecessor_revision_id pointing back at
-    THIS revision, effective_from equal to THIS period's own
-    effective_to) somewhere in the same document's period set. A period
-    closed for withdrawn/correction has no such requirement (nothing
-    picks up after a genuine withdrawal/correction)."""
-    problems: list[str] = []
-    for period in periods:
-        if period.closure_reason not in ("superseded", "rollback"):
-            continue
-        successor_exists = any(
-            other.predecessor_revision_id == period.document_revision_id and other.effective_from == period.effective_to
-            for other in periods
-            if other.authority_period_id != period.authority_period_id
-        )
-        if not successor_exists:
-            problems.append(
-                f"period {period.authority_period_id} (revision {period.document_revision_id!r}, closed "
-                f"{period.closure_reason!r} at {period.effective_to}) has no matching successor period"
-            )
-    return problems
 
 
 def resolve_query_scope(
@@ -168,20 +165,26 @@ def resolve_query_scope(
         periods_by_id.setdefault(period.document_revision_id, []).append(period)
 
     snapshot_hash = _registry_snapshot_hash(logical_document_id, metadata_by_id, periods_by_id)
+
+    # Stage 7R.1b item 3: ONE central integrity pass, before eligibility
+    # selection, shared by all four intents.
+    integrity_report = validate_document_integrity(logical_document_id, identities, metadata_by_id, periods_by_id, all_periods)
+
     labels = {
-        rid: _label_for(rid, metadata_by_id.get(rid), periods_by_id.get(rid, []), as_of_date) for rid in metadata_by_id
+        rid: _label_for(rid, metadata_by_id.get(rid), periods_by_id.get(rid, []), as_of_date, integrity_report)
+        for rid in metadata_by_id
     }
 
     if query_intent in ("current", "as_of"):
-        return _resolve_current_or_as_of(logical_document_id, query_intent, as_of_date, labels, all_periods, snapshot_hash)
+        return _resolve_current_or_as_of(logical_document_id, query_intent, as_of_date, labels, integrity_report, snapshot_hash)
     if query_intent == "comparison":
         return _resolve_explicit(
-            logical_document_id, "comparison", as_of_date, requested_revision_ids or [], labels, snapshot_hash,
+            logical_document_id, "comparison", as_of_date, requested_revision_ids or [], labels, integrity_report, snapshot_hash,
             allowed_states=("effective", "superseded", "approved_future", "draft", "under_review", "withdrawn"),
         )
     if query_intent == "draft":
         return _resolve_explicit(
-            logical_document_id, "draft", as_of_date, requested_revision_ids or [], labels, snapshot_hash,
+            logical_document_id, "draft", as_of_date, requested_revision_ids or [], labels, integrity_report, snapshot_hash,
             allowed_states=("draft", "under_review"),
         )
     raise ValueError(f"unknown query_intent: {query_intent!r}")
@@ -192,7 +195,7 @@ def _resolve_current_or_as_of(
     query_intent: QueryIntent,
     as_of_date: date,
     labels: dict[str, "RevisionAuthorityLabel"],
-    all_periods: list[AuthorityPeriod],
+    integrity_report: DocumentIntegrityReport,
     snapshot_hash: str,
 ) -> QueryResolutionResult:
     def _fail(message: str, code: str) -> QueryResolutionResult:
@@ -206,16 +209,20 @@ def _resolve_current_or_as_of(
     if not labels:
         return _fail(f"logical_document_id={logical_document_id!r} has no registered revisions at all", "no_revisions_registered")
 
-    per_record_errors = [f"{rid}: {label.error}" for rid, label in labels.items() if label.error is not None]
-    if per_record_errors:
+    # current/as_of "pick" exactly one revision -- ANY problem (document-
+    # or revision-scoped) makes the whole timeline untrustworthy for that
+    # purpose, so it fails the whole query closed. The reported code is
+    # the SPECIFIC problem type (e.g. "cross_revision_period_overlap",
+    # "missing_successor") rather than a single generic bucket --
+    # document-scoped problems take priority (they invalidate the whole
+    # timeline, not just one revision), first-found order otherwise.
+    if integrity_report.has_any_problem:
+        all_problems = integrity_report.all_problems()
+        leading_problem = integrity_report.document_problems[0] if integrity_report.document_problems else all_problems[0]
         return _fail(
-            "revision authority data is internally inconsistent -- " + "; ".join(per_record_errors),
-            "malformed_authority_record",
+            "revision authority data is internally inconsistent -- " + "; ".join(p.message for p in all_problems),
+            leading_problem.code,
         )
-
-    link_problems = _period_link_inconsistencies(all_periods)
-    if link_problems:
-        return _fail("inconsistent supersession/rollback link(s): " + "; ".join(link_problems), "inconsistent_period_link")
 
     effective_ids = [rid for rid, label in labels.items() if label.derived_state == "effective"]
     if len(effective_ids) > 1:
@@ -264,11 +271,27 @@ def _resolve_explicit(
     as_of_date: date,
     requested_revision_ids: list[str],
     labels: dict[str, RevisionAuthorityLabel],
+    integrity_report: DocumentIntegrityReport,
     snapshot_hash: str,
     allowed_states: tuple[str, ...],
 ) -> QueryResolutionResult:
     if not requested_revision_ids:
         raise ValueError(f"{query_intent} intent requires at least one requested_revision_ids entry")
+
+    # Stage 7R.1b item 3: a DOCUMENT-scoped problem makes the whole
+    # shared timeline untrustworthy -- even comparison/draft (which never
+    # "pick" a single revision) fail the whole query closed, since there
+    # is nothing meaningful left to compare or browse.
+    if integrity_report.document_problems:
+        message = "document-wide authority timeline is internally inconsistent -- " + "; ".join(
+            p.message for p in integrity_report.document_problems
+        )
+        return QueryResolutionResult(
+            logical_document_id=logical_document_id, query_intent=query_intent, as_of_date=as_of_date,
+            requested_revision_ids=requested_revision_ids, eligible_revision_ids=[], excluded=[],
+            authority_labels=labels, resolution_explanation=message, registry_snapshot_hash=snapshot_hash,
+            integrity_error=message, integrity_error_code=integrity_report.document_problems[0].code,
+        )
 
     eligible: list[str] = []
     excluded: list[ExclusionReason] = []
@@ -291,10 +314,9 @@ def _resolve_explicit(
         result_labels[rid] = label
 
         if label.error is not None:
-            # Never returned as eligible -- a label containing an
-            # integrity error is excluded individually, never silently
-            # included and never enough to abort the whole
-            # comparison/draft query (item 6).
+            # A REVISION-scoped problem -- excluded individually, never
+            # returned as eligible, never enough to abort the whole
+            # comparison/draft query (item 3/6).
             excluded.append(ExclusionReason(revision_id=rid, reason_code="malformed_authority_record", detail=label.error))
             continue
 

@@ -194,8 +194,15 @@ def test_overlapping_effective_revisions_fail_closed():
     result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2024, 1, 1))
     assert result.eligible_revision_ids == []
     assert result.integrity_error is not None
-    assert result.integrity_error_code == "overlapping_effective_revisions"
-    assert "simultaneously effective" in result.integrity_error
+    # Stage 7R.1b item 3: the central, date-independent
+    # cross_revision_period_overlap check now catches this (and any
+    # other) case of two revisions' periods overlapping ANYWHERE in
+    # history -- a strictly broader, more precise classification than
+    # the old as_of-date-scoped "overlapping_effective_revisions" check,
+    # which is now unreachable (any two periods simultaneously
+    # "effective" at one date necessarily also overlap structurally).
+    assert result.integrity_error_code == "cross_revision_period_overlap"
+    assert "overlaps" in result.integrity_error
 
 
 def test_inconsistent_supersession_links_fail_closed():
@@ -229,7 +236,7 @@ def test_inconsistent_supersession_links_fail_closed():
     result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2024, 1, 1))
     assert result.eligible_revision_ids == []
     assert result.integrity_error is not None
-    assert result.integrity_error_code == "inconsistent_period_link"
+    assert result.integrity_error_code == "missing_successor"
     assert "successor" in result.integrity_error
 
 
@@ -254,25 +261,38 @@ def test_effective_revision_must_be_approved():
     result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2024, 1, 1))
     assert result.eligible_revision_ids == []
     assert result.integrity_error is not None
-    assert result.integrity_error_code == "malformed_authority_record"
+    # Sourced from the central validator (item 3) -- specific, not a generic
+    # bucket code, consistent with the rest of the package's reason_code style.
+    assert result.integrity_error_code == "unapproved_with_real_period"
     assert "not approved" in result.integrity_error.lower()
 
 
 def test_malformed_record_excluded_individually_under_comparison_never_fatal():
-    """Business nuance (item 6): comparison/draft intents must NEVER
+    """Business nuance (item 3/6): comparison/draft intents must NEVER
     hard-fail the whole query because ONE requested revision's record is
-    malformed -- it is excluded individually, with the integrity error
-    as its own exclusion reason. Failure this guards against: one bad
-    record silently making an entire comparison/audit view unusable.
-    Affects: auditability directly (comparison mode exists precisely to
-    inspect a registry, including a broken one)."""
+    malformed IN A WAY THAT IS SPECIFIC TO ITSELF (a REVISION-scoped
+    problem, e.g. a draft revision with a real period) -- it is excluded
+    individually, with the integrity error as its own exclusion reason.
+    `bad`'s period is deliberately NON-overlapping with `good`'s so this
+    test isolates the revision-scoped case from the DOCUMENT-scoped
+    cross_revision_period_overlap case (which correctly fails the whole
+    query -- see test_malformed_comparison_document_scoped_problem_fails_whole_query).
+    Failure this guards against: one bad record silently making an
+    entire comparison/audit view unusable. Affects: auditability
+    directly (comparison mode exists precisely to inspect a registry,
+    including a broken one)."""
     service, repo = _service()
     good = _register(service, "a" * 64, revision_number=1)
     service.activate_revision(new_revision_id=good.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
     bad = _register(service, "b" * 64, revision_number=2)
+    # bad stays "draft" (never approved) but gets a REAL period anyway --
+    # a revision-scoped problem. good's period is OPEN-ENDED from 2020
+    # onward, so bad's spurious period must be fully BOUNDED and entirely
+    # BEFORE 2020 to be disjoint -- anything from 2020 onward would also
+    # trip the document-scoped cross_revision_period_overlap check.
     repo.save_period(AuthorityPeriod(
         authority_period_id=0, logical_document_id="DOC-1", document_revision_id=bad.document_revision_id,
-        effective_from=date(2020, 1, 1), effective_to=None, opening_event_id=1,
+        effective_from=date(2010, 1, 1), effective_to=date(2015, 1, 1), opening_event_id=1,
         authority_source="gov", authority_reference="RAW", recorded_at=NOW, recorded_by="alice",
     ))
 
@@ -284,6 +304,71 @@ def test_malformed_record_excluded_individually_under_comparison_never_fatal():
     assert result.eligible_revision_ids == [good.document_revision_id]
     excluded = {e.revision_id: e.reason_code for e in result.excluded}
     assert excluded[bad.document_revision_id] == "malformed_authority_record"
+
+
+def test_document_scoped_overlap_fails_the_whole_comparison_query():
+    """Business nuance (item 3): unlike a REVISION-scoped problem (which
+    only excludes the one bad revision), a DOCUMENT-scoped problem --
+    here, two DIFFERENT revisions' periods genuinely overlapping in the
+    shared timeline -- makes the whole document untrustworthy, so it
+    fails the WHOLE comparison query closed, never just excluding one
+    side of the overlap. Failure this guards against: a comparison view
+    silently showing two overlapping "effective" periods as if the
+    timeline were coherent. Affects: auditability (comparison exists to
+    audit a registry -- it must say so plainly when the registry itself
+    is broken, not paper over it)."""
+    service, repo = _service()
+    a = _register(service, "a" * 64, revision_number=1)
+    b = _register(service, "b" * 64, revision_number=2)
+    service.activate_revision(new_revision_id=a.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
+    repo.save_metadata(b.document_revision_id, AuthorityMetadata(
+        publication_status="approved", authority_source="gov", authority_reference="R2",
+        authority_recorded_at=NOW, authority_recorded_by="alice",
+    ))
+    repo.save_period(AuthorityPeriod(
+        authority_period_id=0, logical_document_id="DOC-1", document_revision_id=b.document_revision_id,
+        effective_from=date(2021, 1, 1), effective_to=None, opening_event_id=1,
+        authority_source="gov", authority_reference="RAW", recorded_at=NOW, recorded_by="alice",
+    ))
+
+    result = service.resolve_query_scope(
+        logical_document_id="DOC-1", query_intent="comparison", as_of_date=date(2024, 1, 1),
+        requested_revision_ids=[a.document_revision_id, b.document_revision_id],
+    )
+    assert result.eligible_revision_ids == []
+    assert result.integrity_error is not None
+    assert result.integrity_error_code == "cross_revision_period_overlap"
+
+
+def test_document_scoped_broken_link_fails_the_whole_draft_query():
+    """Business nuance (item 3): a DOCUMENT-scoped broken supersession
+    link fails the whole `draft` query closed too, not just current/
+    as_of/comparison -- the same "the shared timeline itself cannot be
+    trusted" reasoning applies regardless of which intent asked.
+    Affects: auditability."""
+    service, repo = _service()
+    a = _register(service, "a" * 64, revision_number=1)
+    draft_candidate = _register(service, "b" * 64, revision_number=2)
+    repo.save_metadata(a.document_revision_id, AuthorityMetadata(
+        publication_status="approved", authority_source="gov", authority_reference="R1",
+        authority_recorded_at=NOW, authority_recorded_by="alice",
+    ))
+    # a's period claims to have been superseded but nothing picks up --
+    # a broken, document-scoped link.
+    repo.save_period(AuthorityPeriod(
+        authority_period_id=0, logical_document_id="DOC-1", document_revision_id=a.document_revision_id,
+        effective_from=date(2020, 1, 1), effective_to=date(2023, 1, 1), opening_event_id=1,
+        closing_event_id=2, closure_reason="superseded",
+        authority_source="gov", authority_reference="RAW", recorded_at=NOW, recorded_by="alice",
+    ))
+
+    result = service.resolve_query_scope(
+        logical_document_id="DOC-1", query_intent="draft", as_of_date=date(2024, 1, 1),
+        requested_revision_ids=[draft_candidate.document_revision_id],
+    )
+    assert result.eligible_revision_ids == []
+    assert result.integrity_error is not None
+    assert result.integrity_error_code == "missing_successor"
 
 
 def test_duplicate_requested_revision_ids_deduplicated_not_doubled():

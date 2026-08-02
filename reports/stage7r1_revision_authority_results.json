@@ -1,6 +1,6 @@
 {
   "contract_version": "revision_authority_scenarios_v2",
-  "generated_at": "2026-08-02T00:53:18.895854+00:00",
+  "generated_at": "2026-08-02T02:43:51.450493+00:00",
   "registration_checks": [
     {
       "step_id": "reg_v1",
@@ -290,18 +290,58 @@
       ],
       "expected_excluded": [
         {
+          "symbol": "v1",
+          "expected_reason_code": "not_effective_superseded",
+          "actual_reason_code": "not_effective_superseded",
+          "matched": true
+        },
+        {
+          "symbol": "v2",
+          "expected_reason_code": "not_effective_superseded",
+          "actual_reason_code": "not_effective_superseded",
+          "matched": true
+        },
+        {
+          "symbol": "v4",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
+        },
+        {
+          "symbol": "v4_under_review",
+          "expected_reason_code": "not_effective_under_review",
+          "actual_reason_code": "not_effective_under_review",
+          "matched": true
+        },
+        {
           "symbol": "v5",
           "expected_reason_code": "not_effective_approved_future",
           "actual_reason_code": "not_effective_approved_future",
           "matched": true
+        },
+        {
+          "symbol": "v0_late_upload",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
         }
       ],
       "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
         "v3": "effective",
-        "v5": "approved_future"
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
+        "v0_late_upload": "draft"
       },
       "actual_states": {
+        "v4": "draft",
+        "v0_late_upload": "draft",
         "v5": "approved_future",
+        "v1": "superseded",
+        "v4_under_review": "under_review",
+        "v2": "superseded",
         "v3": "effective"
       },
       "integrity_error_expected": false,
@@ -327,18 +367,58 @@
       ],
       "expected_excluded": [
         {
+          "symbol": "v1",
+          "expected_reason_code": "not_effective_superseded",
+          "actual_reason_code": "not_effective_superseded",
+          "matched": true
+        },
+        {
+          "symbol": "v2",
+          "expected_reason_code": "not_effective_superseded",
+          "actual_reason_code": "not_effective_superseded",
+          "matched": true
+        },
+        {
           "symbol": "v3",
           "expected_reason_code": "not_effective_superseded",
           "actual_reason_code": "not_effective_superseded",
           "matched": true
+        },
+        {
+          "symbol": "v4",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
+        },
+        {
+          "symbol": "v4_under_review",
+          "expected_reason_code": "not_effective_under_review",
+          "actual_reason_code": "not_effective_under_review",
+          "matched": true
+        },
+        {
+          "symbol": "v0_late_upload",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
         }
       ],
       "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
         "v3": "superseded",
-        "v5": "effective"
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "effective",
+        "v0_late_upload": "draft"
       },
       "actual_states": {
+        "v4": "draft",
+        "v0_late_upload": "draft",
         "v5": "effective",
+        "v1": "superseded",
+        "v4_under_review": "under_review",
+        "v2": "superseded",
         "v3": "superseded"
       },
       "integrity_error_expected": false,
@@ -364,18 +444,58 @@
       ],
       "expected_excluded": [
         {
+          "symbol": "v1",
+          "expected_reason_code": "not_effective_superseded",
+          "actual_reason_code": "not_effective_superseded",
+          "matched": true
+        },
+        {
+          "symbol": "v2",
+          "expected_reason_code": "not_effective_superseded",
+          "actual_reason_code": "not_effective_superseded",
+          "matched": true
+        },
+        {
+          "symbol": "v4",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
+        },
+        {
+          "symbol": "v4_under_review",
+          "expected_reason_code": "not_effective_under_review",
+          "actual_reason_code": "not_effective_under_review",
+          "matched": true
+        },
+        {
           "symbol": "v5",
           "expected_reason_code": "not_effective_approved_future",
           "actual_reason_code": "not_effective_approved_future",
           "matched": true
+        },
+        {
+          "symbol": "v0_late_upload",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
         }
       ],
       "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
         "v3": "effective",
-        "v5": "approved_future"
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
+        "v0_late_upload": "draft"
       },
       "actual_states": {
+        "v4": "draft",
+        "v0_late_upload": "draft",
         "v5": "approved_future",
+        "v1": "superseded",
+        "v4_under_review": "under_review",
+        "v2": "superseded",
         "v3": "effective"
       },
       "integrity_error_expected": false,
@@ -401,6 +521,36 @@
       ],
       "expected_excluded": [
         {
+          "symbol": "v1",
+          "expected_reason_code": "not_effective_superseded",
+          "actual_reason_code": "not_effective_superseded",
+          "matched": true
+        },
+        {
+          "symbol": "v2",
+          "expected_reason_code": "not_effective_superseded",
+          "actual_reason_code": "not_effective_superseded",
+          "matched": true
+        },
+        {
+          "symbol": "v4",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
+        },
+        {
+          "symbol": "v4_under_review",
+          "expected_reason_code": "not_effective_under_review",
+          "actual_reason_code": "not_effective_under_review",
+          "matched": true
+        },
+        {
+          "symbol": "v5",
+          "expected_reason_code": "not_effective_approved_future",
+          "actual_reason_code": "not_effective_approved_future",
+          "matched": true
+        },
+        {
           "symbol": "v0_late_upload",
           "expected_reason_code": "not_effective_draft",
           "actual_reason_code": "not_effective_draft",
@@ -408,11 +558,21 @@
         }
       ],
       "expected_states": {
+        "v1": "superseded",
+        "v2": "superseded",
         "v3": "effective",
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
         "v0_late_upload": "draft"
       },
       "actual_states": {
+        "v4": "draft",
         "v0_late_upload": "draft",
+        "v5": "approved_future",
+        "v1": "superseded",
+        "v4_under_review": "under_review",
+        "v2": "superseded",
         "v3": "effective"
       },
       "integrity_error_expected": false,
@@ -475,9 +635,21 @@
         }
       ],
       "expected_states": {
-        "v3": "effective"
+        "v1": "superseded",
+        "v2": "superseded",
+        "v3": "effective",
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
+        "v0_late_upload": "draft"
       },
       "actual_states": {
+        "v4": "draft",
+        "v0_late_upload": "draft",
+        "v5": "approved_future",
+        "v1": "superseded",
+        "v4_under_review": "under_review",
+        "v2": "superseded",
         "v3": "effective"
       },
       "integrity_error_expected": false,
@@ -513,15 +685,47 @@
           "expected_reason_code": "not_effective_approved_future",
           "actual_reason_code": "not_effective_approved_future",
           "matched": true
+        },
+        {
+          "symbol": "v4",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
+        },
+        {
+          "symbol": "v4_under_review",
+          "expected_reason_code": "not_effective_under_review",
+          "actual_reason_code": "not_effective_under_review",
+          "matched": true
+        },
+        {
+          "symbol": "v5",
+          "expected_reason_code": "not_effective_approved_future",
+          "actual_reason_code": "not_effective_approved_future",
+          "matched": true
+        },
+        {
+          "symbol": "v0_late_upload",
+          "expected_reason_code": "not_effective_draft",
+          "actual_reason_code": "not_effective_draft",
+          "matched": true
         }
       ],
       "expected_states": {
         "v1": "superseded",
         "v2": "effective",
-        "v3": "approved_future"
+        "v3": "approved_future",
+        "v4": "draft",
+        "v4_under_review": "under_review",
+        "v5": "approved_future",
+        "v0_late_upload": "draft"
       },
       "actual_states": {
+        "v4": "draft",
+        "v0_late_upload": "draft",
+        "v5": "approved_future",
         "v1": "superseded",
+        "v4_under_review": "under_review",
         "v2": "effective",
         "v3": "approved_future"
       },
@@ -626,10 +830,12 @@
         }
       ],
       "expected_states": {
-        "v4": "draft"
+        "v4": "draft",
+        "v3": "effective"
       },
       "actual_states": {
-        "v4": "draft"
+        "v4": "draft",
+        "v3": "effective"
       },
       "integrity_error_expected": false,
       "expected_integrity_error_code": null,
@@ -712,10 +918,10 @@
         "c2": "effective"
       },
       "integrity_error_expected": true,
-      "expected_integrity_error_code": "overlapping_effective_revisions",
-      "actual_integrity_error": "2 revisions of 'POLICY-CONFLICT-DEMO-001' are simultaneously effective as of 2025-06-01: ['59cfbadb767dfef58bd35636f2eb3b70515a62f9e717f1269a0afad3ce0ed1fd', 'eb3d8cbb2b37f0503ba851becefcc9a5e7eb0ce1bff7494d7772d8b86c6fd124'] -- refusing to silently choose one",
-      "actual_integrity_error_code": "overlapping_effective_revisions",
-      "resolution_explanation": "2 revisions of 'POLICY-CONFLICT-DEMO-001' are simultaneously effective as of 2025-06-01: ['59cfbadb767dfef58bd35636f2eb3b70515a62f9e717f1269a0afad3ce0ed1fd', 'eb3d8cbb2b37f0503ba851becefcc9a5e7eb0ce1bff7494d7772d8b86c6fd124'] -- refusing to silently choose one",
+      "expected_integrity_error_code": "cross_revision_period_overlap",
+      "actual_integrity_error": "revision authority data is internally inconsistent -- revision '59cfbadb767dfef58bd35636f2eb3b70515a62f9e717f1269a0afad3ce0ed1fd' period [2020-01-01, None) overlaps revision 'eb3d8cbb2b37f0503ba851becefcc9a5e7eb0ce1bff7494d7772d8b86c6fd124' period [2021-01-01, None)",
+      "actual_integrity_error_code": "cross_revision_period_overlap",
+      "resolution_explanation": "revision authority data is internally inconsistent -- revision '59cfbadb767dfef58bd35636f2eb3b70515a62f9e717f1269a0afad3ce0ed1fd' period [2020-01-01, None) overlaps revision 'eb3d8cbb2b37f0503ba851becefcc9a5e7eb0ce1bff7494d7772d8b86c6fd124' period [2021-01-01, None)",
       "registry_snapshot_hash": "86b931cb7cd0584a8e3eafd0494970c283e2f31c500c96febc1a59a736e5f6b0",
       "passed": true
     },

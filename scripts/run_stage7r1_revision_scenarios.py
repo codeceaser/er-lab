@@ -1,5 +1,5 @@
-"""Stage 7R.1 runner: replays every scenario in
-contracts/revision_authority_scenarios_v1.json against a fresh
+"""Stage 7R.1/7R.1a/7R.1b runner: replays every scenario in
+contracts/revision_authority_scenarios_v2.json against a fresh
 InMemoryRevisionAuthorityRepository (never Postgres -- this report never
 requires a database) and writes the scorecard/results from one execution.
 

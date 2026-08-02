@@ -34,6 +34,6 @@ AUTHORITY_EVENT_TABLE = os.environ.get(
 )
 
 CONTRACTS_ROOT = REPO_ROOT / "contracts"
-REVISION_AUTHORITY_SCENARIOS_CONTRACT_PATH = CONTRACTS_ROOT / "revision_authority_scenarios_v1.json"
+REVISION_AUTHORITY_SCENARIOS_CONTRACT_PATH = CONTRACTS_ROOT / "revision_authority_scenarios_v2.json"
 
 REPORTS_ROOT = REPO_ROOT / "reports"

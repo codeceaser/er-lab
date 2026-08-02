@@ -49,8 +49,10 @@ __all__ = [
     "RevisionIdentity",
     "compute_document_revision_id",
     "PublicationStatus",
+    "DirectlyAssignableStatus",
     "DerivedAuthorityState",
     "ClosureReason",
+    "WithdrawalClosureReason",
     "AuthorityMetadata",
     "AuthorityPeriod",
     "AuthorityDecisionEvent",
@@ -65,6 +67,25 @@ __all__ = [
 # derive_authority_state below), never stored as if they were an
 # independent fact an old revision's row gets rewritten to.
 PublicationStatus = Literal["draft", "under_review", "approved", "withdrawn"]
+
+# Stage 7R.1b item 1: record_authority_decision() -- a PURE status
+# change with no period involved -- may only ever set one of these two
+# pre-approval states. "approved" (which always requires a real period
+# backing it) is producible ONLY by activate_revision()/
+# reinstate_revision(); "withdrawn" (which always closes a real period)
+# is producible ONLY by withdraw_revision(). Restricting the TYPE alone
+# is not enforcement -- service.py's own record_authority_decision()
+# additionally raises at runtime if a caller passes anything else.
+DirectlyAssignableStatus = Literal["draft", "under_review"]
+
+# Stage 7R.1b item 2: withdraw_revision() may close a period only for
+# one of these two reasons -- "superseded" and "rollback" are producible
+# ONLY by activate_revision()/reinstate_revision() respectively, never
+# passed in by a withdraw_revision() caller. There is no public,
+# generic closure_reason parameter anywhere that would let a caller
+# construct a semantically contradictory transition (e.g. "withdraw...
+# but call it a supersession").
+WithdrawalClosureReason = Literal["withdrawn", "correction"]
 
 # Computed, never stored. An old revision may remain historically
 # "approved" (publication_status) forever while its derived CURRENT

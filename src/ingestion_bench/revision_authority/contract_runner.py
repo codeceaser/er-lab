@@ -1,5 +1,5 @@
-"""Stage 7R.1/7R.1a: interpreter for
-`contracts/revision_authority_scenarios_v1.json`.
+"""Stage 7R.1/7R.1a/7R.1b: interpreter for
+`contracts/revision_authority_scenarios_v2.json`.
 
 Not a generic contract/plug-in framework -- a one-shot interpreter for
 this ONE JSON schema, used by both the scenario runner script and the
@@ -290,12 +290,29 @@ def run_contract(contract_path: Path, service: RevisionAuthorityService | None =
         actual_eligible_symbols = sorted(id_to_symbol.get(rid, rid) for rid in result.eligible_revision_ids)
         expected_eligible_symbols = sorted(scenario["expected_eligible_symbols"])
 
+        # Stage 7R.1b item 6: EXACT equality against the FULL set of
+        # authority_labels the resolver actually returned -- never
+        # filtered down to only the symbols the contract happens to
+        # mention. An unexpected extra label (e.g. a revision the
+        # contract forgot to account for, or one whose state silently
+        # changed) now fails the scenario instead of passing unnoticed.
+        # Labels with derived_state=None (a malformed/errored record --
+        # already covered by expected_excluded/integrity_error) are
+        # never part of this comparison.
         actual_states = {
             id_to_symbol.get(rid, rid): label.derived_state
             for rid, label in result.authority_labels.items()
-            if id_to_symbol.get(rid, rid) in scenario["expected_states"]
+            if label.derived_state is not None
         }
 
+        # Stage 7R.1b item 6: EXACT equality on the full (symbol,
+        # reason_code) exclusion set -- an unexpected extra exclusion
+        # (one the contract never declared) now fails the scenario,
+        # not just a missing/wrong expected one.
+        actual_excluded_pairs = {
+            (id_to_symbol.get(e.revision_id, e.revision_id), e.reason_code) for e in result.excluded
+        }
+        expected_excluded_pairs = {(e["symbol"], e["reason_code"]) for e in scenario["expected_excluded"]}
         excluded_by_symbol: dict[str, str] = {}
         for exclusion in result.excluded:
             sym = id_to_symbol.get(exclusion.revision_id, exclusion.revision_id)
@@ -312,6 +329,7 @@ def run_contract(contract_path: Path, service: RevisionAuthorityService | None =
         passed = (
             actual_eligible_symbols == expected_eligible_symbols
             and actual_states == scenario["expected_states"]
+            and actual_excluded_pairs == expected_excluded_pairs
             and (result.integrity_error is not None) == scenario["integrity_error_expected"]
             and result.integrity_error_code == scenario["expected_integrity_error_code"]
             and all(c.matched for c in exclusion_checks)
@@ -393,7 +411,7 @@ def render_scorecard_markdown(result: ScenarioRunResult) -> str:
 
 Generated from a single in-memory `ScenarioRunResult` -- this Markdown
 and `reports/stage7r1_revision_authority_results.json` come from the
-SAME execution, replaying `contracts/revision_authority_scenarios_v1.json`
+SAME execution, replaying `contracts/revision_authority_scenarios_v2.json`
 against `InMemoryRevisionAuthorityRepository` (never Postgres -- this
 report never requires a database).
 

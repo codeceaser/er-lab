@@ -2,12 +2,12 @@
 
 Generated from a single in-memory `ScenarioRunResult` -- this Markdown
 and `reports/stage7r1_revision_authority_results.json` come from the
-SAME execution, replaying `contracts/revision_authority_scenarios_v1.json`
+SAME execution, replaying `contracts/revision_authority_scenarios_v2.json`
 against `InMemoryRevisionAuthorityRepository` (never Postgres -- this
 report never requires a database).
 
 `contract_version`: `revision_authority_scenarios_v2`
-`generated_at`: `2026-08-02T00:53:18.895854+00:00`
+`generated_at`: `2026-08-02T02:43:51.450493+00:00`
 `registration_checks`: 17/17 passed
 `transition_checks`: 2/2 passed
 `query_scenarios`: 21/21 passed
@@ -91,8 +91,8 @@ v5 is approved with a future effective_from (2028-01-01); as of 2027-12-31 it mu
 - query_intent: `current`, as_of_date: `2027-12-31`
 - requested: `[]`
 - expected eligible: `['v3']` / actual: `['v3']`
-- expected exclusions: `[('v5', 'not_effective_approved_future')]` / actual: `[('v5', 'not_effective_approved_future')]`
-- expected states: `{'v3': 'effective', 'v5': 'approved_future'}` / actual: `{'v5': 'approved_future', 'v3': 'effective'}`
+- expected exclusions: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]` / actual: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]`
+- expected states: `{'v1': 'superseded', 'v2': 'superseded', 'v3': 'effective', 'v4': 'draft', 'v4_under_review': 'under_review', 'v5': 'approved_future', 'v0_late_upload': 'draft'}` / actual: `{'v4': 'draft', 'v0_late_upload': 'draft', 'v5': 'approved_future', 'v1': 'superseded', 'v4_under_review': 'under_review', 'v2': 'superseded', 'v3': 'effective'}`
 - integrity_error expected: `False` (code `None`) / actual: `None` (code `None`)
 - resolution_explanation: current query for 'POLICY-RESILIENCE-001' as of 2027-12-31: 1 of 7 revision(s) effective -- d89ce8672548142297bc4a32c8860385de97871af5687744ab8d74b5d166f498
 - registry_snapshot_hash: `57bbb007d5c03ea68eb68598fd5e6b9ab1361f659346b3d573a91e7ba95f3e0d`
@@ -105,8 +105,8 @@ On the exact effective_from boundary (2028-01-01), v5 becomes effective and v3 b
 - query_intent: `current`, as_of_date: `2028-01-01`
 - requested: `[]`
 - expected eligible: `['v5']` / actual: `['v5']`
-- expected exclusions: `[('v3', 'not_effective_superseded')]` / actual: `[('v3', 'not_effective_superseded')]`
-- expected states: `{'v3': 'superseded', 'v5': 'effective'}` / actual: `{'v5': 'effective', 'v3': 'superseded'}`
+- expected exclusions: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v3', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v0_late_upload', 'not_effective_draft')]` / actual: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v3', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v0_late_upload', 'not_effective_draft')]`
+- expected states: `{'v1': 'superseded', 'v2': 'superseded', 'v3': 'superseded', 'v4': 'draft', 'v4_under_review': 'under_review', 'v5': 'effective', 'v0_late_upload': 'draft'}` / actual: `{'v4': 'draft', 'v0_late_upload': 'draft', 'v5': 'effective', 'v1': 'superseded', 'v4_under_review': 'under_review', 'v2': 'superseded', 'v3': 'superseded'}`
 - integrity_error expected: `False` (code `None`) / actual: `None` (code `None`)
 - resolution_explanation: current query for 'POLICY-RESILIENCE-001' as of 2028-01-01: 1 of 7 revision(s) effective -- 6ddd50a3ef42a863eb506129a5a9952ae42e1d7d9afb5d7ce619485bf6140a31
 - registry_snapshot_hash: `57bbb007d5c03ea68eb68598fd5e6b9ab1361f659346b3d573a91e7ba95f3e0d`
@@ -119,8 +119,8 @@ One day before the boundary (2027-12-31), the OLD revision (v3) is still effecti
 - query_intent: `current`, as_of_date: `2027-12-31`
 - requested: `[]`
 - expected eligible: `['v3']` / actual: `['v3']`
-- expected exclusions: `[('v5', 'not_effective_approved_future')]` / actual: `[('v5', 'not_effective_approved_future')]`
-- expected states: `{'v3': 'effective', 'v5': 'approved_future'}` / actual: `{'v5': 'approved_future', 'v3': 'effective'}`
+- expected exclusions: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]` / actual: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]`
+- expected states: `{'v1': 'superseded', 'v2': 'superseded', 'v3': 'effective', 'v4': 'draft', 'v4_under_review': 'under_review', 'v5': 'approved_future', 'v0_late_upload': 'draft'}` / actual: `{'v4': 'draft', 'v0_late_upload': 'draft', 'v5': 'approved_future', 'v1': 'superseded', 'v4_under_review': 'under_review', 'v2': 'superseded', 'v3': 'effective'}`
 - integrity_error expected: `False` (code `None`) / actual: `None` (code `None`)
 - resolution_explanation: current query for 'POLICY-RESILIENCE-001' as of 2027-12-31: 1 of 7 revision(s) effective -- d89ce8672548142297bc4a32c8860385de97871af5687744ab8d74b5d166f498
 - registry_snapshot_hash: `57bbb007d5c03ea68eb68598fd5e6b9ab1361f659346b3d573a91e7ba95f3e0d`
@@ -133,8 +133,8 @@ v0 is registered very late (2026) but never approved/activated -- late upload al
 - query_intent: `current`, as_of_date: `2026-06-02`
 - requested: `[]`
 - expected eligible: `['v3']` / actual: `['v3']`
-- expected exclusions: `[('v0_late_upload', 'not_effective_draft')]` / actual: `[('v0_late_upload', 'not_effective_draft')]`
-- expected states: `{'v3': 'effective', 'v0_late_upload': 'draft'}` / actual: `{'v0_late_upload': 'draft', 'v3': 'effective'}`
+- expected exclusions: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]` / actual: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]`
+- expected states: `{'v1': 'superseded', 'v2': 'superseded', 'v3': 'effective', 'v4': 'draft', 'v4_under_review': 'under_review', 'v5': 'approved_future', 'v0_late_upload': 'draft'}` / actual: `{'v4': 'draft', 'v0_late_upload': 'draft', 'v5': 'approved_future', 'v1': 'superseded', 'v4_under_review': 'under_review', 'v2': 'superseded', 'v3': 'effective'}`
 - integrity_error expected: `False` (code `None`) / actual: `None` (code `None`)
 - resolution_explanation: current query for 'POLICY-RESILIENCE-001' as of 2026-06-02: 1 of 7 revision(s) effective -- d89ce8672548142297bc4a32c8860385de97871af5687744ab8d74b5d166f498
 - registry_snapshot_hash: `57bbb007d5c03ea68eb68598fd5e6b9ab1361f659346b3d573a91e7ba95f3e0d`
@@ -148,7 +148,7 @@ Plain current-authoritative query -- exactly one eligible revision.
 - requested: `[]`
 - expected eligible: `['v3']` / actual: `['v3']`
 - expected exclusions: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]` / actual: `[('v1', 'not_effective_superseded'), ('v2', 'not_effective_superseded'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]`
-- expected states: `{'v3': 'effective'}` / actual: `{'v3': 'effective'}`
+- expected states: `{'v1': 'superseded', 'v2': 'superseded', 'v3': 'effective', 'v4': 'draft', 'v4_under_review': 'under_review', 'v5': 'approved_future', 'v0_late_upload': 'draft'}` / actual: `{'v4': 'draft', 'v0_late_upload': 'draft', 'v5': 'approved_future', 'v1': 'superseded', 'v4_under_review': 'under_review', 'v2': 'superseded', 'v3': 'effective'}`
 - integrity_error expected: `False` (code `None`) / actual: `None` (code `None`)
 - resolution_explanation: current query for 'POLICY-RESILIENCE-001' as of 2025-06-01: 1 of 7 revision(s) effective -- d89ce8672548142297bc4a32c8860385de97871af5687744ab8d74b5d166f498
 - registry_snapshot_hash: `57bbb007d5c03ea68eb68598fd5e6b9ab1361f659346b3d573a91e7ba95f3e0d`
@@ -161,8 +161,8 @@ Historical as-of query resolves the revision that was effective THEN, not now.
 - query_intent: `as_of`, as_of_date: `2020-06-01`
 - requested: `[]`
 - expected eligible: `['v2']` / actual: `['v2']`
-- expected exclusions: `[('v1', 'not_effective_superseded'), ('v3', 'not_effective_approved_future')]` / actual: `[('v1', 'not_effective_superseded'), ('v3', 'not_effective_approved_future')]`
-- expected states: `{'v1': 'superseded', 'v2': 'effective', 'v3': 'approved_future'}` / actual: `{'v1': 'superseded', 'v2': 'effective', 'v3': 'approved_future'}`
+- expected exclusions: `[('v1', 'not_effective_superseded'), ('v3', 'not_effective_approved_future'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]` / actual: `[('v1', 'not_effective_superseded'), ('v3', 'not_effective_approved_future'), ('v4', 'not_effective_draft'), ('v4_under_review', 'not_effective_under_review'), ('v5', 'not_effective_approved_future'), ('v0_late_upload', 'not_effective_draft')]`
+- expected states: `{'v1': 'superseded', 'v2': 'effective', 'v3': 'approved_future', 'v4': 'draft', 'v4_under_review': 'under_review', 'v5': 'approved_future', 'v0_late_upload': 'draft'}` / actual: `{'v4': 'draft', 'v0_late_upload': 'draft', 'v5': 'approved_future', 'v1': 'superseded', 'v4_under_review': 'under_review', 'v2': 'effective', 'v3': 'approved_future'}`
 - integrity_error expected: `False` (code `None`) / actual: `None` (code `None`)
 - resolution_explanation: as_of query for 'POLICY-RESILIENCE-001' as of 2020-06-01: 1 of 7 revision(s) effective -- a2c03a3cc2201265ab6516b900df77ba833e89079b9b3a34c30f78b101065699
 - registry_snapshot_hash: `57bbb007d5c03ea68eb68598fd5e6b9ab1361f659346b3d573a91e7ba95f3e0d`
@@ -204,7 +204,7 @@ Draft intent returns only the explicitly requested draft/under_review revisions 
 - requested: `['v4', 'v3']`
 - expected eligible: `['v4']` / actual: `['v4']`
 - expected exclusions: `[('v3', 'not_eligible_for_draft_intent')]` / actual: `[('v3', 'not_eligible_for_draft_intent')]`
-- expected states: `{'v4': 'draft'}` / actual: `{'v4': 'draft'}`
+- expected states: `{'v4': 'draft', 'v3': 'effective'}` / actual: `{'v4': 'draft', 'v3': 'effective'}`
 - integrity_error expected: `False` (code `None`) / actual: `None` (code `None`)
 - resolution_explanation: draft query for 'POLICY-RESILIENCE-001': 1 of 2 requested revision(s) eligible
 - registry_snapshot_hash: `57bbb007d5c03ea68eb68598fd5e6b9ab1361f659346b3d573a91e7ba95f3e0d`
@@ -247,8 +247,8 @@ Two revisions simultaneously effective -- fails closed rather than silently choo
 - expected eligible: `[]` / actual: `[]`
 - expected exclusions: `[]` / actual: `[]`
 - expected states: `{'c1': 'effective', 'c2': 'effective'}` / actual: `{'c1': 'effective', 'c2': 'effective'}`
-- integrity_error expected: `True` (code `overlapping_effective_revisions`) / actual: `2 revisions of 'POLICY-CONFLICT-DEMO-001' are simultaneously effective as of 2025-06-01: ['59cfbadb767dfef58bd35636f2eb3b70515a62f9e717f1269a0afad3ce0ed1fd', 'eb3d8cbb2b37f0503ba851becefcc9a5e7eb0ce1bff7494d7772d8b86c6fd124'] -- refusing to silently choose one` (code `overlapping_effective_revisions`)
-- resolution_explanation: 2 revisions of 'POLICY-CONFLICT-DEMO-001' are simultaneously effective as of 2025-06-01: ['59cfbadb767dfef58bd35636f2eb3b70515a62f9e717f1269a0afad3ce0ed1fd', 'eb3d8cbb2b37f0503ba851becefcc9a5e7eb0ce1bff7494d7772d8b86c6fd124'] -- refusing to silently choose one
+- integrity_error expected: `True` (code `cross_revision_period_overlap`) / actual: `revision authority data is internally inconsistent -- revision '59cfbadb767dfef58bd35636f2eb3b70515a62f9e717f1269a0afad3ce0ed1fd' period [2020-01-01, None) overlaps revision 'eb3d8cbb2b37f0503ba851becefcc9a5e7eb0ce1bff7494d7772d8b86c6fd124' period [2021-01-01, None)` (code `cross_revision_period_overlap`)
+- resolution_explanation: revision authority data is internally inconsistent -- revision '59cfbadb767dfef58bd35636f2eb3b70515a62f9e717f1269a0afad3ce0ed1fd' period [2020-01-01, None) overlaps revision 'eb3d8cbb2b37f0503ba851becefcc9a5e7eb0ce1bff7494d7772d8b86c6fd124' period [2021-01-01, None)
 - registry_snapshot_hash: `86b931cb7cd0584a8e3eafd0494970c283e2f31c500c96febc1a59a736e5f6b0`
 - **PASS**
 

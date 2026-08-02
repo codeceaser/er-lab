@@ -144,3 +144,147 @@ def test_activate_revision_first_ever_activation_allows_old_revision_id_none():
     )
     result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2021, 1, 1))
     assert result.eligible_revision_ids == [only.identity.document_revision_id]
+
+
+# --- Stage 7R.1b item 1: restrict status mutation ---------------------------
+
+
+def test_record_authority_decision_rejects_direct_approved_status():
+    """Business nuance: 'approved' must always be created ALONGSIDE a
+    real authority period (activate_revision/reinstate_revision) --
+    never as a bare status flip. Failure this guards against: a caller
+    marking a revision 'approved' with NO period at all, which the
+    resolver would then have to treat as the 'effective revision is not
+    approved' integrity violation (or, worse, some other silent
+    misbehavior) rather than never being possible in the first place.
+    Affects: current search (an 'approved' revision must always have
+    real authority behind it) and auditability (the ONLY path to
+    'approved' is now traceable to a period-opening event)."""
+    service = _service()
+    only = _register(service)
+    try:
+        service.record_authority_decision(
+            document_revision_id=only.identity.document_revision_id, publication_status="approved",
+            authority_source="gov", authority_reference="X", authority_recorded_by="alice", recorded_at=NOW,
+        )
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert "draft" in str(exc) and "under_review" in str(exc)
+    # No period was created, no metadata mutation occurred.
+    assert service._repository.get_metadata(only.identity.document_revision_id).publication_status == "draft"
+    assert service._repository.list_periods_for_revision(only.identity.document_revision_id) == []
+
+
+def test_record_authority_decision_rejects_direct_withdrawn_status():
+    """Business nuance: 'withdrawn' must always CLOSE a real open
+    period (withdraw_revision) -- never as a bare status flip that
+    leaves the period itself still open. Failure this guards against:
+    a revision marked 'withdrawn' while its authority period remains
+    open (effective_to=None) -- the resolver would then have to guess
+    whether to trust the status or the period; instead this is
+    structurally impossible to create. Affects: current search (an open
+    period under a 'withdrawn' status would be a genuine ambiguity) and
+    auditability."""
+    service = _service()
+    only = _register(service)
+    service.activate_revision(
+        new_revision_id=only.identity.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1),
+        authority_source="gov", authority_reference="ACT", authority_recorded_by="alice", recorded_at=NOW,
+    )
+    try:
+        service.record_authority_decision(
+            document_revision_id=only.identity.document_revision_id, publication_status="withdrawn",
+            authority_source="gov", authority_reference="X", authority_recorded_by="alice", recorded_at=NOW,
+        )
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert "draft" in str(exc) and "under_review" in str(exc)
+    # The period is still open and still resolves effective -- direct
+    # "withdrawn" never got a chance to leave it in a contradictory state.
+    period = service._repository.list_periods_for_revision(only.identity.document_revision_id)[0]
+    assert period.is_open
+    result = service.resolve_query_scope(logical_document_id="DOC-1", query_intent="current", as_of_date=date(2021, 1, 1))
+    assert result.eligible_revision_ids == [only.identity.document_revision_id]
+
+
+def test_record_authority_decision_still_supports_draft_and_under_review():
+    """Business nuance: the restriction in item 1 must not break the
+    LEGITIMATE pure-status-change use case -- draft <-> under_review
+    transitions remain fully supported, with no period involved either
+    way. Affects: auditability (a reviewer workflow must still work)."""
+    service = _service()
+    only = _register(service)
+    updated = service.record_authority_decision(
+        document_revision_id=only.identity.document_revision_id, publication_status="under_review",
+        authority_source="gov", authority_reference="X", authority_recorded_by="alice", recorded_at=NOW,
+    )
+    assert updated.publication_status == "under_review"
+    back_to_draft = service.record_authority_decision(
+        document_revision_id=only.identity.document_revision_id, publication_status="draft",
+        authority_source="gov", authority_reference="Y", authority_recorded_by="alice", recorded_at=NOW,
+    )
+    assert back_to_draft.publication_status == "draft"
+    assert service._repository.list_periods_for_revision(only.identity.document_revision_id) == []
+
+
+# --- Stage 7R.1b item 2: restrict closure reasons per operation -------------
+
+
+def test_activate_revision_always_closes_old_period_as_superseded():
+    """Business nuance: activate_revision's forward-progress supersession
+    must always be recorded with closure_reason='superseded' -- there is
+    no public parameter letting a caller relabel it. Affects:
+    auditability (closure_reason is an audit-meaningful fact, not a free
+    choice)."""
+    service = _service()
+    old = _register(service, source_document_sha256="a" * 64)
+    new = _register(service, source_document_sha256="b" * 64)
+    service.activate_revision(new_revision_id=old.identity.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
+    service.activate_revision(new_revision_id=new.identity.document_revision_id, old_revision_id=old.identity.document_revision_id, effective_from=date(2023, 1, 1), authority_source="gov", authority_reference="A2", authority_recorded_by="alice", recorded_at=NOW)
+    old_period = service._repository.list_periods_for_revision(old.identity.document_revision_id)[0]
+    assert old_period.closure_reason == "superseded"
+    assert not hasattr(service.activate_revision, "__wrapped__")  # sanity: not dynamically patched
+    import inspect
+    assert "closure_reason" not in inspect.signature(service.activate_revision).parameters
+
+
+def test_reinstate_revision_always_closes_old_period_as_rollback():
+    """Business nuance: reinstate_revision's reversal must always be
+    recorded with closure_reason='rollback', distinct from a forward
+    supersession -- there is no public parameter letting a caller
+    relabel it either. Affects: auditability (rollback vs. supersession
+    is a real, meaningful distinction in the audit trail)."""
+    import inspect
+
+    service = _service()
+    old = _register(service, source_document_sha256="a" * 64)
+    new = _register(service, source_document_sha256="b" * 64)
+    service.activate_revision(new_revision_id=old.identity.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
+    service.activate_revision(new_revision_id=new.identity.document_revision_id, old_revision_id=old.identity.document_revision_id, effective_from=date(2023, 1, 1), authority_source="gov", authority_reference="A2", authority_recorded_by="alice", recorded_at=NOW)
+    service.reinstate_revision(new_revision_id=old.identity.document_revision_id, old_revision_id=new.identity.document_revision_id, effective_from=date(2024, 1, 1), authority_source="gov", authority_reference="R1", authority_recorded_by="alice", recorded_at=NOW)
+    new_period = [p for p in service._repository.list_periods_for_revision(new.identity.document_revision_id) if not p.is_open][0]
+    assert new_period.closure_reason == "rollback"
+    assert "closure_reason" not in inspect.signature(service.reinstate_revision).parameters
+
+
+def test_withdraw_revision_rejects_superseded_and_rollback_as_closure_reason():
+    """Business nuance: withdraw_revision must never accept
+    'superseded'/'rollback' -- those are meaningful ONLY when a NEW
+    revision is simultaneously taking over (activate_revision/
+    reinstate_revision), which withdraw_revision never does. Failure
+    this guards against: a semantically contradictory audit record
+    ("withdrawn... for reason: superseded") with no actual successor.
+    Affects: auditability directly."""
+    service = _service()
+    only = _register(service)
+    service.activate_revision(new_revision_id=only.identity.document_revision_id, old_revision_id=None, effective_from=date(2020, 1, 1), authority_source="gov", authority_reference="A1", authority_recorded_by="alice", recorded_at=NOW)
+    for bad_reason in ("superseded", "rollback"):
+        try:
+            service.withdraw_revision(
+                document_revision_id=only.identity.document_revision_id, withdrawal_effective_date=date(2023, 1, 1),
+                closure_reason=bad_reason, authority_source="gov", authority_reference="X",
+                authority_recorded_by="alice", recorded_at=NOW,
+            )
+            assert False, f"expected ValueError for closure_reason={bad_reason!r}"
+        except ValueError as exc:
+            assert "withdrawn" in str(exc) and "correction" in str(exc)
