@@ -1,0 +1,422 @@
+{
+  "contract_version": "revision_search_benchmark_v1",
+  "generated_at": "2026-08-02T04:37:11.207993+00:00",
+  "logical_document_id": "POLICY-RETENTION-001",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "fixture_inventory": [
+    {
+      "symbol": "v1",
+      "source_relative_path": "generated/POLICY_RETENTION_v1.docx",
+      "source_document_sha256": "ad07edda961b23391ae3358fd382cef81f0091dcaa17eafc3af979ad743b2adf",
+      "document_revision_id": "e421c4084cee42fbb5ba4a46db69c021944991704a9b8e90287526066e2672d6",
+      "version_label": null,
+      "revision_number": 1,
+      "chunk_count": 4,
+      "chunk_ids": [
+        "ceae17fa16786afb9047b97d63605722b71db14f4bdf79a025a1f372d03f3d42",
+        "96711ee5e2681044e96aa353d88de3c4e53367f2f619802278a1c0d6f088651e",
+        "4aaa56147990ccc964b7cd197c9b46ea5bd82cfd242b4de81f63ef8a840bbc66",
+        "5f0f5e1717bd3da0a8c5e51804bc4bc3c7071eb44b85baa18e6f389fa8759e7c"
+      ],
+      "retention_value": "3 years"
+    },
+    {
+      "symbol": "v2",
+      "source_relative_path": "generated/POLICY_RETENTION_v2.docx",
+      "source_document_sha256": "cb8962d0f37323c690fbc1279af1d9075598dd4dbbebb16066c29a036465ce30",
+      "document_revision_id": "fdeda1920250c9c4d345e4fa416a6d2997ff469665a0af24c4c03750be1b1918",
+      "version_label": null,
+      "revision_number": 2,
+      "chunk_count": 4,
+      "chunk_ids": [
+        "fbe553dbfb049ee478ff2c32a9987fdfbd40442c4034e2bd28a86d8fe73a0b26",
+        "6820c67828ab301ca64df383d4aeb8f1e0edb6ba31327b8bd6425bcdd432302e",
+        "cd3880438df4090e72cde1cf2330c721548af9f5691fae4a6e3985cbb4ae0eb8",
+        "e4d9667b91e490f8e54eea74fb3cbda40b61bbd3cb668f817266b647816fb4e9"
+      ],
+      "retention_value": "5 years"
+    },
+    {
+      "symbol": "v3",
+      "source_relative_path": "generated/POLICY_RETENTION_v3.docx",
+      "source_document_sha256": "a41da20acee3878bfdb4f8018efe3e55843ce26988a4db517344657756ad98ef",
+      "document_revision_id": "661952d0a87e24913e91ecaac232a99c8d5f6358c5e9d404d7eeba5d2e0053dc",
+      "version_label": null,
+      "revision_number": 3,
+      "chunk_count": 4,
+      "chunk_ids": [
+        "033159d2e5e7706ce1d4c3bbd8bf618f0c9c64f4e138a0c8551ea0d21cae0659",
+        "e72f3cbc855329fa631ad18b6c39b780a2d9d531e74916e44c6e5e5750bcd2ab",
+        "fb21e65e26cccd75f6a82421a84b98e44cb53473c4a758e68b0c2ab43e8c3142",
+        "469dd7256c80a00df5515dfa50d0f3374356418d436b85e6a4aeaa54e45b0248"
+      ],
+      "retention_value": "7 years"
+    },
+    {
+      "symbol": "v4",
+      "source_relative_path": "generated/POLICY_RETENTION_v4.docx",
+      "source_document_sha256": "3b54ba6bd14157848da2bfe003b8bd8b1e2d21950aed5aff41fc168a62ba9eaa",
+      "document_revision_id": "68791e8a5359582fd6ae89968046082bdb85d7e52869d38d400e5ffeb8af95f1",
+      "version_label": null,
+      "revision_number": 4,
+      "chunk_count": 4,
+      "chunk_ids": [
+        "436041c881571c1f849f898d52982fb37c8561b0f32e764b963714f5f35a0bde",
+        "320dab60c3821087209be07fb54d7e119bef2e1129c95e071b4281f03501aa60",
+        "85d863a87d88e88e745cfeb53305ab5a28a46e0c02d09e0f1d7990e25df5c1ea",
+        "60fc38a6459cf01da66298d8dc52a444eb4e3f6d703eadcf90e421476b86d19a"
+      ],
+      "retention_value": "10 years"
+    },
+    {
+      "symbol": "v5",
+      "source_relative_path": "generated/POLICY_RETENTION_v5.docx",
+      "source_document_sha256": "f2d23ac23db9c4ffb609cad9adbbfd131a92f7a5c662978fde95c48daf8eadfb",
+      "document_revision_id": "3c827a7c1eb9afcd19f7acb3da0856b6500442ac9229a3ac4cc3ed700ae22be5",
+      "version_label": null,
+      "revision_number": 5,
+      "chunk_count": 4,
+      "chunk_ids": [
+        "6a435c4393da159ddc176500da4a4923942ea6aa6074c68a1d40beabe6ee9b20",
+        "5f462ea74b3342ae5a788bd1e09a238f3e3719966c85b4ae460b9dca11069677",
+        "5e25c95d75de46ea7937326908e74e2223a27d4dce08470b731d064f15299da7",
+        "3090d81a1a8b9fa54c737249b7374166ce24fa63b3b0cba41162e929d4dd826b"
+      ],
+      "retention_value": "8 years"
+    }
+  ],
+  "index_build": {
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "revision_symbols": [
+      "v1",
+      "v2",
+      "v3",
+      "v4",
+      "v5"
+    ],
+    "candidate_chunk_count": 20,
+    "empty_retrieval_text_skipped_count": 0,
+    "indexed_count": 20,
+    "skipped_unchanged_count": 0,
+    "embedded_count": 20,
+    "build_latency_seconds": 0.5809255000203848,
+    "embedding_elapsed_seconds": 0.43226009979844093,
+    "embedding_cost_usd": null,
+    "index_hash": "f08bbf07ee9d5b37a4fe7181d73e14607c327737754a2ece7e50a9b7392f5c9e",
+    "total_record_count": 20,
+    "generated_at": "2026-08-02T04:37:10.225450+00:00"
+  },
+  "query_scenarios": [
+    {
+      "question_id": "A_current",
+      "description": "Scenario A: plain current query -- exactly v3 (7 years) is eligible; v1/v2 historical, v4 draft, v5 an unactivated candidate must never appear.",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v3"
+      ],
+      "actual_eligible_symbols": [
+        "v3"
+      ],
+      "forbidden_symbols": [
+        "v1",
+        "v2",
+        "v4",
+        "v5"
+      ],
+      "expected_authority_labels": {
+        "v3": "effective"
+      },
+      "actual_authority_labels": {
+        "v5": "draft",
+        "v3": "effective",
+        "v4": "draft",
+        "v1": "superseded",
+        "v2": "superseded"
+      },
+      "authority_aware_top_k_symbols": [
+        "v3",
+        "v3",
+        "v3",
+        "v3"
+      ],
+      "unfiltered_top_k_symbols": [
+        "v1",
+        "v3",
+        "v5",
+        "v2",
+        "v4",
+        "v3",
+        "v4",
+        "v5",
+        "v1",
+        "v2"
+      ],
+      "ineligible_revision_leakage_at_k": 8,
+      "eligible_revision_precision_at_k": 1.0,
+      "required_revision_hit_at_k": true,
+      "expected_value_retrieved": true,
+      "resolver_latency_seconds": 0.040644200053066015,
+      "authority_aware_vector_search_latency_seconds": 0.011783699970692396,
+      "unfiltered_vector_search_latency_seconds": 0.016001000069081783,
+      "total_latency_seconds": 0.0684289000928402,
+      "integrity_error": null,
+      "failure_reasons": [],
+      "passed": true
+    },
+    {
+      "question_id": "B_historical",
+      "description": "Scenario B: an as_of query dated inside v2's own authority window (2018-01-01..2022-01-01) resolves v2 (5 years), never the currently-effective v3.",
+      "query_intent": "as_of",
+      "as_of_date": "2019-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": [
+        "v2"
+      ],
+      "actual_eligible_symbols": [
+        "v2"
+      ],
+      "forbidden_symbols": [
+        "v1",
+        "v3",
+        "v4",
+        "v5"
+      ],
+      "expected_authority_labels": {
+        "v2": "effective"
+      },
+      "actual_authority_labels": {
+        "v5": "draft",
+        "v3": "approved_future",
+        "v4": "draft",
+        "v1": "superseded",
+        "v2": "effective"
+      },
+      "authority_aware_top_k_symbols": [
+        "v2",
+        "v2",
+        "v2",
+        "v2"
+      ],
+      "unfiltered_top_k_symbols": [
+        "v1",
+        "v3",
+        "v5",
+        "v2",
+        "v4",
+        "v3",
+        "v4",
+        "v5",
+        "v1",
+        "v2"
+      ],
+      "ineligible_revision_leakage_at_k": 8,
+      "eligible_revision_precision_at_k": 1.0,
+      "required_revision_hit_at_k": true,
+      "expected_value_retrieved": true,
+      "resolver_latency_seconds": 0.04367310041561723,
+      "authority_aware_vector_search_latency_seconds": 0.012436000164598227,
+      "unfiltered_vector_search_latency_seconds": 0.014587400015443563,
+      "total_latency_seconds": 0.07069650059565902,
+      "integrity_error": null,
+      "failure_reasons": [],
+      "passed": true
+    },
+    {
+      "question_id": "C_draft",
+      "description": "Scenario C: an explicit draft-intent query for v4 returns v4 (proposed 10 years), visibly labeled draft -- never treated as current authority.",
+      "query_intent": "draft",
+      "as_of_date": "2026-06-01",
+      "requested_symbols": [
+        "v4"
+      ],
+      "expected_eligible_symbols": [
+        "v4"
+      ],
+      "actual_eligible_symbols": [
+        "v4"
+      ],
+      "forbidden_symbols": [
+        "v1",
+        "v2",
+        "v3",
+        "v5"
+      ],
+      "expected_authority_labels": {
+        "v4": "draft"
+      },
+      "actual_authority_labels": {
+        "v4": "draft"
+      },
+      "authority_aware_top_k_symbols": [
+        "v4",
+        "v4",
+        "v4",
+        "v4"
+      ],
+      "unfiltered_top_k_symbols": [
+        "v1",
+        "v3",
+        "v5",
+        "v2",
+        "v4",
+        "v3",
+        "v4",
+        "v5",
+        "v1",
+        "v2"
+      ],
+      "ineligible_revision_leakage_at_k": 8,
+      "eligible_revision_precision_at_k": 1.0,
+      "required_revision_hit_at_k": true,
+      "expected_value_retrieved": true,
+      "resolver_latency_seconds": 0.04487400036305189,
+      "authority_aware_vector_search_latency_seconds": 0.010472100228071213,
+      "unfiltered_vector_search_latency_seconds": 0.017526900395751,
+      "total_latency_seconds": 0.0728730009868741,
+      "integrity_error": null,
+      "failure_reasons": [],
+      "passed": true
+    },
+    {
+      "question_id": "D_comparison",
+      "description": "Scenario D: an explicit comparison query for v2 and v3 returns EXACTLY those two, each with its own value and its own authority label -- never merged, never a third revision.",
+      "query_intent": "comparison",
+      "as_of_date": "2026-06-01",
+      "requested_symbols": [
+        "v2",
+        "v3"
+      ],
+      "expected_eligible_symbols": [
+        "v2",
+        "v3"
+      ],
+      "actual_eligible_symbols": [
+        "v2",
+        "v3"
+      ],
+      "forbidden_symbols": [
+        "v1",
+        "v4",
+        "v5"
+      ],
+      "expected_authority_labels": {
+        "v2": "superseded",
+        "v3": "effective"
+      },
+      "actual_authority_labels": {
+        "v2": "superseded",
+        "v3": "effective"
+      },
+      "authority_aware_top_k_symbols": [
+        "v3",
+        "v2",
+        "v3",
+        "v2",
+        "v3",
+        "v2",
+        "v2",
+        "v3"
+      ],
+      "unfiltered_top_k_symbols": [
+        "v1",
+        "v3",
+        "v5",
+        "v2",
+        "v4",
+        "v3",
+        "v4",
+        "v5",
+        "v1",
+        "v2"
+      ],
+      "ineligible_revision_leakage_at_k": 6,
+      "eligible_revision_precision_at_k": 1.0,
+      "required_revision_hit_at_k": true,
+      "expected_value_retrieved": true,
+      "resolver_latency_seconds": 0.03718079999089241,
+      "authority_aware_vector_search_latency_seconds": 0.011669100262224674,
+      "unfiltered_vector_search_latency_seconds": 0.012056299950927496,
+      "total_latency_seconds": 0.06090620020404458,
+      "integrity_error": null,
+      "failure_reasons": [],
+      "passed": true
+    }
+  ],
+  "query_scenarios_passed": 4,
+  "query_scenarios_total": 4,
+  "authority_switch": {
+    "question_id": "E_authority_switch",
+    "as_of_date": "2026-08-01",
+    "before_eligible_symbols": [
+      "v3"
+    ],
+    "before_top1_symbol": "v3",
+    "before_value_found": true,
+    "after_eligible_symbols": [
+      "v5"
+    ],
+    "after_top1_symbol": "v5",
+    "after_value_found": true,
+    "registry_snapshot_hash_before": "5591b6efe9b8bea074d611e300d690829c51e2712b0e9bc4cac97c3c5e0b2095",
+    "registry_snapshot_hash_after": "7d91314b3f726a3943369797a7e8c14213ec94221cfeaa1f33e39efd5168cc13",
+    "registry_snapshot_hash_changed": true,
+    "index_hash_before": "f08bbf07ee9d5b37a4fe7181d73e14607c327737754a2ece7e50a9b7392f5c9e",
+    "index_hash_after": "f08bbf07ee9d5b37a4fe7181d73e14607c327737754a2ece7e50a9b7392f5c9e",
+    "index_hash_unchanged": true,
+    "row_count_before": 20,
+    "row_count_after": 20,
+    "row_count_unchanged": true,
+    "chunk_ids_before": [
+      "033159d2e5e7706ce1d4c3bbd8bf618f0c9c64f4e138a0c8551ea0d21cae0659",
+      "3090d81a1a8b9fa54c737249b7374166ce24fa63b3b0cba41162e929d4dd826b",
+      "320dab60c3821087209be07fb54d7e119bef2e1129c95e071b4281f03501aa60",
+      "436041c881571c1f849f898d52982fb37c8561b0f32e764b963714f5f35a0bde",
+      "469dd7256c80a00df5515dfa50d0f3374356418d436b85e6a4aeaa54e45b0248",
+      "4aaa56147990ccc964b7cd197c9b46ea5bd82cfd242b4de81f63ef8a840bbc66",
+      "5e25c95d75de46ea7937326908e74e2223a27d4dce08470b731d064f15299da7",
+      "5f0f5e1717bd3da0a8c5e51804bc4bc3c7071eb44b85baa18e6f389fa8759e7c",
+      "5f462ea74b3342ae5a788bd1e09a238f3e3719966c85b4ae460b9dca11069677",
+      "60fc38a6459cf01da66298d8dc52a444eb4e3f6d703eadcf90e421476b86d19a",
+      "6820c67828ab301ca64df383d4aeb8f1e0edb6ba31327b8bd6425bcdd432302e",
+      "6a435c4393da159ddc176500da4a4923942ea6aa6074c68a1d40beabe6ee9b20",
+      "85d863a87d88e88e745cfeb53305ab5a28a46e0c02d09e0f1d7990e25df5c1ea",
+      "96711ee5e2681044e96aa353d88de3c4e53367f2f619802278a1c0d6f088651e",
+      "cd3880438df4090e72cde1cf2330c721548af9f5691fae4a6e3985cbb4ae0eb8",
+      "ceae17fa16786afb9047b97d63605722b71db14f4bdf79a025a1f372d03f3d42",
+      "e4d9667b91e490f8e54eea74fb3cbda40b61bbd3cb668f817266b647816fb4e9",
+      "e72f3cbc855329fa631ad18b6c39b780a2d9d531e74916e44c6e5e5750bcd2ab",
+      "fb21e65e26cccd75f6a82421a84b98e44cb53473c4a758e68b0c2ab43e8c3142",
+      "fbe553dbfb049ee478ff2c32a9987fdfbd40442c4034e2bd28a86d8fe73a0b26"
+    ],
+    "chunk_ids_after": [
+      "033159d2e5e7706ce1d4c3bbd8bf618f0c9c64f4e138a0c8551ea0d21cae0659",
+      "3090d81a1a8b9fa54c737249b7374166ce24fa63b3b0cba41162e929d4dd826b",
+      "320dab60c3821087209be07fb54d7e119bef2e1129c95e071b4281f03501aa60",
+      "436041c881571c1f849f898d52982fb37c8561b0f32e764b963714f5f35a0bde",
+      "469dd7256c80a00df5515dfa50d0f3374356418d436b85e6a4aeaa54e45b0248",
+      "4aaa56147990ccc964b7cd197c9b46ea5bd82cfd242b4de81f63ef8a840bbc66",
+      "5e25c95d75de46ea7937326908e74e2223a27d4dce08470b731d064f15299da7",
+      "5f0f5e1717bd3da0a8c5e51804bc4bc3c7071eb44b85baa18e6f389fa8759e7c",
+      "5f462ea74b3342ae5a788bd1e09a238f3e3719966c85b4ae460b9dca11069677",
+      "60fc38a6459cf01da66298d8dc52a444eb4e3f6d703eadcf90e421476b86d19a",
+      "6820c67828ab301ca64df383d4aeb8f1e0edb6ba31327b8bd6425bcdd432302e",
+      "6a435c4393da159ddc176500da4a4923942ea6aa6074c68a1d40beabe6ee9b20",
+      "85d863a87d88e88e745cfeb53305ab5a28a46e0c02d09e0f1d7990e25df5c1ea",
+      "96711ee5e2681044e96aa353d88de3c4e53367f2f619802278a1c0d6f088651e",
+      "cd3880438df4090e72cde1cf2330c721548af9f5691fae4a6e3985cbb4ae0eb8",
+      "ceae17fa16786afb9047b97d63605722b71db14f4bdf79a025a1f372d03f3d42",
+      "e4d9667b91e490f8e54eea74fb3cbda40b61bbd3cb668f817266b647816fb4e9",
+      "e72f3cbc855329fa631ad18b6c39b780a2d9d531e74916e44c6e5e5750bcd2ab",
+      "fb21e65e26cccd75f6a82421a84b98e44cb53473c4a758e68b0c2ab43e8c3142",
+      "fbe553dbfb049ee478ff2c32a9987fdfbd40442c4034e2bd28a86d8fe73a0b26"
+    ],
+    "chunk_ids_unchanged": true,
+    "chunk_hashes_unchanged": true,
+    "embedded_count_during_switch": 0,
+    "passed": true,
+    "failure_reasons": []
+  },
+  "all_passed": true
+}

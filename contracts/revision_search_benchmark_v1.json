@@ -1,0 +1,142 @@
+{
+  "contract_version": "revision_search_benchmark_v1",
+  "logical_document_id": "POLICY-RETENTION-001",
+  "fixtures": [
+    {
+      "symbol": "v1",
+      "source_relative_path": "generated/POLICY_RETENTION_v1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "retention_value": "3 years",
+      "note": "historical, superseded by v2"
+    },
+    {
+      "symbol": "v2",
+      "source_relative_path": "generated/POLICY_RETENTION_v2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "retention_value": "5 years",
+      "note": "historical, superseded by v3 -- used by the historical (as_of) scenario"
+    },
+    {
+      "symbol": "v3",
+      "source_relative_path": "generated/POLICY_RETENTION_v3.docx",
+      "version_label": null,
+      "revision_number": 3,
+      "retention_value": "7 years",
+      "note": "currently effective at benchmark authoring time"
+    },
+    {
+      "symbol": "v4",
+      "source_relative_path": "generated/POLICY_RETENTION_v4.docx",
+      "version_label": null,
+      "revision_number": 4,
+      "retention_value": "10 years",
+      "note": "proposed, registered but never activated -- draft only"
+    },
+    {
+      "symbol": "v5",
+      "source_relative_path": "generated/POLICY_RETENTION_v5.docx",
+      "version_label": null,
+      "revision_number": 5,
+      "retention_value": "8 years",
+      "note": "already ingested/chunked/embedded and registered as a candidate; activated only by the authority-switch scenario"
+    }
+  ],
+  "authority_snapshot": {
+    "description": "Declarative registry setup -- reuses the SAME registry_setup step vocabulary (register/activate) as contracts/revision_authority_scenarios_v2.json, replayed through Stage 7R.1's own, unmodified contract_runner._run_registry_setup and service.py. v1 -> v2 -> v3 is a straight supersession chain; v4 and v5 are registered but left in draft (v5 is activated later, ONLY by the authority_switch step below).",
+    "registry_setup": [
+      { "step_id": "reg_v1", "op": "register", "symbol": "v1", "expected_is_new": true, "recorded_at": "2015-01-01T00:00:00+00:00" },
+      { "step_id": "act_v1", "op": "activate", "new": "v1", "old": null, "effective_from": "2015-01-01", "recorded_at": "2015-01-01T00:00:00+00:00" },
+      { "step_id": "reg_v2", "op": "register", "symbol": "v2", "expected_is_new": true, "recorded_at": "2018-01-01T00:00:00+00:00" },
+      { "step_id": "act_v2", "op": "activate", "new": "v2", "old": "v1", "effective_from": "2018-01-01", "recorded_at": "2018-01-01T00:00:00+00:00" },
+      { "step_id": "reg_v3", "op": "register", "symbol": "v3", "expected_is_new": true, "recorded_at": "2022-01-01T00:00:00+00:00" },
+      { "step_id": "act_v3", "op": "activate", "new": "v3", "old": "v2", "effective_from": "2022-01-01", "recorded_at": "2022-01-01T00:00:00+00:00" },
+      { "step_id": "reg_v4", "op": "register", "symbol": "v4", "expected_is_new": true, "recorded_at": "2026-05-01T00:00:00+00:00" },
+      { "step_id": "reg_v5", "op": "register", "symbol": "v5", "expected_is_new": true, "recorded_at": "2026-06-01T00:00:00+00:00" }
+    ]
+  },
+  "queries": [
+    {
+      "question_id": "A_current",
+      "description": "Scenario A: plain current query -- exactly v3 (7 years) is eligible; v1/v2 historical, v4 draft, v5 an unactivated candidate must never appear.",
+      "query": "How long must customer account records be retained after account closure?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": ["v3"],
+      "forbidden_symbols": ["v1", "v2", "v4", "v5"],
+      "expected_value": "7 years",
+      "expected_values_by_symbol": { "v3": "7 years" },
+      "expected_authority_labels": { "v3": "effective" },
+      "top_k": 10
+    },
+    {
+      "question_id": "B_historical",
+      "description": "Scenario B: an as_of query dated inside v2's own authority window (2018-01-01..2022-01-01) resolves v2 (5 years), never the currently-effective v3.",
+      "query": "How long must customer account records be retained after account closure?",
+      "query_intent": "as_of",
+      "as_of_date": "2019-06-01",
+      "requested_symbols": [],
+      "expected_eligible_symbols": ["v2"],
+      "forbidden_symbols": ["v1", "v3", "v4", "v5"],
+      "expected_value": "5 years",
+      "expected_values_by_symbol": { "v2": "5 years" },
+      "expected_authority_labels": { "v2": "effective" },
+      "top_k": 10
+    },
+    {
+      "question_id": "C_draft",
+      "description": "Scenario C: an explicit draft-intent query for v4 returns v4 (proposed 10 years), visibly labeled draft -- never treated as current authority.",
+      "query": "How long must customer account records be retained after account closure?",
+      "query_intent": "draft",
+      "as_of_date": "2026-06-01",
+      "requested_symbols": ["v4"],
+      "expected_eligible_symbols": ["v4"],
+      "forbidden_symbols": ["v1", "v2", "v3", "v5"],
+      "expected_value": "10 years",
+      "expected_values_by_symbol": { "v4": "10 years" },
+      "expected_authority_labels": { "v4": "draft" },
+      "top_k": 10
+    },
+    {
+      "question_id": "D_comparison",
+      "description": "Scenario D: an explicit comparison query for v2 and v3 returns EXACTLY those two, each with its own value and its own authority label -- never merged, never a third revision.",
+      "query": "How long must customer account records be retained after account closure?",
+      "query_intent": "comparison",
+      "as_of_date": "2026-06-01",
+      "requested_symbols": ["v2", "v3"],
+      "expected_eligible_symbols": ["v2", "v3"],
+      "forbidden_symbols": ["v1", "v4", "v5"],
+      "expected_value": null,
+      "expected_values_by_symbol": { "v2": "5 years", "v3": "7 years" },
+      "expected_authority_labels": { "v2": "superseded", "v3": "effective" },
+      "top_k": 10
+    }
+  ],
+  "authority_switch": {
+    "description": "Scenario E: v3 is effective; v5 is already ingested/chunked/embedded and registered as a candidate (draft). Run the current query (records v3). Activate v5 (effective_from == this query's as_of_date), superseding v3 -- NO re-ingestion, re-chunking, or re-embedding of anything. Run the SAME current query again with the SAME as_of_date (records v5). Only the registry snapshot hash and the eligible/search results may change; the index itself (row count, content hash, chunk ids/hashes, stored vectors, embedding-call count) must be byte-identical before and after.",
+    "activation_step": {
+      "step_id": "act_v5_switch",
+      "op": "activate",
+      "new": "v5",
+      "old": "v3",
+      "effective_from": "2026-08-01",
+      "recorded_at": "2026-08-01T00:00:00+00:00"
+    },
+    "query": {
+      "question_id": "E_authority_switch",
+      "query": "How long must customer account records be retained after account closure?",
+      "query_intent": "current",
+      "as_of_date": "2026-08-01",
+      "requested_symbols": [],
+      "top_k": 10
+    },
+    "before_expected_eligible_symbols": ["v3"],
+    "before_expected_value": "7 years",
+    "before_expected_authority_labels": { "v3": "effective", "v5": "draft" },
+    "after_expected_eligible_symbols": ["v5"],
+    "after_expected_value": "8 years",
+    "after_expected_authority_labels": { "v3": "superseded", "v5": "effective" }
+  }
+}

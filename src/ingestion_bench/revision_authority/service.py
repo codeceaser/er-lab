@@ -186,7 +186,25 @@ class RevisionAuthorityService:
         or leave an open, still-effective period behind under a
         "withdrawn" status the resolver would then have to guess about.
         Rejected at RUNTIME, not just by the type hint (Python does not
-        enforce type hints)."""
+        enforce type hints).
+
+        Stage 7R.1b hardening guard: even a permitted status ("draft"/
+        "under_review") is rejected once the revision has EVER been
+        granted real authority -- ANY of its periods (current, already-
+        closed/historical, or a scheduled future one) with
+        `effective_to is None or effective_to > effective_from`. A
+        revision that is currently effective, historically superseded,
+        approved-future, withdrawn, or reinstated-with-prior-history all
+        have at least one such real period, so none of them may be
+        silently demoted back to draft/under_review through this pure-
+        status-change path -- only `activate_revision`/
+        `reinstate_revision`/`withdraw_revision` may ever touch a
+        revision with real authority behind it. A ZERO-width period
+        (`effective_to == effective_from`, e.g. a
+        `pre_effective_authority_correction` retracted before it ever
+        took effect) never granted authority, so it does not count here
+        -- draft<->under_review remains available for a
+        zero-width-corrected candidate."""
         if publication_status not in ("draft", "under_review"):
             raise ValueError(
                 f"record_authority_decision() may only set publication_status to 'draft' or 'under_review', "
@@ -200,6 +218,19 @@ class RevisionAuthorityService:
         identity = self._repository.get_identity(document_revision_id)
         if identity is None:
             raise ValueError(f"no registered revision with document_revision_id={document_revision_id!r}")
+
+        real_periods = [
+            p for p in self._repository.list_periods_for_revision(document_revision_id)
+            if p.effective_to is None or p.effective_to > p.effective_from
+        ]
+        if real_periods:
+            raise ValueError(
+                f"record_authority_decision() cannot set publication_status={publication_status!r} for "
+                f"document_revision_id={document_revision_id!r} -- it has {len(real_periods)} non-zero-width "
+                "authority period(s) (current, historical, or scheduled future) and has therefore already been "
+                "granted real authority; only activate_revision()/reinstate_revision()/withdraw_revision() may "
+                "change its status from here on"
+            )
 
         updated = AuthorityMetadata(
             publication_status=publication_status,
@@ -483,7 +514,18 @@ class RevisionAuthorityService:
         Stage 7R.1b item 2: only "withdrawn"/"correction" are ever
         accepted here -- "superseded"/"rollback" are producible ONLY by
         `activate_revision`/`reinstate_revision`, never by this method
-        (rejected at RUNTIME, not just by the type hint)."""
+        (rejected at RUNTIME, not just by the type hint).
+
+        Stage 7R.1b hardening guard: "correction" REQUIRES
+        `withdrawal_effective_date == open_period.effective_from`
+        exactly -- a correction retracts a period that never actually
+        took effect, so it is only coherent at the exact instant the
+        period would have begun. Once even a single day of real
+        authority has elapsed (`withdrawal_effective_date >
+        open_period.effective_from`), the period DID take effect and
+        the caller must use `closure_reason="withdrawn"` instead, which
+        genuinely produces a non-zero-width, historically-real closed
+        period rather than retroactively erasing one."""
         if closure_reason not in ("withdrawn", "correction"):
             raise ValueError(
                 f"withdraw_revision() may only close with closure_reason 'withdrawn' or 'correction', "
@@ -504,6 +546,14 @@ class RevisionAuthorityService:
             raise ValueError(
                 f"withdrawal_effective_date {withdrawal_effective_date} is before the open period's own "
                 f"start {open_period.effective_from}"
+            )
+        if closure_reason == "correction" and withdrawal_effective_date != open_period.effective_from:
+            raise ValueError(
+                f"closure_reason='correction' requires withdrawal_effective_date "
+                f"({withdrawal_effective_date}) to equal the open period's own start "
+                f"({open_period.effective_from}) exactly -- this period has already been effective for "
+                f"{(withdrawal_effective_date - open_period.effective_from).days} day(s) and must be closed "
+                "with closure_reason='withdrawn' instead"
             )
 
         new_status: PublicationStatus = "draft" if closure_reason == "correction" else "withdrawn"
