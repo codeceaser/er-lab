@@ -1,0 +1,963 @@
+{
+  "contract_version": "cross_document_relationship_benchmark_v1",
+  "generated_at": "2026-08-02T23:51:29.945779+00:00",
+  "corpus_id": "CROSS-DOC-RELATIONSHIP-001",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "frozen_input_verification": {
+    "corpus_logical_document_ids": [
+      "ADJACENT-DOMAIN",
+      "APP-PORTFOLIO",
+      "CONTROL-LIBRARY",
+      "OBLIGATION-REGISTER",
+      "PROCEDURE-CATALOGUE",
+      "SERVICE-CATALOGUE"
+    ],
+    "revision_symbols": [
+      "adj_rev1",
+      "app_rev1",
+      "app_rev2",
+      "ctl_rev1",
+      "ctl_rev2",
+      "ctl_rev3",
+      "obl_rev1",
+      "obl_rev2",
+      "prc_rev1",
+      "prc_rev2",
+      "svc_rev1"
+    ],
+    "total_chunk_count": 11,
+    "recomputed_index_hash": "63e130e86da53ebe601d3f7167749c2e22652177c751684615307ee6117fbc14",
+    "committed_index_hash": "63e130e86da53ebe601d3f7167749c2e22652177c751684615307ee6117fbc14",
+    "index_hash_matches": true
+  },
+  "extraction_run": {
+    "extraction_run_id": "extrun_openai_0beccdefb3e740b0",
+    "extractor_identity": "openai:gpt-4o-mini",
+    "model": "gpt-4o-mini",
+    "prompt_version": "stage7b1-extract-v1",
+    "prompt_sha256": "977cb1f457d81e945b64715d64b805839a6a581100c0f84b2143eecdfeaf7c0f",
+    "temperature": 0.0,
+    "request_hash": "cd27ad9951cf35ba73f5bc418acfe5a7019f3ff14ee7c5c88765c3033387c937",
+    "raw_response_hash": "41faaeef6a68aa49b9ca3918aba32661d808bc68e166faf8763844547570d4a7",
+    "input_tokens": 3708,
+    "output_tokens": 958,
+    "latency_seconds": 20.385769499931484,
+    "estimated_cost_usd": 0.001131,
+    "chunk_count": 11,
+    "extraction_failure_count": 0,
+    "extraction_failures": []
+  },
+  "build_manifest": {
+    "node_count": 17,
+    "edge_assertion_count": 14,
+    "evidence_count": 10,
+    "graph_payload_sha256": "1ffd01c8f7977d82e8e67e381ee71ce4045a64e0e5e788784193941c56c25d38",
+    "storage_estimate_bytes": 24697,
+    "build_latency_seconds": 24.30925830034539,
+    "extractor_identity": "openai:gpt-4o-mini",
+    "extraction_input_tokens": 3708,
+    "extraction_output_tokens": 958,
+    "extraction_estimated_cost_usd": 0.001131,
+    "extraction_failure_count": 0
+  },
+  "build_evaluation": {
+    "node_count": 17,
+    "edge_assertion_count": 14,
+    "evidence_count": 10,
+    "expected_fact_count": 15,
+    "covered_expected_fact_count": 12,
+    "expected_fact_edge_recall": 0.8,
+    "missing_expected_fact_ids": [
+      "F_adj_prc",
+      "F_prc_current",
+      "F_svc"
+    ],
+    "extracted_edge_precision": 0.8571428571428571,
+    "unsupported_extracted_edge_count": 2,
+    "unsupported_extracted_edges": [
+      "edge_c805ac8f14e6ebdcf8433f53",
+      "edge_71086d2b175f319e5905f5e0"
+    ],
+    "duplicate_assertion_count": 0,
+    "provenance_complete_edge_count": 14,
+    "provenance_completeness": 1.0,
+    "edges_with_invalid_or_missing_supporting_chunk": 0,
+    "entity_normalization_collision_count": 0,
+    "entity_normalization_collisions": [],
+    "rejected_relationship_count": 1
+  },
+  "nodes": [
+    {
+      "node_id": "node_001c32b8da8d7c7faec501ac",
+      "entity_type": "application",
+      "canonical_name": "APP-224499",
+      "aliases": [
+        "APP-224499"
+      ]
+    },
+    {
+      "node_id": "node_8db3f179f33ac4150655123e",
+      "entity_type": "application",
+      "canonical_name": "APP-224510",
+      "aliases": [
+        "APP-224510"
+      ]
+    },
+    {
+      "node_id": "node_407a67f5781920a516ae1513",
+      "entity_type": "application",
+      "canonical_name": "APP-330012",
+      "aliases": [
+        "APP-330012"
+      ]
+    },
+    {
+      "node_id": "node_b07d67e691201384ef70fd40",
+      "entity_type": "control",
+      "canonical_name": "C-77",
+      "aliases": []
+    },
+    {
+      "node_id": "node_365fdd368a8600bf0eaec02e",
+      "entity_type": "control",
+      "canonical_name": "C-88",
+      "aliases": []
+    },
+    {
+      "node_id": "node_cfbaff50fd490bec3abb0d6a",
+      "entity_type": "control",
+      "canonical_name": "C-88a",
+      "aliases": []
+    },
+    {
+      "node_id": "node_3d420aa81089148179601215",
+      "entity_type": "other",
+      "canonical_name": "Control C-91",
+      "aliases": [
+        "Control C-91"
+      ]
+    },
+    {
+      "node_id": "node_09a74a9f969a0041eececf4f",
+      "entity_type": "obligation",
+      "canonical_name": "O-31",
+      "aliases": []
+    },
+    {
+      "node_id": "node_91736795660c2382602329f8",
+      "entity_type": "obligation",
+      "canonical_name": "O-32",
+      "aliases": []
+    },
+    {
+      "node_id": "node_93e8ba7da74f745a8e6e9653",
+      "entity_type": "procedure",
+      "canonical_name": "P-204",
+      "aliases": []
+    },
+    {
+      "node_id": "node_c4396f3a76508d3b5e95645d",
+      "entity_type": "procedure",
+      "canonical_name": "P-205",
+      "aliases": [
+        "Procedure P-205"
+      ]
+    },
+    {
+      "node_id": "node_8b595f1039b6f408eb73b2da",
+      "entity_type": "procedure",
+      "canonical_name": "P-301",
+      "aliases": []
+    },
+    {
+      "node_id": "node_5a8efb4becee670edc4ca1c6",
+      "entity_type": "business_service",
+      "canonical_name": "Payment Reconciliation",
+      "aliases": []
+    },
+    {
+      "node_id": "node_f58cd10783584f120f3ddbf9",
+      "entity_type": "business_service",
+      "canonical_name": "Payment Settlement",
+      "aliases": []
+    },
+    {
+      "node_id": "node_b2c1a87c42b36674d1681e33",
+      "entity_type": "other",
+      "canonical_name": "operating procedure",
+      "aliases": [
+        "operating procedure"
+      ]
+    },
+    {
+      "node_id": "node_2f2f99cd103de02e159db828",
+      "entity_type": "other",
+      "canonical_name": "reconciliation",
+      "aliases": [
+        "reconciliation"
+      ]
+    },
+    {
+      "node_id": "node_e72102cf8fd4ca140c018eb1",
+      "entity_type": "other",
+      "canonical_name": "retired operating procedure",
+      "aliases": [
+        "retired operating procedure"
+      ]
+    }
+  ],
+  "edge_assertions": [
+    {
+      "edge_assertion_id": "edge_376dc47459a97783ccbcef60",
+      "subject_node_id": "node_5a8efb4becee670edc4ca1c6",
+      "predicate": "is governed by",
+      "object_node_id": "node_91736795660c2382602329f8",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "supporting_content_sha256": "028a9ffc52d1a067d040295fe1545bd16552df2bbdc504acef9d829fd41bef30",
+      "supporting_text": "The Payment Reconciliation business service is governed by Obligation O-32.",
+      "source_relative_path": "generated/ADJACENT_DOMAIN_rev1.docx",
+      "source_document_sha256": "19f0adc8e8042ec3b265033fefee51a1be98d4955af08ea96437615ed5315344",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Adjacent Domain Reference",
+        "Payment Reconciliation Chain"
+      ],
+      "source_element_ids": [
+        "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+        "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+        "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+        "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+        "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b"
+      ],
+      "source_refs": [
+        {
+          "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+          "unit_index": 0,
+          "order_index": 3,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+          "unit_index": 0,
+          "order_index": 4,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+          "unit_index": 0,
+          "order_index": 5,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+          "unit_index": 0,
+          "order_index": 6,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_cc8dc7e4fab4b7deff72aecd",
+      "subject_node_id": "node_b07d67e691201384ef70fd40",
+      "predicate": "is implemented through",
+      "object_node_id": "node_8b595f1039b6f408eb73b2da",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "supporting_content_sha256": "028a9ffc52d1a067d040295fe1545bd16552df2bbdc504acef9d829fd41bef30",
+      "supporting_text": "Control C-77 is implemented through Procedure P-301.",
+      "source_relative_path": "generated/ADJACENT_DOMAIN_rev1.docx",
+      "source_document_sha256": "19f0adc8e8042ec3b265033fefee51a1be98d4955af08ea96437615ed5315344",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Adjacent Domain Reference",
+        "Payment Reconciliation Chain"
+      ],
+      "source_element_ids": [
+        "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+        "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+        "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+        "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+        "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b"
+      ],
+      "source_refs": [
+        {
+          "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+          "unit_index": 0,
+          "order_index": 3,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+          "unit_index": 0,
+          "order_index": 4,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+          "unit_index": 0,
+          "order_index": 5,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+          "unit_index": 0,
+          "order_index": 6,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_ea659a81c4600bb2baa47a51",
+      "subject_node_id": "node_91736795660c2382602329f8",
+      "predicate": "is satisfied by",
+      "object_node_id": "node_b07d67e691201384ef70fd40",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "supporting_content_sha256": "028a9ffc52d1a067d040295fe1545bd16552df2bbdc504acef9d829fd41bef30",
+      "supporting_text": "Obligation O-32 is satisfied by Control C-77.",
+      "source_relative_path": "generated/ADJACENT_DOMAIN_rev1.docx",
+      "source_document_sha256": "19f0adc8e8042ec3b265033fefee51a1be98d4955af08ea96437615ed5315344",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Adjacent Domain Reference",
+        "Payment Reconciliation Chain"
+      ],
+      "source_element_ids": [
+        "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+        "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+        "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+        "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+        "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b"
+      ],
+      "source_refs": [
+        {
+          "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+          "unit_index": 0,
+          "order_index": 3,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+          "unit_index": 0,
+          "order_index": 4,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+          "unit_index": 0,
+          "order_index": 5,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+          "unit_index": 0,
+          "order_index": 6,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_71086d2b175f319e5905f5e0",
+      "subject_node_id": "node_8b595f1039b6f408eb73b2da",
+      "predicate": "is the current operating procedure for",
+      "object_node_id": "node_2f2f99cd103de02e159db828",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "supporting_content_sha256": "028a9ffc52d1a067d040295fe1545bd16552df2bbdc504acef9d829fd41bef30",
+      "supporting_text": "Procedure P-301 is the current operating procedure for reconciliation.",
+      "source_relative_path": "generated/ADJACENT_DOMAIN_rev1.docx",
+      "source_document_sha256": "19f0adc8e8042ec3b265033fefee51a1be98d4955af08ea96437615ed5315344",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Adjacent Domain Reference",
+        "Payment Reconciliation Chain"
+      ],
+      "source_element_ids": [
+        "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+        "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+        "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+        "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+        "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b"
+      ],
+      "source_refs": [
+        {
+          "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+          "unit_index": 0,
+          "order_index": 3,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+          "unit_index": 0,
+          "order_index": 4,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+          "unit_index": 0,
+          "order_index": 5,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+          "unit_index": 0,
+          "order_index": 6,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_39bfe1722941805016788ad9",
+      "subject_node_id": "node_407a67f5781920a516ae1513",
+      "predicate": "supports",
+      "object_node_id": "node_5a8efb4becee670edc4ca1c6",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "supporting_content_sha256": "028a9ffc52d1a067d040295fe1545bd16552df2bbdc504acef9d829fd41bef30",
+      "supporting_text": "Application APP-330012 supports the Payment Reconciliation business service.",
+      "source_relative_path": "generated/ADJACENT_DOMAIN_rev1.docx",
+      "source_document_sha256": "19f0adc8e8042ec3b265033fefee51a1be98d4955af08ea96437615ed5315344",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Adjacent Domain Reference",
+        "Payment Reconciliation Chain"
+      ],
+      "source_element_ids": [
+        "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+        "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+        "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+        "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+        "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b"
+      ],
+      "source_refs": [
+        {
+          "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+          "unit_index": 0,
+          "order_index": 3,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+          "unit_index": 0,
+          "order_index": 4,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+          "unit_index": 0,
+          "order_index": 5,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        },
+        {
+          "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+          "unit_index": 0,
+          "order_index": 6,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_9a703af006d76b2ed9bf0598",
+      "subject_node_id": "node_001c32b8da8d7c7faec501ac",
+      "predicate": "supports",
+      "object_node_id": "node_f58cd10783584f120f3ddbf9",
+      "logical_document_id": "APP-PORTFOLIO",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "supporting_chunk_id": "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8",
+      "supporting_content_sha256": "62fab2bb03baae6ec0e2b612fe7370d5ee697b46f34c532fb82faaa0733ce9f1",
+      "supporting_text": "Application APP-224499 supports the Payment Settlement business service.",
+      "source_relative_path": "generated/APP_PORTFOLIO_rev1.docx",
+      "source_document_sha256": "aa584c4c983661a6962e2e5af8c06499df6f3e40b36b2e67b47bd860d1b419a3",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Application Portfolio",
+        "Registered Applications"
+      ],
+      "source_element_ids": [
+        "e4c046d70a286e271e77c82de8fe97b4a2e469f85fa1675e74943cde777cec9f"
+      ],
+      "source_refs": [
+        {
+          "element_id": "e4c046d70a286e271e77c82de8fe97b4a2e469f85fa1675e74943cde777cec9f",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_1193ffd74a5e684b60fd6cf0",
+      "subject_node_id": "node_8db3f179f33ac4150655123e",
+      "predicate": "supports",
+      "object_node_id": "node_f58cd10783584f120f3ddbf9",
+      "logical_document_id": "APP-PORTFOLIO",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "supporting_chunk_id": "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+      "supporting_content_sha256": "cd362e1283ef769a785851e6e1ea75f5618a99d9cfe920433dfe4c596ef20d18",
+      "supporting_text": "Application APP-224510 supports the Payment Settlement business service.",
+      "source_relative_path": "generated/APP_PORTFOLIO_rev2.docx",
+      "source_document_sha256": "69c504e74f62e9418387fcb0c869a18912b8605fdc12c4ada7f55eea9940a887",
+      "version_label": null,
+      "revision_number": 2,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Application Portfolio",
+        "Registered Applications"
+      ],
+      "source_element_ids": [
+        "b4f381a4e1458e7f56e4c4c25e9a179180c6c8fb653599ccded3a05b40db2ea7"
+      ],
+      "source_refs": [
+        {
+          "element_id": "b4f381a4e1458e7f56e4c4c25e9a179180c6c8fb653599ccded3a05b40db2ea7",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_fe35fabb0724ef074855d39b",
+      "subject_node_id": "node_cfbaff50fd490bec3abb0d6a",
+      "predicate": "is implemented through",
+      "object_node_id": "node_93e8ba7da74f745a8e6e9653",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "supporting_chunk_id": "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a",
+      "supporting_content_sha256": "60311037bdc6986c88400f5d4fb6d99a15bea35a04c75a7f2ef6831cf1dda159",
+      "supporting_text": "Control C-88a is implemented through Procedure P-204.",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev1.docx",
+      "source_document_sha256": "8d378619827af6250d3f23347d9d9d255bfef61adc1ef2037539e1e106439c65",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Control Library",
+        "Control Implementations"
+      ],
+      "source_element_ids": [
+        "8e26839de1ff885561c0ebdc3197ee062120db0a684855d51ef508e556524bde"
+      ],
+      "source_refs": [
+        {
+          "element_id": "8e26839de1ff885561c0ebdc3197ee062120db0a684855d51ef508e556524bde",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_b24ea8f7e909bfbf9cfb45f7",
+      "subject_node_id": "node_365fdd368a8600bf0eaec02e",
+      "predicate": "is implemented through",
+      "object_node_id": "node_c4396f3a76508d3b5e95645d",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "supporting_chunk_id": "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+      "supporting_content_sha256": "78ee76a964e9515f90b82af0f87c24c41848927c86f2275c733617798e6b1fd9",
+      "supporting_text": "Control C-88 is implemented through Procedure P-205.",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev2.docx",
+      "source_document_sha256": "7fb8a0698c64954be7f881c0c3301993a4fdda7e4e60b04971efe050a31bdf02",
+      "version_label": null,
+      "revision_number": 2,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Control Library",
+        "Control Implementations"
+      ],
+      "source_element_ids": [
+        "cefd0b37349f50f3e1dc027e500a7aebeaa4e4fad92b06945f8f25815f374434"
+      ],
+      "source_refs": [
+        {
+          "element_id": "cefd0b37349f50f3e1dc027e500a7aebeaa4e4fad92b06945f8f25815f374434",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_e39deb4c37da89f19bc83ec8",
+      "subject_node_id": "node_3d420aa81089148179601215",
+      "predicate": "is implemented through",
+      "object_node_id": "node_c4396f3a76508d3b5e95645d",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "supporting_chunk_id": "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c",
+      "supporting_content_sha256": "0e8bbb34c4924947daff29e223e9d0ebf76430919f229602f02f50637f006c05",
+      "supporting_text": "Control C-91 is implemented through Procedure P-205.",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev3.docx",
+      "source_document_sha256": "041eac0d61ad714f116bf96e8a8748f1cf2d34df676014ef36e7113668ccf349",
+      "version_label": null,
+      "revision_number": 3,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Control Library",
+        "Control Implementations"
+      ],
+      "source_element_ids": [
+        "60cb174e8ec1f58f08af943484d3eb6b1716aa30b555d8b8506db28af5a6a0d8"
+      ],
+      "source_refs": [
+        {
+          "element_id": "60cb174e8ec1f58f08af943484d3eb6b1716aa30b555d8b8506db28af5a6a0d8",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_622414afa2046d6c9a80dee1",
+      "subject_node_id": "node_09a74a9f969a0041eececf4f",
+      "predicate": "is satisfied by",
+      "object_node_id": "node_cfbaff50fd490bec3abb0d6a",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "supporting_chunk_id": "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a",
+      "supporting_content_sha256": "21aa7abef16842733598de5726673645a4a1a1893e71d4f678d89bfc9ee6c8f6",
+      "supporting_text": "Obligation O-31 is satisfied by Control C-88a.",
+      "source_relative_path": "generated/OBLIGATION_REGISTER_rev1.docx",
+      "source_document_sha256": "f448abf11ebfd110cf34e6f1f01ca7d3a93a6e0e6261e0cd79535c568c4c3c8d",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Obligation Register",
+        "Obligation Coverage"
+      ],
+      "source_element_ids": [
+        "bff56946bc24afd4d5f343cc43daab1dad32cfe0677ac1a9e72f6e80fa2df49f"
+      ],
+      "source_refs": [
+        {
+          "element_id": "bff56946bc24afd4d5f343cc43daab1dad32cfe0677ac1a9e72f6e80fa2df49f",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_a24b7026704938a554f267b0",
+      "subject_node_id": "node_09a74a9f969a0041eececf4f",
+      "predicate": "is satisfied by",
+      "object_node_id": "node_365fdd368a8600bf0eaec02e",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "supporting_chunk_id": "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+      "supporting_content_sha256": "85c6c84a6ac4761aa30f20cd9585d3b4d9417360a3b4018dc179fbebb54af1b0",
+      "supporting_text": "Obligation O-31 is satisfied by Control C-88.",
+      "source_relative_path": "generated/OBLIGATION_REGISTER_rev2.docx",
+      "source_document_sha256": "4828ed818726684ceabcec55834865ddf809cc2c29adff4b1416bc6d00ddb360",
+      "version_label": null,
+      "revision_number": 2,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Obligation Register",
+        "Obligation Coverage"
+      ],
+      "source_element_ids": [
+        "2cadac731ee907f7adff182121d3dd161852e8f52d814d6faf2edb2e32fb234f"
+      ],
+      "source_refs": [
+        {
+          "element_id": "2cadac731ee907f7adff182121d3dd161852e8f52d814d6faf2edb2e32fb234f",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_42d464f9e437365b08422179",
+      "subject_node_id": "node_93e8ba7da74f745a8e6e9653",
+      "predicate": "is a",
+      "object_node_id": "node_e72102cf8fd4ca140c018eb1",
+      "logical_document_id": "PROCEDURE-CATALOGUE",
+      "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "supporting_chunk_id": "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1",
+      "supporting_content_sha256": "bb84264ad5c55bb6b31aed7e09d346df20aa54c109338fdd3d47bcb01c1edb8e",
+      "supporting_text": "Procedure P-204 is a retired operating procedure.",
+      "source_relative_path": "generated/PROCEDURE_CATALOGUE_rev1.docx",
+      "source_document_sha256": "46f354211b3c8af9b9426cb039700917e8912f4e6a7b796f00772865eeb8b898",
+      "version_label": null,
+      "revision_number": 1,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Procedure Catalogue",
+        "Operating Procedures"
+      ],
+      "source_element_ids": [
+        "1f854b5c7752ee97efec8ce36e64a603e1d0c1b671a925fd075e10951449b6d8"
+      ],
+      "source_refs": [
+        {
+          "element_id": "1f854b5c7752ee97efec8ce36e64a603e1d0c1b671a925fd075e10951449b6d8",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    },
+    {
+      "edge_assertion_id": "edge_c805ac8f14e6ebdcf8433f53",
+      "subject_node_id": "node_c4396f3a76508d3b5e95645d",
+      "predicate": "is the current",
+      "object_node_id": "node_b2c1a87c42b36674d1681e33",
+      "logical_document_id": "PROCEDURE-CATALOGUE",
+      "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "supporting_chunk_id": "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb",
+      "supporting_content_sha256": "e856f21141ca346ebe68d7e3eb01082ed58796e10f930a65178bcf288131b3d5",
+      "supporting_text": "Procedure P-205 is the current operating procedure.",
+      "source_relative_path": "generated/PROCEDURE_CATALOGUE_rev2.docx",
+      "source_document_sha256": "bb175f1064b36ed4f3bb469c321827eb5836e438e13910cf978c94cb12cc0012",
+      "version_label": null,
+      "revision_number": 2,
+      "unit_indices": [
+        0
+      ],
+      "heading_path": [
+        "Procedure Catalogue",
+        "Operating Procedures"
+      ],
+      "source_element_ids": [
+        "fe6fa1fb6d0932d39ea4b0184d053844d4195280d9a670aa66f0911eaac2abc1"
+      ],
+      "source_refs": [
+        {
+          "element_id": "fe6fa1fb6d0932d39ea4b0184d053844d4195280d9a670aa66f0911eaac2abc1",
+          "unit_index": 0,
+          "order_index": 2,
+          "bbox": null,
+          "element_type": "paragraph",
+          "fragment_index": null,
+          "start_char": null,
+          "end_char": null
+        }
+      ],
+      "extraction_run_id": "extrun_openai_0beccdefb3e740b0"
+    }
+  ]
+}
