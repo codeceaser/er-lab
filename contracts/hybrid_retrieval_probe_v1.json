@@ -1,0 +1,62 @@
+{
+  "contract_version": "hybrid_retrieval_probe_v1",
+  "description": "Stage 7B.2 hybrid Vector-Graph probe. ONE immutable global algorithm configuration + the decision gates, declared BEFORE the measured run. Contains NO question-specific paths, seeds, answers, or relationship hints, and permits NO per-question tuning. The final per-question evidence budget (top_k) comes ONLY from the frozen Stage 7B.0 question contract, never from here.",
+
+  "candidate_parameters": {
+    "vector_candidate_multiplier": 3,
+    "max_vector_seed_chunks": 8,
+    "semantic_edge_candidate_count": 5,
+    "max_hop_depth": 5,
+    "max_candidate_paths": 32,
+    "rrf_constant": 60
+  },
+
+  "modes": {
+    "V": "Frozen authority-aware Vector baseline (Stage 7B.0 result, loaded, never rerun/rescored).",
+    "G": "Frozen Stage 7B.1 simple Graph baseline (explicit-alias seeds, hop-distance-first chunk ranking).",
+    "H0": "Reciprocal-Rank-Fusion of the frozen Vector ranking with the frozen simple-Graph ranking.",
+    "H1": "H0, but the Graph side traverses from EXPANDED seeds (explicit + Vector-chunk + semantic-edge), hop-distance-ranked.",
+    "H2": "H1, but the Graph side ranks bounded simple PATHS by query<->path-representation semantic similarity (not hop distance)."
+  },
+
+  "graph_conditions": {
+    "real_graph": "The exact committed Stage 7B.1 measured graph snapshot (loaded from reports/stage7b1_graph_build_results.json; OpenAI extraction is NOT rerun).",
+    "perfect_graph": "The deterministic FakeRelationshipExtractor graph (recall 1.00, precision 1.00, 0 normalization collisions)."
+  },
+
+  "decision_gates": {
+    "note": "Exactly one decision is returned. Gates are evaluated in order A, D, B, C and are NOT altered after seeing results. 'target questions' are Q04/Q06/Q07 (deep/distributed chain); 'complete-chain improvement' means real-graph H2 makes complete_chain_represented true where the frozen Vector baseline had it false.",
+    "A_retain_hybrid": {
+      "decision": "Retain Hybrid Graph experimentally/selectively",
+      "conditions": [
+        "real-graph H2 improves complete-chain retrieval on at least 2 of Q04/Q06/Q07",
+        "real-graph H2 has zero regressions relative to Vector across all other questions",
+        "real-graph H2 does not regress Q12",
+        "real-graph H2 has zero authority leakage",
+        "real-graph H2 uses the same final K as Vector",
+        "real-graph H2 uses no query-time LLM",
+        "real-graph H2 mean query latency <= 2x the Vector mean"
+      ]
+    },
+    "D_keep_vector_graph_navigation": {
+      "decision": "Keep Vector; use Graph only for navigation/offline analysis",
+      "conditions": [
+        "real-graph H2 removes Graph regressions (no regression vs Vector on any question)",
+        "real-graph H2 improves fewer than 2 of Q04/Q06/Q07"
+      ]
+    },
+    "B_defer_until_reliable_relationships": {
+      "decision": "Defer until reliable structured relationships exist",
+      "conditions": [
+        "perfect-graph H2 meets gate A's improvement/regression/latency/leakage conditions",
+        "real-graph H2 does not"
+      ]
+    },
+    "C_close_graph_exploration": {
+      "decision": "Close Graph exploration for this architecture",
+      "conditions": [
+        "neither real-graph nor perfect-graph hybrid materially improves Vector"
+      ]
+    }
+  }
+}
