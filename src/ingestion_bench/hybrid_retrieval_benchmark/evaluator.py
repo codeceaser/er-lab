@@ -102,33 +102,44 @@ class GateInputs(BaseModel):
     mean_latency_ratio_vs_vector: float
 
 
+def _hard_safety(g: GateInputs) -> bool:
+    """Zero authority leakage, the same final K as Vector, and no
+    query-time LLM -- HARD requirements for gates A, B and D."""
+    return g.total_authority_leakage == 0 and g.same_final_k and not g.uses_query_time_llm
+
+
 def meets_gate_a(g: GateInputs) -> bool:
     return (
         g.target_complete_chain_improvements >= 2
         and len(g.regressions_vs_vector) == 0
         and not g.q12_regressed
-        and g.total_authority_leakage == 0
-        and g.same_final_k
-        and not g.uses_query_time_llm
+        and _hard_safety(g)
         and g.mean_latency_ratio_vs_vector <= 2.0
     )
 
 
 def decide(real: GateInputs, perfect: GateInputs, real_improves_any_target: bool, perfect_improves_any_target: bool) -> tuple[str, str, str]:
-    """Returns (gate_id, decision, rationale). Gates evaluated in the
-    fixed order A, D, B, C."""
+    """Returns (gate_id, decision, rationale). Gates are evaluated in the
+    FIXED order A -> B -> D -> C (never reordered after seeing results).
+
+    A: real H2 meets the retain gate.
+    B: perfect H2 meets the retain gate and real H2 does not.
+    D: neither A nor B; real H2 has no regressions vs Vector but improves
+       fewer than two target questions (hard safety still required).
+    C: none of A/B/D applies.
+    """
     if meets_gate_a(real):
         return ("A", "Retain Hybrid Graph experimentally/selectively",
                 "Real-graph H2 improved complete-chain on >=2 of Q04/Q06/Q07 with zero regressions, no Q12 regression, zero authority "
                 "leakage, the same final K, no query-time LLM, and mean latency <= 2x Vector.")
-    if len(real.regressions_vs_vector) == 0 and not real.q12_regressed and real.target_complete_chain_improvements < 2:
-        return ("D", "Keep Vector; use Graph only for navigation/offline analysis",
-                f"Real-graph H2 removed Graph regressions (no regression vs Vector) but improved only "
-                f"{real.target_complete_chain_improvements} of the three target questions (< 2).")
-    if meets_gate_a(perfect) and not meets_gate_a(real):
+    if meets_gate_a(perfect):
         return ("B", "Defer until reliable structured relationships exist",
                 "Perfect-graph H2 meets the retain gate but real-graph H2 does not -- the benefit is contingent on structured-relationship "
                 "quality that the real extractor does not deliver.")
+    if _hard_safety(real) and len(real.regressions_vs_vector) == 0 and not real.q12_regressed and real.target_complete_chain_improvements < 2:
+        return ("D", "Do not retain Graph in the online retrieval path. Navigation or offline relationship analysis remains a separate, unevaluated use case.",
+                f"Neither gate A nor gate B applies. Real-graph H2 has no regressions relative to Vector (zero authority leakage, same final K, "
+                f"no query-time LLM) but improves only {real.target_complete_chain_improvements} of the three target questions (< 2).")
     return ("C", "Close Graph exploration for this architecture",
             f"Neither real-graph nor perfect-graph hybrid materially improves Vector (real target improvements "
             f"{real.target_complete_chain_improvements}, perfect {perfect.target_complete_chain_improvements}; "

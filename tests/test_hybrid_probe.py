@@ -21,7 +21,7 @@ from ingestion_bench.retrieval_baseline.embeddings import FakeEmbeddingProvider
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 HYBRID_ROOT = REPO_ROOT / "src" / "ingestion_bench" / "hybrid_retrieval_benchmark"
-QUERY_PATH_MODULES = ("seed_provider.py", "path_retriever.py", "fusion.py", "edge_index.py", "evaluator.py", "benchmark_runner.py", "model.py", "config.py")
+QUERY_PATH_MODULES = ("seed_provider.py", "path_retriever.py", "fusion.py", "edge_index.py", "evaluator.py", "benchmark_runner.py", "model.py", "config.py", "vector_candidate_store.py")
 
 
 @pytest.fixture(scope="module")
@@ -129,7 +129,7 @@ def test_edge_semantic_index_filters_eligibility_before_ranking():
 
 
 def test_vector_chunk_seed_pool_filters_eligibility_before_ranking():
-    from ingestion_bench.hybrid_retrieval_benchmark.seed_provider import _authority_aware_vector_pool
+    from ingestion_bench.hybrid_retrieval_benchmark.vector_candidate_store import InMemoryVectorCandidateStore
     from ingestion_bench.revision_search_benchmark.store import RevisionVectorRecord
 
     def _r(cid, rev, emb):
@@ -138,9 +138,11 @@ def test_vector_chunk_seed_pool_filters_eligibility_before_ranking():
             source_document_sha256="a" * 64, source_relative_path="x", chunk_id=cid, content_sha256="b" * 64,
             retrieval_text="t", chunk_type="text", embedding=emb,
         )
-    ce = {"good": _r("good", "rev-ok", [0.0, 1.0]), "bad": _r("bad", "rev-bad", [1.0, 0.0])}
-    assert _authority_aware_vector_pool(query_vector=[1.0, 0.0], chunk_evidence=ce, eligible_revision_ids=[], pool_size=5) == []
-    pool = _authority_aware_vector_pool(query_vector=[1.0, 0.0], chunk_evidence=ce, eligible_revision_ids=["rev-ok"], pool_size=5)
+    store = InMemoryVectorCandidateStore([_r("good", "rev-ok", [0.0, 1.0]), _r("bad", "rev-bad", [1.0, 0.0])])
+    # empty eligible -> []
+    assert store.search_eligible(query_vector=[1.0, 0.0], eligible_revision_ids=[], pool_size=5) == []
+    # 'bad' is the strongest match but is filtered BEFORE ranking + LIMIT
+    pool = store.search_eligible(query_vector=[1.0, 0.0], eligible_revision_ids=["rev-ok"], pool_size=5)
     assert [cid for cid, _ in pool] == ["good"]
 
 
@@ -191,8 +193,11 @@ def test_path_integrity_via_direct_call():
     # seed on every node to force maximal path enumeration
     seeds = [HybridSeed(node_id=n.node_id, canonical_name=n.canonical_name, entity_type=n.entity_type, origins=[SeedOrigin(seed_source="explicit_alias", matched_ref="x", source_rank=1)]) for n in proj.nodes.values()]
     max_hops = contract["candidate_parameters"]["max_hop_depth"]
-    side = semantic_path_ranked_graph_evidence(seeds=seeds, eligible_edges=proj.edge_assertions, node_by_id=proj.nodes, chunk_evidence=proj.chunk_evidence, query_vector=[0.1] * 32, embedding_provider=FakeEmbeddingProvider(), max_hops=max_hops, max_candidate_paths=contract["candidate_parameters"]["max_candidate_paths"])
+    side = semantic_path_ranked_graph_evidence(seeds=seeds, eligible_edges=proj.edge_assertions, node_by_id=proj.nodes, chunk_evidence=proj.chunk_evidence, query_vector=[0.1] * 32, embedding_provider=FakeEmbeddingProvider(), max_hops=max_hops, max_candidate_paths=contract["candidate_parameters"]["max_candidate_paths"], path_enumeration_safety_ceiling=contract["candidate_parameters"]["path_enumeration_safety_ceiling"])
     assert side.candidate_path_count <= contract["candidate_parameters"]["max_candidate_paths"]
+    # ALL eligible simple paths are enumerated & scored BEFORE truncation.
+    assert side.paths_enumerated_before_ranking >= side.paths_retained_after_ranking
+    assert side.paths_retained_after_ranking == side.candidate_path_count
     for path in side.paths:
         assert len(path.node_ids) == len(set(path.node_ids)), "path has a repeated node"
         assert path.hop_length <= max_hops
@@ -266,7 +271,8 @@ def test_probe_contract_has_no_question_specific_tuning():
     # per-question keys).
     assert set(contract["candidate_parameters"].keys()) == {
         "vector_candidate_multiplier", "max_vector_seed_chunks", "semantic_edge_candidate_count",
-        "max_hop_depth", "max_candidate_paths", "rrf_constant",
+        "max_supplemental_seed_nodes", "supplemental_seed_saturation_threshold",
+        "max_hop_depth", "path_enumeration_safety_ceiling", "max_candidate_paths", "rrf_constant",
     }
 
 
@@ -292,6 +298,158 @@ def test_frozen_stages_unmodified_by_stage7b2():
     assert result.returncode == 0, "a frozen Stage 7B.0/7B.1/7R/7A input was modified"
 
 
+# --- section 1: seed saturation -------------------------------------------
+
+
+def test_global_supplemental_seed_cap_and_diagnostics(probe_result):
+    """Every H1/H2 row keeps at most max_supplemental_seed_nodes supplemental
+    seeds, always retains explicit-alias seeds, and reports the full
+    saturation diagnostics."""
+    cap = hcfg.load_probe_config()["candidate_parameters"]["max_supplemental_seed_nodes"]
+    rows = [m for m in probe_result.mode_results if m.mode in ("H1", "H2")]
+    assert rows
+    for m in rows:
+        assert m.selected_supplemental_seed_count <= cap, f"{m.question_id}/{m.mode}/{m.graph_condition}"
+        # total seeds = explicit-alias seeds (always kept) + selected supplemental seeds
+        assert m.total_seed_count == m.explicit_seed_count + m.selected_supplemental_seed_count
+        assert m.eligible_graph_node_count >= 0
+        assert 0.0 <= m.seed_saturation_ratio <= 1.0
+
+
+def test_seed_saturation_guard_enforced(probe_result):
+    """The 40% saturation guard is satisfied on every measured H1/H2 row
+    (either <=4 eligible nodes, or ratio within threshold)."""
+    thr = hcfg.load_probe_config()["candidate_parameters"]["supplemental_seed_saturation_threshold"]
+    for m in probe_result.mode_results:
+        if m.mode in ("H1", "H2"):
+            assert m.seed_saturation_ok, f"{m.question_id}/{m.mode}/{m.graph_condition} ratio {m.seed_saturation_ratio}"
+            assert m.eligible_graph_node_count <= 4 or m.seed_saturation_ratio <= thr + 1e-9
+
+
+# --- section 2: all paths scored before truncation -------------------------
+
+
+def test_all_paths_scored_before_post_score_truncation(probe_result):
+    cap = hcfg.load_probe_config()["candidate_parameters"]["max_candidate_paths"]
+    for m in probe_result.mode_results:
+        if m.mode == "H2":
+            assert m.paths_retained_after_ranking <= cap
+            assert m.paths_enumerated_before_ranking >= m.paths_retained_after_ranking
+            assert m.paths_retained_after_ranking == m.candidate_path_count
+
+
+def test_eligible_edge_path_coverage_reported(probe_result):
+    for m in probe_result.mode_results:
+        if m.mode == "H2":
+            assert 0.0 <= m.eligible_edge_path_coverage <= 1.0
+
+
+def test_path_enumeration_safety_ceiling_raises():
+    """Enumeration fails EXPLICITLY past the ceiling -- it is a safety
+    bound, never a silent pre-score truncation."""
+    from ingestion_bench.hybrid_retrieval_benchmark.path_retriever import _enumerate_simple_paths, PathEnumerationCeilingExceeded
+    from ingestion_bench.graph_retrieval_benchmark.model import GraphEdgeAssertion
+    from ingestion_bench.hybrid_retrieval_benchmark.model import HybridSeed, SeedOrigin
+
+    # a small dense graph yields more simple paths than a ceiling of 3
+    def _edge(i, a, b):
+        return GraphEdgeAssertion(
+            edge_assertion_id=f"e{i}", subject_node_id=a, object_node_id=b, predicate="p", logical_document_id="D",
+            document_revision_id="r", supporting_chunk_id="c", supporting_content_sha256="0" * 64, supporting_text="t",
+            source_relative_path="x", source_document_sha256="0" * 64, extraction_run_id="run",
+        )
+    edges = [_edge(0, "a", "b"), _edge(1, "b", "c"), _edge(2, "a", "c"), _edge(3, "c", "d")]
+    adj: dict = {}
+    for e in edges:
+        adj.setdefault(e.subject_node_id, []).append(e)
+        adj.setdefault(e.object_node_id, []).append(e)
+    seeds = [HybridSeed(node_id=n, canonical_name=n, entity_type="t", origins=[SeedOrigin(seed_source="explicit_alias", matched_ref="x", source_rank=1)]) for n in ("a", "b", "c", "d")]
+    with pytest.raises(PathEnumerationCeilingExceeded):
+        _enumerate_simple_paths(seeds, adj, max_hops=5, safety_ceiling=3)
+
+
+# --- section 3: gate B reachable and not shadowed by D ----------------------
+
+
+def test_gate_b_reachable_and_not_shadowed_by_d():
+    from ingestion_bench.hybrid_retrieval_benchmark.evaluator import GateInputs, decide
+
+    # real satisfies D's own conditions (no regressions, <2 target improvements, hard-safe)...
+    real_d_ready = GateInputs(target_complete_chain_improvements=0, regressions_vs_vector=[], q12_regressed=False,
+                              total_authority_leakage=0, same_final_k=True, uses_query_time_llm=False, mean_latency_ratio_vs_vector=1.0)
+    perfect_meets_a = GateInputs(target_complete_chain_improvements=2, regressions_vs_vector=[], q12_regressed=False,
+                                 total_authority_leakage=0, same_final_k=True, uses_query_time_llm=False, mean_latency_ratio_vs_vector=1.0)
+    perfect_fails_a = GateInputs(target_complete_chain_improvements=0, regressions_vs_vector=[], q12_regressed=False,
+                                 total_authority_leakage=0, same_final_k=True, uses_query_time_llm=False, mean_latency_ratio_vs_vector=1.0)
+
+    # B is reachable AND takes precedence over D (B evaluated before D).
+    gate_b, _, _ = decide(real_d_ready, perfect_meets_a, False, True)
+    assert gate_b == "B", "gate B must win over D when perfect meets A"
+    # With the SAME real inputs but perfect NOT meeting A, the decision falls through to D.
+    gate_d, _, _ = decide(real_d_ready, perfect_fails_a, False, False)
+    assert gate_d == "D", "should reach D when neither A nor B applies"
+
+
+# --- section 5/6: frozen-G verification + timing accounting -----------------
+
+
+def test_frozen_g_verification_present(probe_result):
+    fgv = probe_result.frozen_g_verification
+    assert fgv.g_loaded_directly_from_frozen_7b1 is True
+    assert len(fgv.per_question_frozen_g_chunk_counts) == 12
+    # under Fake embeddings the model does not match the committed ST model,
+    # so rerun-equality is not asserted (and holds vacuously).
+    assert fgv.embedding_model_matches is False
+    assert fgv.rerun_equality_asserted is False and fgv.rerun_equality_holds is True
+
+
+def test_query_time_embedding_call_accounting(probe_result):
+    """query_time_embedding_calls = initial query embedding + path-embedding
+    batches; H2 includes its path batch, H1 does not; all latencies >= 0."""
+    for m in probe_result.mode_results:
+        assert m.query_time_embedding_calls == m.query_embedding_calls + m.path_embedding_calls, f"{m.mode}/{m.question_id}"
+        for fld in ("query_embedding_latency_seconds", "authority_resolution_latency_seconds", "vector_candidate_store_latency_seconds",
+                    "semantic_edge_store_latency_seconds", "graph_load_latency_seconds", "traversal_latency_seconds",
+                    "path_embedding_latency_seconds", "fusion_latency_seconds", "total_latency_seconds"):
+            assert getattr(m, fld) >= 0.0
+    for m in probe_result.mode_results:
+        if m.mode == "H2":
+            assert m.query_time_embedding_calls == 1 + m.path_embedding_calls
+        if m.mode == "H1":
+            assert m.query_time_embedding_calls == 1 and m.path_embedding_calls == 0
+
+
+# --- section 8: no predetermined-outcome instruction; appendices complete ---
+
+
+def test_docs_contain_no_predetermined_outcome_instruction():
+    forbidden = ("do not fight it", "EXPECTED FINDING", "Final expected conclusion of the investigation")
+    for name in ("DEVIN_REBUILD_PROMPT.md", "CONSOLIDATED_FINDINGS_AND_LEARNINGS.md"):
+        text = (REPO_ROOT / "docs" / name).read_text(encoding="utf-8")
+        for token in forbidden:
+            assert token not in text, f"{name} still contains predetermined-outcome instruction {token!r}"
+
+
+def test_devin_appendices_contain_exact_contracts():
+    import json
+    ap = json.loads((REPO_ROOT / "docs" / "DEVIN_REBUILD_APPENDICES.json").read_text(encoding="utf-8"))
+    assert len(ap["E_cross_document_facts"]) == 15
+    assert len(ap["F_questions"]) == 12
+    assert len(ap["G_fixture_source_text"]) == 11
+    # every question carries its intent, date, required/forbidden facts, top-K
+    for q in ap["F_questions"]:
+        for field in ("question_id", "query_intent", "as_of_date", "required_fact_ids", "forbidden_fact_ids", "top_k"):
+            assert field in q, f"question {q.get('question_id')} missing {field}"
+    # the corrected 7B.2a algorithm contract + gates are present verbatim
+    contract = ap["A_hybrid_probe_contract_7b2a"]
+    assert contract["decision_gates"]["evaluation_order"] == ["A", "B", "D", "C"]
+    assert "max_supplemental_seed_nodes" in contract["candidate_parameters"]
+    assert "path_enumeration_safety_ceiling" in contract["candidate_parameters"]
+    # exact fixture text (not "e.g." placeholders) for every revision symbol
+    for symbol, chunks in ap["G_fixture_source_text"].items():
+        assert chunks and all(c["text"] for c in chunks), f"fixture {symbol} missing exact source text"
+
+
 # --- real sentence-transformers + Postgres (skippable) ----------------------
 
 
@@ -311,21 +469,41 @@ def _real_infra() -> bool:
 
 
 @pytest.mark.skipif(not _real_infra(), reason="DATABASE_URL/Postgres unreachable or sentence-transformers missing")
-def test_real_sentence_transformers_and_postgres_edge_index():
-    """Real ST embeddings end-to-end probe + a real Postgres edge index
-    proving SQL-level eligibility filtering before ranking."""
+def test_real_measured_run_uses_persisted_postgres_stores():
+    """Section 4/9: the MEASURED run (real ST embeddings) drives the SAME
+    persisted path -- isolated Postgres graph store, edge-semantic index,
+    and pgvector candidate store -- NOT an in-memory probe followed by a
+    separate SQL unit check. Proven by (a) the probe completing over
+    persisted stores with zero leakage and the frozen inputs verified, and
+    (b) the isolated Postgres tables existing and populated afterward, and
+    (c) SQL-level eligibility filtering before ranking on the real edge
+    index."""
+    from sqlalchemy import create_engine, text
+
+    from ingestion_bench.hybrid_retrieval_benchmark.edge_index import PgEdgeSemanticIndex, build_edge_embedding_records
     from ingestion_bench.graph_retrieval_benchmark.builder import build_graph, load_fixtures_and_verify
     from ingestion_bench.graph_retrieval_benchmark.benchmark_runner import load_contract
     from ingestion_bench.graph_retrieval_benchmark.extractor import FakeRelationshipExtractor
-    from ingestion_bench.hybrid_retrieval_benchmark.edge_index import PgEdgeSemanticIndex, build_edge_embedding_records
     from ingestion_bench.retrieval_baseline.embeddings import SentenceTransformerEmbeddingProvider
     from ingestion_bench.revision_authority.repository import InMemoryRevisionAuthorityRepository
 
     provider = SentenceTransformerEmbeddingProvider()
-    result = run_probe(hcfg.CROSS_DOCUMENT_BENCHMARK_CONTRACT_PATH, hcfg.load_probe_config(), InMemoryRevisionAuthorityRepository(), provider)
+    result = run_probe(hcfg.CROSS_DOCUMENT_BENCHMARK_CONTRACT_PATH, hcfg.load_probe_config(), InMemoryRevisionAuthorityRepository(), provider, persisted=True)
     assert result.input_verification.corpus_index_hash_matches is True
     assert sum(m.authority_leakage_count for m in result.mode_results) == 0
     assert result.decision_gate in ("A", "B", "C", "D")
+    # Section 5: with the real ST model matching the committed 7B.1 model,
+    # the frozen-G rerun-equality assertion is active and holds.
+    fgv = result.frozen_g_verification
+    assert fgv.embedding_model_matches is True and fgv.rerun_equality_asserted is True and fgv.rerun_equality_holds is True
+
+    # The isolated persisted tables must exist and be populated -- proof the
+    # measured run actually used Postgres (not the in-memory stores).
+    engine = create_engine(hcfg.DATABASE_URL, future=True)
+    with engine.connect() as conn:
+        for tbl in ("edib_stage7b2_vector_candidate", "edib_stage7b2_graph_real_graph_edge", "edib_stage7b2_edge_real_graph"):
+            n = conn.execute(text(f"SELECT count(*) FROM {tbl}")).scalar()
+            assert n and n > 0, f"persisted table {tbl} empty -- measured run did not use Postgres"
 
     # Real Postgres edge index: eligibility IN (...) before ORDER BY/LIMIT.
     qc = load_contract(hcfg.CROSS_DOCUMENT_BENCHMARK_CONTRACT_PATH)
@@ -340,7 +518,35 @@ def test_real_sentence_transformers_and_postgres_edge_index():
         assert out and all(r.document_revision_id in set(eligible) for r, _ in out)
         assert idx.semantic_search_eligible(query_vector=records[0].embedding, eligible_revision_ids=[], top_n=5) == []
     finally:
-        from sqlalchemy import text
+        from sqlalchemy import text as _text
         with idx._ensure().connect() as conn:
-            conn.execute(text("DROP TABLE IF EXISTS _pytest_7b2_edge CASCADE"))
+            conn.execute(_text("DROP TABLE IF EXISTS _pytest_7b2_edge CASCADE"))
+            conn.commit()
+
+
+@pytest.mark.skipif(not _real_infra(), reason="DATABASE_URL/Postgres unreachable or sentence-transformers missing")
+def test_persisted_vector_candidate_store_eligibility_before_ranking():
+    """Section 4/9: the pgvector candidate store applies eligibility as a
+    SQL `document_revision_id IN (...)` BEFORE ORDER BY/LIMIT -- the
+    strongest match in an ineligible revision must never surface."""
+    from sqlalchemy import text
+
+    from ingestion_bench.hybrid_retrieval_benchmark.vector_candidate_store import PgVectorCandidateStore
+    from ingestion_bench.revision_search_benchmark.store import RevisionVectorRecord
+
+    def _r(cid, rev, emb):
+        return RevisionVectorRecord(
+            embedding_model="fake", logical_document_id="D", document_revision_id=rev, version_label=None, revision_number=1,
+            source_document_sha256="a" * 64, source_relative_path="x", chunk_id=cid, content_sha256="b" * 64,
+            retrieval_text="t", chunk_type="text", embedding=emb,
+        )
+    store = PgVectorCandidateStore(embedding_dimension=2, table_name="_pytest_7b2_vec")
+    try:
+        store.load([_r("good", "rev-ok", [0.0, 1.0]), _r("bad", "rev-bad", [1.0, 0.0])])
+        assert store.search_eligible(query_vector=[1.0, 0.0], eligible_revision_ids=[], pool_size=5) == []
+        out = store.search_eligible(query_vector=[1.0, 0.0], eligible_revision_ids=["rev-ok"], pool_size=5)
+        assert [cid for cid, _ in out] == ["good"], "ineligible strongest match leaked past the SQL filter"
+    finally:
+        with store._ensure().connect() as conn:
+            conn.execute(text("DROP TABLE IF EXISTS _pytest_7b2_vec CASCADE"))
             conn.commit()

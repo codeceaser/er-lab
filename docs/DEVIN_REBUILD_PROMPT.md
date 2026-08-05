@@ -99,7 +99,13 @@ You need a canonical ingestion layer. Build a **minimal** version of these
 - A document adapter that converts a source file (DOCX is enough) to a
   canonical document with a real `source_sha256`. (A library like Docling
   works; a minimal DOCX text extractor is fine — the benchmarks only need
-  one sentence per chunk.)
+  one sentence per chunk.) **However, numerical comparability requires a
+  fixed adapter+chunker:** if you intend to reproduce the prior run's
+  chunk ids / content hashes / retrieval numbers (see Appendix A
+  `G_fixture_source_text`), you must use the SAME adapter and chunker
+  configuration throughout — do NOT swap in a different minimal DOCX parser
+  while simultaneously requiring reproduction of prior hashes/results.
+  Choose one adapter/chunker, freeze it, and reuse it read-only.
 - `EmbeddingProvider` protocol: `embed(list[str]) -> vectors + call_count
   + elapsed + cost`. Provide `FakeEmbeddingProvider` (deterministic
   hash-based unit vectors) and `SentenceTransformerEmbeddingProvider`
@@ -233,12 +239,18 @@ withdrawn.
   comparison/draft take explicit `requested_revision_ids` and exclude a
   malformed *revision* individually.
 
-**Persistence:** three isolated tables (registry, period, event). Handle a
-pre-existing older schema explicitly: `ALTER TABLE ... ADD COLUMN IF NOT
-EXISTS` for new columns; detect populated legacy effective/supersession
-columns with no matching period and **fail fast** with a clear error +
-a one-time reset script (drop/recreate only these three tables) — never
-silently ignore populated legacy data.
+**Persistence:** three isolated tables (registry, period, event). For a
+**from-scratch build these tables are created fresh, so legacy-schema
+migration/reset is NOT in mandatory scope** — just create the three
+tables.
+
+> *Optional integration note (only if you are attaching to a database that
+> already holds an older revision-authority schema):* handle it explicitly
+> — `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for new columns; detect
+> populated legacy effective/supersession columns with no matching period
+> and **fail fast** with a clear error plus a one-time reset script
+> (drop/recreate only these three tables); never silently ignore populated
+> legacy data. This is not required for a clean-slate rebuild.
 
 **Scenario contract:** a JSON of registry setups + queries; the runner
 requires **EXACT equality** on eligible revisions, excluded
@@ -401,13 +413,20 @@ clean); a substring-based "no eval truth" test (use AST).
   no seed. Score with the SAME frozen Stage C scorer (import identity).
 - **Compare** to the frozen Stage C Vector results (loaded, never rerun).
 
-**EXPECTED FINDING (do not fight it):** with a real LLM extractor, graph
-build is imperfect (recall ~0.8) and non-deterministic; a single missed or
-inconsistently-named edge breaks a multi-hop chain, so graph retrieval
-**improves nothing and regresses** the multi-hop questions. Only a perfect
-extractor improves the deep endpoint questions (and even then it's mixed).
-**Recommend: defer Graph.** Report both the real snapshot and the
-deterministic best-case.
+**Reference observation from the prior implementation (NOT acceptance
+criteria):** Observed configuration — one real `gpt-*` extraction snapshot
+(temperature 0), the deterministic perfect FakeRelationshipExtractor as
+best-case, hop cap ≤5, the frozen Stage C scorer, this corpus and the
+`sentence-transformers/all-MiniLM-L6-v2` embedding model. Under that
+configuration the real graph build was imperfect (edge recall ≈0.8) and
+non-deterministic; a single missed or inconsistently-named edge broke a
+multi-hop chain, so real-graph retrieval improved nothing and regressed
+several multi-hop questions, while only the perfect extractor improved the
+deep endpoint questions. This is a **reproducibility reference, not a
+target**: build the system honestly, report both the real snapshot and the
+deterministic best-case, and if your numbers diverge, INVESTIGATE and
+report the divergence — never change code or parameters merely to
+reproduce this reference.
 
 **Pitfalls we hit — avoid:** merging current/historical assertions;
 normalization that either fails to connect ("Control C-88" vs "C-88") or
@@ -462,19 +481,54 @@ separator char, not a bare space, if your editor injects control bytes).
   calls, zero query-time LLM), and the Q04/Q06/Q07 (deep chain), Q05/Q10
   (mid-chain), Q12 (unnamed-entity) highlights — without hardcoding their
   seeds/paths.
-- **Decision gates (fixed order A→D→B→C, pre-declared):** A retain (real
+- **Decision gates (fixed order A→B→D→C, pre-declared):** A retain (real
   H2 improves ≥2 target complete-chains, 0 regressions, no Q12 regression,
-  0 leakage, same K, no LLM, ≤2× latency); D keep-Vector/graph-for-nav
-  (real H2 removes regressions but improves <2 targets); B defer (perfect
-  H2 meets A but real does not); C close (neither improves).
+  0 leakage, same K, no LLM, ≤2× latency); B defer (perfect H2 meets A but
+  real does not); D do-not-retain-Graph-online (neither A nor B; real H2
+  has no regressions but improves <2 targets, with the same hard-safety
+  requirements); C close (none of A/B/D). Add a test proving gate B is
+  reachable and is not shadowed by gate D.
+- **Seed budget & saturation (7B.2a):** always retain every explicit-alias
+  seed; RANK supplemental (Vector-chunk + semantic-edge) seed candidates by
+  RRF over their two source ranks and keep only the global top
+  `max_supplemental_seed_nodes`; report eligible-graph-node-count,
+  supplemental-candidate/selected counts, total seeds, and the saturation
+  ratio; FAIL qualification if supplemental seeds exceed 40% of eligible
+  graph nodes (except when ≤4 eligible nodes).
+- **Path generation (7B.2a):** enumerate ALL authority-eligible simple
+  paths (no repeated node, ≤max_hops), failing explicitly past a 5000
+  safety ceiling; embed and semantically rank EVERY enumerated path; apply
+  `max_candidate_paths` ONLY after ranking. Report paths-enumerated,
+  paths-retained, count-by-hop-length, count-by-originating-seed, and
+  eligible-edge path coverage.
+- **Measured run (7B.2a):** use isolated Postgres stores — a graph store,
+  an edge-semantic index, and a pgvector candidate store whose SQL includes
+  the eligible revision ids BEFORE `ORDER BY`/`LIMIT`. In-memory stores are
+  for deterministic tests only; the real integration test must invoke the
+  SAME persisted measured path.
+- **Frozen G (7B.2a):** the real-graph G is the frozen prior per-question
+  Graph result, loaded directly; when the embedding model matches, a rerun
+  must reproduce the ranked (chunk_id, rank, score) tuples EXACTLY.
+- **Timing/calls (7B.2a):** record query-embedding, authority-resolution,
+  vector-candidate-store, semantic-edge-store, graph-load, traversal/path-
+  enumeration, path-embedding, and fusion latencies separately; never
+  double-count resolver latency; `query_time_embedding_calls` counts the
+  initial query embedding plus all path-embedding batches.
 
-**EXPECTED FINDING (do not fight it):** under a fixed budget with RRF and
-no query-time LLM, hybrid **converges to Vector** — it rescues a bad graph
-UP to Vector (removes regressions) but dilutes a perfect graph DOWN to
-Vector (mixing Vector's ranking into a complete graph chain drops a
-required chunk from the shared budget). Semantic seeding/path ranking add
-nothing over plain fusion. **Gate D: keep Vector; use Graph only for
-navigation/offline analysis.** For the latency gate, compare against the
+**Reference observation from the prior implementation (NOT acceptance
+criteria):** Observed configuration — equal-weight RRF with one global
+constant; every explicit-alias seed retained plus at most 4 RRF-ranked
+supplemental seeds; ALL eligible simple paths enumerated and semantically
+ranked before truncation; the frozen per-question top-K budget; no
+query-time LLM; this corpus and the `all-MiniLM-L6-v2` model. Under that
+configuration the prior run reached **gate D** (do not retain Graph in the
+online retrieval path): hybrid rescued a bad graph up to Vector and, on
+the perfect graph, mixing the fixed Vector ranking into a complete graph
+chain under the shared budget diluted the gain; semantic seeding/path
+ranking added nothing over plain fusion. Do NOT treat "gate D" as the
+required answer — the same run's perfect-graph H0 raised Q06 0.80→1.00, so
+graph structure CAN help within budget. Report whichever gate your honest
+run reaches and explain it. For the latency gate, compare against the
 **frozen Vector total latency**, not a resolver-only recompute (or the
 ratio is meaninglessly inflated on a tiny corpus).
 
@@ -516,9 +570,26 @@ committed `reports/*.{json,md}` (audit-complete), gitignored regenerable
 Maintain a single status table (stage, scope, deliverables, tests,
 findings) and a consolidated findings/limitations doc.
 
-**Final expected conclusion of the investigation:** authority-aware
-**Vector** retrieval is the right choice for this architecture; Graph
-(and hybrid Graph) do not justify their cost under a fixed evidence budget
-without a higher-recall/deterministic relationship source or a larger,
-noisier corpus. Do not re-litigate this unless new evidence (bigger
-corpus, better extractor, enlarged budget) is introduced.
+**Reference observations from the prior implementation (read AFTER you
+have your own results — never as a target):** For each prior finding
+below, the exact configuration under which it was observed is stated; each
+is a reproducibility reference, not acceptance criteria; divergent results
+must be investigated and reported honestly; and code/parameters must never
+be changed merely to reproduce the reference.
+
+- *Vector vs Graph (Stage D config: one real temperature-0 extraction
+  snapshot; perfect FakeRelationshipExtractor best-case; hop cap ≤5; frozen
+  Stage C scorer; this corpus; all-MiniLM-L6-v2):* real graph regressed
+  several multi-hop questions; only the perfect graph improved deep
+  endpoints.
+- *Hybrid (Stage E / 7B.2a config: equal-weight RRF, ≤4 RRF-ranked
+  supplemental seeds, all-paths-before-ranking, frozen per-question top-K,
+  no query-time LLM, this corpus, all-MiniLM-L6-v2):* reached gate D — but
+  perfect-graph H0 improved Q06 complete-chain 0.80→1.00, so graph
+  structure can help within budget.
+
+Do NOT re-litigate a predetermined conclusion. Build the system to the
+contract, run it honestly, and let the pre-declared gates decide. The
+exact, machine-readable fixtures/identities/timelines/scenarios/facts/
+questions and the corrected 7B.2a algorithm contract + gates required to
+reproduce these references are in **Appendix A** (`docs/DEVIN_REBUILD_APPENDICES.json`).

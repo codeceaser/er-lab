@@ -1,0 +1,2388 @@
+{
+  "appendix_id": "DEVIN_REBUILD_APPENDIX_A",
+  "purpose": "Exact, machine-readable reproduction reference for a from-scratch rebuild (Stage 7B.2a). NOT acceptance criteria: build honestly, and if results diverge, investigate and report -- never change code/parameters merely to reproduce these.",
+  "source_contract_versions": {
+    "cross_document": "cross_document_relationship_benchmark_v1",
+    "revision_authority_scenarios": "revision_authority_scenarios_v2",
+    "revision_search_benchmark": "revision_search_benchmark_v1",
+    "hybrid_retrieval_probe": "hybrid_retrieval_probe_v1"
+  },
+  "source_contract_sha256": {
+    "cross_document": "ae804447f613d9701c51d3847e143d1b5bd504527a95e11b935235610c5c51a9",
+    "revision_authority_scenarios": "64a21da7eff07fe4516d0f1822461be7f5205b04f851f922fee32d27299c30ce",
+    "revision_search_benchmark": "69c150d88c3d6b0c7504839d2e10ad4ace62d3f0d251922aebe3370227d3b4d9",
+    "hybrid_retrieval_probe": "c1322fcb3a44029966239517ac8842d53363445ca3c7d22e07ddd72d180ca41e"
+  },
+  "A_hybrid_probe_contract_7b2a": {
+    "contract_version": "hybrid_retrieval_probe_v1",
+    "description": "Stage 7B.2 / 7B.2a hybrid Vector-Graph probe. ONE immutable global algorithm configuration + the decision gates, declared BEFORE the measured run. Contains NO question-specific paths, seeds, answers, or relationship hints, and permits NO per-question tuning. The final per-question evidence budget (top_k) comes ONLY from the frozen Stage 7B.0 question contract, never from here.",
+    "candidate_parameters": {
+      "vector_candidate_multiplier": 3,
+      "max_vector_seed_chunks": 8,
+      "semantic_edge_candidate_count": 5,
+      "max_supplemental_seed_nodes": 4,
+      "supplemental_seed_saturation_threshold": 0.4,
+      "max_hop_depth": 5,
+      "path_enumeration_safety_ceiling": 5000,
+      "max_candidate_paths": 32,
+      "rrf_constant": 60
+    },
+    "parameter_notes": {
+      "max_supplemental_seed_nodes": "Global cap on supplemental (Vector-chunk + semantic-edge) seed nodes retained per query, AFTER RRF-ranking supplemental node candidates by their Vector-chunk source rank and semantic-edge source rank. Every explicit-alias seed is ALWAYS retained (never capped). No per-question seed limits.",
+      "supplemental_seed_saturation_threshold": "Benchmark qualification fails if selected supplemental seeds exceed this fraction of the eligible graph node count -- EXCEPT when the eligible graph has <= 4 nodes (a small graph is legitimately saturated).",
+      "path_enumeration_safety_ceiling": "Path enumeration must fail explicitly if the number of authority-eligible simple paths (no repeated node, <= max_hop_depth) exceeds this global ceiling. It is a safety bound, NOT a truncation of candidates before scoring.",
+      "max_candidate_paths": "The number of paths RETAINED after ALL enumerated paths are embedded and semantically ranked. It is applied ONLY after semantic ranking, never as an early DFS cutoff."
+    },
+    "modes": {
+      "V": "Frozen authority-aware Vector baseline (Stage 7B.0 result, loaded, never rerun/rescored).",
+      "G": "Frozen Stage 7B.1 simple Graph baseline. For the real graph this is the committed Stage 7B.1 per-question Graph result, verified by exact equality of ranked chunk ids/ranks/scores before use.",
+      "H0": "Reciprocal-Rank-Fusion of the frozen Vector ranking with the simple-Graph ranking.",
+      "H1": "H0, but the Graph side traverses from EXPANDED seeds (explicit-alias always + up to max_supplemental_seed_nodes RRF-ranked Vector-chunk/semantic-edge supplemental seeds), hop-distance-ranked.",
+      "H2": "H1, but the Graph side enumerates ALL eligible simple paths, semantically ranks every one by query<->path-representation cosine, and retains the top max_candidate_paths (not hop distance)."
+    },
+    "graph_conditions": {
+      "real_graph": "The exact committed Stage 7B.1 measured graph snapshot (loaded from reports/stage7b1_graph_build_results.json; OpenAI extraction is NOT rerun).",
+      "perfect_graph": "The deterministic FakeRelationshipExtractor graph (recall 1.00, precision 1.00, 0 normalization collisions)."
+    },
+    "decision_gates": {
+      "note": "Exactly one decision is returned. Gates are evaluated in the fixed order A, B, D, C and are NOT altered after seeing results. Zero authority leakage, the same final K as Vector, and no query-time LLM are HARD SAFETY REQUIREMENTS for A, B, and D -- a mode failing any of them cannot satisfy those gates. 'target questions' are Q04/Q06/Q07 (deep/distributed chain); a 'complete-chain improvement' means H2 makes complete_chain_represented true where the frozen Vector baseline had it false.",
+      "evaluation_order": [
+        "A",
+        "B",
+        "D",
+        "C"
+      ],
+      "A_retain_hybrid": {
+        "decision": "Retain Hybrid Graph experimentally/selectively",
+        "conditions": [
+          "real-graph H2 improves complete-chain retrieval on at least 2 of Q04/Q06/Q07",
+          "real-graph H2 has zero regressions relative to Vector across all other questions",
+          "real-graph H2 does not regress Q12",
+          "HARD SAFETY: real-graph H2 has zero authority leakage, uses the same final K as Vector, and uses no query-time LLM",
+          "real-graph H2 mean query latency <= 2x the Vector mean"
+        ]
+      },
+      "B_defer_until_reliable_relationships": {
+        "decision": "Defer until reliable structured relationships exist",
+        "conditions": [
+          "perfect-graph H2 meets gate A's improvement/regression/safety/latency conditions",
+          "real-graph H2 does not meet gate A"
+        ]
+      },
+      "D_no_online_graph_navigation_only": {
+        "decision": "Do not retain Graph in the online retrieval path. Navigation or offline relationship analysis remains a separate, unevaluated use case.",
+        "conditions": [
+          "neither gate A nor gate B applies",
+          "HARD SAFETY: real-graph H2 has zero authority leakage, uses the same final K as Vector, and uses no query-time LLM",
+          "real-graph H2 has no regressions relative to Vector on any question",
+          "real-graph H2 improves fewer than 2 of Q04/Q06/Q07"
+        ]
+      },
+      "C_close_graph_exploration": {
+        "decision": "Close Graph exploration for this architecture",
+        "conditions": [
+          "none of A, B, or D applies"
+        ]
+      }
+    }
+  },
+  "B_logical_documents": {
+    "APP-PORTFOLIO": "Application Portfolio (which application supports which business service)",
+    "SERVICE-CATALOGUE": "Business Service Catalogue (which obligation governs which service)",
+    "OBLIGATION-REGISTER": "Obligation Register (which control satisfies which obligation)",
+    "CONTROL-LIBRARY": "Control Library (which procedure implements which control)",
+    "PROCEDURE-CATALOGUE": "Procedure Catalogue (which procedure is current)",
+    "ADJACENT-DOMAIN": "Adjacent Domain Reference -- an unrelated but lexically similar Payment Reconciliation chain, present only as a distractor"
+  },
+  "B_fixtures_revision_identities": [
+    {
+      "symbol": "app_rev1",
+      "logical_document_id": "APP-PORTFOLIO",
+      "source_relative_path": "generated/APP_PORTFOLIO_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "historical -- retired application APP-224499"
+    },
+    {
+      "symbol": "app_rev2",
+      "logical_document_id": "APP-PORTFOLIO",
+      "source_relative_path": "generated/APP_PORTFOLIO_rev2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "note": "current -- APP-224510"
+    },
+    {
+      "symbol": "svc_rev1",
+      "logical_document_id": "SERVICE-CATALOGUE",
+      "source_relative_path": "generated/SERVICE_CATALOGUE_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "current -- Payment Settlement governed by O-31"
+    },
+    {
+      "symbol": "obl_rev1",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "source_relative_path": "generated/OBLIGATION_REGISTER_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "historical -- O-31 satisfied by superseded control C-88a"
+    },
+    {
+      "symbol": "obl_rev2",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "source_relative_path": "generated/OBLIGATION_REGISTER_rev2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "note": "current -- O-31 satisfied by C-88"
+    },
+    {
+      "symbol": "ctl_rev1",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "historical -- C-88a implemented through P-204"
+    },
+    {
+      "symbol": "ctl_rev2",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "note": "current -- C-88 implemented through P-205"
+    },
+    {
+      "symbol": "ctl_rev3",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "source_relative_path": "generated/CONTROL_LIBRARY_rev3.docx",
+      "version_label": null,
+      "revision_number": 3,
+      "note": "draft/proposed -- C-91, registered but never activated"
+    },
+    {
+      "symbol": "prc_rev1",
+      "logical_document_id": "PROCEDURE-CATALOGUE",
+      "source_relative_path": "generated/PROCEDURE_CATALOGUE_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "historical -- P-204 retired"
+    },
+    {
+      "symbol": "prc_rev2",
+      "logical_document_id": "PROCEDURE-CATALOGUE",
+      "source_relative_path": "generated/PROCEDURE_CATALOGUE_rev2.docx",
+      "version_label": null,
+      "revision_number": 2,
+      "note": "current -- P-205"
+    },
+    {
+      "symbol": "adj_rev1",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "source_relative_path": "generated/ADJACENT_DOMAIN_rev1.docx",
+      "version_label": null,
+      "revision_number": 1,
+      "note": "current -- unrelated Payment Reconciliation chain (distractor only)"
+    }
+  ],
+  "C_authority_setup_timelines": {
+    "description": "Per logical document, replayed through Stage 7R.1's own unmodified contract_runner._run_registry_setup + service. Symbols are globally unique across documents so one shared symbol_to_id map is safe. Every rev1 became effective 2020-01-01; each current successor superseded it effective 2023-01-01; the draft control (ctl_rev3) is registered but never activated (stays draft).",
+    "documents": [
+      {
+        "logical_document_id": "APP-PORTFOLIO",
+        "registry_setup": [
+          {
+            "step_id": "reg_app_rev1",
+            "op": "register",
+            "symbol": "app_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_app_rev1",
+            "op": "activate",
+            "new": "app_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_app_rev2",
+            "op": "register",
+            "symbol": "app_rev2",
+            "expected_is_new": true,
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_app_rev2",
+            "op": "activate",
+            "new": "app_rev2",
+            "old": "app_rev1",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "SERVICE-CATALOGUE",
+        "registry_setup": [
+          {
+            "step_id": "reg_svc_rev1",
+            "op": "register",
+            "symbol": "svc_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_svc_rev1",
+            "op": "activate",
+            "new": "svc_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "OBLIGATION-REGISTER",
+        "registry_setup": [
+          {
+            "step_id": "reg_obl_rev1",
+            "op": "register",
+            "symbol": "obl_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_obl_rev1",
+            "op": "activate",
+            "new": "obl_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_obl_rev2",
+            "op": "register",
+            "symbol": "obl_rev2",
+            "expected_is_new": true,
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_obl_rev2",
+            "op": "activate",
+            "new": "obl_rev2",
+            "old": "obl_rev1",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "CONTROL-LIBRARY",
+        "registry_setup": [
+          {
+            "step_id": "reg_ctl_rev1",
+            "op": "register",
+            "symbol": "ctl_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_ctl_rev1",
+            "op": "activate",
+            "new": "ctl_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_ctl_rev2",
+            "op": "register",
+            "symbol": "ctl_rev2",
+            "expected_is_new": true,
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_ctl_rev2",
+            "op": "activate",
+            "new": "ctl_rev2",
+            "old": "ctl_rev1",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_ctl_rev3",
+            "op": "register",
+            "symbol": "ctl_rev3",
+            "expected_is_new": true,
+            "recorded_at": "2026-05-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "PROCEDURE-CATALOGUE",
+        "registry_setup": [
+          {
+            "step_id": "reg_prc_rev1",
+            "op": "register",
+            "symbol": "prc_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_prc_rev1",
+            "op": "activate",
+            "new": "prc_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_prc_rev2",
+            "op": "register",
+            "symbol": "prc_rev2",
+            "expected_is_new": true,
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_prc_rev2",
+            "op": "activate",
+            "new": "prc_rev2",
+            "old": "prc_rev1",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "ADJACENT-DOMAIN",
+        "registry_setup": [
+          {
+            "step_id": "reg_adj_rev1",
+            "op": "register",
+            "symbol": "adj_rev1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_adj_rev1",
+            "op": "activate",
+            "new": "adj_rev1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          }
+        ]
+      }
+    ]
+  },
+  "C_revision_authority_scenarios": {
+    "contract_version": "revision_authority_scenarios_v2",
+    "description": "Deterministic Stage 7R.1/7R.1a authority-resolution contract -- not a replacement for source-document fixtures. Every 'symbol' below is a local alias the runner resolves to a real compute_document_revision_id() hash after replaying registry_setup; scenarios reference revisions by symbol. Stage 7R.1a: effective dates now live SOLELY in AuthorityPeriod, opened/closed via activate/reinstate/withdraw -- 'decide' registry_setup steps are pure publication_status changes, never dates.",
+    "logical_documents": [
+      {
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "description": "One resilience/retention policy document: superseded, historical, current, draft, under_review, approved-future, a rollback-corrected candidate, and a late-uploaded draft.",
+        "revisions": [
+          {
+            "symbol": "v1",
+            "source_document_sha256": "e033e48d1e76cad26603f74c4f8de4b669eadb02c0643ccb194a2fa2e2432812",
+            "version_label": null,
+            "revision_number": 1,
+            "note": "retention period 3 years"
+          },
+          {
+            "symbol": "v2",
+            "source_document_sha256": "108d7cd40dd67a0bdbc5dcb80361c8fae1c705fdb3aabeb9b1521ef1e281b232",
+            "version_label": null,
+            "revision_number": 2,
+            "note": "retention period 5 years"
+          },
+          {
+            "symbol": "v3",
+            "source_document_sha256": "d56264d996753a49feae9f5d6dfbc188fa4cb23b0daaa1842be682183989f60d",
+            "version_label": null,
+            "revision_number": 3,
+            "note": "retention period 7 years"
+          },
+          {
+            "symbol": "v3_duplicate",
+            "source_document_sha256": "d56264d996753a49feae9f5d6dfbc188fa4cb23b0daaa1842be682183989f60d",
+            "version_label": null,
+            "revision_number": 3,
+            "note": "exact duplicate registration of v3 (Scenario A)"
+          },
+          {
+            "symbol": "v4",
+            "source_document_sha256": "5f736041b1e87a7255d7cacf15e1cbe00d526eaaeab1dcc49fb0e709ba086365",
+            "version_label": null,
+            "revision_number": 4,
+            "note": "draft, proposed retention period 10 years"
+          },
+          {
+            "symbol": "v4_under_review",
+            "source_document_sha256": "04df1e255f3a41e504e7a8722dfff8c57d6d83fa9ff638bf857fff1863efb4f9",
+            "version_label": null,
+            "revision_number": 41,
+            "note": "under_review, never a period"
+          },
+          {
+            "symbol": "v5",
+            "source_document_sha256": "51a0b90e61273710977d2168c10c3465aab539c95e137c0168f4abfab70935e3",
+            "version_label": null,
+            "revision_number": 5,
+            "note": "approved future, retention period 8 years"
+          },
+          {
+            "symbol": "v0_late_upload",
+            "source_document_sha256": "eebf3c3ac0ec0969f40b7f28ea71c40e374347477979cc5b79639c22b134165f",
+            "version_label": null,
+            "revision_number": 0,
+            "note": "Scenario F: registered very late (2026), never activated -- must not become current merely by existing"
+          }
+        ],
+        "registry_setup": [
+          {
+            "step_id": "reg_v1",
+            "op": "register",
+            "symbol": "v1",
+            "scenario_id": "B_changed_content",
+            "expected_is_new": true,
+            "recorded_at": "2014-11-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_v1",
+            "op": "activate",
+            "new": "v1",
+            "old": null,
+            "effective_from": "2015-01-01",
+            "recorded_at": "2015-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_v2",
+            "op": "register",
+            "symbol": "v2",
+            "scenario_id": "B_changed_content",
+            "expected_is_new": true,
+            "recorded_at": "2018-11-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_v2",
+            "op": "activate",
+            "new": "v2",
+            "old": "v1",
+            "effective_from": "2019-01-01",
+            "recorded_at": "2019-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_v3",
+            "op": "register",
+            "symbol": "v3",
+            "expected_is_new": true,
+            "recorded_at": "2022-11-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_v3",
+            "op": "activate",
+            "new": "v3",
+            "old": "v2",
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_v3_dup",
+            "op": "register",
+            "symbol": "v3_duplicate",
+            "scenario_id": "A_exact_duplicate_upload",
+            "expected_is_new": false,
+            "recorded_at": "2023-02-15T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_v4",
+            "op": "register",
+            "symbol": "v4",
+            "scenario_id": "C_newer_draft_does_not_replace",
+            "expected_is_new": true,
+            "recorded_at": "2024-09-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_v4ur",
+            "op": "register",
+            "symbol": "v4_under_review",
+            "scenario_id": "J2_under_review_via_draft_intent",
+            "expected_is_new": true,
+            "recorded_at": "2024-09-15T00:00:00+00:00"
+          },
+          {
+            "step_id": "decide_v4ur",
+            "op": "decide",
+            "symbol": "v4_under_review",
+            "scenario_id": "J2_under_review_via_draft_intent",
+            "publication_status": "under_review",
+            "recorded_at": "2024-09-16T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_v5",
+            "op": "register",
+            "symbol": "v5",
+            "expected_is_new": true,
+            "recorded_at": "2024-10-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_v5",
+            "op": "activate",
+            "new": "v5",
+            "old": "v3",
+            "effective_from": "2028-01-01",
+            "recorded_at": "2024-10-15T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_v0",
+            "op": "register",
+            "symbol": "v0_late_upload",
+            "scenario_id": "F_late_upload_old_revision",
+            "expected_is_new": true,
+            "recorded_at": "2026-06-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "POLICY-WITHDRAWN-DEMO-001",
+        "description": "Scenario K: a document whose only effective revision is withdrawn (at an explicit withdrawal_effective_date, never recorded_at) with no replacement registered.",
+        "revisions": [
+          {
+            "symbol": "w1",
+            "source_document_sha256": "e09d124ee5980161000f4eb9724699570272b29e6e1644e0ceedde74af2d62d8",
+            "version_label": null,
+            "revision_number": 1,
+            "note": "the only revision; later withdrawn"
+          }
+        ],
+        "registry_setup": [
+          {
+            "step_id": "reg_w1",
+            "op": "register",
+            "symbol": "w1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_w1",
+            "op": "activate",
+            "new": "w1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "withdraw_w1",
+            "op": "withdraw",
+            "symbol": "w1",
+            "withdrawal_effective_date": "2024-01-01",
+            "closure_reason": "withdrawn",
+            "scenario_id": "K_withdrawn_no_replacement",
+            "recorded_at": "2025-03-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "POLICY-CONFLICT-DEMO-001",
+        "description": "Scenario L: two revisions simultaneously effective. Stage 7R.1a's own pre-activation overlap validation now correctly PREVENTS this via ordinary service calls -- so this precondition is constructed via one legitimate activation plus one raw, low-level repository write (op=corrupt_period), simulating pre-existing inconsistent data (e.g. from before this validation existed) rather than a mistake the service itself could still be tricked into making.",
+        "revisions": [
+          {
+            "symbol": "c1",
+            "source_document_sha256": "06436174a6bccfbd7394500fe24f4811ae5601da163e45de9f99aad90027a8ff",
+            "version_label": null,
+            "revision_number": 1,
+            "note": ""
+          },
+          {
+            "symbol": "c2",
+            "source_document_sha256": "5f58936d13ddc6c70df49850933818a8e0f176a33d3eeb8da5532e839578f4a7",
+            "version_label": null,
+            "revision_number": 2,
+            "note": ""
+          }
+        ],
+        "registry_setup": [
+          {
+            "step_id": "reg_c1",
+            "op": "register",
+            "symbol": "c1",
+            "expected_is_new": true,
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_c1",
+            "op": "activate",
+            "new": "c1",
+            "old": null,
+            "effective_from": "2020-01-01",
+            "recorded_at": "2020-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_c2",
+            "op": "register",
+            "symbol": "c2",
+            "expected_is_new": true,
+            "recorded_at": "2021-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "corrupt_c2_metadata",
+            "op": "corrupt_metadata",
+            "symbol": "c2",
+            "publication_status": "approved",
+            "recorded_at": "2021-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "corrupt_c2",
+            "op": "corrupt_period",
+            "symbol": "c2",
+            "effective_from": "2021-01-01",
+            "effective_to": null,
+            "scenario_id": "L_overlapping_effective_revisions",
+            "recorded_at": "2021-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "POLICY-SHARED-TEXT-DEMO-001",
+        "description": "Scenario N: identical textual content (source_document_sha256) reused under a DIFFERENT logical_document_id -- must get a fully independent revision identity.",
+        "revisions": [
+          {
+            "symbol": "n1_shares_v2_text",
+            "source_document_sha256": "108d7cd40dd67a0bdbc5dcb80361c8fae1c705fdb3aabeb9b1521ef1e281b232",
+            "version_label": null,
+            "revision_number": 1,
+            "note": "byte-identical content to POLICY-RESILIENCE-001's v2, different logical_document_id"
+          }
+        ],
+        "registry_setup": [
+          {
+            "step_id": "reg_n1",
+            "op": "register",
+            "symbol": "n1_shares_v2_text",
+            "scenario_id": "N_same_text_different_identity",
+            "expected_is_new": true,
+            "recorded_at": "2019-06-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "POLICY-ROLLBACK-DEMO-001",
+        "description": "Stage 7R.1a item 3: v3 effective from 2023-01-01, v5 effective from 2028-01-01 (supersedes v3), v5 rolled back on 2028-06-01, v3 reinstated from 2028-06-01 -- a SECOND, disjoint authority period for v3.",
+        "revisions": [
+          {
+            "symbol": "rv3",
+            "source_document_sha256": "56621f5404a32e53964995ac083677df8c4a9c551205be893d7089fde2d76a94",
+            "version_label": null,
+            "revision_number": 3,
+            "note": ""
+          },
+          {
+            "symbol": "rv5",
+            "source_document_sha256": "ce6c741bbabf926e04b6eae437016d51b95286a209107eae05e53c21d6083cb3",
+            "version_label": null,
+            "revision_number": 5,
+            "note": ""
+          }
+        ],
+        "registry_setup": [
+          {
+            "step_id": "reg_rv3",
+            "op": "register",
+            "symbol": "rv3",
+            "expected_is_new": true,
+            "recorded_at": "2022-11-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_rv3",
+            "op": "activate",
+            "new": "rv3",
+            "old": null,
+            "effective_from": "2023-01-01",
+            "recorded_at": "2023-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "reg_rv5",
+            "op": "register",
+            "symbol": "rv5",
+            "expected_is_new": true,
+            "recorded_at": "2027-11-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_rv5",
+            "op": "activate",
+            "new": "rv5",
+            "old": "rv3",
+            "effective_from": "2028-01-01",
+            "scenario_id": "E2_post_effective_rollback",
+            "recorded_at": "2027-11-15T00:00:00+00:00"
+          },
+          {
+            "step_id": "reinstate_rv3",
+            "op": "reinstate",
+            "new": "rv3",
+            "old": "rv5",
+            "effective_from": "2028-06-01",
+            "scenario_id": "E2_post_effective_rollback",
+            "recorded_at": "2028-06-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "POLICY-MALFORMED-DEMO-001",
+        "description": "A revision left in publication_status='draft' but given a REAL (non-zero-width) authority period via a raw repository write -- the exact 'effective revision is not approved' integrity violation, constructed directly (never reachable via normal service calls) to prove comparison/draft intents exclude it individually rather than aborting the whole query.",
+        "revisions": [
+          {
+            "symbol": "m1",
+            "source_document_sha256": "30b13bc89a54ccf3e57ec6f8ccda4266d820ee467d133cfd9fcd0906b159566c",
+            "version_label": null,
+            "revision_number": 1,
+            "note": ""
+          }
+        ],
+        "registry_setup": [
+          {
+            "step_id": "reg_m1",
+            "op": "register",
+            "symbol": "m1",
+            "expected_is_new": true,
+            "recorded_at": "2024-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "corrupt_m1",
+            "op": "corrupt_period",
+            "symbol": "m1",
+            "effective_from": "2024-01-01",
+            "effective_to": null,
+            "scenario_id": "malformed_record_excluded_not_fatal",
+            "recorded_at": "2024-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "POLICY-VALIDATION-DEMO-001",
+        "description": "Item 5: activation validation rejections, proven directly against the service (each step below is EXPECTED to raise).",
+        "revisions": [
+          {
+            "symbol": "val1",
+            "source_document_sha256": "4892300f8fae9cfc908cf92ea9004333e77fa0161646c633b7088fcfd957e078",
+            "version_label": null,
+            "revision_number": 1,
+            "note": ""
+          }
+        ],
+        "registry_setup": [
+          {
+            "step_id": "reg_val1",
+            "op": "register",
+            "symbol": "val1",
+            "expected_is_new": true,
+            "recorded_at": "2024-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_val1",
+            "op": "activate",
+            "new": "val1",
+            "old": null,
+            "effective_from": "2024-01-01",
+            "recorded_at": "2024-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "self_supersede_val1",
+            "op": "activate",
+            "new": "val1",
+            "old": "val1",
+            "effective_from": "2025-01-01",
+            "expect_error": true,
+            "expect_error_substring": "cannot supersede itself",
+            "scenario_id": "self_supersession_rejected",
+            "recorded_at": "2025-01-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "cross_doc_val1",
+            "op": "activate",
+            "new": "val1",
+            "old": "v3",
+            "effective_from": "2025-01-01",
+            "expect_error": true,
+            "expect_error_substring": "SAME logical document",
+            "scenario_id": "cross_document_activation_rejected",
+            "recorded_at": "2025-01-01T00:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "logical_document_id": "POLICY-CORRECTION-DEMO-001",
+        "description": "pre_effective_authority_correction, isolated: v6 approved-future then retracted before it ever took effect (closure_reason=correction, zero-width period) -- kept in its own document since it never needs to interact with any other revision's own period.",
+        "revisions": [
+          {
+            "symbol": "v6_rollback_demo",
+            "source_document_sha256": "ec5ed26679117a0391cb2d21c9bda36492b9a5c57c6215c35a679eea6c1f1f98",
+            "version_label": null,
+            "revision_number": 6,
+            "note": "pre_effective_authority_correction: approved-future then retracted before it ever took effect"
+          }
+        ],
+        "registry_setup": [
+          {
+            "step_id": "reg_v6",
+            "op": "register",
+            "symbol": "v6_rollback_demo",
+            "expected_is_new": true,
+            "recorded_at": "2024-11-01T00:00:00+00:00"
+          },
+          {
+            "step_id": "act_v6",
+            "op": "activate",
+            "new": "v6_rollback_demo",
+            "old": null,
+            "effective_from": "2029-01-01",
+            "scenario_id": "M_pre_effective_authority_correction",
+            "recorded_at": "2024-11-05T00:00:00+00:00"
+          },
+          {
+            "step_id": "correct_v6",
+            "op": "withdraw",
+            "symbol": "v6_rollback_demo",
+            "withdrawal_effective_date": "2029-01-01",
+            "closure_reason": "correction",
+            "scenario_id": "M_pre_effective_authority_correction",
+            "recorded_at": "2024-11-20T00:00:00+00:00"
+          }
+        ]
+      }
+    ],
+    "query_scenarios": [
+      {
+        "scenario_id": "C_newer_draft_does_not_replace",
+        "description": "A newer draft (v4) exists but must not replace the current effective revision (v3).",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "current",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v3"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v1",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v2",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v4",
+            "reason_code": "not_effective_draft"
+          },
+          {
+            "symbol": "v4_under_review",
+            "reason_code": "not_effective_under_review"
+          },
+          {
+            "symbol": "v5",
+            "reason_code": "not_effective_approved_future"
+          },
+          {
+            "symbol": "v0_late_upload",
+            "reason_code": "not_effective_draft"
+          }
+        ],
+        "expected_states": {
+          "v1": "superseded",
+          "v2": "superseded",
+          "v3": "effective",
+          "v4": "draft",
+          "v4_under_review": "under_review",
+          "v5": "approved_future",
+          "v0_late_upload": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "D_approved_future_not_early",
+        "description": "v5 is approved with a future effective_from (2028-01-01); as of 2027-12-31 it must NOT be current.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "current",
+        "as_of_date": "2027-12-31",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v3"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v1",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v2",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v4",
+            "reason_code": "not_effective_draft"
+          },
+          {
+            "symbol": "v4_under_review",
+            "reason_code": "not_effective_under_review"
+          },
+          {
+            "symbol": "v5",
+            "reason_code": "not_effective_approved_future"
+          },
+          {
+            "symbol": "v0_late_upload",
+            "reason_code": "not_effective_draft"
+          }
+        ],
+        "expected_states": {
+          "v1": "superseded",
+          "v2": "superseded",
+          "v3": "effective",
+          "v4": "draft",
+          "v4_under_review": "under_review",
+          "v5": "approved_future",
+          "v0_late_upload": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "E_supersession_boundary_on",
+        "description": "On the exact effective_from boundary (2028-01-01), v5 becomes effective and v3 becomes superseded in the SAME atomic transition.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "current",
+        "as_of_date": "2028-01-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v5"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v1",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v2",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v3",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v4",
+            "reason_code": "not_effective_draft"
+          },
+          {
+            "symbol": "v4_under_review",
+            "reason_code": "not_effective_under_review"
+          },
+          {
+            "symbol": "v0_late_upload",
+            "reason_code": "not_effective_draft"
+          }
+        ],
+        "expected_states": {
+          "v1": "superseded",
+          "v2": "superseded",
+          "v3": "superseded",
+          "v4": "draft",
+          "v4_under_review": "under_review",
+          "v5": "effective",
+          "v0_late_upload": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "O_boundary_day_before",
+        "description": "One day before the boundary (2027-12-31), the OLD revision (v3) is still effective -- end-exclusive interval semantics.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "current",
+        "as_of_date": "2027-12-31",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v3"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v1",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v2",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v4",
+            "reason_code": "not_effective_draft"
+          },
+          {
+            "symbol": "v4_under_review",
+            "reason_code": "not_effective_under_review"
+          },
+          {
+            "symbol": "v5",
+            "reason_code": "not_effective_approved_future"
+          },
+          {
+            "symbol": "v0_late_upload",
+            "reason_code": "not_effective_draft"
+          }
+        ],
+        "expected_states": {
+          "v1": "superseded",
+          "v2": "superseded",
+          "v3": "effective",
+          "v4": "draft",
+          "v4_under_review": "under_review",
+          "v5": "approved_future",
+          "v0_late_upload": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "F_late_upload_old_revision",
+        "description": "v0 is registered very late (2026) but never approved/activated -- late upload alone must never grant currency.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "current",
+        "as_of_date": "2026-06-02",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v3"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v1",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v2",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v4",
+            "reason_code": "not_effective_draft"
+          },
+          {
+            "symbol": "v4_under_review",
+            "reason_code": "not_effective_under_review"
+          },
+          {
+            "symbol": "v5",
+            "reason_code": "not_effective_approved_future"
+          },
+          {
+            "symbol": "v0_late_upload",
+            "reason_code": "not_effective_draft"
+          }
+        ],
+        "expected_states": {
+          "v1": "superseded",
+          "v2": "superseded",
+          "v3": "effective",
+          "v4": "draft",
+          "v4_under_review": "under_review",
+          "v5": "approved_future",
+          "v0_late_upload": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "G_current_authoritative_query",
+        "description": "Plain current-authoritative query -- exactly one eligible revision.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "current",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v3"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v1",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v2",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v4",
+            "reason_code": "not_effective_draft"
+          },
+          {
+            "symbol": "v4_under_review",
+            "reason_code": "not_effective_under_review"
+          },
+          {
+            "symbol": "v5",
+            "reason_code": "not_effective_approved_future"
+          },
+          {
+            "symbol": "v0_late_upload",
+            "reason_code": "not_effective_draft"
+          }
+        ],
+        "expected_states": {
+          "v1": "superseded",
+          "v2": "superseded",
+          "v3": "effective",
+          "v4": "draft",
+          "v4_under_review": "under_review",
+          "v5": "approved_future",
+          "v0_late_upload": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "H_historical_as_of_query",
+        "description": "Historical as-of query resolves the revision that was effective THEN, not now.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "as_of",
+        "as_of_date": "2020-06-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v2"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v1",
+            "reason_code": "not_effective_superseded"
+          },
+          {
+            "symbol": "v3",
+            "reason_code": "not_effective_approved_future"
+          },
+          {
+            "symbol": "v4",
+            "reason_code": "not_effective_draft"
+          },
+          {
+            "symbol": "v4_under_review",
+            "reason_code": "not_effective_under_review"
+          },
+          {
+            "symbol": "v5",
+            "reason_code": "not_effective_approved_future"
+          },
+          {
+            "symbol": "v0_late_upload",
+            "reason_code": "not_effective_draft"
+          }
+        ],
+        "expected_states": {
+          "v1": "superseded",
+          "v2": "effective",
+          "v3": "approved_future",
+          "v4": "draft",
+          "v4_under_review": "under_review",
+          "v5": "approved_future",
+          "v0_late_upload": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "H2_historical_as_of_before_withdrawal",
+        "description": "Item 2: as_of BEFORE the withdrawal date, within the old (now-closed) period, must still resolve effective.",
+        "logical_document_id": "POLICY-WITHDRAWN-DEMO-001",
+        "query_intent": "as_of",
+        "as_of_date": "2022-06-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "w1"
+        ],
+        "expected_excluded": [],
+        "expected_states": {
+          "w1": "effective"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "I_explicit_comparison_query",
+        "description": "Comparison permits superseded/current/future revisions together, retaining their own labels -- never silently picking one.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "comparison",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [
+          "v1",
+          "v3",
+          "v5"
+        ],
+        "expected_eligible_symbols": [
+          "v1",
+          "v3",
+          "v5"
+        ],
+        "expected_excluded": [],
+        "expected_states": {
+          "v1": "superseded",
+          "v3": "effective",
+          "v5": "approved_future"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "J_explicit_draft_query",
+        "description": "Draft intent returns only the explicitly requested draft/under_review revisions -- v3 (effective, not draft) is excluded even though explicitly requested, never silently mixed in.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "draft",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [
+          "v4",
+          "v3"
+        ],
+        "expected_eligible_symbols": [
+          "v4"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v3",
+            "reason_code": "not_eligible_for_draft_intent"
+          }
+        ],
+        "expected_states": {
+          "v4": "draft",
+          "v3": "effective"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "J2_under_review_via_draft_intent",
+        "description": "under_review is ALSO a legitimate draft-intent result -- v4_under_review must be eligible.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "draft",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [
+          "v4_under_review"
+        ],
+        "expected_eligible_symbols": [
+          "v4_under_review"
+        ],
+        "expected_excluded": [],
+        "expected_states": {
+          "v4_under_review": "under_review"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "K_withdrawn_no_replacement",
+        "description": "current/as_of ON/AFTER the withdrawal date: fails closed, never silently returns nothing as if that were a normal empty result.",
+        "logical_document_id": "POLICY-WITHDRAWN-DEMO-001",
+        "query_intent": "current",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [],
+        "expected_excluded": [],
+        "expected_states": {
+          "w1": "withdrawn"
+        },
+        "integrity_error_expected": true,
+        "expected_integrity_error_code": "no_effective_revision"
+      },
+      {
+        "scenario_id": "L_overlapping_effective_revisions",
+        "description": "Two revisions simultaneously effective -- fails closed rather than silently choosing one.",
+        "logical_document_id": "POLICY-CONFLICT-DEMO-001",
+        "query_intent": "current",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [],
+        "expected_excluded": [],
+        "expected_states": {
+          "c1": "effective",
+          "c2": "effective"
+        },
+        "integrity_error_expected": true,
+        "expected_integrity_error_code": "cross_revision_period_overlap"
+      },
+      {
+        "scenario_id": "M_pre_effective_authority_correction",
+        "description": "v6 was approved-future then RETRACTED (closure_reason=correction) before it ever took effect -- comparison shows it back in draft, and the correction never touches v3/v5's own effective windows.",
+        "logical_document_id": "POLICY-CORRECTION-DEMO-001",
+        "query_intent": "comparison",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [
+          "v6_rollback_demo"
+        ],
+        "expected_eligible_symbols": [
+          "v6_rollback_demo"
+        ],
+        "expected_excluded": [],
+        "expected_states": {
+          "v6_rollback_demo": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "N_same_text_different_identity",
+        "description": "Byte-identical content under a DIFFERENT logical_document_id gets a fully independent revision identity.",
+        "logical_document_id": "POLICY-SHARED-TEXT-DEMO-001",
+        "query_intent": "draft",
+        "as_of_date": "2019-06-02",
+        "requested_symbols": [
+          "n1_shares_v2_text"
+        ],
+        "expected_eligible_symbols": [
+          "n1_shares_v2_text"
+        ],
+        "expected_excluded": [],
+        "expected_states": {
+          "n1_shares_v2_text": "draft"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "E2_post_effective_rollback_before",
+        "description": "Item 3: as_of 2027-12-31 (before rv5 ever existed) -> rv3.",
+        "logical_document_id": "POLICY-ROLLBACK-DEMO-001",
+        "query_intent": "as_of",
+        "as_of_date": "2027-12-31",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "rv3"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "rv5",
+            "reason_code": "not_effective_approved_future"
+          }
+        ],
+        "expected_states": {
+          "rv3": "effective",
+          "rv5": "approved_future"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "E2_post_effective_rollback_during",
+        "description": "Item 3: as_of 2028-03-01 (rv5's own window, before rollback) -> rv5.",
+        "logical_document_id": "POLICY-ROLLBACK-DEMO-001",
+        "query_intent": "as_of",
+        "as_of_date": "2028-03-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "rv5"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "rv3",
+            "reason_code": "not_effective_approved_future"
+          }
+        ],
+        "expected_states": {
+          "rv3": "approved_future",
+          "rv5": "effective"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "E2_post_effective_rollback_after",
+        "description": "Item 3: current/as_of 2028-07-01 (after rollback) -> REINSTATED rv3, rv3's own SECOND authority period.",
+        "logical_document_id": "POLICY-ROLLBACK-DEMO-001",
+        "query_intent": "current",
+        "as_of_date": "2028-07-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "rv3"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "rv5",
+            "reason_code": "not_effective_superseded"
+          }
+        ],
+        "expected_states": {
+          "rv3": "effective",
+          "rv5": "superseded"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "malformed_record_excluded_not_fatal_comparison",
+        "description": "A revision with a genuinely malformed record (draft status + a real, non-zero-width period -- 'effective revision is not approved') is EXCLUDED individually under comparison intent, never aborting the whole query.",
+        "logical_document_id": "POLICY-MALFORMED-DEMO-001",
+        "query_intent": "comparison",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [
+          "m1"
+        ],
+        "expected_eligible_symbols": [],
+        "expected_excluded": [
+          {
+            "symbol": "m1",
+            "reason_code": "malformed_authority_record"
+          }
+        ],
+        "expected_states": {},
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "malformed_record_excluded_not_fatal_draft",
+        "description": "The SAME malformed revision is EXCLUDED individually under draft intent too, never aborting the whole query.",
+        "logical_document_id": "POLICY-MALFORMED-DEMO-001",
+        "query_intent": "draft",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [
+          "m1"
+        ],
+        "expected_eligible_symbols": [],
+        "expected_excluded": [
+          {
+            "symbol": "m1",
+            "reason_code": "malformed_authority_record"
+          }
+        ],
+        "expected_states": {},
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      },
+      {
+        "scenario_id": "duplicate_requested_revision_ids_rejected",
+        "description": "Item 6: requesting the same revision id twice under comparison intent deduplicates deterministically -- one eligible entry, one duplicate_request exclusion, never two eligible entries.",
+        "logical_document_id": "POLICY-RESILIENCE-001",
+        "query_intent": "comparison",
+        "as_of_date": "2025-06-01",
+        "requested_symbols": [
+          "v3",
+          "v3"
+        ],
+        "expected_eligible_symbols": [
+          "v3"
+        ],
+        "expected_excluded": [
+          {
+            "symbol": "v3",
+            "reason_code": "duplicate_request"
+          }
+        ],
+        "expected_states": {
+          "v3": "effective"
+        },
+        "integrity_error_expected": false,
+        "expected_integrity_error_code": null
+      }
+    ]
+  },
+  "D_revision_search_scenarios": {
+    "contract_version": "revision_search_benchmark_v1",
+    "logical_document_id": "POLICY-RETENTION-001",
+    "fixtures": [
+      {
+        "symbol": "v1",
+        "source_relative_path": "generated/POLICY_RETENTION_v1.docx",
+        "version_label": null,
+        "revision_number": 1,
+        "retention_value": "3 years",
+        "note": "historical, superseded by v2"
+      },
+      {
+        "symbol": "v2",
+        "source_relative_path": "generated/POLICY_RETENTION_v2.docx",
+        "version_label": null,
+        "revision_number": 2,
+        "retention_value": "5 years",
+        "note": "historical, superseded by v3 -- used by the historical (as_of) scenario"
+      },
+      {
+        "symbol": "v3",
+        "source_relative_path": "generated/POLICY_RETENTION_v3.docx",
+        "version_label": null,
+        "revision_number": 3,
+        "retention_value": "7 years",
+        "note": "currently effective at benchmark authoring time"
+      },
+      {
+        "symbol": "v4",
+        "source_relative_path": "generated/POLICY_RETENTION_v4.docx",
+        "version_label": null,
+        "revision_number": 4,
+        "retention_value": "10 years",
+        "note": "proposed, registered but never activated -- draft only"
+      },
+      {
+        "symbol": "v5",
+        "source_relative_path": "generated/POLICY_RETENTION_v5.docx",
+        "version_label": null,
+        "revision_number": 5,
+        "retention_value": "8 years",
+        "note": "already ingested/chunked/embedded and registered as a candidate; activated only by the authority-switch scenario"
+      }
+    ],
+    "authority_snapshot": {
+      "description": "Declarative registry setup -- reuses the SAME registry_setup step vocabulary (register/activate) as contracts/revision_authority_scenarios_v2.json, replayed through Stage 7R.1's own, unmodified contract_runner._run_registry_setup and service.py. v1 -> v2 -> v3 is a straight supersession chain; v4 and v5 are registered but left in draft (v5 is activated later, ONLY by the authority_switch step below).",
+      "registry_setup": [
+        {
+          "step_id": "reg_v1",
+          "op": "register",
+          "symbol": "v1",
+          "expected_is_new": true,
+          "recorded_at": "2015-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_v1",
+          "op": "activate",
+          "new": "v1",
+          "old": null,
+          "effective_from": "2015-01-01",
+          "recorded_at": "2015-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v2",
+          "op": "register",
+          "symbol": "v2",
+          "expected_is_new": true,
+          "recorded_at": "2018-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_v2",
+          "op": "activate",
+          "new": "v2",
+          "old": "v1",
+          "effective_from": "2018-01-01",
+          "recorded_at": "2018-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v3",
+          "op": "register",
+          "symbol": "v3",
+          "expected_is_new": true,
+          "recorded_at": "2022-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "act_v3",
+          "op": "activate",
+          "new": "v3",
+          "old": "v2",
+          "effective_from": "2022-01-01",
+          "recorded_at": "2022-01-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v4",
+          "op": "register",
+          "symbol": "v4",
+          "expected_is_new": true,
+          "recorded_at": "2026-05-01T00:00:00+00:00"
+        },
+        {
+          "step_id": "reg_v5",
+          "op": "register",
+          "symbol": "v5",
+          "expected_is_new": true,
+          "recorded_at": "2026-06-01T00:00:00+00:00"
+        }
+      ]
+    },
+    "queries": [
+      {
+        "question_id": "A_current",
+        "description": "Scenario A: plain current query -- exactly v3 (7 years) is eligible; v1/v2 historical, v4 draft, v5 an unactivated candidate must never appear.",
+        "query": "How long must customer account records be retained after account closure?",
+        "query_intent": "current",
+        "as_of_date": "2026-06-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v3"
+        ],
+        "forbidden_symbols": [
+          "v1",
+          "v2",
+          "v4",
+          "v5"
+        ],
+        "expected_value": "7 years",
+        "expected_values_by_symbol": {
+          "v3": "7 years"
+        },
+        "expected_authority_labels": {
+          "v3": "effective"
+        },
+        "top_k": 10
+      },
+      {
+        "question_id": "B_historical",
+        "description": "Scenario B: an as_of query dated inside v2's own authority window (2018-01-01..2022-01-01) resolves v2 (5 years), never the currently-effective v3.",
+        "query": "How long must customer account records be retained after account closure?",
+        "query_intent": "as_of",
+        "as_of_date": "2019-06-01",
+        "requested_symbols": [],
+        "expected_eligible_symbols": [
+          "v2"
+        ],
+        "forbidden_symbols": [
+          "v1",
+          "v3",
+          "v4",
+          "v5"
+        ],
+        "expected_value": "5 years",
+        "expected_values_by_symbol": {
+          "v2": "5 years"
+        },
+        "expected_authority_labels": {
+          "v2": "effective"
+        },
+        "top_k": 10
+      },
+      {
+        "question_id": "C_draft",
+        "description": "Scenario C: an explicit draft-intent query for v4 returns v4 (proposed 10 years), visibly labeled draft -- never treated as current authority.",
+        "query": "How long must customer account records be retained after account closure?",
+        "query_intent": "draft",
+        "as_of_date": "2026-06-01",
+        "requested_symbols": [
+          "v4"
+        ],
+        "expected_eligible_symbols": [
+          "v4"
+        ],
+        "forbidden_symbols": [
+          "v1",
+          "v2",
+          "v3",
+          "v5"
+        ],
+        "expected_value": "10 years",
+        "expected_values_by_symbol": {
+          "v4": "10 years"
+        },
+        "expected_authority_labels": {
+          "v4": "draft"
+        },
+        "top_k": 10
+      },
+      {
+        "question_id": "D_comparison",
+        "description": "Scenario D: an explicit comparison query for v2 and v3 returns EXACTLY those two, each with its own value and its own authority label -- never merged, never a third revision.",
+        "query": "How long must customer account records be retained after account closure?",
+        "query_intent": "comparison",
+        "as_of_date": "2026-06-01",
+        "requested_symbols": [
+          "v2",
+          "v3"
+        ],
+        "expected_eligible_symbols": [
+          "v2",
+          "v3"
+        ],
+        "forbidden_symbols": [
+          "v1",
+          "v4",
+          "v5"
+        ],
+        "expected_value": null,
+        "expected_values_by_symbol": {
+          "v2": "5 years",
+          "v3": "7 years"
+        },
+        "expected_authority_labels": {
+          "v2": "superseded",
+          "v3": "effective"
+        },
+        "top_k": 10
+      }
+    ],
+    "authority_switch": {
+      "description": "Scenario E: v3 is effective; v5 is already ingested/chunked/embedded and registered as a candidate (draft). Run the current query (records v3). Activate v5 (effective_from == this query's as_of_date), superseding v3 -- NO re-ingestion, re-chunking, or re-embedding of anything. Run the SAME current query again with the SAME as_of_date (records v5). Only the registry snapshot hash and the eligible/search results may change; the index itself (row count, content hash, chunk ids/hashes, stored vectors, embedding-call count) must be byte-identical before and after.",
+      "activation_step": {
+        "step_id": "act_v5_switch",
+        "op": "activate",
+        "new": "v5",
+        "old": "v3",
+        "effective_from": "2026-08-01",
+        "recorded_at": "2026-08-01T00:00:00+00:00"
+      },
+      "query": {
+        "question_id": "E_authority_switch",
+        "query": "How long must customer account records be retained after account closure?",
+        "query_intent": "current",
+        "as_of_date": "2026-08-01",
+        "requested_symbols": [],
+        "top_k": 10
+      },
+      "before_expected_eligible_symbols": [
+        "v3"
+      ],
+      "before_expected_value": "7 years",
+      "before_expected_authority_labels": {
+        "v3": "effective",
+        "v5": "draft"
+      },
+      "after_expected_eligible_symbols": [
+        "v5"
+      ],
+      "after_expected_value": "8 years",
+      "after_expected_authority_labels": {
+        "v3": "superseded",
+        "v5": "effective"
+      }
+    }
+  },
+  "E_cross_document_facts": [
+    {
+      "fact_id": "F_app_current",
+      "subject": "APP-224510",
+      "predicate": "supports",
+      "object": "Payment Settlement",
+      "supporting_logical_document_id": "APP-PORTFOLIO",
+      "supporting_revision_symbol": "app_rev2",
+      "expected_supporting_passage": "Application APP-224510 supports the Payment Settlement",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_svc",
+      "subject": "Payment Settlement",
+      "predicate": "is_governed_by",
+      "object": "Obligation O-31",
+      "supporting_logical_document_id": "SERVICE-CATALOGUE",
+      "supporting_revision_symbol": "svc_rev1",
+      "expected_supporting_passage": "Payment Settlement business service is governed by Obligation O-31",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_obl_current",
+      "subject": "Obligation O-31",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-88",
+      "supporting_logical_document_id": "OBLIGATION-REGISTER",
+      "supporting_revision_symbol": "obl_rev2",
+      "expected_supporting_passage": "Obligation O-31 is satisfied by Control C-88.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_ctl_current",
+      "subject": "Control C-88",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-205",
+      "supporting_logical_document_id": "CONTROL-LIBRARY",
+      "supporting_revision_symbol": "ctl_rev2",
+      "expected_supporting_passage": "Control C-88 is implemented through Procedure P-205.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_prc_current",
+      "subject": "Procedure P-205",
+      "predicate": "has_status",
+      "object": "current operating procedure",
+      "supporting_logical_document_id": "PROCEDURE-CATALOGUE",
+      "supporting_revision_symbol": "prc_rev2",
+      "expected_supporting_passage": "Procedure P-205 is the current operating procedure.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "none"
+    },
+    {
+      "fact_id": "F_app_historical",
+      "subject": "APP-224499",
+      "predicate": "supports",
+      "object": "Payment Settlement",
+      "supporting_logical_document_id": "APP-PORTFOLIO",
+      "supporting_revision_symbol": "app_rev1",
+      "expected_supporting_passage": "Application APP-224499 supports the Payment Settlement",
+      "authority_applicability": "historical",
+      "temporal_classification": "historical",
+      "distractor_status": "retired"
+    },
+    {
+      "fact_id": "F_obl_historical",
+      "subject": "Obligation O-31",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-88a",
+      "supporting_logical_document_id": "OBLIGATION-REGISTER",
+      "supporting_revision_symbol": "obl_rev1",
+      "expected_supporting_passage": "Obligation O-31 is satisfied by Control C-88a.",
+      "authority_applicability": "historical",
+      "temporal_classification": "historical",
+      "distractor_status": "superseded"
+    },
+    {
+      "fact_id": "F_ctl_historical",
+      "subject": "Control C-88a",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-204",
+      "supporting_logical_document_id": "CONTROL-LIBRARY",
+      "supporting_revision_symbol": "ctl_rev1",
+      "expected_supporting_passage": "Control C-88a is implemented through Procedure P-204.",
+      "authority_applicability": "historical",
+      "temporal_classification": "historical",
+      "distractor_status": "superseded"
+    },
+    {
+      "fact_id": "F_prc_historical",
+      "subject": "Procedure P-204",
+      "predicate": "has_status",
+      "object": "retired operating procedure",
+      "supporting_logical_document_id": "PROCEDURE-CATALOGUE",
+      "supporting_revision_symbol": "prc_rev1",
+      "expected_supporting_passage": "Procedure P-204 is a retired operating procedure.",
+      "authority_applicability": "historical",
+      "temporal_classification": "historical",
+      "distractor_status": "retired"
+    },
+    {
+      "fact_id": "F_ctl_draft",
+      "subject": "Control C-91",
+      "predicate": "is_proposed_to_implement",
+      "object": "Procedure P-205",
+      "supporting_logical_document_id": "CONTROL-LIBRARY",
+      "supporting_revision_symbol": "ctl_rev3",
+      "expected_supporting_passage": "Control C-91 is implemented through Procedure P-205.",
+      "authority_applicability": "draft",
+      "temporal_classification": "draft",
+      "distractor_status": "proposed"
+    },
+    {
+      "fact_id": "F_adj_app",
+      "subject": "APP-330012",
+      "predicate": "supports",
+      "object": "Payment Reconciliation",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Application APP-330012 supports the Payment Reconciliation",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    },
+    {
+      "fact_id": "F_adj_svc",
+      "subject": "Payment Reconciliation",
+      "predicate": "is_governed_by",
+      "object": "Obligation O-32",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Payment Reconciliation business service is governed by Obligation O-32",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    },
+    {
+      "fact_id": "F_adj_obl",
+      "subject": "Obligation O-32",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-77",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Obligation O-32 is satisfied by Control C-77.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    },
+    {
+      "fact_id": "F_adj_ctl",
+      "subject": "Control C-77",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-301",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Control C-77 is implemented through Procedure P-301.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    },
+    {
+      "fact_id": "F_adj_prc",
+      "subject": "Procedure P-301",
+      "predicate": "has_status",
+      "object": "current operating procedure for reconciliation",
+      "supporting_logical_document_id": "ADJACENT-DOMAIN",
+      "supporting_revision_symbol": "adj_rev1",
+      "expected_supporting_passage": "Procedure P-301 is the current operating procedure for reconciliation.",
+      "authority_applicability": "current",
+      "temporal_classification": "current",
+      "distractor_status": "adjacent_unrelated"
+    }
+  ],
+  "F_questions": [
+    {
+      "question_id": "Q01_direct_service_of_app",
+      "question_type": "direct_semantic_lookup",
+      "query": "Which business service does application APP-224510 support?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_historical",
+        "F_adj_app"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q02_one_hop_control_of_obligation",
+      "question_type": "one_hop_relationship_lookup",
+      "query": "Which control satisfies Obligation O-31?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_obl_current"
+      ],
+      "required_supporting_document_ids": [
+        "OBLIGATION-REGISTER"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_historical",
+        "F_ctl_draft",
+        "F_adj_obl"
+      ],
+      "expected_relationship_chain": [
+        "F_obl_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q03_two_hop_obligation_of_app",
+      "question_type": "distributed_two_hop_lookup",
+      "query": "Which obligation governs the business service that application APP-224510 supports?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current",
+        "F_svc"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO",
+        "SERVICE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_adj_app",
+        "F_adj_svc"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current",
+        "F_svc"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q04_two_hop_control_of_service",
+      "question_type": "distributed_two_hop_lookup",
+      "query": "Which control satisfies the obligation that governs the Payment Settlement business service?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_svc",
+        "F_obl_current"
+      ],
+      "required_supporting_document_ids": [
+        "SERVICE-CATALOGUE",
+        "OBLIGATION-REGISTER"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_historical",
+        "F_adj_svc",
+        "F_adj_obl"
+      ],
+      "expected_relationship_chain": [
+        "F_svc",
+        "F_obl_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q05_three_hop_procedure_of_obligation",
+      "question_type": "distributed_multi_hop_lookup",
+      "query": "Which currently effective operating procedure implements the control that satisfies Obligation O-31?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "required_supporting_document_ids": [
+        "OBLIGATION-REGISTER",
+        "CONTROL-LIBRARY",
+        "PROCEDURE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical",
+        "F_ctl_draft",
+        "F_adj_obl",
+        "F_adj_ctl",
+        "F_adj_prc"
+      ],
+      "expected_relationship_chain": [
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "top_k": 4
+    },
+    {
+      "question_id": "Q06_four_hop_procedure_of_app",
+      "question_type": "distributed_multi_hop_lookup",
+      "query": "Which operating procedure ultimately supports application APP-224510?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current",
+        "F_svc",
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO",
+        "SERVICE-CATALOGUE",
+        "OBLIGATION-REGISTER",
+        "CONTROL-LIBRARY",
+        "PROCEDURE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_historical",
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical",
+        "F_ctl_draft",
+        "F_adj_app",
+        "F_adj_svc",
+        "F_adj_obl",
+        "F_adj_ctl",
+        "F_adj_prc"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current",
+        "F_svc",
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "top_k": 5
+    },
+    {
+      "question_id": "Q07_consolidation_payment_settlement",
+      "question_type": "relationship_consolidation",
+      "query": "Which current applications, obligations, controls and procedures are connected to the Payment Settlement business service?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current",
+        "F_svc",
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO",
+        "SERVICE-CATALOGUE",
+        "OBLIGATION-REGISTER",
+        "CONTROL-LIBRARY",
+        "PROCEDURE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_historical",
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical",
+        "F_ctl_draft",
+        "F_adj_app",
+        "F_adj_svc",
+        "F_adj_obl",
+        "F_adj_ctl",
+        "F_adj_prc"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current",
+        "F_svc",
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "top_k": 5
+    },
+    {
+      "question_id": "Q08_distractor_resistance_current_control",
+      "question_type": "distractor_resistance",
+      "query": "Which control currently satisfies Obligation O-31, excluding any superseded or proposed controls?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_obl_current"
+      ],
+      "required_supporting_document_ids": [
+        "OBLIGATION-REGISTER"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_historical",
+        "F_ctl_draft",
+        "F_adj_obl"
+      ],
+      "expected_relationship_chain": [
+        "F_obl_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q09_current_authority_app",
+      "question_type": "current_authority_relationship_lookup",
+      "query": "Which application currently supports the Payment Settlement business service?",
+      "query_intent": "current",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_current"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_historical"
+      ],
+      "expected_relationship_chain": [
+        "F_app_current"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q10_historical_procedure_of_obligation",
+      "question_type": "historical_comparison",
+      "query": "As of 2021, which operating procedure implemented the control that satisfied Obligation O-31?",
+      "query_intent": "as_of",
+      "as_of_date": "2021-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical"
+      ],
+      "required_supporting_document_ids": [
+        "OBLIGATION-REGISTER",
+        "CONTROL-LIBRARY",
+        "PROCEDURE-CATALOGUE"
+      ],
+      "forbidden_fact_ids": [
+        "F_obl_current",
+        "F_ctl_current",
+        "F_prc_current"
+      ],
+      "expected_relationship_chain": [
+        "F_obl_historical",
+        "F_ctl_historical",
+        "F_prc_historical"
+      ],
+      "top_k": 4
+    },
+    {
+      "question_id": "Q11_historical_app_of_service",
+      "question_type": "historical_comparison",
+      "query": "As of 2021, which application supported the Payment Settlement business service?",
+      "query_intent": "as_of",
+      "as_of_date": "2021-06-01",
+      "requested_revision_symbols": [],
+      "required_fact_ids": [
+        "F_app_historical"
+      ],
+      "required_supporting_document_ids": [
+        "APP-PORTFOLIO"
+      ],
+      "forbidden_fact_ids": [
+        "F_app_current"
+      ],
+      "expected_relationship_chain": [
+        "F_app_historical"
+      ],
+      "top_k": 3
+    },
+    {
+      "question_id": "Q12_draft_proposed_control",
+      "question_type": "draft_lookup",
+      "query": "Which proposed draft control is under consideration in the Control Library?",
+      "query_intent": "draft",
+      "as_of_date": "2026-06-01",
+      "requested_revision_symbols": [
+        "ctl_rev3"
+      ],
+      "required_fact_ids": [
+        "F_ctl_draft"
+      ],
+      "required_supporting_document_ids": [
+        "CONTROL-LIBRARY"
+      ],
+      "forbidden_fact_ids": [
+        "F_ctl_current"
+      ],
+      "expected_relationship_chain": [
+        "F_ctl_draft"
+      ],
+      "top_k": 3
+    }
+  ],
+  "G_fixture_source_text": {
+    "app_rev1": [
+      {
+        "chunk_id": "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8",
+        "chunk_type": "text",
+        "heading_path": [
+          "Application Portfolio",
+          "Registered Applications"
+        ],
+        "content_sha256": "62fab2bb03baae6ec0e2b612fe7370d5ee697b46f34c532fb82faaa0733ce9f1",
+        "text": "Application Portfolio > Registered Applications\n\nApplication APP-224499 supports the Payment Settlement business service."
+      }
+    ],
+    "app_rev2": [
+      {
+        "chunk_id": "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+        "chunk_type": "text",
+        "heading_path": [
+          "Application Portfolio",
+          "Registered Applications"
+        ],
+        "content_sha256": "cd362e1283ef769a785851e6e1ea75f5618a99d9cfe920433dfe4c596ef20d18",
+        "text": "Application Portfolio > Registered Applications\n\nApplication APP-224510 supports the Payment Settlement business service."
+      }
+    ],
+    "svc_rev1": [
+      {
+        "chunk_id": "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+        "chunk_type": "text",
+        "heading_path": [
+          "Business Service Catalogue",
+          "Governed Services"
+        ],
+        "content_sha256": "9e594b6177af4102edf3a35611f3324040f8b5235a91c3d57f75d4062e18c799",
+        "text": "Business Service Catalogue > Governed Services\n\nThe Payment Settlement business service is governed by Obligation O-31."
+      }
+    ],
+    "obl_rev1": [
+      {
+        "chunk_id": "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a",
+        "chunk_type": "text",
+        "heading_path": [
+          "Obligation Register",
+          "Obligation Coverage"
+        ],
+        "content_sha256": "21aa7abef16842733598de5726673645a4a1a1893e71d4f678d89bfc9ee6c8f6",
+        "text": "Obligation Register > Obligation Coverage\n\nObligation O-31 is satisfied by Control C-88a."
+      }
+    ],
+    "obl_rev2": [
+      {
+        "chunk_id": "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+        "chunk_type": "text",
+        "heading_path": [
+          "Obligation Register",
+          "Obligation Coverage"
+        ],
+        "content_sha256": "85c6c84a6ac4761aa30f20cd9585d3b4d9417360a3b4018dc179fbebb54af1b0",
+        "text": "Obligation Register > Obligation Coverage\n\nObligation O-31 is satisfied by Control C-88."
+      }
+    ],
+    "ctl_rev1": [
+      {
+        "chunk_id": "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a",
+        "chunk_type": "text",
+        "heading_path": [
+          "Control Library",
+          "Control Implementations"
+        ],
+        "content_sha256": "60311037bdc6986c88400f5d4fb6d99a15bea35a04c75a7f2ef6831cf1dda159",
+        "text": "Control Library > Control Implementations\n\nControl C-88a is implemented through Procedure P-204."
+      }
+    ],
+    "ctl_rev2": [
+      {
+        "chunk_id": "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+        "chunk_type": "text",
+        "heading_path": [
+          "Control Library",
+          "Control Implementations"
+        ],
+        "content_sha256": "78ee76a964e9515f90b82af0f87c24c41848927c86f2275c733617798e6b1fd9",
+        "text": "Control Library > Control Implementations\n\nControl C-88 is implemented through Procedure P-205."
+      }
+    ],
+    "ctl_rev3": [
+      {
+        "chunk_id": "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c",
+        "chunk_type": "text",
+        "heading_path": [
+          "Control Library",
+          "Control Implementations"
+        ],
+        "content_sha256": "0e8bbb34c4924947daff29e223e9d0ebf76430919f229602f02f50637f006c05",
+        "text": "Control Library > Control Implementations\n\nControl C-91 is implemented through Procedure P-205."
+      }
+    ],
+    "prc_rev1": [
+      {
+        "chunk_id": "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1",
+        "chunk_type": "text",
+        "heading_path": [
+          "Procedure Catalogue",
+          "Operating Procedures"
+        ],
+        "content_sha256": "bb84264ad5c55bb6b31aed7e09d346df20aa54c109338fdd3d47bcb01c1edb8e",
+        "text": "Procedure Catalogue > Operating Procedures\n\nProcedure P-204 is a retired operating procedure."
+      }
+    ],
+    "prc_rev2": [
+      {
+        "chunk_id": "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb",
+        "chunk_type": "text",
+        "heading_path": [
+          "Procedure Catalogue",
+          "Operating Procedures"
+        ],
+        "content_sha256": "e856f21141ca346ebe68d7e3eb01082ed58796e10f930a65178bcf288131b3d5",
+        "text": "Procedure Catalogue > Operating Procedures\n\nProcedure P-205 is the current operating procedure."
+      }
+    ],
+    "adj_rev1": [
+      {
+        "chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+        "chunk_type": "text",
+        "heading_path": [
+          "Adjacent Domain Reference",
+          "Payment Reconciliation Chain"
+        ],
+        "content_sha256": "028a9ffc52d1a067d040295fe1545bd16552df2bbdc504acef9d829fd41bef30",
+        "text": "Adjacent Domain Reference > Payment Reconciliation Chain\n\nApplication APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      }
+    ]
+  }
+}

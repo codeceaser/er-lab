@@ -27,6 +27,7 @@ CROSS_DOCUMENT_BENCHMARK_CONTRACT_PATH = CONTRACTS_ROOT / "cross_document_relati
 REPORTS_ROOT = REPO_ROOT / "reports"
 STAGE7B0_VECTOR_RESULTS_PATH = REPORTS_ROOT / "stage7b0_cross_document_vector_results.json"
 STAGE7B1_GRAPH_BUILD_RESULTS_PATH = REPORTS_ROOT / "stage7b1_graph_build_results.json"
+STAGE7B1_GRAPH_RETRIEVAL_RESULTS_PATH = REPORTS_ROOT / "stage7b1_graph_retrieval_results.json"
 
 ARTIFACTS_ROOT = REPO_ROOT / "artifacts" / "stage7b2"
 
@@ -43,6 +44,7 @@ __all__ = [
     "CROSS_DOCUMENT_BENCHMARK_CONTRACT_PATH",
     "STAGE7B0_VECTOR_RESULTS_PATH",
     "STAGE7B1_GRAPH_BUILD_RESULTS_PATH",
+    "STAGE7B1_GRAPH_RETRIEVAL_RESULTS_PATH",
     "REPORTS_ROOT",
     "ARTIFACTS_ROOT",
     "load_probe_config",

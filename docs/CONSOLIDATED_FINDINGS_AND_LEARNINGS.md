@@ -43,23 +43,34 @@ Companion documents:
    temperature 0. The multi-hop advantage is real only with a *perfect*
    extractor.
 
-5. **Hybrid fusion converges to Vector — it cannot exceed it under a fixed budget.**
-   (Stage 7B.2.) Reciprocal-Rank Fusion of Vector with Graph, under the
-   same top-K budget and with no query-time LLM, *rescues* a bad graph up
-   to Vector's level (removing graph regressions) but *dilutes* a perfect
-   graph back down to Vector's level (mixing Vector's noise into a
-   complete graph chain pushes a required chunk out of the shared budget).
-   Vector-assisted seeding and semantic path ranking add nothing over
-   plain fusion. **Decision: keep Vector; use Graph only for
-   navigation/offline analysis.**
+5. **In this experiment, hybrid fusion converged to Vector.**
+   (Stage 7B.2a.) For *the tested equal-weight RRF implementation*, *the
+   declared supplemental-seed budget (max 4 RRF-ranked seeds)*, *the
+   corrected semantic-path generation (all eligible simple paths
+   enumerated and ranked before truncation)*, *this corpus, and this
+   embedding model*, Reciprocal-Rank Fusion of Vector with Graph — under
+   the same top-K budget and with no query-time LLM — *rescued* a bad
+   graph up to Vector's level (removing graph regressions) but did not
+   improve any of the three target questions; on the perfect graph, mixing
+   the fixed Vector ranking into a complete graph chain under the shared
+   budget diluted the graph's gains. Vector-assisted seeding and semantic
+   path ranking added nothing over plain fusion here. This is an observed
+   result under the stated configuration, **not** a proof that hybrid can
+   never exceed Vector: the same run's perfect-graph H0 raised Q06 from
+   0.80 to 1.00, so graph structure *can* help within budget. **Decision
+   (gate D): do not retain Graph in the online retrieval path. Navigation
+   or offline relationship analysis remains a separate, unevaluated use
+   case.**
 
-**Net architectural conclusion:** for this corpus and these constraints,
-authority-aware **Vector** retrieval is the right choice. Graph adds cost,
-maintenance, entity-normalization risk, and non-determinism without a
-retrieval win. Revisit graph only if (a) a higher-recall/deterministic
-structured-relationship source exists, (b) the corpus grows large/noisy
-enough that Vector's own recall degrades, or (c) the evidence budget is
-allowed to grow (so fusion is not a zero-sum dilution).
+**Net architectural conclusion (scoped):** for this corpus, this
+embedding model, this fixed evidence budget, and these constraints,
+authority-aware **Vector** retrieval was the right choice — Graph added
+cost, maintenance, entity-normalization risk, and non-determinism without
+a net retrieval win in the online path. Revisit graph only if (a) a
+higher-recall/deterministic structured-relationship source exists, (b)
+the corpus grows large/noisy enough that Vector's own recall degrades, or
+(c) the evidence budget is allowed to grow (so fusion is not a zero-sum
+dilution).
 
 ---
 

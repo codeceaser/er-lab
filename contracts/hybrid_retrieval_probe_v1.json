@@ -1,22 +1,32 @@
 {
   "contract_version": "hybrid_retrieval_probe_v1",
-  "description": "Stage 7B.2 hybrid Vector-Graph probe. ONE immutable global algorithm configuration + the decision gates, declared BEFORE the measured run. Contains NO question-specific paths, seeds, answers, or relationship hints, and permits NO per-question tuning. The final per-question evidence budget (top_k) comes ONLY from the frozen Stage 7B.0 question contract, never from here.",
+  "description": "Stage 7B.2 / 7B.2a hybrid Vector-Graph probe. ONE immutable global algorithm configuration + the decision gates, declared BEFORE the measured run. Contains NO question-specific paths, seeds, answers, or relationship hints, and permits NO per-question tuning. The final per-question evidence budget (top_k) comes ONLY from the frozen Stage 7B.0 question contract, never from here.",
 
   "candidate_parameters": {
     "vector_candidate_multiplier": 3,
     "max_vector_seed_chunks": 8,
     "semantic_edge_candidate_count": 5,
+    "max_supplemental_seed_nodes": 4,
+    "supplemental_seed_saturation_threshold": 0.40,
     "max_hop_depth": 5,
+    "path_enumeration_safety_ceiling": 5000,
     "max_candidate_paths": 32,
     "rrf_constant": 60
   },
 
+  "parameter_notes": {
+    "max_supplemental_seed_nodes": "Global cap on supplemental (Vector-chunk + semantic-edge) seed nodes retained per query, AFTER RRF-ranking supplemental node candidates by their Vector-chunk source rank and semantic-edge source rank. Every explicit-alias seed is ALWAYS retained (never capped). No per-question seed limits.",
+    "supplemental_seed_saturation_threshold": "Benchmark qualification fails if selected supplemental seeds exceed this fraction of the eligible graph node count -- EXCEPT when the eligible graph has <= 4 nodes (a small graph is legitimately saturated).",
+    "path_enumeration_safety_ceiling": "Path enumeration must fail explicitly if the number of authority-eligible simple paths (no repeated node, <= max_hop_depth) exceeds this global ceiling. It is a safety bound, NOT a truncation of candidates before scoring.",
+    "max_candidate_paths": "The number of paths RETAINED after ALL enumerated paths are embedded and semantically ranked. It is applied ONLY after semantic ranking, never as an early DFS cutoff."
+  },
+
   "modes": {
     "V": "Frozen authority-aware Vector baseline (Stage 7B.0 result, loaded, never rerun/rescored).",
-    "G": "Frozen Stage 7B.1 simple Graph baseline (explicit-alias seeds, hop-distance-first chunk ranking).",
-    "H0": "Reciprocal-Rank-Fusion of the frozen Vector ranking with the frozen simple-Graph ranking.",
-    "H1": "H0, but the Graph side traverses from EXPANDED seeds (explicit + Vector-chunk + semantic-edge), hop-distance-ranked.",
-    "H2": "H1, but the Graph side ranks bounded simple PATHS by query<->path-representation semantic similarity (not hop distance)."
+    "G": "Frozen Stage 7B.1 simple Graph baseline. For the real graph this is the committed Stage 7B.1 per-question Graph result, verified by exact equality of ranked chunk ids/ranks/scores before use.",
+    "H0": "Reciprocal-Rank-Fusion of the frozen Vector ranking with the simple-Graph ranking.",
+    "H1": "H0, but the Graph side traverses from EXPANDED seeds (explicit-alias always + up to max_supplemental_seed_nodes RRF-ranked Vector-chunk/semantic-edge supplemental seeds), hop-distance-ranked.",
+    "H2": "H1, but the Graph side enumerates ALL eligible simple paths, semantically ranks every one by query<->path-representation cosine, and retains the top max_candidate_paths (not hop distance)."
   },
 
   "graph_conditions": {
@@ -25,37 +35,38 @@
   },
 
   "decision_gates": {
-    "note": "Exactly one decision is returned. Gates are evaluated in order A, D, B, C and are NOT altered after seeing results. 'target questions' are Q04/Q06/Q07 (deep/distributed chain); 'complete-chain improvement' means real-graph H2 makes complete_chain_represented true where the frozen Vector baseline had it false.",
+    "note": "Exactly one decision is returned. Gates are evaluated in the fixed order A, B, D, C and are NOT altered after seeing results. Zero authority leakage, the same final K as Vector, and no query-time LLM are HARD SAFETY REQUIREMENTS for A, B, and D -- a mode failing any of them cannot satisfy those gates. 'target questions' are Q04/Q06/Q07 (deep/distributed chain); a 'complete-chain improvement' means H2 makes complete_chain_represented true where the frozen Vector baseline had it false.",
+    "evaluation_order": ["A", "B", "D", "C"],
     "A_retain_hybrid": {
       "decision": "Retain Hybrid Graph experimentally/selectively",
       "conditions": [
         "real-graph H2 improves complete-chain retrieval on at least 2 of Q04/Q06/Q07",
         "real-graph H2 has zero regressions relative to Vector across all other questions",
         "real-graph H2 does not regress Q12",
-        "real-graph H2 has zero authority leakage",
-        "real-graph H2 uses the same final K as Vector",
-        "real-graph H2 uses no query-time LLM",
+        "HARD SAFETY: real-graph H2 has zero authority leakage, uses the same final K as Vector, and uses no query-time LLM",
         "real-graph H2 mean query latency <= 2x the Vector mean"
-      ]
-    },
-    "D_keep_vector_graph_navigation": {
-      "decision": "Keep Vector; use Graph only for navigation/offline analysis",
-      "conditions": [
-        "real-graph H2 removes Graph regressions (no regression vs Vector on any question)",
-        "real-graph H2 improves fewer than 2 of Q04/Q06/Q07"
       ]
     },
     "B_defer_until_reliable_relationships": {
       "decision": "Defer until reliable structured relationships exist",
       "conditions": [
-        "perfect-graph H2 meets gate A's improvement/regression/latency/leakage conditions",
-        "real-graph H2 does not"
+        "perfect-graph H2 meets gate A's improvement/regression/safety/latency conditions",
+        "real-graph H2 does not meet gate A"
+      ]
+    },
+    "D_no_online_graph_navigation_only": {
+      "decision": "Do not retain Graph in the online retrieval path. Navigation or offline relationship analysis remains a separate, unevaluated use case.",
+      "conditions": [
+        "neither gate A nor gate B applies",
+        "HARD SAFETY: real-graph H2 has zero authority leakage, uses the same final K as Vector, and uses no query-time LLM",
+        "real-graph H2 has no regressions relative to Vector on any question",
+        "real-graph H2 improves fewer than 2 of Q04/Q06/Q07"
       ]
     },
     "C_close_graph_exploration": {
       "decision": "Close Graph exploration for this architecture",
       "conditions": [
-        "neither real-graph nor perfect-graph hybrid materially improves Vector"
+        "none of A, B, or D applies"
       ]
     }
   }

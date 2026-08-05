@@ -1,4 +1,4 @@
-# Stage 7B.2 -- Hybrid Vector-Graph Retrieval Value Probe
+# Stage 7B.2a -- Hybrid Vector-Graph Retrieval Value Probe
 
 Generated from one `ProbeRunResult` (same object as
 `reports/stage7b2_hybrid_retrieval_results.json` and
@@ -8,14 +8,14 @@ Stage 7B.0 `_evaluate_question`. No query-time LLM. Hybrid superiority is
 never assumed.
 
 `contract_version`: `hybrid_retrieval_probe_v1`
-`generated_at`: `2026-08-03T14:58:38.562983+00:00`
+`generated_at`: `2026-08-05T14:47:42.667013+00:00`
 `embedding_model`: `sentence-transformers/all-MiniLM-L6-v2`
 
 ## Decision
 
-**Gate D: Keep Vector; use Graph only for navigation/offline analysis**
+**Gate D: Do not retain Graph in the online retrieval path. Navigation or offline relationship analysis remains a separate, unevaluated use case.**
 
-Real-graph H2 removed Graph regressions (no regression vs Vector) but improved only 0 of the three target questions (< 2).
+Neither gate A nor gate B applies. Real-graph H2 has no regressions relative to Vector (zero authority leakage, same final K, no query-time LLM) but improves only 0 of the three target questions (< 2).
 
 ## Frozen input verification
 
@@ -28,8 +28,51 @@ Real-graph H2 removed Graph regressions (no regression vs Vector) but improved o
 
 - vector_candidate_multiplier: 3, max_vector_seed_chunks: 8
 - semantic_edge_candidate_count: 5, max_hop_depth: 5
-- max_candidate_paths: 32, rrf_constant: 60
+- max_supplemental_seed_nodes: 4, supplemental_seed_saturation_threshold: 0.4
+- path_enumeration_safety_ceiling: 5000, max_candidate_paths: 32, rrf_constant: 60
 - final top-K comes only from the frozen Stage 7B.0 question contract
+
+## Seed-saturation diagnostics (real-graph H2)
+
+Explicit-alias seeds are always retained; supplemental (Vector-chunk +
+semantic-edge) seeds are RRF-ranked and capped at max_supplemental_seed_nodes.
+Qualification fails if selected supplemental seeds exceed
+40% of eligible graph nodes (except <=4-node graphs).
+
+| Question | eligible nodes | suppl. candidates | selected suppl. | total seeds | saturation | ok |
+|---|---|---|---|---|---|---|
+| Q01_direct_service_of_app | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q02_one_hop_control_of_obligation | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q03_two_hop_obligation_of_app | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q04_two_hop_control_of_service | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q05_three_hop_procedure_of_obligation | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q06_four_hop_procedure_of_app | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q07_consolidation_payment_settlement | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q08_distractor_resistance_current_control | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q09_current_authority_app | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q10_historical_procedure_of_obligation | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q11_historical_app_of_service | 12 | 11 | 4 | 5 | 0.33 | True |
+| Q12_draft_proposed_control | 2 | 2 | 2 | 2 | 1.00 | True |
+
+## Path-enumeration diagnostics (real-graph H2)
+
+ALL authority-eligible simple paths are enumerated and semantically ranked
+BEFORE truncation to max_candidate_paths (safety ceiling 5000).
+
+| Question | enumerated | retained | eligible-edge coverage |
+|---|---|---|---|
+| Q01_direct_service_of_app | 17 | 17 | 0.67 |
+| Q02_one_hop_control_of_obligation | 21 | 21 | 0.89 |
+| Q03_two_hop_obligation_of_app | 17 | 17 | 0.67 |
+| Q04_two_hop_control_of_service | 17 | 17 | 0.67 |
+| Q05_three_hop_procedure_of_obligation | 19 | 19 | 0.89 |
+| Q06_four_hop_procedure_of_app | 13 | 13 | 1.00 |
+| Q07_consolidation_payment_settlement | 17 | 17 | 0.67 |
+| Q08_distractor_resistance_current_control | 19 | 19 | 0.89 |
+| Q09_current_authority_app | 17 | 17 | 0.67 |
+| Q10_historical_procedure_of_obligation | 19 | 19 | 0.89 |
+| Q11_historical_app_of_service | 17 | 17 | 0.67 |
+| Q12_draft_proposed_control | 2 | 2 | 1.00 |
 
 ## Edge semantic-index manifests
 
@@ -106,9 +149,9 @@ perfect-graph G/H2 upper bound.
 - total authority leakage across ALL modes/questions/conditions: **0** (must be 0)
 - final evidence budget never exceeds the frozen top-K: **True**
 - query-time LLM calls: **0** (deterministic; no query-time model)
-- mean latency (s) V / real-H2 / perfect-H2: 0.1229 / 0.2732 / 0.3448
+- mean latency (s) V / real-H2 / perfect-H2: 0.1229 / 0.1710 / 0.3046
 
 ## Decision-gate inputs
 
-- real-graph H2: `{'target_complete_chain_improvements': 0, 'regressions_vs_vector': [], 'q12_regressed': False, 'total_authority_leakage': 0, 'same_final_k': True, 'uses_query_time_llm': False, 'mean_latency_ratio_vs_vector': 2.2233312059282517}`
-- perfect-graph H2: `{'target_complete_chain_improvements': 0, 'regressions_vs_vector': [], 'q12_regressed': False, 'total_authority_leakage': 0, 'same_final_k': True, 'uses_query_time_llm': False, 'mean_latency_ratio_vs_vector': 2.805410282030595}`
+- real-graph H2: `{'target_complete_chain_improvements': 0, 'regressions_vs_vector': [], 'q12_regressed': False, 'total_authority_leakage': 0, 'same_final_k': True, 'uses_query_time_llm': False, 'mean_latency_ratio_vs_vector': 1.3914220737083478}`
+- perfect-graph H2: `{'target_complete_chain_improvements': 0, 'regressions_vs_vector': [], 'q12_regressed': False, 'total_authority_leakage': 0, 'same_final_k': True, 'uses_query_time_llm': False, 'mean_latency_ratio_vs_vector': 2.4787484437077767}`

@@ -1,4 +1,4 @@
-# Stage 7B.2 -- Hybrid Vector-Graph Closure Decision
+# Stage 7B.2a -- Hybrid Vector-Graph Closure Decision
 
 Durable decision record for Stage 7B.2, the bounded hybrid probe that
 closes the Graph investigation. Companion to
@@ -18,9 +18,9 @@ by the frozen Stage 7B.0 scorer over the frozen top-K budgets.
 
 ## Decision
 
-**Gate D: Keep Vector; use Graph only for navigation/offline analysis**
+**Gate D: Do not retain Graph in the online retrieval path. Navigation or offline relationship analysis remains a separate, unevaluated use case.**
 
-Real-graph H2 removed Graph regressions (no regression vs Vector) but improved only 0 of the three target questions (< 2).
+Neither gate A nor gate B applies. Real-graph H2 has no regressions relative to Vector (zero authority leakage, same final K, no query-time LLM) but improves only 0 of the three target questions (< 2).
 
 ## Key evidence
 
@@ -38,6 +38,21 @@ The ablation (G -> H0 -> H1 -> H2, plus the perfect-graph upper bound in
 the scorecard) isolates whether any gain comes from fusion, better
 seeding, semantic path ranking, or graph extraction quality. See the
 "Ablation / attribution" table in the scorecard.
+
+## Claim boundary
+
+This decision states a result, not an impossibility theorem. The
+conclusions hold ONLY for: the tested equal-weight RRF implementation;
+the declared supplemental-seed budget (every explicit-alias seed retained
+plus at most `max_supplemental_seed_nodes` RRF-ranked supplemental seeds);
+the corrected semantic-path generation (ALL authority-eligible simple
+paths enumerated and semantically ranked BEFORE any truncation to
+`max_candidate_paths`); this corpus; and this embedding model. It is NOT
+the claim "Hybrid cannot exceed Vector under a fixed budget" -- this very
+run's perfect-graph H0 improves Q06 complete-chain coverage from 0.80 to
+1.00, so graph structure demonstrably can help within budget. Graph was
+simply not worth retaining in the ONLINE retrieval path under these
+tested conditions.
 
 ## Limitations
 

@@ -34,11 +34,16 @@ from ingestion_bench.revision_authority.repository import InMemoryRevisionAuthor
 
 def main() -> None:
     fake = "--fake" in sys.argv[1:]
+    # The MEASURED run uses the isolated Postgres stores (section 4).
+    # `--in-memory` forces the deterministic in-memory path (e.g. when no
+    # Postgres is available); `--fake` implies deterministic in-memory.
+    persisted = not fake and "--in-memory" not in sys.argv[1:]
     provider = FakeEmbeddingProvider() if fake else SentenceTransformerEmbeddingProvider()
     repository = InMemoryRevisionAuthorityRepository()
     print(f"Mode: {'FAKE (deterministic, no download)' if fake else 'REAL sentence-transformers'} ({provider.model_identity})")
+    print(f"Stores: {'PERSISTED Postgres (isolated tables)' if persisted else 'in-memory (deterministic)'}")
 
-    result = run_probe(hcfg.CROSS_DOCUMENT_BENCHMARK_CONTRACT_PATH, hcfg.load_probe_config(), repository, provider)
+    result = run_probe(hcfg.CROSS_DOCUMENT_BENCHMARK_CONTRACT_PATH, hcfg.load_probe_config(), repository, provider, persisted=persisted)
 
     art = hcfg.ARTIFACTS_ROOT
     (art / "query_results" / "real_graph").mkdir(parents=True, exist_ok=True)

@@ -30,6 +30,31 @@ def _mode(by_key, qid, mode, cond):
     return by_key.get((qid, mode, "common") if mode == "V" else (qid, mode, cond))
 
 
+def _seed_saturation_rows(by_key) -> str:
+    rows = []
+    for (qid, mode, cond), m in by_key.items():
+        if mode == "H2" and cond == "real_graph":
+            rows.append((qid, m))
+    rows.sort(key=lambda r: r[0])
+    return "\n".join(
+        f"| {qid} | {m.eligible_graph_node_count} | {m.supplemental_seed_candidate_count} | "
+        f"{m.selected_supplemental_seed_count} | {m.total_seed_count} | {m.seed_saturation_ratio:.2f} | {m.seed_saturation_ok} |"
+        for qid, m in rows
+    )
+
+
+def _path_enum_rows(by_key) -> str:
+    rows = []
+    for (qid, mode, cond), m in by_key.items():
+        if mode == "H2" and cond == "real_graph":
+            rows.append((qid, m))
+    rows.sort(key=lambda r: r[0])
+    return "\n".join(
+        f"| {qid} | {m.paths_enumerated_before_ranking} | {m.paths_retained_after_ranking} | {m.eligible_edge_path_coverage:.2f} |"
+        for qid, m in rows
+    )
+
+
 def render_results_json(result: ProbeRunResult) -> str:
     return result.model_dump_json(indent=2)
 
@@ -79,7 +104,7 @@ def render_scorecard_markdown(result: ProbeRunResult) -> str:
         h2p = _cov(by_key, qid, "H2", "perfect_graph")
         ablation_rows.append(f"| {qid} | {v:.2f} | {g:.2f} | {h0:.2f} | {h1:.2f} | {h2:.2f} | {gp:.2f} | {h2p:.2f} |")
 
-    return f"""# Stage 7B.2 -- Hybrid Vector-Graph Retrieval Value Probe
+    return f"""# Stage 7B.2a -- Hybrid Vector-Graph Retrieval Value Probe
 
 Generated from one `ProbeRunResult` (same object as
 `reports/stage7b2_hybrid_retrieval_results.json` and
@@ -109,8 +134,29 @@ never assumed.
 
 - vector_candidate_multiplier: {p['vector_candidate_multiplier']}, max_vector_seed_chunks: {p['max_vector_seed_chunks']}
 - semantic_edge_candidate_count: {p['semantic_edge_candidate_count']}, max_hop_depth: {p['max_hop_depth']}
-- max_candidate_paths: {p['max_candidate_paths']}, rrf_constant: {p['rrf_constant']}
+- max_supplemental_seed_nodes: {p['max_supplemental_seed_nodes']}, supplemental_seed_saturation_threshold: {p['supplemental_seed_saturation_threshold']}
+- path_enumeration_safety_ceiling: {p['path_enumeration_safety_ceiling']}, max_candidate_paths: {p['max_candidate_paths']}, rrf_constant: {p['rrf_constant']}
 - final top-K comes only from the frozen Stage 7B.0 question contract
+
+## Seed-saturation diagnostics (real-graph H2)
+
+Explicit-alias seeds are always retained; supplemental (Vector-chunk +
+semantic-edge) seeds are RRF-ranked and capped at max_supplemental_seed_nodes.
+Qualification fails if selected supplemental seeds exceed
+{p['supplemental_seed_saturation_threshold']:.0%} of eligible graph nodes (except <=4-node graphs).
+
+| Question | eligible nodes | suppl. candidates | selected suppl. | total seeds | saturation | ok |
+|---|---|---|---|---|---|---|
+{_seed_saturation_rows(by_key)}
+
+## Path-enumeration diagnostics (real-graph H2)
+
+ALL authority-eligible simple paths are enumerated and semantically ranked
+BEFORE truncation to max_candidate_paths (safety ceiling {p['path_enumeration_safety_ceiling']}).
+
+| Question | enumerated | retained | eligible-edge coverage |
+|---|---|---|---|
+{_path_enum_rows(by_key)}
 
 ## Edge semantic-index manifests
 
@@ -175,7 +221,7 @@ def render_decision_doc(result: ProbeRunResult) -> str:
 
     real = result.real_gate_inputs
     perfect = result.perfect_gate_inputs
-    return f"""# Stage 7B.2 -- Hybrid Vector-Graph Closure Decision
+    return f"""# Stage 7B.2a -- Hybrid Vector-Graph Closure Decision
 
 Durable decision record for Stage 7B.2, the bounded hybrid probe that
 closes the Graph investigation. Companion to
@@ -215,6 +261,21 @@ The ablation (G -> H0 -> H1 -> H2, plus the perfect-graph upper bound in
 the scorecard) isolates whether any gain comes from fusion, better
 seeding, semantic path ranking, or graph extraction quality. See the
 "Ablation / attribution" table in the scorecard.
+
+## Claim boundary
+
+This decision states a result, not an impossibility theorem. The
+conclusions hold ONLY for: the tested equal-weight RRF implementation;
+the declared supplemental-seed budget (every explicit-alias seed retained
+plus at most `max_supplemental_seed_nodes` RRF-ranked supplemental seeds);
+the corrected semantic-path generation (ALL authority-eligible simple
+paths enumerated and semantically ranked BEFORE any truncation to
+`max_candidate_paths`); this corpus; and this embedding model. It is NOT
+the claim "Hybrid cannot exceed Vector under a fixed budget" -- this very
+run's perfect-graph H0 improves Q06 complete-chain coverage from 0.80 to
+1.00, so graph structure demonstrably can help within budget. Graph was
+simply not worth retaining in the ONLINE retrieval path under these
+tested conditions.
 
 ## Limitations
 

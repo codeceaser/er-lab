@@ -8,13 +8,15 @@ authority-eligible edge assertions and supporting multiple seeds:
   chunk_id) -- the Stage 7B.1-style hop-first ranking, but from expanded
   seeds.
 
-- `semantic_path_ranked_graph_evidence` (used by H2): enumerate bounded
-  SIMPLE paths (no repeated node, <= max_hops edges, capped at a fixed
-  global candidate limit), derive each path's representation from its
-  OWN existing edges only ("subject predicate object\n..."), embed it,
-  and rank paths by query<->path cosine similarity (NOT hop distance),
-  then shorter path, then stable path id. Chunks are collected in
-  path-rank order.
+- `semantic_path_ranked_graph_evidence` (used by H2): enumerate ALL
+  authority-eligible SIMPLE paths (no repeated node, <= max_hops edges)
+  -- never truncated before scoring -- failing explicitly if the
+  enumeration exceeds a fixed global safety ceiling. Derive each path's
+  representation from its OWN existing edges only
+  ("subject predicate object\n..."), embed EVERY enumerated path, rank
+  them by query<->path cosine similarity (NOT hop distance), then shorter
+  path, then stable path id, and only THEN retain the top
+  `max_candidate_paths`. Chunks are collected in path-rank order.
 
 Only original source chunks count as retrieved evidence. No inferred or
 repaired edge is ever added. Evaluation truth is never read.
@@ -33,6 +35,12 @@ from ingestion_bench.retrieval_baseline.embeddings import EmbeddingProvider
 from ingestion_bench.revision_search_benchmark.store import RevisionVectorRecord, cosine_similarity
 
 
+class PathEnumerationCeilingExceeded(RuntimeError):
+    """Raised when the number of authority-eligible simple paths exceeds
+    the global safety ceiling -- enumeration is a safety bound, never a
+    silent truncation of candidates before scoring."""
+
+
 @dataclass
 class GraphSideResult:
     ranked_chunks: list[RankedChunk]
@@ -43,6 +51,14 @@ class GraphSideResult:
     candidate_path_count: int
     embedding_calls: int
     latency_seconds: float
+    # path-enumeration diagnostics (H2 only; 0/empty for the hop-ranked side)
+    paths_enumerated_before_ranking: int = 0
+    paths_retained_after_ranking: int = 0
+    path_count_by_hop_length: dict[int, int] = field(default_factory=dict)
+    path_count_by_originating_seed: dict[str, int] = field(default_factory=dict)
+    eligible_edge_path_coverage: float = 0.0
+    path_embedding_latency_seconds: float = 0.0
+    enumeration_latency_seconds: float = 0.0
 
 
 def _adjacency(eligible_edges: list[GraphEdgeAssertion]) -> dict[str, list[GraphEdgeAssertion]]:
@@ -111,20 +127,24 @@ def hop_ranked_graph_evidence(
     return GraphSideResult(ranked_chunks=ranked, traversed_edge_ids=sorted(set(traversed)), paths=[], chunk_support=chunk_support, candidate_path_count=0, embedding_calls=0, latency_seconds=time.perf_counter() - start)
 
 
-def _enumerate_simple_paths(seeds: list[HybridSeed], adj: dict[str, list[GraphEdgeAssertion]], max_hops: int, max_paths: int) -> list[tuple[list[str], list[GraphEdgeAssertion]]]:
-    """Bounded simple-path enumeration (no repeated node, <= max_hops
-    edges), deterministic (edges expanded in edge_assertion_id order),
-    capped at max_paths. Returns (node_path, edge_path) pairs -- the node
-    path is tracked during traversal (never reconstructed from edges), so
-    it is always a genuine simple chain in traversal order."""
+def _enumerate_simple_paths(seeds: list[HybridSeed], adj: dict[str, list[GraphEdgeAssertion]], max_hops: int, safety_ceiling: int) -> list[tuple[list[str], list[GraphEdgeAssertion]]]:
+    """Enumerate ALL authority-eligible simple paths (no repeated node,
+    <= max_hops edges) from the seeds -- never truncated before scoring.
+    Deterministic (seeds and edges expanded in id order). The node path is
+    tracked directly during traversal (never reconstructed from edges), so
+    it is always a genuine simple chain in traversal order. Fails
+    explicitly via PathEnumerationCeilingExceeded if the number of
+    enumerated paths would exceed the global safety ceiling."""
     paths: list[tuple[list[str], list[GraphEdgeAssertion]]] = []
     seed_ids = sorted({s.node_id for s in seeds})
 
     def dfs(current: str, node_path: list[str], edges: list[GraphEdgeAssertion]) -> None:
         if edges:
             paths.append((list(node_path), list(edges)))
-            if len(paths) >= max_paths:
-                return
+            if len(paths) > safety_ceiling:
+                raise PathEnumerationCeilingExceeded(
+                    f"authority-eligible simple paths exceeded the safety ceiling of {safety_ceiling}"
+                )
         if len(edges) >= max_hops:
             return
         for edge in sorted(adj.get(current, []), key=lambda e: e.edge_assertion_id):
@@ -136,14 +156,10 @@ def _enumerate_simple_paths(seeds: list[HybridSeed], adj: dict[str, list[GraphEd
             dfs(other, node_path, edges)
             edges.pop()
             node_path.pop()
-            if len(paths) >= max_paths:
-                return
 
     for seed_id in seed_ids:
-        if len(paths) >= max_paths:
-            break
         dfs(seed_id, [seed_id], [])
-    return paths[:max_paths]
+    return paths
 
 
 def _path_representation(edges: list[GraphEdgeAssertion], node_by_id: dict[str, GraphNode]) -> str:
@@ -162,23 +178,43 @@ def _path_id(edges: list[GraphEdgeAssertion]) -> str:
 def semantic_path_ranked_graph_evidence(
     *, seeds: list[HybridSeed], eligible_edges: list[GraphEdgeAssertion], node_by_id: dict[str, GraphNode],
     chunk_evidence: dict[str, RevisionVectorRecord], query_vector: list[float], embedding_provider: EmbeddingProvider,
-    max_hops: int, max_candidate_paths: int,
+    max_hops: int, max_candidate_paths: int, path_enumeration_safety_ceiling: int,
 ) -> GraphSideResult:
     start = time.perf_counter()
     adj = _adjacency(eligible_edges)
-    edge_paths = _enumerate_simple_paths(seeds, adj, max_hops, max_candidate_paths)
+    # Enumerate ALL eligible simple paths first (fails past the ceiling);
+    # truncation to max_candidate_paths happens ONLY after ranking below.
+    enum_start = time.perf_counter()
+    edge_paths = _enumerate_simple_paths(seeds, adj, max_hops, path_enumeration_safety_ceiling)
+    enumeration_latency = time.perf_counter() - enum_start
 
     reprs = [_path_representation(ep, node_by_id) for _np, ep in edge_paths]
+    embed_start = time.perf_counter()
     embeddings = embedding_provider.embed(reprs).vectors if reprs else []
-    candidates: list[PathCandidate] = []
+    path_embedding_latency = time.perf_counter() - embed_start
+    all_candidates: list[PathCandidate] = []
     for (node_seq, ep), representation, emb in zip(edge_paths, reprs, embeddings):
-        candidates.append(PathCandidate(
+        all_candidates.append(PathCandidate(
             path_id=_path_id(ep), node_ids=list(node_seq), edge_assertion_ids=[e.edge_assertion_id for e in ep],
             representation=representation, hop_length=len(ep), semantic_score=cosine_similarity(query_vector, emb),
             supporting_chunk_ids=list(dict.fromkeys(e.supporting_chunk_id for e in ep)),
         ))
-    # Rank paths by semantic similarity (NOT hop distance), then shorter, then id.
-    candidates.sort(key=lambda p: (-p.semantic_score, p.hop_length, p.path_id))
+    # Rank EVERY enumerated path by semantic similarity (NOT hop distance),
+    # then shorter, then id -- and only THEN retain the top budget.
+    all_candidates.sort(key=lambda p: (-p.semantic_score, p.hop_length, p.path_id))
+    paths_enumerated_before_ranking = len(all_candidates)
+    candidates = all_candidates[:max_candidate_paths]
+
+    # Diagnostics over the FULLY enumerated set (before post-score truncation).
+    path_count_by_hop_length: dict[int, int] = {}
+    path_count_by_originating_seed: dict[str, int] = {}
+    covered_edges: set[str] = set()
+    for _np, ep in edge_paths:
+        path_count_by_hop_length[len(ep)] = path_count_by_hop_length.get(len(ep), 0) + 1
+        origin = _np[0]
+        path_count_by_originating_seed[origin] = path_count_by_originating_seed.get(origin, 0) + 1
+        covered_edges.update(e.edge_assertion_id for e in ep)
+    eligible_edge_path_coverage = (len(covered_edges) / len(eligible_edges)) if eligible_edges else 0.0
 
     edge_by_id = {e.edge_assertion_id: e for e in eligible_edges}
     seen_chunks: dict[str, int] = {}
@@ -206,4 +242,8 @@ def semantic_path_ranked_graph_evidence(
     return GraphSideResult(
         ranked_chunks=ranked, traversed_edge_ids=traversed, paths=candidates, chunk_support=chunk_support,
         candidate_path_count=len(candidates), embedding_calls=1 if reprs else 0, latency_seconds=time.perf_counter() - start,
+        paths_enumerated_before_ranking=paths_enumerated_before_ranking, paths_retained_after_ranking=len(candidates),
+        path_count_by_hop_length=path_count_by_hop_length, path_count_by_originating_seed=path_count_by_originating_seed,
+        eligible_edge_path_coverage=eligible_edge_path_coverage, path_embedding_latency_seconds=path_embedding_latency,
+        enumeration_latency_seconds=enumeration_latency,
     )
