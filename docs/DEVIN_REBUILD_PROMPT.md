@@ -465,7 +465,9 @@ separator char, not a bare space, if your editor injects control bytes).
   entity absent an edge), semantic-edge (top-N eligible semantic edges →
   their subject/object nodes). Dedup by node id, preserve ALL origins,
   support multiple seeds, retain full seed provenance.
-- **Bounded simple paths:** no repeated node, ≤ max hops, fixed beam;
+- **Bounded simple paths:** no repeated node, ≤ max hops, all
+  seed-reachable eligible simple paths enumerated and ranked before
+  post-score truncation;
   derive the path representation from its OWN existing edges only; embed;
   rank by query↔path cosine (NOT hop distance). Track the node path during
   traversal (do NOT reconstruct node order from edges — that produces

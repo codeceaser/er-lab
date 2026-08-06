@@ -8,10 +8,10 @@ authority-eligible edge assertions and supporting multiple seeds:
   chunk_id) -- the Stage 7B.1-style hop-first ranking, but from expanded
   seeds.
 
-- `semantic_path_ranked_graph_evidence` (used by H2): enumerate ALL
-  authority-eligible SIMPLE paths (no repeated node, <= max_hops edges)
-  -- never truncated before scoring -- failing explicitly if the
-  enumeration exceeds a fixed global safety ceiling. Derive each path's
+- `semantic_path_ranked_graph_evidence` (used by H2): enumerate all
+  authority-eligible simple paths reachable from selected seeds (no
+  repeated node, <= max_hops edges) -- never truncated before scoring --
+  failing explicitly if the enumeration exceeds a fixed global safety ceiling. Derive each path's
   representation from its OWN existing edges only
   ("subject predicate object\n..."), embed EVERY enumerated path, rank
   them by query<->path cosine similarity (NOT hop distance), then shorter
@@ -128,8 +128,9 @@ def hop_ranked_graph_evidence(
 
 
 def _enumerate_simple_paths(seeds: list[HybridSeed], adj: dict[str, list[GraphEdgeAssertion]], max_hops: int, safety_ceiling: int) -> list[tuple[list[str], list[GraphEdgeAssertion]]]:
-    """Enumerate ALL authority-eligible simple paths (no repeated node,
-    <= max_hops edges) from the seeds -- never truncated before scoring.
+    """Enumerate all authority-eligible simple paths reachable from
+    selected seeds (no repeated node, <= max_hops edges) -- never
+    truncated before scoring.
     Deterministic (seeds and edges expanded in id order). The node path is
     tracked directly during traversal (never reconstructed from edges), so
     it is always a genuine simple chain in traversal order. Fails

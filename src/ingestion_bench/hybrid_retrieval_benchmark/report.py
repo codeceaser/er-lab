@@ -151,8 +151,8 @@ Qualification fails if selected supplemental seeds exceed
 
 ## Path-enumeration diagnostics (real-graph H2)
 
-ALL authority-eligible simple paths are enumerated and semantically ranked
-BEFORE truncation to max_candidate_paths (safety ceiling {p['path_enumeration_safety_ceiling']}).
+All authority-eligible simple paths reachable from selected seeds are enumerated
+and semantically ranked BEFORE truncation to max_candidate_paths (safety ceiling {p['path_enumeration_safety_ceiling']}).
 
 | Question | enumerated | retained | eligible-edge coverage |
 |---|---|---|---|
