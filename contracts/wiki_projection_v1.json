@@ -1,0 +1,189 @@
+{
+  "contract_version": "wiki_projection_v1",
+  "stage": "7C.0",
+  "status": "frozen",
+  "llm_calls": 0,
+  "page_identity": {
+    "page_key_format": "{kind}:{normalized_identity}",
+    "kinds": {
+      "IDENT": "governed_identifier (Lane 1)",
+      "PHRASE": "business_topic (Lane 2)"
+    },
+    "identifier_normalization": "uppercase the matched identifier; keeps C-88 and C-88A DISTINCT",
+    "phrase_normalization": "casefold + single-space collapse",
+    "display_title_rule": "first_source_occurrence_surface_form: the exact surface text of this anchor's first posting in ascending (document_revision_id, chunk_id, start_char, end_char) order, copied verbatim from source_text/heading_path; never re-worded, never type-prefixed, never generated",
+    "page_type_rule": "the anchor's own anchor_kind; fully deterministic; never model-generated",
+    "heading_title_anchors_create_pages": false
+  },
+  "anchor_lanes": {
+    "lane_1_identifier": {
+      "regex": "\\b([A-Za-z]{1,6}-\\d+[A-Za-z]?)\\b",
+      "lifted_from": "graph_retrieval_benchmark/model.py identifiers_in (LIFTED, never imported -- Revision 6 Q9)",
+      "also_uses_identifier_annotations": true,
+      "identifier_annotations_present_in_this_corpus": false,
+      "fields": [
+        "source_text",
+        "heading_path"
+      ]
+    },
+    "lane_2_repeated_phrase": {
+      "token_pattern": "^[A-Z][A-Za-z0-9&/-]*$ or an identifier token",
+      "run_rule": "maximal runs of consecutive QUALIFYING tokens; a stop-listed or non-qualifying token ENDS the run",
+      "min_tokens": 2,
+      "max_tokens": 4,
+      "min_chars": 3,
+      "max_chars": 60,
+      "min_distinct_chunks": 2,
+      "min_distinct_logical_documents": 2,
+      "identifier_collision_rule": "a candidate containing an identifier token is dropped -- identifiers win",
+      "stop_list": [
+        "a",
+        "an",
+        "and",
+        "any",
+        "are",
+        "as",
+        "at",
+        "be",
+        "but",
+        "by",
+        "for",
+        "from",
+        "how",
+        "if",
+        "in",
+        "into",
+        "is",
+        "it",
+        "its",
+        "no",
+        "not",
+        "of",
+        "on",
+        "or",
+        "over",
+        "per",
+        "so",
+        "such",
+        "than",
+        "that",
+        "the",
+        "their",
+        "then",
+        "there",
+        "these",
+        "they",
+        "this",
+        "those",
+        "through",
+        "to",
+        "under",
+        "until",
+        "up",
+        "was",
+        "were",
+        "what",
+        "when",
+        "where",
+        "which",
+        "while",
+        "who",
+        "with"
+      ],
+      "fields": [
+        "source_text",
+        "heading_path"
+      ]
+    },
+    "lane_3_heading_title": {
+      "rule": "one anchor per distinct normalized heading_path element",
+      "creates_page_identity": false,
+      "traversable": false,
+      "reason": "Revision 6 SS7.1 -- a shared heading asserts document-template similarity, not entity co-occurrence"
+    }
+  },
+  "membership_rule": {
+    "statement": "a facet (page_key, document_revision_id) exists IF AND ONLY IF that page identity has >= 1 anchor posting in that revision",
+    "inputs": [
+      "page_identities",
+      "anchor_postings"
+    ],
+    "may_not_depend_on": [
+      "LLM claims",
+      "summary sentences",
+      "aliases",
+      "validation outcome",
+      "adjudication verdict",
+      "compiler success or failure"
+    ],
+    "authority_effect": "an authority change alters VISIBILITY only -- never membership, never a hash"
+  },
+  "links": {
+    "structural": "document / revision-page / section hierarchy and revision-history siblings; asserts no entity relationship",
+    "exact_anchor": "means ONLY: this same source-backed identity occurs there; no direction, no type, no lineage",
+    "is_authoritative_lineage": false,
+    "advisory_downgrade": "exact-anchor links of a phrase anchor with pairwise-disjoint identifier context are marked advisory"
+  },
+  "sentence_splitter": {
+    "version": "wiki_sentence_splitter_v1",
+    "specification": "split source_text on blank-line block boundaries, then within each block after a '.', '!' or '?' that is followed by whitespace or end-of-block; spans are half-open over the ORIGINAL text; leading/trailing whitespace is excluded from a sentence span but never removed from the underlying text",
+    "pattern": "[.!?](?=\\s|$)",
+    "sha256": "30ddb7d3484deabdfcee23a9969d8adcccb84ab2f276a46a00d54ece0ca0abbb"
+  },
+  "d0_contract": {
+    "seed_procedure": {
+      "version": "d0_seed_procedure_v1",
+      "steps": [
+        "embed the query once with the EXISTING V/W0 embedding provider (no new embedding representation)",
+        "authority-first search over the EXISTING chunk embeddings: WHERE document_revision_id IN (:eligible) ORDER BY embedding <=> :q",
+        "retrieve up to P_seed = K source chunks",
+        "map each retrieved chunk to its deterministic AnchorPostings",
+        "map those postings to page identities (Lane 1 / Lane 2 pages only)",
+        "order seed pages by (retrieved chunk rank, posting start_char, posting end_char, stable page_key)",
+        "deduplicate preserving first occurrence",
+        "truncate to P_seed",
+        "record the rank-1 seed page as the later path origin"
+      ],
+      "sha256": "7033640938d3ed12137e6486ec9b8ed4c92858eea34bd242963f54b8426dab82"
+    },
+    "branch_prioritizer": {
+      "version": "d0_branch_prioritizer_v1",
+      "clauses": [
+        "(a) max cosine between the already-computed query embedding and the EXISTING chunk embeddings of the target page's eligible facets",
+        "(b) deterministic link-type priority: exact_anchor before structural",
+        "(c) stable page_key order"
+      ],
+      "link_type_priority": {
+        "exact_anchor": 0,
+        "structural": 1
+      },
+      "sha256": "8c4f18449fe09c728e0d19407d8b254b8a5f8f36755d9d1f7614f42dfea19746"
+    },
+    "forbidden_inputs": [
+      "W1 facet embeddings",
+      "compiler output",
+      "claims",
+      "summary sentences",
+      "aliases",
+      "adjudication verdicts",
+      "query-time LLM reasoning"
+    ],
+    "executed_in_stage_7c0": false
+  },
+  "measured_projection_properties": {
+    "m_max": 3,
+    "m_max_definition": "max over page_key of |{document_revision_id : the page has >= 1 anchor posting in that revision}|, computed over the completed Stage 7C.0 projection",
+    "m_max_is_a_measured_property_not_a_knob": true,
+    "m_max_argmax_page_keys": [
+      "IDENT:O-31",
+      "IDENT:P-205",
+      "PHRASE:payment settlement"
+    ],
+    "candidate_ceiling_formula": "C = (P_seed + B) x M_max x F_max",
+    "candidate_ceiling_evaluated_in_stage": "7C.2",
+    "facet_count": 22,
+    "page_identity_count": 13
+  },
+  "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+  "contract_sha256": "36d591eaeb8b21be59e7d7d1e9a3bb76c0506fff70e11243c8a3b893a55d8c78"
+}

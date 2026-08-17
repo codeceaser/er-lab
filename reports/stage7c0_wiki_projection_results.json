@@ -1,0 +1,1553 @@
+{
+  "contract_version": "wiki_projection_v1",
+  "generated_at": "2026-08-17T01:26:42.337375+00:00",
+  "corpus_id": "CROSS-DOC-RELATIONSHIP-001",
+  "manifest": {
+    "contract_version": "wiki_projection_v1",
+    "corpus_id": "CROSS-DOC-RELATIONSHIP-001",
+    "corpus_logical_document_ids": [
+      "ADJACENT-DOMAIN",
+      "APP-PORTFOLIO",
+      "CONTROL-LIBRARY",
+      "OBLIGATION-REGISTER",
+      "PROCEDURE-CATALOGUE",
+      "SERVICE-CATALOGUE"
+    ],
+    "revision_symbol_by_id": {
+      "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da": "app_rev1",
+      "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a": "app_rev2",
+      "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868": "svc_rev1",
+      "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689": "obl_rev1",
+      "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc": "obl_rev2",
+      "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b": "ctl_rev1",
+      "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23": "ctl_rev2",
+      "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82": "ctl_rev3",
+      "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea": "prc_rev1",
+      "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4": "prc_rev2",
+      "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec": "adj_rev1"
+    },
+    "counts": {
+      "logical_document_count": 6,
+      "revision_count": 11,
+      "section_count": 11,
+      "anchor_count": 25,
+      "anchor_count_by_kind": {
+        "heading_title": 12,
+        "identifier": 12,
+        "phrase": 1
+      },
+      "posting_count": 47,
+      "posting_count_by_kind": {
+        "heading_title": 22,
+        "identifier": 22,
+        "phrase": 3
+      },
+      "page_identity_count": 13,
+      "page_identity_count_by_type": {
+        "business_topic": 1,
+        "governed_identifier": 12
+      },
+      "facet_count": 22,
+      "structural_link_count": 34,
+      "exact_anchor_link_count": 48,
+      "advisory_link_count": 6,
+      "m_max": 3,
+      "facets_per_page_max_page_keys": [
+        "IDENT:O-31",
+        "IDENT:P-205",
+        "PHRASE:payment settlement"
+      ]
+    },
+    "anchor_inventory": [
+      {
+        "anchor_id": "22c8ead0a3a265d95b266e23be3666a45657ced2fbb630859ab62f30943eb931",
+        "anchor_kind": "heading_title",
+        "normalized_value": "adjacent domain reference",
+        "display_text": "Adjacent Domain Reference",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Adjacent Domain Reference"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 1
+      },
+      {
+        "anchor_id": "e3e378760eb5098e02a37d4a1401b0899ac1e2b0c4f7b90c74f4610bb45f6e40",
+        "anchor_kind": "heading_title",
+        "normalized_value": "application portfolio",
+        "display_text": "Application Portfolio",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Application Portfolio"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "b9b3167cbdcc03a7fcd0fb0ee2a1b544bfdfa67f92f9d4c2fda8cec9ec8d7106",
+        "anchor_kind": "heading_title",
+        "normalized_value": "business service catalogue",
+        "display_text": "Business Service Catalogue",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Business Service Catalogue"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 1
+      },
+      {
+        "anchor_id": "4b53c43ec91990a6db2504aa85284b4ac1b1d25927becbf14230fa58a258e6f0",
+        "anchor_kind": "heading_title",
+        "normalized_value": "control implementations",
+        "display_text": "Control Implementations",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Control Implementations"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 3
+      },
+      {
+        "anchor_id": "bdcbc9a51fe9cdbc57da90b3eefbce1616e47d46a25a41eb4c966be642cf821e",
+        "anchor_kind": "heading_title",
+        "normalized_value": "control library",
+        "display_text": "Control Library",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Control Library"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 3
+      },
+      {
+        "anchor_id": "6f37814108882ae85dc7dfd311533935de77d9224948944b8b9faf0eac2e44d8",
+        "anchor_kind": "heading_title",
+        "normalized_value": "governed services",
+        "display_text": "Governed Services",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Governed Services"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 1
+      },
+      {
+        "anchor_id": "78f88818990302e42deff7ab52059357b18991a3f6e15fa392f043dd145e311c",
+        "anchor_kind": "heading_title",
+        "normalized_value": "obligation coverage",
+        "display_text": "Obligation Coverage",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Obligation Coverage"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "77fbe70bb5e3ae7a62d62251ab76806a0500bbf0037bee6493496b2bb732ee64",
+        "anchor_kind": "heading_title",
+        "normalized_value": "obligation register",
+        "display_text": "Obligation Register",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Obligation Register"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "61a990cb9d8e55a6a2d1f65826416e625c6ce7dfa6e7bc54258ae5339ed85211",
+        "anchor_kind": "heading_title",
+        "normalized_value": "operating procedures",
+        "display_text": "Operating Procedures",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Operating Procedures"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "9942526ceeacf303d08cd060fb60020a374400b3dce7b708ec14dd7ff22e4936",
+        "anchor_kind": "heading_title",
+        "normalized_value": "payment reconciliation chain",
+        "display_text": "Payment Reconciliation Chain",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Payment Reconciliation Chain"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 1
+      },
+      {
+        "anchor_id": "f342d249bc6fbbbb77c19952e19cecef1f94e6fecc1b08bcccbf09ad1879937e",
+        "anchor_kind": "heading_title",
+        "normalized_value": "procedure catalogue",
+        "display_text": "Procedure Catalogue",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Procedure Catalogue"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "e3d1942833b080e989522def61dfc95da6b65bbf35887bae4815cdc0c8a406a0",
+        "anchor_kind": "heading_title",
+        "normalized_value": "registered applications",
+        "display_text": "Registered Applications",
+        "extraction_method": "wiki_lane3_heading_title_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Registered Applications"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "c7b11928f7af51d2ec8577daa1f18f439654d37a3c573ea38659ac4dffd1d48d",
+        "anchor_kind": "identifier",
+        "normalized_value": "APP-224499",
+        "display_text": "APP-224499",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "APP-224499"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 1
+      },
+      {
+        "anchor_id": "82d2fda404690aa08155450e8ffd8250ab34e58847e06aa2c2d33f5fd067afb0",
+        "anchor_kind": "identifier",
+        "normalized_value": "APP-224510",
+        "display_text": "APP-224510",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "APP-224510"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 1
+      },
+      {
+        "anchor_id": "f703af31feb09fbaaf21938ba12bbdc1a13278bfc76bc55b5dd6705d2dc728ef",
+        "anchor_kind": "identifier",
+        "normalized_value": "APP-330012",
+        "display_text": "APP-330012",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "APP-330012"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 1
+      },
+      {
+        "anchor_id": "2f6bbd5d6e078d52e5f00a42b53ac5e9f2ddcc4c1991fcb6ac46077bcaee3b20",
+        "anchor_kind": "identifier",
+        "normalized_value": "C-77",
+        "display_text": "C-77",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "C-77"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "9724b0b2c16f88141217024185f54ecd62d254c4cc7f93fde5d7a91619e3599d",
+        "anchor_kind": "identifier",
+        "normalized_value": "C-88",
+        "display_text": "C-88",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "C-88"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "a67a88fe8d845e479f97ec11fe0d25e1d03a98c0174f2c7a7c13646cf0b5ed5f",
+        "anchor_kind": "identifier",
+        "normalized_value": "C-88A",
+        "display_text": "C-88a",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "C-88a"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "d81fd5d2da63e6994ced74c6948a87f83594c05795cd7f083ae0781e374025f9",
+        "anchor_kind": "identifier",
+        "normalized_value": "C-91",
+        "display_text": "C-91",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "C-91"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 1
+      },
+      {
+        "anchor_id": "6f65053cce8e43af67f79fefafbe7cabd48ccf36e3572b108f59f0db73ab06bd",
+        "anchor_kind": "identifier",
+        "normalized_value": "O-31",
+        "display_text": "O-31",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "O-31"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 3
+      },
+      {
+        "anchor_id": "c10a0f3067eda70cf6f2da17878c59d366f9951aeae798dd2bb59f56abf33515",
+        "anchor_kind": "identifier",
+        "normalized_value": "O-32",
+        "display_text": "O-32",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "O-32"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "bc4e2bd9dcb8d976b05f90b65a778304e9bd8452c34db56ef1a14018b4ef8132",
+        "anchor_kind": "identifier",
+        "normalized_value": "P-204",
+        "display_text": "P-204",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "P-204"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "317db1d10a2189bf3cd94afd93fd61a16be8d9ffe1980da10409f3bc50f07cca",
+        "anchor_kind": "identifier",
+        "normalized_value": "P-205",
+        "display_text": "P-205",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "P-205"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 3
+      },
+      {
+        "anchor_id": "3d053face3c4756ac2692f1b1f0dba761ccc0e56a82f6fde4a5f3dc06c3730ae",
+        "anchor_kind": "identifier",
+        "normalized_value": "P-301",
+        "display_text": "P-301",
+        "extraction_method": "wiki_lane1_identifier_regex_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "P-301"
+        ],
+        "has_disjoint_identifier_context": false,
+        "posting_count": 2
+      },
+      {
+        "anchor_id": "8f4a1d672e501db0ab794c5ac0dea92624aba636e119c3c4bbc01cadf97b48a3",
+        "anchor_kind": "phrase",
+        "normalized_value": "payment settlement",
+        "display_text": "Payment Settlement",
+        "extraction_method": "wiki_lane2_repeated_phrase_v1",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Payment Settlement"
+        ],
+        "has_disjoint_identifier_context": true,
+        "posting_count": 3
+      }
+    ],
+    "phrase_anchor_inventory": [
+      {
+        "normalized_value": "payment settlement",
+        "display_text": "Payment Settlement",
+        "posting_count": 3,
+        "has_disjoint_identifier_context": true
+      }
+    ],
+    "phrase_lane_ledger": [
+      {
+        "normalized_phrase": "adjacent domain reference",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_chunks"
+      },
+      {
+        "normalized_phrase": "application app-224499",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "application app-224510",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "application app-330012",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "application portfolio",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_logical_documents"
+      },
+      {
+        "normalized_phrase": "business service catalogue",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_chunks"
+      },
+      {
+        "normalized_phrase": "control c-77",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "control c-88",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 2,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "control c-88a",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 2,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "control c-91",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "control implementations",
+        "distinct_chunks": 3,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_logical_documents"
+      },
+      {
+        "normalized_phrase": "control library",
+        "distinct_chunks": 3,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_logical_documents"
+      },
+      {
+        "normalized_phrase": "governed services",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_chunks"
+      },
+      {
+        "normalized_phrase": "obligation coverage",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_logical_documents"
+      },
+      {
+        "normalized_phrase": "obligation o-31",
+        "distinct_chunks": 3,
+        "distinct_logical_documents": 2,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "obligation o-32",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "obligation register",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_logical_documents"
+      },
+      {
+        "normalized_phrase": "operating procedures",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_logical_documents"
+      },
+      {
+        "normalized_phrase": "payment reconciliation",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_chunks"
+      },
+      {
+        "normalized_phrase": "payment reconciliation chain",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_chunks"
+      },
+      {
+        "normalized_phrase": "payment settlement",
+        "distinct_chunks": 3,
+        "distinct_logical_documents": 2,
+        "accepted": true,
+        "rejection_reason": null
+      },
+      {
+        "normalized_phrase": "procedure catalogue",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_logical_documents"
+      },
+      {
+        "normalized_phrase": "procedure p-204",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 2,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "procedure p-205",
+        "distinct_chunks": 3,
+        "distinct_logical_documents": 2,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "procedure p-301",
+        "distinct_chunks": 1,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "identifier_collision"
+      },
+      {
+        "normalized_phrase": "registered applications",
+        "distinct_chunks": 2,
+        "distinct_logical_documents": 1,
+        "accepted": false,
+        "rejection_reason": "below_min_distinct_logical_documents"
+      }
+    ],
+    "ambiguity_flags": [
+      {
+        "anchor_id": "8f4a1d672e501db0ab794c5ac0dea92624aba636e119c3c4bbc01cadf97b48a3",
+        "normalized_value": "payment settlement",
+        "is_ambiguous": false,
+        "display_variants": [
+          "Payment Settlement"
+        ],
+        "has_disjoint_identifier_context": true
+      }
+    ],
+    "page_identity_inventory": [
+      {
+        "page_key": "IDENT:APP-224499",
+        "page_type": "governed_identifier",
+        "display_title": "APP-224499",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 1
+      },
+      {
+        "page_key": "IDENT:APP-224510",
+        "page_type": "governed_identifier",
+        "display_title": "APP-224510",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 1
+      },
+      {
+        "page_key": "IDENT:APP-330012",
+        "page_type": "governed_identifier",
+        "display_title": "APP-330012",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 1
+      },
+      {
+        "page_key": "IDENT:C-77",
+        "page_type": "governed_identifier",
+        "display_title": "C-77",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 1
+      },
+      {
+        "page_key": "IDENT:C-88",
+        "page_type": "governed_identifier",
+        "display_title": "C-88",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 2
+      },
+      {
+        "page_key": "IDENT:C-88A",
+        "page_type": "governed_identifier",
+        "display_title": "C-88a",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 2
+      },
+      {
+        "page_key": "IDENT:C-91",
+        "page_type": "governed_identifier",
+        "display_title": "C-91",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 1
+      },
+      {
+        "page_key": "IDENT:O-31",
+        "page_type": "governed_identifier",
+        "display_title": "O-31",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 3
+      },
+      {
+        "page_key": "IDENT:O-32",
+        "page_type": "governed_identifier",
+        "display_title": "O-32",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 1
+      },
+      {
+        "page_key": "IDENT:P-204",
+        "page_type": "governed_identifier",
+        "display_title": "P-204",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 2
+      },
+      {
+        "page_key": "IDENT:P-205",
+        "page_type": "governed_identifier",
+        "display_title": "P-205",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 3
+      },
+      {
+        "page_key": "IDENT:P-301",
+        "page_type": "governed_identifier",
+        "display_title": "P-301",
+        "identity_confidence": "exact",
+        "anchor_kind": "identifier",
+        "facet_count": 1
+      },
+      {
+        "page_key": "PHRASE:payment settlement",
+        "page_type": "business_topic",
+        "display_title": "Payment Settlement",
+        "identity_confidence": "ambiguous",
+        "anchor_kind": "phrase",
+        "facet_count": 3
+      }
+    ],
+    "facet_membership_inventory": [
+      {
+        "page_key": "IDENT:APP-224499",
+        "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+        "revision_symbol": "app_rev1",
+        "logical_document_id": "APP-PORTFOLIO",
+        "chunk_ids": [
+          "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+        ],
+        "posting_count": 1,
+        "membership_hash": "5dfa423509ab1f85bfd7040a766d507f2ea4c42655e84eac1915b029970e82e9"
+      },
+      {
+        "page_key": "IDENT:APP-224510",
+        "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+        "revision_symbol": "app_rev2",
+        "logical_document_id": "APP-PORTFOLIO",
+        "chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+        ],
+        "posting_count": 1,
+        "membership_hash": "8381dfcab8911ce99368f38dc529dc7638b2d7bd9b93d6c3a8850a5440d6dce7"
+      },
+      {
+        "page_key": "IDENT:APP-330012",
+        "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+        "revision_symbol": "adj_rev1",
+        "logical_document_id": "ADJACENT-DOMAIN",
+        "chunk_ids": [
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "posting_count": 1,
+        "membership_hash": "ba7c57fdd559d727bf1387fa27b07f79285df5e2aed537f65cdfaeffc46e4fbc"
+      },
+      {
+        "page_key": "IDENT:C-77",
+        "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+        "revision_symbol": "adj_rev1",
+        "logical_document_id": "ADJACENT-DOMAIN",
+        "chunk_ids": [
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "posting_count": 2,
+        "membership_hash": "8ccdd747c5a5d571ac0037c971f33f2c07aadacf376dfd5b2b78cd328c428de9"
+      },
+      {
+        "page_key": "IDENT:C-88",
+        "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+        "revision_symbol": "ctl_rev2",
+        "logical_document_id": "CONTROL-LIBRARY",
+        "chunk_ids": [
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+        ],
+        "posting_count": 1,
+        "membership_hash": "211ae6145a64b192dec7bb86d508c5e9b4649953c45df467f080a708269e3f71"
+      },
+      {
+        "page_key": "IDENT:C-88",
+        "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+        "revision_symbol": "obl_rev2",
+        "logical_document_id": "OBLIGATION-REGISTER",
+        "chunk_ids": [
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+        ],
+        "posting_count": 1,
+        "membership_hash": "d213dbf72b2e607708f853702d3570619aa60fc54f1ec4d7f6cf0eb8a519d4eb"
+      },
+      {
+        "page_key": "IDENT:C-88A",
+        "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+        "revision_symbol": "ctl_rev1",
+        "logical_document_id": "CONTROL-LIBRARY",
+        "chunk_ids": [
+          "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+        ],
+        "posting_count": 1,
+        "membership_hash": "88f7c9b237f9ae41fc979a93c0c9498814c7df714cd6c5bfdaa1789fcd4bf07b"
+      },
+      {
+        "page_key": "IDENT:C-88A",
+        "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+        "revision_symbol": "obl_rev1",
+        "logical_document_id": "OBLIGATION-REGISTER",
+        "chunk_ids": [
+          "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+        ],
+        "posting_count": 1,
+        "membership_hash": "9889bfe775410de9c4ea663cf38f2a514f148b087d2293d05ebc24958b9c450e"
+      },
+      {
+        "page_key": "IDENT:C-91",
+        "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+        "revision_symbol": "ctl_rev3",
+        "logical_document_id": "CONTROL-LIBRARY",
+        "chunk_ids": [
+          "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+        ],
+        "posting_count": 1,
+        "membership_hash": "b038b0bb2452b8e4c0ef2de8f5c336946fcbd630b176b5ce558816f12f0f48ec"
+      },
+      {
+        "page_key": "IDENT:O-31",
+        "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+        "revision_symbol": "svc_rev1",
+        "logical_document_id": "SERVICE-CATALOGUE",
+        "chunk_ids": [
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+        ],
+        "posting_count": 1,
+        "membership_hash": "9a5728157327bffda2d11bf990ca2b2e48376e43e82fa3ff75e0e9cb26848733"
+      },
+      {
+        "page_key": "IDENT:O-31",
+        "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+        "revision_symbol": "obl_rev2",
+        "logical_document_id": "OBLIGATION-REGISTER",
+        "chunk_ids": [
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+        ],
+        "posting_count": 1,
+        "membership_hash": "d10fbe05f19c45f38f592f5c3cd5a7d61d944b9a7161d22070abdbccc6c0d43a"
+      },
+      {
+        "page_key": "IDENT:O-31",
+        "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+        "revision_symbol": "obl_rev1",
+        "logical_document_id": "OBLIGATION-REGISTER",
+        "chunk_ids": [
+          "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+        ],
+        "posting_count": 1,
+        "membership_hash": "1186a65017bfea5ce4d075fb60052930e82a2c505c83ee82a30f75d9b989fd31"
+      },
+      {
+        "page_key": "IDENT:O-32",
+        "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+        "revision_symbol": "adj_rev1",
+        "logical_document_id": "ADJACENT-DOMAIN",
+        "chunk_ids": [
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "posting_count": 2,
+        "membership_hash": "4fd6609206d38272cf2dcfe26d808c6639aefbe9085b071999143dd8c6e27203"
+      },
+      {
+        "page_key": "IDENT:P-204",
+        "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+        "revision_symbol": "ctl_rev1",
+        "logical_document_id": "CONTROL-LIBRARY",
+        "chunk_ids": [
+          "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+        ],
+        "posting_count": 1,
+        "membership_hash": "c924367b929081b6e9397f66aac68fa5990f122666de363f715e6530525192d5"
+      },
+      {
+        "page_key": "IDENT:P-204",
+        "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+        "revision_symbol": "prc_rev1",
+        "logical_document_id": "PROCEDURE-CATALOGUE",
+        "chunk_ids": [
+          "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1"
+        ],
+        "posting_count": 1,
+        "membership_hash": "f5252b022faf9058c628ea587b4f58443547fc57b9423818caf23a9000cf912a"
+      },
+      {
+        "page_key": "IDENT:P-205",
+        "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+        "revision_symbol": "ctl_rev3",
+        "logical_document_id": "CONTROL-LIBRARY",
+        "chunk_ids": [
+          "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+        ],
+        "posting_count": 1,
+        "membership_hash": "059032c50b98954bad72ce4a9ad26e2d61b39a2b92dffa54b43d18f16b68d941"
+      },
+      {
+        "page_key": "IDENT:P-205",
+        "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+        "revision_symbol": "ctl_rev2",
+        "logical_document_id": "CONTROL-LIBRARY",
+        "chunk_ids": [
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+        ],
+        "posting_count": 1,
+        "membership_hash": "4619f3a82913ddc76da38688a507f1fe416ff79aaed248993ac218222bb83ddd"
+      },
+      {
+        "page_key": "IDENT:P-205",
+        "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+        "revision_symbol": "prc_rev2",
+        "logical_document_id": "PROCEDURE-CATALOGUE",
+        "chunk_ids": [
+          "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+        ],
+        "posting_count": 1,
+        "membership_hash": "295bf02b718d343c3241a4a6315d53c7aa0ddcd06aa398c6566e0090b514a202"
+      },
+      {
+        "page_key": "IDENT:P-301",
+        "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+        "revision_symbol": "adj_rev1",
+        "logical_document_id": "ADJACENT-DOMAIN",
+        "chunk_ids": [
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "posting_count": 2,
+        "membership_hash": "da3c3133a4c13286e36a1ee221ed621b95b7cf8c4a6bd13426fbe2ebe25b5840"
+      },
+      {
+        "page_key": "PHRASE:payment settlement",
+        "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+        "revision_symbol": "svc_rev1",
+        "logical_document_id": "SERVICE-CATALOGUE",
+        "chunk_ids": [
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+        ],
+        "posting_count": 1,
+        "membership_hash": "5aeb43a3eef1c4021d5d0ec35d0b4e65ff467397b461bd5ffa7f62e7a517516e"
+      },
+      {
+        "page_key": "PHRASE:payment settlement",
+        "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+        "revision_symbol": "app_rev1",
+        "logical_document_id": "APP-PORTFOLIO",
+        "chunk_ids": [
+          "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+        ],
+        "posting_count": 1,
+        "membership_hash": "0fd23fc8498313ae62ab93c16998ec1415faf663413a252454be510de404e496"
+      },
+      {
+        "page_key": "PHRASE:payment settlement",
+        "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+        "revision_symbol": "app_rev2",
+        "logical_document_id": "APP-PORTFOLIO",
+        "chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+        ],
+        "posting_count": 1,
+        "membership_hash": "1c052f6abe1921f6a41d9ee5da586ed1109bc5d4f3673c9b9d8ec56c9d681264"
+      }
+    ],
+    "page_to_revision_facet_counts": {
+      "IDENT:APP-224499": 1,
+      "IDENT:APP-224510": 1,
+      "IDENT:APP-330012": 1,
+      "IDENT:C-77": 1,
+      "IDENT:C-88": 2,
+      "IDENT:C-88A": 2,
+      "IDENT:C-91": 1,
+      "IDENT:O-31": 3,
+      "IDENT:O-32": 1,
+      "IDENT:P-204": 2,
+      "IDENT:P-205": 3,
+      "IDENT:P-301": 1,
+      "PHRASE:payment settlement": 3
+    },
+    "c88_c88a_separation_proof": {
+      "c_88_anchor_id": "9724b0b2c16f88141217024185f54ecd62d254c4cc7f93fde5d7a91619e3599d",
+      "c_88a_anchor_id": "a67a88fe8d845e479f97ec11fe0d25e1d03a98c0174f2c7a7c13646cf0b5ed5f",
+      "distinct_anchor_ids": true,
+      "c_88_page_key": "IDENT:C-88",
+      "c_88a_page_key": "IDENT:C-88A",
+      "c_88_display_text": "C-88",
+      "c_88a_display_text": "C-88a",
+      "c_88_chunk_ids": [
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+      ],
+      "c_88a_chunk_ids": [
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a",
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+      ],
+      "shared_chunk_ids": [],
+      "never_merged": true
+    },
+    "posting_counts_by_revision": {
+      "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82": 4,
+      "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b": 4,
+      "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23": 4,
+      "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea": 3,
+      "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868": 4,
+      "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc": 4,
+      "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da": 4,
+      "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec": 9,
+      "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a": 4,
+      "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689": 4,
+      "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4": 3
+    },
+    "link_counts": {
+      "structural": 34,
+      "exact_anchor": 48,
+      "advisory": 6,
+      "is_authoritative_lineage_true_count": 0
+    },
+    "provenance_completeness": {
+      "postings_with_source_ref": 47,
+      "postings_total": 47,
+      "sections_with_source_refs": 11,
+      "sections_total": 11,
+      "sections_with_content_sha256": 11
+    },
+    "m_max": 3,
+    "m_max_argmax_page_keys": [
+      "IDENT:O-31",
+      "IDENT:P-205",
+      "PHRASE:payment settlement"
+    ],
+    "sentence_splitter": {
+      "version": "wiki_sentence_splitter_v1",
+      "specification": "split source_text on blank-line block boundaries, then within each block after a '.', '!' or '?' that is followed by whitespace or end-of-block; spans are half-open over the ORIGINAL text; leading/trailing whitespace is excluded from a sentence span but never removed from the underlying text",
+      "pattern": "[.!?](?=\\s|$)",
+      "sha256": "30ddb7d3484deabdfcee23a9969d8adcccb84ab2f276a46a00d54ece0ca0abbb"
+    },
+    "d0_contract": {
+      "seed_procedure": {
+        "version": "d0_seed_procedure_v1",
+        "steps": [
+          "embed the query once with the EXISTING V/W0 embedding provider (no new embedding representation)",
+          "authority-first search over the EXISTING chunk embeddings: WHERE document_revision_id IN (:eligible) ORDER BY embedding <=> :q",
+          "retrieve up to P_seed = K source chunks",
+          "map each retrieved chunk to its deterministic AnchorPostings",
+          "map those postings to page identities (Lane 1 / Lane 2 pages only)",
+          "order seed pages by (retrieved chunk rank, posting start_char, posting end_char, stable page_key)",
+          "deduplicate preserving first occurrence",
+          "truncate to P_seed",
+          "record the rank-1 seed page as the later path origin"
+        ],
+        "sha256": "7033640938d3ed12137e6486ec9b8ed4c92858eea34bd242963f54b8426dab82"
+      },
+      "branch_prioritizer": {
+        "version": "d0_branch_prioritizer_v1",
+        "clauses": [
+          "(a) max cosine between the already-computed query embedding and the EXISTING chunk embeddings of the target page's eligible facets",
+          "(b) deterministic link-type priority: exact_anchor before structural",
+          "(c) stable page_key order"
+        ],
+        "link_type_priority": {
+          "exact_anchor": 0,
+          "structural": 1
+        },
+        "sha256": "8c4f18449fe09c728e0d19407d8b254b8a5f8f36755d9d1f7614f42dfea19746"
+      },
+      "forbidden_inputs": [
+        "W1 facet embeddings",
+        "compiler output",
+        "claims",
+        "summary sentences",
+        "aliases",
+        "adjudication verdicts",
+        "query-time LLM reasoning"
+      ],
+      "executed_in_stage_7c0": false
+    },
+    "deterministic_build_hashes": {
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "anchors_hash": "c151a62ec4ea65a360d35eddcf0fe877a47dc0f6ea6d073bc10eb8a7d988856b",
+      "postings_hash": "d7cd9acd8701acf87ff167882bb54fe681e84cf71dd01d9481bf709fedb27464",
+      "facets_hash": "a3f233e173144ce2d06e7ce8e3433b26a35e76f6a69683ccff40c98894090967",
+      "links_hash": "6c9b0ba613a6a3abcd02b7a5bca0e467a389d523e4b9046c48f9b9c2bc0a40f3",
+      "sections_hash": "28fe639602933d0d12659de921135af29a8d1504cd635368e0425bf11a36d629"
+    },
+    "manifest_sha256": "8aeee003092f2e9bd2f2f630b8c77c29283d0141ad498cdc5eb28be995a7316b"
+  },
+  "cost_ledger": {
+    "stage": "7C.0",
+    "llm_calls": 0,
+    "llm_cost_usd": 0.0,
+    "modules_added": [
+      "src/ingestion_bench/wiki_projection/__init__.py",
+      "src/ingestion_bench/wiki_projection/benchmark.py",
+      "src/ingestion_bench/wiki_projection/config.py",
+      "src/ingestion_bench/wiki_projection/identity.py",
+      "src/ingestion_bench/wiki_projection/model.py",
+      "src/ingestion_bench/wiki_projection/pg_store.py",
+      "src/ingestion_bench/wiki_projection/projection.py",
+      "src/ingestion_bench/wiki_projection/rendering.py",
+      "src/ingestion_bench/wiki_projection/report.py",
+      "src/ingestion_bench/wiki_projection/store.py"
+    ],
+    "lines_of_code_by_file": {
+      "src/ingestion_bench/wiki_projection/__init__.py": 17,
+      "src/ingestion_bench/wiki_projection/benchmark.py": 271,
+      "src/ingestion_bench/wiki_projection/config.py": 44,
+      "src/ingestion_bench/wiki_projection/identity.py": 296,
+      "src/ingestion_bench/wiki_projection/model.py": 210,
+      "src/ingestion_bench/wiki_projection/pg_store.py": 204,
+      "src/ingestion_bench/wiki_projection/projection.py": 805,
+      "src/ingestion_bench/wiki_projection/rendering.py": 216,
+      "src/ingestion_bench/wiki_projection/report.py": 476,
+      "src/ingestion_bench/wiki_projection/store.py": 72,
+      "scripts/run_stage7c0_wiki_projection.py": 199
+    },
+    "lines_of_code_total": 2810,
+    "database_tables_created_by_this_stage": [
+      "edib_stage7c_anchor",
+      "edib_stage7c_anchor_posting"
+    ],
+    "database_tables_deliberately_not_created": [
+      "edib_stage7c_facet (Stage 7C.1)",
+      "edib_stage7c_facet_embedding (Stage 7C.1)",
+      "edib_stage7c_compilation_audit (Stage 7C.1)"
+    ],
+    "projection_records": {
+      "anchors": 25,
+      "postings": 47,
+      "sections_derived_view": 11,
+      "revision_pages_derived_view": 11,
+      "page_identities": 13,
+      "facets": 22,
+      "links": 82
+    },
+    "storage_bytes_serialized_projection": 129492,
+    "build_latency_seconds_total_run": 3.7673054999904707,
+    "embedding_calls_attributable_to_7c0": 0,
+    "embedding_calls_note": "The deterministic projection makes ZERO embedding calls. The W0 semantic CONTROL reuses the existing chunk embeddings and the existing query embedding, exactly as V does; it introduces no new embedding representation and no embedding attributable to the projection itself.",
+    "authority_change_rebuild_cost": {
+      "reparse": 0,
+      "rechunk": 0,
+      "anchor_rebuild": 0,
+      "embedding_rebuild": 0,
+      "projection_hash_change": 0,
+      "note": "an authority change alters only the query-time eligible view"
+    },
+    "source_change_rebuild_behaviour": "a source-revision change changes that revision's chunks, therefore its sections, postings, facet membership and the projection hash; other revisions are untouched",
+    "operational_dependencies": [
+      "frozen Stage 5A Docling adapter",
+      "frozen Stage 4/4.1 chunker",
+      "frozen Stage 7R.1 revision authority resolver (query time only)",
+      "frozen Stage 7B.0 corpus, contract and evaluator (read-only)"
+    ],
+    "known_failure_modes": [
+      "Lane 2 is bounded by capitalisation convention: it misses lower-cased entity names and can over-generate on boilerplate headings (mitigated by the >=2-distinct-document rule).",
+      "Anchor fan-out is unbounded on a large corpus; exact-anchor links grow quadratically in the number of sections sharing an anchor.",
+      "Exact-anchor links assert co-occurrence only -- no direction and no relationship meaning.",
+      "The corpus supplies no IdentifierAnnotations, so Lane 1 rests on the lifted regex alone here.",
+      "A phrase anchor bridging documents necessarily shows disjoint identifier context, so the SS2.1 advisory downgrade fires on the corpus's only cross-document phrase anchor."
+    ]
+  },
+  "w0_control": {
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "evaluator_identity": "ingestion_bench.cross_document_benchmark.benchmark_runner._evaluate_question",
+    "questions": [
+      {
+        "question_id": "Q01_direct_service_of_app",
+        "top_k": 3,
+        "v_hit_chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+        ],
+        "w0_hit_chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "3265f3d6e24d7aedc7140c3295383e237a9fa9d53a131da811958c36ed31cb7f",
+          "c3f512a39a5b998a847af6a6646c1eabc97119bc0c48ac68cb10fa908b42c53f",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q02_one_hop_control_of_obligation",
+        "top_k": 3,
+        "v_hit_chunk_ids": [
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+        ],
+        "w0_hit_chunk_ids": [
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "acf78881b2e0cbe3fcf2ff17a8ac81af76ec774fcdfb3de06174124d99336002",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08",
+          "fd92215316d6f9f2825b8266d853e62a3c12dd8ec5537ee92607c7f84c5bec11"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q03_two_hop_obligation_of_app",
+        "top_k": 3,
+        "v_hit_chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "w0_hit_chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "3265f3d6e24d7aedc7140c3295383e237a9fa9d53a131da811958c36ed31cb7f",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08",
+          "c3f512a39a5b998a847af6a6646c1eabc97119bc0c48ac68cb10fa908b42c53f"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q04_two_hop_control_of_service",
+        "top_k": 3,
+        "v_hit_chunk_ids": [
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+        ],
+        "w0_hit_chunk_ids": [
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "partial",
+        "w0_outcome": "partial",
+        "v_coverage_at_k": 0.5,
+        "w0_coverage_at_k": 0.5,
+        "v_complete_chain": false,
+        "w0_complete_chain": false,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08",
+          "c3f512a39a5b998a847af6a6646c1eabc97119bc0c48ac68cb10fa908b42c53f",
+          "3265f3d6e24d7aedc7140c3295383e237a9fa9d53a131da811958c36ed31cb7f"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q05_three_hop_procedure_of_obligation",
+        "top_k": 4,
+        "v_hit_chunk_ids": [
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+        ],
+        "w0_hit_chunk_ids": [
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "acf78881b2e0cbe3fcf2ff17a8ac81af76ec774fcdfb3de06174124d99336002",
+          "fd92215316d6f9f2825b8266d853e62a3c12dd8ec5537ee92607c7f84c5bec11",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08",
+          "cb967ccb5cd5b545ef051f368d658dc6a698ece75ed8c3f28c17f1fe47dbe4c5"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q06_four_hop_procedure_of_app",
+        "top_k": 5,
+        "v_hit_chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+        ],
+        "w0_hit_chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "partial",
+        "w0_outcome": "partial",
+        "v_coverage_at_k": 0.8,
+        "w0_coverage_at_k": 0.8,
+        "v_complete_chain": false,
+        "w0_complete_chain": false,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "3265f3d6e24d7aedc7140c3295383e237a9fa9d53a131da811958c36ed31cb7f",
+          "cb967ccb5cd5b545ef051f368d658dc6a698ece75ed8c3f28c17f1fe47dbe4c5",
+          "c3f512a39a5b998a847af6a6646c1eabc97119bc0c48ac68cb10fa908b42c53f",
+          "fd92215316d6f9f2825b8266d853e62a3c12dd8ec5537ee92607c7f84c5bec11",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q07_consolidation_payment_settlement",
+        "top_k": 5,
+        "v_hit_chunk_ids": [
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+        ],
+        "w0_hit_chunk_ids": [
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "partial",
+        "w0_outcome": "partial",
+        "v_coverage_at_k": 0.8,
+        "w0_coverage_at_k": 0.8,
+        "v_complete_chain": false,
+        "w0_complete_chain": false,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08",
+          "3265f3d6e24d7aedc7140c3295383e237a9fa9d53a131da811958c36ed31cb7f",
+          "c3f512a39a5b998a847af6a6646c1eabc97119bc0c48ac68cb10fa908b42c53f",
+          "acf78881b2e0cbe3fcf2ff17a8ac81af76ec774fcdfb3de06174124d99336002",
+          "cb967ccb5cd5b545ef051f368d658dc6a698ece75ed8c3f28c17f1fe47dbe4c5"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q08_distractor_resistance_current_control",
+        "top_k": 3,
+        "v_hit_chunk_ids": [
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+        ],
+        "w0_hit_chunk_ids": [
+          "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "acf78881b2e0cbe3fcf2ff17a8ac81af76ec774fcdfb3de06174124d99336002",
+          "fd92215316d6f9f2825b8266d853e62a3c12dd8ec5537ee92607c7f84c5bec11",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q09_current_authority_app",
+        "top_k": 3,
+        "v_hit_chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "w0_hit_chunk_ids": [
+          "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "3265f3d6e24d7aedc7140c3295383e237a9fa9d53a131da811958c36ed31cb7f",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08",
+          "c3f512a39a5b998a847af6a6646c1eabc97119bc0c48ac68cb10fa908b42c53f"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q10_historical_procedure_of_obligation",
+        "top_k": 4,
+        "v_hit_chunk_ids": [
+          "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1",
+          "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+        ],
+        "w0_hit_chunk_ids": [
+          "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1",
+          "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "20dfcf5638ed1b793963271f9e6f55353dc0dec471bb68cd71a66ac4a096b41b",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08",
+          "c2e1f622a90d81aea462957f18ba7b348b6268133d3985c86799cbd01e748f58",
+          "56e4cb8dbd94282c0020500422305241f8072a7110d890f666b9144c1d78705f"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q11_historical_app_of_service",
+        "top_k": 3,
+        "v_hit_chunk_ids": [
+          "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "w0_hit_chunk_ids": [
+          "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8",
+          "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "4e9ac5b6962722c76c496d865be6e09aa111f27ae960aea82603a7665a90ec57",
+          "ac590a3393d76ff298a619e98d1f2a20ad9e0f376421bee7572e4d8e1dab9f08",
+          "c3f512a39a5b998a847af6a6646c1eabc97119bc0c48ac68cb10fa908b42c53f"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      },
+      {
+        "question_id": "Q12_draft_proposed_control",
+        "top_k": 3,
+        "v_hit_chunk_ids": [
+          "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+        ],
+        "w0_hit_chunk_ids": [
+          "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+        ],
+        "identical_to_v": true,
+        "v_outcome": "solved",
+        "w0_outcome": "solved",
+        "v_coverage_at_k": 1.0,
+        "w0_coverage_at_k": 1.0,
+        "v_complete_chain": true,
+        "w0_complete_chain": true,
+        "v_authority_leakage": 0,
+        "w0_authority_leakage": 0,
+        "w0_section_ids": [
+          "00e3d9c3ba5a423bfcce1bfc3d22e13d66a06a66b63a58abd3f122d3e9f1258e"
+        ],
+        "dropped_by_dedupe": 0,
+        "truncated_count": 0
+      }
+    ],
+    "questions_total": 12,
+    "identical_to_v_count": 12,
+    "w0_equals_v": true,
+    "v_outcome_counts": {
+      "partial": 3,
+      "solved": 9
+    },
+    "w0_outcome_counts": {
+      "partial": 3,
+      "solved": 9
+    },
+    "total_authority_leakage": 0
+  },
+  "rendered_pages": [
+    "artifacts/stage7c0/rendered_pages/IDENT__APP-224510.current_scope.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__APP-224510.all_revisions.md",
+    "artifacts/stage7c0/rendered_pages/PHRASE__payment_settlement.current_scope.md",
+    "artifacts/stage7c0/rendered_pages/PHRASE__payment_settlement.all_revisions.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__O-31.current_scope.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__O-31.all_revisions.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__C-88.current_scope.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__C-88.all_revisions.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__C-88A.current_scope.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__C-88A.all_revisions.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__P-205.current_scope.md",
+    "artifacts/stage7c0/rendered_pages/IDENT__P-205.all_revisions.md",
+    "artifacts/stage7c0/rendered_pages/revision__adj_rev1.md",
+    "artifacts/stage7c0/rendered_pages/revision__app_rev1.md",
+    "artifacts/stage7c0/rendered_pages/revision__app_rev2.md",
+    "artifacts/stage7c0/rendered_pages/revision__ctl_rev1.md",
+    "artifacts/stage7c0/rendered_pages/revision__ctl_rev2.md",
+    "artifacts/stage7c0/rendered_pages/revision__ctl_rev3.md",
+    "artifacts/stage7c0/rendered_pages/revision__obl_rev1.md",
+    "artifacts/stage7c0/rendered_pages/revision__obl_rev2.md",
+    "artifacts/stage7c0/rendered_pages/revision__prc_rev1.md",
+    "artifacts/stage7c0/rendered_pages/revision__prc_rev2.md",
+    "artifacts/stage7c0/rendered_pages/revision__svc_rev1.md"
+  ]
+}

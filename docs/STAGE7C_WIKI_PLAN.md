@@ -1,8 +1,23 @@
-# Stage 7C Plan (Revision 5 — Wiki Hub Resilience experimental contract) — Deterministic Wiki Control (W0) and Bounded, Auditable LLM-Assisted Evidence Wiki (W1)
+# Stage 7C Plan (Revision 6 — Wiki Hub Resilience experimental contract, attribution-corrected) — Deterministic Wiki Control (W0) and Bounded, Auditable LLM-Assisted Evidence Wiki (W1)
 
-> **Status: PLAN ONLY — pending owner review and approval.** No code, tables,
-> fixtures, embeddings, or LLM calls have been created, run, or modified for
-> Stage 7C. No frozen stage has been touched.
+> ## STATUS: REVISION 6 — OWNER-APPROVED AND FROZEN
+>
+> **Revision 6 is the final pre-implementation contract for Stage 7C.** It was
+> approved by the owner after the R6 attribution corrections and one subsequent
+> terminology-only correction (the "zero-model" → "zero-W1-LLM" / "no W1-derived
+> model output" / "deterministic D0" wording change recorded in §14.5). **No
+> behaviour, gate, attribution rule, contract, measurement or architectural
+> element was changed by that terminology correction.**
+>
+> **This document is now frozen.** Amending it requires fresh owner approval and
+> a new revision number. Stage 7C.0, 7C.1 and 7C.2 implement *this* text.
+>
+> **Implementation status:** **Stage 7C.0 (deterministic Wiki projection
+> qualification, W0) is IMPLEMENTED.** Stage 7C.1 (compilation) and Stage 7C.2
+> (retrieval/navigation comparison) are **not started** and require fresh owner
+> instruction. No LLM call has been made, no W1 facet has been compiled, no W1
+> facet embedding exists, and no D0 / W1-D / W1-FULL benchmark comparison has been
+> run. No frozen predecessor stage has been modified.
 >
 > **Revision history.** R1 ("Source-Backed Navigational Wiki Projection")
 > defined `WikiSection` ≈ 1:1 with `CanonicalChunk` and reused the same chunk
@@ -33,6 +48,31 @@
 > query-time flow, the facet representation, the metrics, the diagnostics and the
 > gates accordingly. R5 changes **no** Stage 7C.0 architecture and reopens **no**
 > frozen stage.
+>
+> **R6 (this revision) is not a redesign.** The R5 Wiki Hub Resilience
+> architecture is accepted and is preserved intact — Stage 7C.0 unchanged,
+> deterministic membership unchanged, facet/page/anchor/chunk semantics unchanged,
+> the payload unchanged, the flow unchanged, Gate Q thresholds unchanged, A-2 and
+> the regression rules unchanged. R6 applies six narrow **attribution**
+> corrections identified in owner review, because R5's *measurement* could not
+> support the conclusions R5's *gates* were about to draw from it (full
+> diff-of-intent in §14.4): (1) R5 compared `N_W0` against `N_W1` while holding
+> the **W1 enriched facet seed constant in both arms**, so it could establish
+> whether claim-derived *routing* helped but could **never** establish that the
+> W1 compiler was unnecessary — the W1 facet representation may already have
+> contributed through **seed discovery**. R6 adds one deterministic,
+> zero-W1-LLM ablation, **D0**, and names the three attribution arms **D0 / W1-D / W1-FULL**
+> (§7.4); (2) it requires **two separate attribution deltas** plus the total
+> (§9.5); (3) it corrects Gate A / Gate B attribution semantics so that Gate A
+> measures W1-FULL against the *deployable, deterministic* D0 rather than against a
+> same-W1-seed arm, and Gate B may not be selected from a same-seed comparison
+> (§9.3); (4) it keeps the §8.G probe diagnostic-only, unchanged; (5) it corrects
+> the candidate compute-ceiling derivation, which multiplied a **per-facet** chunk
+> ceiling by a page count without bounding facets per page (§6.5); and (6) it
+> renames Gate Q's `authority contamination` to **`revision-scope contamination`**,
+> terminology only, because the compiler is authority-blind (§9.2). **D0 is not a
+> new Wiki variant** and introduces no model, prompt, payload, embedding,
+> reranker or planner.
 >
 > **What R5 changes** (full diff-of-intent in §14): the W1 hypothesis (§1.3); the
 > role of claims, from connectivity gate to routing enrichment (§3.7, §6.4); the
@@ -280,13 +320,15 @@ Gate B.
 | | What it is | Retrieval unit | New model calls | Evaluated for |
 |---|---|---|---|---|
 | **V** | Frozen authority-aware Vector baseline over original chunks | chunk | 0 | Reference. Not rerun. |
-| **W0** | Deterministic source Wiki **control** | chunk (via section) | 0 | Organization, provenance orientation, revision navigation, exact-anchor browsing, cost. **Not** semantic-retrieval improvement. Additionally, in R5, W0's link set supplies the **`N_W0` deterministic arm** of the unified flow (§7.4), which *is* a retrieval competitor and is measured as one. |
+| **W0** | Deterministic source Wiki **control** | chunk (via section) | 0 | Organization, provenance orientation, revision navigation, exact-anchor browsing, cost. **Not** semantic-retrieval improvement. Additionally, W0's projection and link set supply the two zero-claim arms of the unified flow (§7.4): **D0**, which carries no W1-derived model output and is the *deployable* deterministic Wiki, and **W1-D**, which borrows the W1 facet seed. Both *are* retrieval competitors and are measured as such. |
 | **W1** | Bounded LLM-assisted source-grounded **evidence Wiki** | facet seed → page hub → structural navigation → cited chunks | ingestion-time only | Compilation quality, retrieval, navigation, resilience, page quality, repeatability, cost. |
 
 **One** LLM Wiki variant. No W2, no compiler A/B, no prompt tournament (§12).
-The `N_W0` arm is **not** a new variant: it is R4 §7.2's existing nesting level
-evaluated inside the unified flow, holding the seed constant and varying only the
-traversable link set.
+Neither **W1-D** (R4 §7.2's existing `N_W0` nesting level, evaluated inside the
+unified flow with the W1 seed held constant) nor **D0** (new in R6, the same
+deterministic link set driven by a seed carrying no W1-derived model output) is a new Wiki variant: they
+are configurations of the same pipeline over the same frozen projection, adding
+no model, prompt, payload, embedding, reranker or planner (§7.4, §12).
 
 ### 1.5 One complete worked example
 
@@ -404,10 +446,22 @@ now independent, which is the entire point of R5.**
 **And the honest counterweight, stated in the same breath:** both recoveries are
 achieved by **deterministic** membership and **deterministic** anchors — that is,
 by **W0's** projection. Neither requires a single LLM claim. §9.5 therefore makes
-"which layer did the work" a **mandatory** analysis, and §9.3 makes Gate A
-conditional on W1 beating the deterministic `N_W0` arm. If it does not, the
-correct outcome is **Gate B (retain W0), not Gate A**, and this plan says so in
-advance rather than discovering it during interpretation.
+"which layer did the work" a **mandatory** analysis.
+
+> **R6 correction to that counterweight.** "Requires no LLM *claim*" is not the
+> same as "requires no LLM". Reaching the chain still requires **landing on the
+> right hub first**, and under R5 both zero-claim arms were seeded from the
+> **W1 enriched facet representation** — itself a compiler output. R5 therefore
+> would have concluded "the compiler was unnecessary" from an experiment in which
+> the compiler was still supplying the seed. R6 adds **D0** (§7.4), which seeds
+> from the existing V/W0 chunk embeddings and uses **no W1-derived model output
+> anywhere**,
+> and §9.3 makes Gate A conditional on the complete W1 treatment beating **D0** —
+> not on claim-derived routing specifically. If W1's value turns out to come from
+> semantic seed enrichment rather than from claim-derived routing, that is still
+> W1 value and Gate A remains available; it is only when **D0 itself** delivers
+> the transitive win that the correct outcome is **Gate B**. This plan says so in
+> advance rather than discovering it during interpretation.
 
 ---
 
@@ -418,7 +472,11 @@ advance rather than discovering it during interpretation.
 **Unchanged from R4. Stage 7C.0 is not redesigned by R5.**
 
 All records are Pydantic models; all IDs and hashes are SHA-256 over stable
-inputs (never random, never run-scoped). W0 makes **zero model calls**.
+inputs (never random, never run-scoped). The W0 projection build makes **zero LLM
+calls** — it is pure text processing over frozen chunks. *(The separate W0
+**semantic control** of §2.3 does invoke the existing embedding model, as V does;
+"zero LLM calls" throughout this plan means no compiler/generative call, never
+"no ML inference of any kind".)*
 
 - **`WikiSection`** — a **view** over a `CanonicalChunk`, 1:1, not a stored
   table (§10.3): `section_id = sha256(document_revision_id | chunk_id)`,
@@ -512,10 +570,13 @@ control outcome, not a failure.
 
 > **R5 boundary, stated to prevent a category error.** The sentence above is
 > about **W0 as a semantic retriever** and remains true and ungated. It is *not*
-> a statement about the `N_W0` deterministic arm of the unified flow (§7.4),
-> which uses a W1 facet seed and W0's link set, is a genuine retrieval treatment,
-> and is expected on this corpus to be **strong**. Confusing the two would let a
-> deterministic win be reported as a W1 win. §9.3 and §9.5 exist to prevent that.
+> a statement about the deterministic-link arms of the unified flow (§7.4) —
+> **W1-D** (W1 facet seed + W0 link set) and **D0** (chunk-embedding seed + W0
+> link set) — both of which are genuine retrieval treatments and are expected on
+> this corpus to be **strong**. Confusing them with W0 semantic retrieval would
+> let a hub-expansion win be reported as a chunk-vector result; confusing **W1-D**
+> with **D0** would let a *W1-seeded* win be reported as a *deterministic D0* one.
+> §9.3 and §9.5 exist to prevent both errors.
 
 ### 2.4 W0 navigation, expected value, and limitations
 
@@ -748,8 +809,8 @@ is exactly **aliases + claims + summary sentences**, which is the whole of what 
 is trusted to produce.
 
 **The graceful-degradation property above is not asserted — it is measured**, by
-the `N_W0` arm (§7.4, truth-free) and the counterfactual probe (§8.G,
-truth-informed).
+the truth-free zero-claim arms **W1-D** and **D0** (§7.4) and by the
+counterfactual probe (§8.G, truth-informed).
 
 ### 3.8 What makes W1 "bounded"
 
@@ -1328,6 +1389,15 @@ contribute at Tier 2. `seed_rank_used` and `seed_pages_expanded` are reported.
 path, and a path has one origin. Deriving the origin from the ranking rather than
 picking it keeps the rule non-tunable.
 
+> **R6 note.** `seed_page_priority` is defined over **facet** similarities and is
+> therefore available only to the W1 arms. The **D0** arm reads no facet
+> embedding, so it substitutes the deterministic seed order of §7.4.2 step 5 and
+> reports `seed_order_rule = "D0_posting_order"`. `P_seed = K`, the rank-1 seed as
+> path origin, the hop budget, the §6.6 policy and the no-backfill rule are
+> **identical across all three arms** — the seed *ordering rule* is the only thing
+> that differs, and it differs because a W1-LLM-free arm cannot consult a
+> W1-derived vector.
+
 **Hop budget.** `B`, global, declared before the run (proposed **6**, §7.3),
 never tuned per question. **One hop = one traversal from a visited page identity
 to an adjacent page identity.** Expanding a page's own eligible facets (§6.4 step
@@ -1336,14 +1406,51 @@ cost is fully reported as branching and candidate counts (§8.H). The longest
 target chain on this corpus is 4 hops (§1.5.2), so `B = 6` leaves slack; whether
 that slack is enough under mis-prioritized branching is part of what is measured.
 
-**Candidate compute ceiling.** `C = (P_seed + B) × F_max`, i.e. `(K + 6) × 12`.
+**Candidate compute ceiling (derivation corrected in R6).**
 
-*Derivation:* the flow can visit at most `P_seed` seed pages plus `B` traversed
-pages, and each page's facets can hold at most `F_max` chunks per facet. C is
-therefore a **provably non-binding compute ceiling on this corpus** (§0.1: one
-chunk per revision), **not a selection filter.** If it ever binds, that is a
-contract-breach event requiring owner review — reported, never silently
+R5 stated `C = (P_seed + B) × F_max`. That is **not a valid upper bound**:
+`F_max` (§3.9) is a **per-facet** input-chunk ceiling, while a visited page may
+expose **several eligible facets** — one per revision in which its identity
+occurs — and §6.4 step [4] expands *all* of them. The R5 formula silently assumed
+one facet per visited page, which is false in general (and false on this corpus
+for any page appearing in more than one revision).
+
+The corrected bound introduces one additional deterministic, predeclared term:
+
+```
+M_max = the maximum number of facets attached to any single page identity,
+        computed deterministically over the frozen Stage 7C.0 projection
+        (max over page_key of |{document_revision_id : the page has ≥1
+         anchor posting in that revision}|)
+
+C = (P_seed + B) × M_max × F_max
+```
+
+*Derivation:* the flow visits at most `P_seed` seed pages plus `B` traversed
+pages; each visited page exposes at most `M_max` facets (eligible facets are a
+subset of all facets, so the all-revisions maximum bounds the authority-filtered
+count); and each facet carries at most `F_max` input chunks. The product is
+therefore a genuine upper bound on chunks carried into the final-K policy.
+
+**`M_max` is a measured property of the frozen projection, not a knob.** It is
+computed once at 7C.0 with zero LLM calls, recorded in
+`contracts/wiki_projection_v1.json` alongside the projection manifest, and frozen
+with it. It is never chosen, never tuned, never per-question, and never
+recomputed at 7C.2. Any equivalent mathematically valid deterministic bound may
+be substituted, but it must be derived and frozen the same way.
+
+C remains a **non-binding compute guard, not a selection filter**, and on this
+corpus it is provably non-binding (§0.1: one chunk per revision, so the `F_max`
+factor is 1 in practice and `M_max` is bounded by 11). If it ever binds, that is
+a contract-breach event requiring owner review — reported, never silently
 truncated.
+
+> **R6 note, stated so the correction cannot be misread as a loosening.**
+> Correcting this bound **changes no measured evidence policy**. `P_seed`, `B`,
+> the §6.6 final-K policy, the §7.3 prioritizer and every selection rule are
+> untouched. The only change is that `C` is now an arithmetically valid ceiling
+> rather than an under-stated one; a ceiling that was too *low* to be sound was
+> never protecting anything, and raising it to the correct value selects nothing.
 
 **Reported per question** (all modes where applicable):
 
@@ -1499,6 +1606,16 @@ contribution is directly measurable**: `N_W1 − N_W0` isolates the value of
 claim-derived routing over deterministic anchors, and `N_advisory − N_W1`
 isolates the advisory contribution.
 
+> **R6 clarification — a link set is not an arm.** `N_W0` / `N_W1` /
+> `N_advisory` name **traversable link sets** only. An experimental arm is a
+> **(seed representation × link set)** pair, and R5 conflated the two: it read
+> `N_W1 − N_W0` as "the marginal value of the LLM Wiki" when both sides were
+> seeded from the **W1 facet representation**, so that delta isolates
+> claim-derived *routing* and nothing else. The three attribution arms are
+> defined in §7.4; these three names continue to designate link sets exactly as
+> R5 defined them, and `N_W1 − N_W0` keeps its R5 meaning — one of the two
+> deltas, not the whole question.
+
 **`N_advisory` is retained only because R4 already required it as a diagnostic.**
 It adds **no model call** (it reuses facet embeddings already computed for §6.2).
 It **may not** be used to satisfy Gate A, may not be folded into any source-backed
@@ -1514,7 +1631,9 @@ Outgoing links ordered by (a) cosine between the already-computed query embeddin
 and the target page's eligible facet embedding, then (b) lexical overlap between
 the link's `predicate` and the query, then (c) link-type priority
 (`claim_derived` before `exact_anchor` before `structural`), then (d) stable key
-order.
+order. **This prioritizer is used by `W1-D` and `W1-FULL`; the deterministic
+`D0` arm uses the substitution declared in §7.4.2, since clause (a) reads a
+W1-derived facet embedding and clause (b) reads a claim predicate.**
 
 > **Stated as a limitation, not a capability:** *this is similarity ordering, not
 > intent understanding.* It cannot reliably distinguish "which control satisfies
@@ -1525,39 +1644,169 @@ order.
 > navigation results, not concealed inside BFS.** Fixing it properly needs a
 > query-planning LLM or a typed relation registry, both out of scope (§12).
 
-### 7.4 The `N_W0` arm is a competitor, not a control (new in R5)
+### 7.4 The three attribution arms — D0, W1-D, W1-FULL (corrected in R6)
 
-This is the most consequential structural point in R5 and it is stated separately
-so it cannot be lost inside §7.3.
+This is the most consequential measurement point in the plan and it is stated
+separately so it cannot be lost inside §7.3.
+
+#### 7.4.1 The seed-attribution confound R5 contained
 
 Under R4, W0 was only ever a *semantic-retrieval* control (≈ V, ungated, §2.3).
 Under R5's unified flow, running the same pipeline with the `N_W0` link set gives
 a genuine retrieval system: **W1 facet seed + deterministic hub expansion +
 deterministic anchor traversal + the §6.6 final-K policy, with zero claims used
-for connectivity or routing.**
+for connectivity or routing.** R5 then compared that arm against `N_W1` and
+proposed to conclude from the result whether the LLM compiler was needed at all.
 
-Per §0.1 and §1.5.4, this arm is expected to reconstruct the entire Q04/Q06/Q07
-chain on this corpus **by itself**. If it does, then:
+**That inference does not follow, and R6 corrects it.** Both sides of R5's
+comparison were seeded from the **same W1 enriched facet representation** (§6.2),
+which is a compiler output that depends on accepted claims, adjudicated summary
+sentences and validated aliases. Holding it constant correctly isolates the
+marginal value of **claim-derived routing** — but it can say nothing about
+whether the compiler was unnecessary, because the compiler was still running on
+both sides, supplying the step that decides *where the traversal starts*.
 
-- the **R5 hypothesis is supported** — deterministic membership and source anchors
-  did preserve transitive reachability;
-- but **W1's compiled claim layer contributed nothing to connectivity**, and its
-  marginal contribution is confined to seed quality, routing order and
-  explanation;
-- and therefore the correct decision is **Gate B (retain W0's deterministic
-  projection), not Gate A (retain the LLM-compiled Wiki)** — because Gate A pays
-  for a compiler, a validator, an adjudication process, a regeneration policy and
-  a model dependency that the measurement showed were not required.
+The R5 hypothesis (§1.3.2) in fact contains **two distinct possible
+model-derived contributions**, and the experiment must measure them
+independently:
+
+1. **semantic facet enrichment may improve SEED DISCOVERY** — the enriched facet
+   payload lands on a better hub than a raw chunk vector would;
+2. **accepted claims may improve ROUTING after the seed** — typed, directed,
+   prioritized hops beat untyped anchor fallback.
+
+R5 measured only (2). R6 measures both.
+
+#### 7.4.2 D0 — the deterministic, zero-W1-LLM ablation (new in R6)
+
+> **D0 is NOT a new Wiki variant.** It introduces **no** new model, prompt,
+> payload, embedding representation, reranker or planner, and adds no module and
+> no table. It is one additional configuration of `retrieval.py` +
+> `navigation.py` over the already-frozen 7C.0 projection, run at 7C.2 alongside
+> the arms R5 already required.
+
+> **What "D0" does and does not exclude — read this before quoting the arm
+> anywhere (terminology correction, R6).** D0 excludes **W1-derived model
+> output**: no compiler call, no claim, no alias, no summary sentence, no
+> adjudication verdict, no facet payload, no facet embedding. D0 **does** use the
+> **existing embedding model** — the same query embedding and the same V/W0
+> chunk embeddings that the frozen Vector baseline uses — because reusing them is
+> what makes D0 comparable to V and to the W1 arms, and introducing a second
+> representation is forbidden (§12). So D0 is **not** "an arm with no machine
+> learning in it"; it is the arm with **no Stage 7C.1 LLM layer** in it. Where
+> this plan calls D0 *deterministic*, that means its Wiki-specific steps — anchor
+> mapping, seed ordering, hub expansion, traversal, final-K assembly — are fixed
+> rules over frozen artifacts, not that its retrieval contains no learned model.
+> Prefer **"zero-W1-LLM"**, **"no W1-derived model output"** or **"deterministic
+> D0"** in reports; never write "no model" unqualified.
+
+D0 exists to answer one question R5 could not: **what does the deterministic Wiki
+achieve with no W1-derived model output anywhere in the path?** It is therefore the
+*deployable* deterministic Wiki — the thing a Gate B decision would actually
+retain — and it is the correct baseline for pricing the LLM layer.
+
+**The D0 seed procedure — fully predeclared, truth-free and untunable.**
+Declared here, frozen in `contracts/wiki_projection_v1.json` at 7C.0, before any
+measured run:
+
+1. Embed the query **once**, with the existing provider, into the **existing
+   V/W0 chunk embedding space**. *(No second embedding representation is
+   introduced — this is the same query vector V uses.)*
+2. Authority-first SQL over the **existing chunk embeddings**, exactly the §0
+   pattern: `WHERE document_revision_id IN (:eligible) ORDER BY embedding <=> :q
+   LIMIT P_seed`. The bound is `P_seed = K` (§6.5), unchanged and shared with the
+   W1 arms.
+3. Map each retrieved chunk to **deterministic source anchors**: the
+   `AnchorPosting`s already recorded against that `chunk_id` at 7C.0 (§2.2).
+4. Map those anchors to **seed page identities** — the page keys they belong to.
+5. Order seed pages deterministically by (a) the rank of the retrieved chunk they
+   came from, then (b) ascending posting `char_span` start within that chunk,
+   then (c) stable `page_key`. Deduplicate preserving first position; truncate to
+   `P_seed`. The **rank-1 seed page is the path origin** for §6.6 Tier 1, and its
+   path-establishing chunk is the retrieved chunk that produced it.
+6. From here the flow is **identical to §6.4 step [4] onward**: deterministic hub
+   expansion of all eligible facets of each seed page, deterministic
+   exact/source-anchor navigation only (the `N_W0` link set), the same global hop
+   budget `B`, and the **same §6.6 final-K policy** truncating to the same
+   per-question `top_k`.
+
+**No `seed_page_priority` cosine over facet embeddings is computed for D0**, since
+D0 may not read a facet embedding; its seed order is the deterministic rule in
+step 5, and it is reported as `seed_order_rule = "D0_posting_order"`.
+
+**The D0 branch prioritizer.** §7.3's prioritizer ranks outgoing links partly by
+cosine against the **target page's facet embedding**, which is model-derived and
+therefore unavailable to D0. D0 substitutes the deterministic analogue, declared
+before the run and not tunable: (a) max cosine between the already-computed query
+embedding and the **existing chunk embeddings** of the target page's eligible
+facets; then (b) link-type priority (`exact_anchor` before `structural`); then
+(c) stable key order. Clause (b) of §7.3 (lexical predicate overlap) is
+inapplicable — D0 traverses no `claim_derived` link and so has no predicate.
+
+> **The one honest rider on this substitution, stated in advance.** Because D0
+> may not use a facet embedding *anywhere*, the D0 → W1-D difference covers
+> **both** seed discovery **and** branch ordering, not seed discovery alone. This
+> is a confound *of necessity*, not an oversight: a W1-LLM-free arm cannot borrow
+> a W1-derived facet vector for branch ordering without ceasing to be free of W1
+> model output.
+> The delta is therefore named **"marginal value of W1 semantic facet
+> enrichment"** rather than "of seeding", and §8.H reports
+> `branch_order_divergence_vs_D0` — the count of visited hubs at which W1-D's
+> branch order differs from D0's — so the size of the rider is measured rather
+> than assumed. On this corpus it is expected to be near zero (§0.1: branching is
+> minimal), which would make the delta effectively a seed-discovery measurement.
+
+#### 7.4.3 The three arms, defined
+
+All three share the corpus, the authority scope, the frozen 7C.0 projection, the
+hop budget `B`, the §6.6 final-K policy, the per-question `top_k`, and the frozen
+7B.0 evaluator. They differ **only** in the two columns below.
+
+| Arm | Seed representation | Traversable link set | Model output used anywhere in the path | Existing name |
+|---|---|---|---|---|
+| **D0** | existing **W0/V source-chunk** embeddings → deterministic source anchors → page identities (§7.4.2) | `N_W0` (structural + exact_anchor) | **none** | *new in R6* |
+| **W1-D** | **W1 enriched facet** representation (§6.2) → seed page identities | `N_W0` (structural + exact_anchor) | facet payload only (compiler + adjudication); **no claim used for connectivity or routing** | R5's "`N_W0` unified arm" |
+| **W1-FULL** | **same W1 enriched facet seed** | `N_W1` (+ `claim_derived`) | facet payload **and** claim-derived routing | R5's `N_W1`, the primary W1 treatment |
+
+`N_advisory` (§7.3) remains a diagnostic on top of W1-FULL and is unchanged: it
+may not satisfy Gate A and nothing depends on it.
+
+> **Reports, tables, code identifiers and the decision record MUST use the arm
+> names `D0`, `W1-D` and `W1-FULL`** wherever an experimental role is meant, and
+> reserve `N_W0` / `N_W1` / `N_advisory` for link sets. Writing "`N_W0`" where an
+> arm is meant is the exact ambiguity that produced R5's confound. Where the R5
+> name aids continuity, write `W1-D (= the N_W0 link set on the W1 seed)`.
+
+#### 7.4.4 What each comparison can and cannot establish
+
+| Comparison | Isolates | Can establish | Cannot establish |
+|---|---|---|---|
+| **W1-D vs D0** | seed representation (+ branch ordering, §7.4.2 rider) | whether **semantic facet enrichment** contributed | anything about claims |
+| **W1-FULL vs W1-D** | traversable link set | whether **claim-derived routing** contributed | whether the compiler was needed at all |
+| **W1-FULL vs D0** | the whole LLM layer | the **total marginal value** of the LLM-assisted Wiki over the deployable deterministic Wiki | which of the two sub-layers produced it |
+
+Per §0.1 and §1.5.4, **D0** is expected to reconstruct the Q04/Q06/Q07 chain on
+this corpus by itself. If it does, then the R5 hypothesis is supported — but *for
+the deterministic projection* — and Gate B becomes the likely outcome (§9.6). What
+R6 changes is that this conclusion may now only be drawn from **D0**, never from
+the same-W1-seed comparison alone.
 
 **Two attributions must not be confused**, and §9.5 enforces the separation:
 
 | Question | Answered by | Feeds |
 |---|---|---|
 | Was the win extraction or representation? | §9.4 (W1 claims vs frozen 7B.1 edges) | Gate A precondition |
-| Was the win **deterministic structure or model-derived structure**? | §9.5 (`N_W1` vs `N_W0`, same seed, same policy) | Gate A precondition **and** the A-vs-B decision |
+| Was the win **deterministic structure or model-derived structure** — and if model-derived, **seed enrichment or routing**? | §9.5 (the two deltas plus the total, over D0 / W1-D / W1-FULL) | Gate A precondition **and** the A-vs-B decision |
 
-The `N_W0` arm is **truth-free** — it uses no benchmark knowledge and selects
-nothing by hand — so unlike §8.G's probe it **is** admissible Gate-A evidence.
+All three arms are **truth-free** — none uses benchmark knowledge or selects
+anything by hand — so, unlike §8.G's probe, all three **are** admissible Gate-A
+evidence.
+
+> **R6 closes a gap R5's Gate B wording had left open.** R5 noted that a W0-only
+> deployment "would need a seed of its own" and had no arm supplying one. **D0 is
+> that arm.** Gate B can now be selected on evidence about a system that could
+> actually be deployed, rather than by inference from an arm that borrowed the
+> compiler's seed.
 
 ---
 
@@ -1611,14 +1860,27 @@ authority-leakage count (**must be 0**); evidence-document diversity;
 solved/partial/failed; the §6.5 bounds and saturation table; and an explicit
 **per-question gains and regressions** table.
 
-**R5 adds one required row to that table.** The comparison set is now:
+**R5 added rows to that table; R6 corrects and completes them.** The comparison
+set is now, using the §7.4 arm names:
 
 ```
-W1 (= N_W1 unified flow)   vs  V
-W1                          vs  N_W0 unified arm      ← new, decisive for Gate A (§7.4, §9.5)
-N_W0 unified arm            vs  V                     ← new, the deterministic-structure result
-W0 semantic                 vs  V                     ← unchanged control (expected ≈)
+W1-FULL      vs  V           the headline retrieval result
+W1-FULL      vs  D0          ← TOTAL marginal value of the LLM-assisted Wiki
+                                over the deployable deterministic Wiki.
+                                Decisive for Gate A (A-7, §9.3, §9.5)
+W1-D         vs  D0          ← ATTRIBUTION DELTA 1: marginal value of W1
+                                semantic facet enrichment (§7.4.2 rider applies)
+W1-FULL      vs  W1-D        ← ATTRIBUTION DELTA 2: marginal value of
+                                claim-derived routing
+D0           vs  V           the deterministic-structure result (no W1 LLM)
+W0 semantic  vs  V           unchanged control (expected ≈)
 ```
+
+> **All three attribution rows are mandatory and none substitutes for another.**
+> Reporting `W1-FULL vs W1-D` alone — R5's error — measures routing and is
+> **prohibited** as a basis for any statement about whether the compiler was
+> needed (§9.5). `N_advisory` is reported separately as a diagnostic and enters
+> no gate.
 
 > **Labelling when Gate Q fails.** W1 retrieval is measured whether or not Gate Q
 > passed (§9.2). If Gate Q failed, **every W1 row, figure, table cell and summary
@@ -1633,17 +1895,19 @@ W0 semantic                 vs  V                     ← unchanged control (exp
 loaded read-only, with a rerun-equality verification step only if exact benchmark
 parity requires it.
 
-### 8.C Navigation quality (`N_W0` vs `N_W1` vs `N_advisory`)
+### 8.C Navigation quality (D0 vs W1-D vs W1-FULL vs `N_advisory`)
 
 Because navigation is now part of retrieval (§7.2), §8C reports the *navigational
 properties* of the same runs §8B scores, rather than a separate experiment:
 required-evidence reachability; complete-chain navigability; minimum clicks to
 required evidence; branch count; irrelevant-destination count; ambiguity rate;
 authority leakage (**must be 0**); forbidden-fact exposure; **marginal contribution
-of each nesting level** (§7.3); navigation-path explainability (every hop cites an
-`anchor_id`, or a `claim_id` + `source_ref`); prioritizer-degradation rate (§7.3).
-Primary targets Q04/Q06/Q07. Semantic similarity alone is **never** treated as
-verified lineage.
+of each nesting level** (§7.3); **the two §9.5 attribution deltas and the total,
+reported as navigation outcomes as well as retrieval outcomes** (new in R6);
+navigation-path explainability (every hop cites an `anchor_id`, or a `claim_id` +
+`source_ref`); prioritizer-degradation rate (§7.3, reported for D0's substituted
+prioritizer as well, §7.4.2). Primary targets Q04/Q06/Q07. Semantic similarity
+alone is **never** treated as verified lineage.
 
 ### 8.D User-facing page quality
 
@@ -1661,7 +1925,7 @@ summary-degradation rate per intent — but **never substituted for the rubric**
 Implementation surface (modules, LOC, tables); compilation calls; input/output
 tokens; **dollar cost** via the existing `estimate_cost_usd()` (returning `None`
 rather than a fabricated figure for an unpriced model); build latency; retrieval
-latency (V vs W0 vs `N_W0` arm vs W1, warm); storage; validation rejection rate;
+latency (V vs W0 vs **D0** vs **W1-D** vs **W1-FULL**, warm); storage; validation rejection rate;
 reprocessing cost after a source change, after an authority change, after a
 model/prompt change, and — **new in R5** — **after an adjudication-verdict change**
 (§6.7); output stability (§8F); debugging difficulty; stale-page risk; operational
@@ -1678,8 +1942,15 @@ adjudication item count and elapsed effort for Run 1.
 > human-readable.** W1's ledger carries its compiler, prompt versioning,
 > validator, adjudication effort, rejection triage, regeneration policy and model
 > dependency as costs, compared honestly against V (near-zero marginal), against
-> the **`N_W0` deterministic arm** (§7.4 — zero model calls, zero adjudication),
-> and against the frozen 7B Graph/Hybrid ledger.
+> the **D0 deterministic arm** (§7.4 — zero LLM calls, zero adjudication, zero
+> compiler, and therefore the true cost floor for a deployable Wiki), against
+> **W1-D** (which pays for the compiler and adjudication but not for claim-derived
+> routing), and against the frozen 7B Graph/Hybrid ledger.
+>
+> **R6 pricing rule.** The compiler's cost is charged against the **W1-FULL vs
+> D0** total, not against the W1-FULL vs W1-D delta. Charging the full compiler
+> ledger against the routing delta alone — R5's implicit framing — would price a
+> layer against a benefit it only partly produces.
 
 Order-of-magnitude expectation, to be replaced by measurement and never quoted as
 a result: tens of facets × a few thousand input tokens at `gpt-4o-mini` pricing →
@@ -1706,7 +1977,7 @@ not measured — it is 100% by construction (§3.2).*
 
 **New in R5 — membership stability is also not measured, and saying so is the
 point.** Facet membership, source chunks, anchors and postings are produced at
-7C.0 with zero model calls and are **byte-identical across all three runs by
+7C.0 with zero LLM calls and are **byte-identical across all three runs by
 construction** (§2.2). The claim-set Jaccard therefore measures variance in the
 *routing/enrichment* layer only, sitting on top of an invariant connectivity
 layer. This is exactly the structural property R5 asserts, and its verification is
@@ -1773,8 +2044,14 @@ metric set for the suppressed run.
   using the question's required-evidence set, i.e. **frozen benchmark truth** —
   it is **truth-informed and therefore not admissible as Gate A evidence at
   all.** It informs the Gate B/C narrative and the §9.5 attribution discussion.
-  The truth-free equivalent, which **is** Gate-A-admissible, is the `N_W0` arm
-  (§7.4), which suppresses *all* claim-derived links without consulting truth.
+- **It does not replace either truth-free attribution comparison** (new in R6,
+  and binding). This probe varies **only** the claim-derived link set on the W1
+  seed, so at most it speaks to the same territory as the **W1-FULL vs W1-D**
+  delta — and it speaks to it *less* well, being truth-informed. It says nothing
+  whatever about **W1-D vs D0** or **W1-FULL vs D0**. The truth-free comparisons
+  that **are** Gate-A-admissible are the §7.4 arms: **W1-D**, which suppresses
+  *all* claim-derived links without consulting truth, and **D0**, which
+  additionally removes the model-derived seed.
 - **It does not perfectly simulate a full extraction miss.** The frozen facet
   semantic representation was created **before** the link was suppressed, so the
   seed step still benefits from the claim's text in payload component 6 and from
@@ -1793,13 +2070,15 @@ metric set for the suppressed run.
 
 ### 8.H Wiki resilience and ambiguity metrics (new in R5)
 
-Reported **per question**, for every arm (`N_W0`, `N_W1`, `N_advisory`, and the
-§8.G suppressed run), at minimum:
+Reported **per question**, for every arm (**D0**, **W1-D**, **W1-FULL**,
+`N_advisory`, and the §8.G suppressed run), at minimum:
 
 | Metric | Notes |
 |---|---|
-| seed facet(s) | `(page_key, document_revision_id)` and rank |
-| seed page identity | plus `seed_page_priority` (§6.3) |
+| seed facet(s) | `(page_key, document_revision_id)` and rank. **D0 reports the retrieved seed chunk(s) and the postings that produced its seed pages instead** (§7.4.2) |
+| seed page identity | plus `seed_page_priority` (§6.3) for the W1 arms; `seed_order_rule = "D0_posting_order"` for D0 |
+| **`seed_page_overlap_vs_D0`** | **new in R6** — how many of the arm's seed pages D0 also selected, and at what rank. Directly quantifies attribution delta 1's mechanism |
+| **`branch_order_divergence_vs_D0`** | **new in R6** — visited hubs at which this arm's branch order differs from D0's; bounds the §7.4.2 prioritizer rider |
 | target evidence reachable | yes / no |
 | minimum discovered hops to required evidence | over the discovered graph, not the taken path |
 | actual traversed hops | ≤ `B` |
@@ -1868,7 +2147,7 @@ good its retrieval numbers are.
 |---|---|---|
 | Q-1 | Citation validity | **1.00** |
 | Q-2 | Invalid source references | **0** |
-| Q-3 | Authority contamination (any claim citing a chunk outside its facet's revision) | **0** |
+| Q-3 | **Revision-scope contamination** (any claim citing a chunk outside its facet's revision) | **0** |
 | Q-4 | False merges (incl. C-88 / C-88A) | **0** |
 | Q-5 | Accepted-claim precision | **≥ predeclared threshold** (proposed **0.95**) |
 | Q-6 | Expected-fact recall in accepted claims | **≥ predeclared threshold** (proposed **0.80**) |
@@ -1876,6 +2155,18 @@ good its retrieval numbers are.
 | Q-8 | Repeatability (§8F thresholds) | **pass** |
 | Q-9 | Budget and ceilings (§3.9) | **no breach; within declared dollar cap** |
 | Q-10 | Supported-alias precision (owner-adjudicated, every supported alias, §4.5) | **incorrect supported aliases = 0** |
+
+> **R6 terminology correction to Q-3 — a rename only.** R5 called this condition
+> "authority contamination". That name was wrong in a way that could mislead a
+> reader of the decision record: **the compiler is authority-blind** (§3.1 — it
+> never sees the resolver, authority state, or any revision but its facet's), so
+> it cannot contaminate an authority scope. What Q-3 actually detects is a claim
+> escaping its facet's **revision scope**, which is why §3.1 makes it structurally
+> near-impossible and §4.1.2/§4.1.4 check it mechanically. **Actual authority
+> leakage is a separate, query/assembly-time hard-safety metric** — §9.1, §8.B and
+> §8.H, each with target 0 — and remains exactly as specified. **Behaviour,
+> detection rule and threshold (= 0) are unchanged; only the name changes.** Code,
+> contracts, reports and the decision record use `revision_scope_contamination`.
 
 Recall stays a Gate Q criterion because **low recall is a completeness failure**: a
 compilation that misses expected facts is an incomplete evidence layer and cannot
@@ -1885,15 +2176,25 @@ be retained on that basis.
 > longer routes connectivity through claims, low claim recall should no longer
 > block retention. **Q-6 is deliberately kept as-is.** If claim recall is low and
 > retrieval still works, that is not a reason to retain the compiler — it is
-> evidence that the compiler was not needed, which points to Gate B via §7.4. The
-> threshold's job is to stop a weak compiler being retained on someone else's
-> results, and that job is *more* necessary under R5, not less.
+> evidence that the compiler was not needed **for connectivity**, which points
+> toward Gate B via §7.4. The threshold's job is to stop a weak compiler being
+> retained on someone else's results, and that job is *more* necessary under R5,
+> not less.
+>
+> **R6 qualification.** "Someone else's results" must be identified correctly.
+> Low claim recall plus working retrieval shows the *claims* were not needed; it
+> does **not** show the *compiler* was not needed, because the compiler also
+> produces the seed representation (§6.2) that `W1-D` and `W1-FULL` both consume.
+> Whether the compiler was needed at all is settled against **`D0`** (§9.5.1), not
+> against Q-6. Q-6's threshold and semantics are unchanged.
 
 > **If Gate Q fails after a *technically completed* compilation:**
 >
 > - **W1 can never satisfy Gate A**;
 > - **nevertheless Stage 7C.2 still runs** the full unified flow over the frozen
->   Run 1 facets, including the `N_W0` arm and the §8.G probe;
+>   Run 1 facets, including the **D0** and **W1-D** arms and the §8.G probe
+>   *(D0 is unaffected by a Gate Q failure — it consumes no compiler output, so
+>   its results are never labelled `NON-QUALIFYING`)*;
 > - **all W1 results are explicitly labelled `NON-QUALIFYING / DIAGNOSTIC ONLY`**
 >   (§8B), alongside the specific failing criteria;
 > - the stage proceeds to **Gate B or Gate C**, with the diagnostic evidence and
@@ -1947,47 +2248,93 @@ definition counts.
 | A-4 | same final source-evidence K; zero authority leakage | unchanged |
 | A-5 | user-facing page quality (§8D) improves over W0 | unchanged |
 | A-6 | the **§9.4 extraction attribution** completed and recorded | unchanged |
-| A-7 | **the §9.5 structural attribution completed, and `N_W1` demonstrably outperforms the `N_W0` deterministic arm on the target questions** | **NEW in R5** |
-| A-8 | cost/maintenance justified relative to V **and relative to the `N_W0` arm** | strengthened |
+| A-7 | **the §9.5 structural attribution completed — both deltas and the total computed and recorded — and the complete W1 treatment (`W1-FULL`) demonstrates measurable value over the deployable deterministic `D0` Wiki (which uses no W1-derived model output) on the target questions** | **REPLACED in R6** |
+| A-8 | cost/maintenance justified relative to V **and relative to the `D0` arm** (the zero-W1-LLM cost floor, §8E) | strengthened |
 
 > **Gate A is unreachable if Gate Q failed**, irrespective of how good the
 > diagnostic retrieval numbers are (§9.2).
 
-**Why A-7 was added, and why it is a strengthening rather than a weakening.** The
-request asked that the strict Q04/Q06/Q07 improvement rule be preserved unless the
-corrected experiment logically requires an adjustment. **A-2 is preserved
-verbatim.** But the corrected experiment introduces a possibility R4's flow made
-impossible: under R5, evidence can be reached with **zero claims**, so W1 can now
-satisfy A-2 while contributing nothing (§7.4, §1.5.4). Without A-7, Gate A would
-retain an LLM compiler on the strength of a deterministic result — the precise
-misattribution §9.4 exists to prevent, in a different dimension. A-7 therefore
-raises the bar; **nothing in this revision lowers it.** If A-2 is met but A-7 is
-not, the outcome is **Gate B**.
+**Why A-7 exists, and what R6 corrected in it.** The strict Q04/Q06/Q07
+improvement rule was to be preserved unless the corrected experiment logically
+required an adjustment. **A-2 is preserved verbatim, and so are all the
+regression rules.** A-7 exists because R5's redesign made it possible for W1 to
+satisfy A-2 while contributing nothing: evidence can be reached with zero claims
+(§7.4, §1.5.4), so without A-7 Gate A could retain an LLM compiler on the
+strength of a deterministic result.
 
-*A-7's comparison is defined concretely:* on Q04/Q06/Q07, `N_W1` must show a
-strictly better outcome than `N_W0` on at least one of {status, complete-chain
-represented, required-fact coverage@K}, with no regression on the others, and with
-no regression from `N_W0` on the remaining nine questions. Both arms share the
-seed, the budget, the prioritizer and the §6.6 policy, so the only variable is the
-claim-derived link set.
+**R5 wrote A-7 against the wrong comparator.** It required `N_W1` to beat the
+same-W1-seed `N_W0` arm — i.e. it demanded that **claim-derived routing
+specifically** carry the win. That is too narrow in one direction and unfounded
+in the other:
+
+- *too narrow* — if the W1 facet representation produces the qualifying
+  improvement through **seed discovery**, that is genuine, measured value from
+  the LLM layer, and R5's A-7 would have discarded it and forced Gate B;
+- *unfounded* — a same-seed comparison cannot show the compiler was unnecessary,
+  because the compiler was seeding both arms (§7.4.1).
+
+> **A-7, corrected, defined concretely.** On Q04/Q06/Q07, **W1-FULL** must show a
+> strictly better outcome than **D0** on at least one of {status, complete-chain
+> represented, required-fact coverage@K}, with no regression on the others, and
+> with no regression from **D0** on the remaining nine questions. In addition,
+> both §9.5 attribution deltas (**W1-D vs D0** and **W1-FULL vs W1-D**) and the
+> total (**W1-FULL vs D0**) must be computed and recorded, so the decision record
+> states *which* sub-layer produced the value.
+>
+> **Claim-derived routing does NOT have to contribute.** If semantic facet
+> enrichment alone produces the qualifying W1-FULL improvement over D0, A-7 is
+> met and Gate A remains available. The attribution deltas determine what is
+> *written down* about the mechanism, not whether the gate opens.
+
+A-7 still raises the bar relative to R4 — nothing in R5 or R6 lowers it — and it
+now measures against a system that could actually be deployed. If A-2 is met but
+A-7 is not, the outcome is **Gate B**.
 
 **Gate B — Retain W0 only, as a source-navigation and deterministic-retrieval
 layer.** W1 fails Gate Q, or fails Gate A (including failing **A-7**); W0 provides
 useful revision / provenance / exact-anchor navigation; W0 maintenance remains
 low.
 
+> **Gate B's evidentiary requirement, corrected in R6 and binding.** Gate B is a
+> decision that the **deployable deterministic Wiki suffices**, so it must rest on
+> evidence about the deployable deterministic Wiki:
+>
+> **Gate B requires either**
+> (i) **D0** is *sufficient* — it achieves the transitive result on the target
+> questions, and **W1-FULL vs D0** shows no qualifying improvement; **or**
+> (ii) **W1-FULL vs D0** shows a measured improvement, but that **incremental
+> value is not worth its cost** against §8E's ledger (compiler, validator,
+> adjudication as an index dependency, regeneration policy, model dependency),
+> with the cost judgement stated explicitly and the measured delta quoted
+> alongside it.
+>
+> **Gate B MUST NOT be selected from a same-W1-seed comparison.** In particular,
+> "`W1-FULL` did not beat `W1-D`" is **not** grounds for Gate B on its own: both
+> arms consume the compiler, so that result establishes only that *claim-derived
+> routing* added nothing, while the compiler may still have been carrying the
+> result through the seed. Selecting Gate B on that basis would retire a layer the
+> experiment showed was working — the mirror image of the misattribution A-7
+> exists to prevent.
+
 > **R5 amends R4's Gate B wording.** R4 required that "W0 is not represented as a
 > superior semantic retriever (its retrieval is reported as ≈ V, by
 > construction)". That sentence is **kept for W0's pure semantic retrieval**
-> (§2.3) and **does not apply to the `N_W0` unified arm** (§7.4), which may
-> legitimately outperform V — it is a different computation, using hub expansion
-> and anchor traversal rather than a single chunk-vector search. Gate B may
-> therefore record a genuine deterministic retrieval win, provided the two are
-> never conflated in wording, and provided the report states plainly that the
-> arm's seed comes from the W1 facet representation and that a W0-only deployment
-> would need a seed of its own. This amendment is required by R5's unification of
-> retrieval and navigation; R4's wording predates it and would otherwise force a
-> true result to be reported as impossible.
+> (§2.3) and **does not apply to the deterministic-link arms of the unified flow**
+> (§7.4), which may legitimately outperform V — they are a different computation,
+> using hub expansion and anchor traversal rather than a single chunk-vector
+> search. Gate B may therefore record a genuine deterministic retrieval win,
+> provided the arms are never conflated in wording. This amendment is required by
+> R5's unification of retrieval and navigation; R4's wording predates it and would
+> otherwise force a true result to be reported as impossible.
+>
+> **R6 completes this amendment.** R5 had to add the caveat that the arm's "seed
+> comes from the W1 facet representation and a W0-only deployment would need a
+> seed of its own" — an admission that R5 had no arm capable of grounding Gate B.
+> **D0 is that arm** (§7.4.2), and it is what a Gate B decision retains. A Gate B
+> record must therefore report **D0's** numbers as the deterministic result. It
+> may report **W1-D** alongside, but only labelled as what it is — *a
+> compiler-seeded arm, not a deployable W1-LLM-free system* — and never as the
+> basis for concluding the compiler was unnecessary.
 
 Where W1 ran diagnostically, its labelled results and both attribution analyses
 are reported as part of the Gate B record.
@@ -1995,10 +2342,10 @@ are reported as part of the Gate B record.
 **Gate C — Do not retain a Wiki projection.** W1 does not improve retrieval or
 navigation; or page quality depends on unsupported generated prose; or omissions
 or unstable links remain high; or authority-safe composition proves impractical;
-or maintenance burden approaches or exceeds the Graph/Hybrid path; or **the
-deterministic `N_W0` arm also fails to preserve transitive reachability** (which
-would falsify the R5 hypothesis outright, §9.6); or W0 adds insufficient value
-beyond the existing chunk/audit viewer.
+or maintenance burden approaches or exceeds the Graph/Hybrid path; or **no arm —
+neither `D0`, nor `W1-D`, nor `W1-FULL` — preserves transitive reachability**
+(which would falsify the R5 hypothesis outright, §9.6); or W0 adds insufficient
+value beyond the existing chunk/audit viewer.
 
 Evaluated in the fixed declared order **A → B → C**. Retrieval value, navigation
 value, page quality and cost are kept distinct and never averaged. No outcome is
@@ -2048,7 +2395,7 @@ interchangeable with a controlled experiment.
 **R5 extension — the reachability comparison (required).** The decision record
 must additionally compare, fact by fact:
 
-| | Graph (frozen 7B.1/7B.2a) | Wiki (7C.2, `N_W1` and `N_W0`) |
+| | Graph (frozen 7B.1/7B.2a) | Wiki (7C.2 — reported for **D0**, **W1-D** and **W1-FULL** separately) |
 |---|---|---|
 | `F_svc` | edge missing → chain broken; 7B.2a hybrid could not recover it | reachable? by which mechanism (membership / anchor / claim)? |
 | `F_prc_current` | edge missing → chain broken | reachable? by which mechanism? |
@@ -2073,28 +2420,91 @@ documentation.
 > must establish which structural layer produced it.** Mandatory for every
 > outcome; Gate A may not be granted without it (A-7).
 
-**The comparison** — all three arms share the seed, hop budget, prioritizer and
-§6.6 policy; only the traversable link set differs (§7.3):
+**The comparison — corrected in R6.** R5 compared two arms. That was insufficient:
+both shared the **W1 enriched facet seed**, so the single delta it produced
+isolated claim-derived routing and could not speak to whether the compiler was
+needed (§7.4.1). R6 uses **three** arms, all sharing the hop budget, the §6.6
+final-K policy, the per-question `top_k` and the frozen evaluator:
 
-| Arm | Connectivity available | Model calls used for connectivity |
-|---|---|---|
-| `N_W0` | structural + exact_anchor (deterministic membership and anchors) | **none** |
-| `N_W1` | + claim_derived | ingestion-time claims |
-| §8.G suppressed | `N_W1` minus the path-relevant claim links | truth-informed; diagnostic only |
+| Arm | Seed representation | Connectivity available | Model output used anywhere in the path |
+|---|---|---|---|
+| **D0** | existing V/W0 chunk embeddings → deterministic anchors → pages (§7.4.2) | structural + exact_anchor | **none** |
+| **W1-D** | W1 enriched facet payload (§6.2) | structural + exact_anchor | facet payload only |
+| **W1-FULL** | W1 enriched facet payload | + claim_derived | payload **and** routing |
+| §8.G suppressed | W1 enriched facet payload | `N_W1` minus the path-relevant claim links | truth-informed; **diagnostic only, replaces neither delta** |
 
-**Interpretation, declared in advance:**
+#### 9.5.1 The three required numbers
 
-| `N_W0` result | `N_W1` vs `N_W0` | Reading that must be recorded |
-|---|---|---|
-| reaches the target evidence | **no better** | **The deterministic projection did the work.** The R5 hypothesis is supported, but *for W0*. The compiler, validator, adjudication and model dependency were not required → **Gate B**. This is a legitimate and valuable outcome, not a failure of the stage. |
-| reaches the target evidence | **better** (A-7 met) | **Both layers contribute**: deterministic structure supplies connectivity, claims supply routing precision. The marginal value of the compiler is exactly the measured `N_W1 − N_W0` delta, and must be priced against §8E's ledger → Gate A possible. |
-| **does not** reach the target evidence | **better** | **Model-derived connectivity was necessary.** The strongest possible case for W1 — and the case in which §8.G's probe should show a reachability loss. Record the mechanism precisely. |
-| **does not** reach the target evidence | no better | **Neither structural layer preserved transitive reachability** → the R5 hypothesis is falsified (§9.6) → Gate C. |
+All three are mandatory in the decision record, each on the target questions and
+across the full 12:
 
-**Prohibited:** reporting a W1 win without this table; describing `N_W0` as "a
-control" in the results narrative (§7.4 — it is a competitor); and quoting the
-§8.G probe in place of the `N_W0` arm, since the probe is truth-informed and the
-arm is not.
+```
+W1-D      vs  D0     =  marginal value of W1 semantic seed enrichment
+                        (§7.4.2 rider: includes branch ordering; report
+                         branch_order_divergence_vs_D0 alongside)
+
+W1-FULL   vs  W1-D   =  marginal value of claim-derived routing
+
+W1-FULL   vs  D0     =  TOTAL marginal value of the LLM-assisted Wiki over
+                        the deployable deterministic Wiki  (the A-7 comparison)
+```
+
+> **The prohibited inference, stated as a rule.** *Do not conclude that the
+> compiler, validator, adjudication process or model dependency was unnecessary
+> merely because claim-derived routing did not beat deterministic routing.*
+> `W1-FULL ≈ W1-D` establishes one thing only: **the claims did not improve
+> routing.** The compiler was still producing the seed representation in both
+> arms. Only **D0** can support a statement about whether the LLM layer was
+> needed at all.
+
+#### 9.5.2 Mandated readings
+
+**If W1-D beats D0 while W1-FULL does not beat W1-D**, the decision record must
+contain this sentence verbatim:
+
+```
+W1 added value through semantic seed enrichment, not through
+claim-derived routing.
+```
+
+and Gate A remains available on A-7 (which compares W1-FULL against D0), with the
+compiler priced against the **W1-FULL vs D0** total (§8E).
+
+**If D0, W1-D and W1-FULL are materially equivalent and D0 provides the transitive
+win**, then — and **only** then — may the result be attributed to the
+deterministic Wiki alone, selecting Gate B. *"Materially equivalent" is
+predeclared, not judged after the fact:* all three arms return identical values
+for {status, complete-chain represented, required-fact coverage@K,
+all-required-retrieved@K} on **every** question. Any divergence on any question
+means the arms are not equivalent and the attribution must be stated in the terms
+of §9.5.1's deltas instead.
+
+**Full interpretation table, declared in advance:**
+
+| D0 reaches target? | W1-D vs D0 (delta 1) | W1-FULL vs W1-D (delta 2) | Reading that must be recorded |
+|---|---|---|---|
+| **yes** | no better | no better | All three materially equivalent and **the deterministic projection did the work.** The R5 hypothesis is supported, but *for the deterministic Wiki*. Compiler, validator, adjudication and model dependency were not required → **Gate B**. A legitimate and valuable outcome, not a failure of the stage. |
+| **yes** | **better** | no better | **W1 added value through semantic seed enrichment, not through claim-derived routing** (verbatim sentence above). Gate A available if A-7 (W1-FULL vs D0) is met; otherwise Gate B under branch (ii). |
+| **yes** | no better | **better** | **Claim-derived routing carried the value**; the enriched seed did not. Gate A available if A-7 is met. Price the compiler against the total, not the routing delta. |
+| **yes** | **better** | **better** | **Both model-derived sub-layers contribute.** Record each delta separately; the compiler's total benefit is W1-FULL vs D0 and must be priced against §8E → Gate A possible. |
+| **no** | **better** (W1-D reaches) | either | **The model-derived seed representation was necessary for reachability** — D0 could not find the right hub. A strong case for W1 independent of claims. |
+| **no** | no better (W1-D also fails) | **better** (W1-FULL reaches) | **Model-derived connectivity was necessary.** The strongest possible case for W1 — and the case in which §8.G's probe should show a reachability loss. Record the mechanism precisely. |
+| **no** | no better | no better | **No structural layer preserved transitive reachability** → the R5 hypothesis is falsified (§9.6) → **Gate C**. |
+
+**Prohibited:**
+
+- reporting a W1 win, or any Gate A/B selection, without all three numbers of
+  §9.5.1;
+- reporting only `W1-FULL vs W1-D` — R5's error — or presenting it as "the"
+  marginal value of the Wiki;
+- concluding the compiler was unnecessary from any comparison that does not
+  include **D0**;
+- describing **D0** or **W1-D** as "a control" in the results narrative (§7.4 —
+  both are competitors), or describing **W1-D** as free of W1-derived model output
+  (it is not);
+- quoting the §8.G probe in place of any of the three deltas, since the probe is
+  truth-informed, the arms are not, and the probe covers at most delta 2's
+  territory.
 
 ### 9.6 Falsification — when the hypothesis is NOT supported (new in R5)
 
@@ -2105,9 +2515,9 @@ its evidence:
 | # | Observation | Where measured |
 |---|---|---|
 | F-1 | required evidence still becomes unreachable when a relevant claim link is missing | §8.G, §9.5 row 4 |
-| F-2 | deterministic anchor fallback rarely preserves transitive reachability | `N_W0` arm, §8.H `target evidence reachable` |
+| F-2 | deterministic anchor fallback rarely preserves transitive reachability | **D0** and **W1-D** arms, §8.H `target evidence reachable` |
 | F-3 | hub branching prevents reaching the target inside the fixed hop budget `B` | §8.H `branching factor`, `B_bound_hit` |
-| F-4 | semantic seed discovery fails to land on useful hubs | §8.H seed metrics; `seed_rank_used` |
+| F-4 | semantic seed discovery fails to land on useful hubs | §8.H seed metrics; `seed_rank_used`; `seed_page_overlap_vs_D0` |
 | F-5 | authority-safe expansion cannot be maintained (any leakage > 0) | §8.H, §9.1 — also a hard-safety failure |
 | F-6 | the Wiki improves nothing over authority-aware Vector (V) | §8B |
 | F-7 | engineering / ingestion / navigation cost is not justified by the measured value | §8E, §8.H cost rows |
@@ -2123,16 +2533,24 @@ alone is insufficient:**
 > being explained solely by better LLM extraction (§9.4).
 
 **And a third condition applies specifically to retaining W1 rather than W0:** by
-A-7, the *model-derived* portion of that structure must itself have contributed.
-Satisfying 1 and 2 with a deterministic-only mechanism supports the hypothesis and
-selects **Gate B**.
+A-7, the *model-derived* portion of the W1 treatment must itself have
+contributed, measured as **W1-FULL vs D0** (§9.5.1). *(R6 correction: that
+portion may be the **seed representation**, the **claim-derived routing**, or
+both — §9.5.2's readings say which, but any of them satisfies the condition.)*
+Satisfying 1 and 2 with a mechanism that **D0 reproduces entirely** supports the
+hypothesis and selects **Gate B**.
 
 **Predeclared honest expectation, recorded now so the outcome cannot be
 retrofitted:** given §0.1 and §1.5.4, the most likely result on this corpus is
-that conditions 1 and 2 are both met by the **deterministic** layer, A-7 fails,
-and the stage resolves to **Gate B**. This plan is approved on the understanding
-that Gate B is a likely and acceptable outcome — indeed, that establishing it
-cheaply and rigorously is much of the stage's value.
+that conditions 1 and 2 are both met by the **deterministic D0 layer**, that
+W1-FULL vs D0 shows no qualifying improvement, that A-7 therefore fails, and that
+the stage resolves to **Gate B**. §6.2's honest note reinforces this: with one
+1–2 sentence chunk per revision, the enriched facet vector is close to the V
+chunk vector, so delta 1 (**W1-D vs D0**) is expected to be small as well. This
+plan is approved on the understanding that Gate B is a likely and acceptable
+outcome — indeed, that establishing it cheaply and rigorously is much of the
+stage's value. **R6's contribution is that this conclusion will now rest on a
+W1-LLM-free measurement rather than on an arm the compiler was seeding.**
 
 ---
 
@@ -2142,11 +2560,15 @@ cheaply and rigorously is much of the stage's value.
 > platform. No table, module or abstraction is created before the value it serves
 > has been demonstrated.** R3 cut R2's proposed surface from 16 modules and 11
 > tables to 11 modules and 5 tables. R4 added no module and no table. **R5 adds no
-> module and no table either**: the unified flow, the `N_W0` arm, the §6.6 final-K
+> module and no table either**: the unified flow, the W1-D arm, the §6.6 final-K
 > policy and the §8.G suppression probe are all configurations of
 > `retrieval.py` + `navigation.py`; the enriched payload is a change to
 > `assembly.py`'s composition function; the adjudication verdict set is already a
-> `compilation_audit` column.
+> `compilation_audit` column. **R6 adds no module and no table either**: the
+> **D0** arm is one more configuration of the same two modules — a seed function
+> reading the existing chunk-embedding store and the existing `anchor_posting`
+> table, then joining the shared flow at §6.4 step [4] — and `M_max` (§6.5) is a
+> scalar computed during the existing 7C.0 projection build.
 
 ### 10.1 New package — `src/ingestion_bench/wiki_projection/`
 
@@ -2160,8 +2582,8 @@ cheaply and rigorously is much of the stage's value.
 | `compiler.py` | `PROMPT_VERSION` / `prompt_sha256()`, facet prompt builder, §3.9 ceilings, `OpenAIFacetCompiler` + `FakeFacetCompiler` | 7C.1 |
 | `validation.py` | §4 deterministic validator (incl. §4.1.15 page coherence, §4.0 membership independence) **and** §3.7 deterministic link derivation | 7C.1 |
 | `assembly.py` | authority-scoped facet view, summary filtering, **§6.2 payload composition incl. the identity-bearing passage selector, dedupe and `PAY_max` drop order**, page rendering | 7C.1 |
-| `retrieval.py` | the §6.4 unified flow, §6.5 bounds, **§6.6 final-K policy**, saturation accounting; W0 semantic control | 7C.2 |
-| `navigation.py` | hub expansion, traversal, §7.3 prioritizer, `N_W0` / `N_W1` / `N_advisory` link-set configurations, **§8.G read-time suppression filter** | 7C.2 |
+| `retrieval.py` | the §6.4 unified flow, §6.5 bounds, **§6.6 final-K policy**, saturation accounting; W0 semantic control; **the D0 deterministic seed procedure (§7.4.2)** | 7C.2 |
+| `navigation.py` | hub expansion, traversal, §7.3 prioritizer **and D0's deterministic prioritizer substitution (§7.4.2)**, `N_W0` / `N_W1` / `N_advisory` link-set configurations, **the D0 / W1-D / W1-FULL arm configurations (§7.4.3)**, **§8.G read-time suppression filter** | 7C.2 |
 | `benchmark.py` | runner, metrics, report; imports the frozen 7B.0 `_evaluate_question` **by identity**; §8.H metric emission; `NON-QUALIFYING / DIAGNOSTIC ONLY` labelling (§8B, §9.2) | 7C.2 |
 
 Plus `config.py` (env-driven, per repo convention).
@@ -2170,14 +2592,19 @@ Plus `config.py` (env-driven, per repo convention).
 
 `contracts/wiki_projection_v1.json` (W0 projection + anchor + identity contract —
 including the deterministic `display_title` / `page_type` derivation of §3.2, the
-**membership rule of §2.2**, and the **sentence-splitter definition** used by §6.2
-component 5 — frozen at 7C.0); `contracts/wiki_compiler_v1.json` (facet schema
+**membership rule of §2.2**, the **sentence-splitter definition** used by §6.2
+component 5, and — new in R6 — **the D0 seed procedure and D0 prioritizer of
+§7.4.2** and **the computed `M_max` value of §6.5** — frozen at 7C.0);
+`contracts/wiki_compiler_v1.json` (facet schema
 whose model output is exactly `aliases` + `claims` + `summary_sentences`, prompt
 version, model identity pinned to the frozen 7B.1 extraction model (§3.8),
 ceilings **including `PAY_max` and its drop order**, budget cap, validation rules,
 **the §6.2 payload composition order**, **the §6.6 final-K policy**, **the hop
-budget `B` and traversable anchor kinds (§7.1)**, Gate Q thresholds, retain gates
-**including A-7**, and the §9.4/§9.5 attribution requirements — frozen at 7C.1);
+budget `B`, the corrected candidate ceiling `C = (P_seed + B) × M_max × F_max`
+(§6.5) and traversable anchor kinds (§7.1)**, Gate Q thresholds **(Q-3 renamed
+`revision_scope_contamination`, §9.2)**, retain gates **including the R6-corrected
+A-7 and the Gate B evidentiary requirement**, and the §9.4/§9.5 attribution
+requirements **including the three mandatory deltas of §9.5.1** — frozen at 7C.1);
 `scripts/run_stage7c_wiki_probe.py` (`--fake` / `--in-memory`, as 7B.2a);
 `tests/test_wiki_projection.py`, `tests/test_wiki_compiler.py`,
 `tests/test_wiki_validation.py`, **`tests/test_wiki_navigation.py`** (membership
@@ -2224,16 +2651,20 @@ Gate D), `cross_document_benchmark/` (7B.0), `revision_authority/` (7R.1),
 
 **Unchanged sequence. R5 does not alter the implementation order.**
 
-**Stage 7C.0 — Projection qualification (W0, deterministic, zero model calls).**
+**Stage 7C.0 — Projection qualification (W0, deterministic, zero LLM calls).**
 Anchors, postings, **deterministic facet membership (§2.2)**, structural +
 exact-anchor links, deterministic page identity, authority-scoped views,
 rendering. Prove hard safety: full provenance, zero benchmark-truth access,
 C-88/C-88a separation, deterministic and immutable rebuilds, correct authority
 views, no Graph dependency, **membership independence from any future model
 output**. Produce projection manifests, rendered sample pages, build-side ledger,
-and the W0 ≈ V control measurement.
+and the W0 ≈ V control measurement. **New in R6:** compute and record `M_max`
+(§6.5) from the completed projection, and freeze the **D0 seed procedure and D0
+prioritizer** (§7.4.2) — both are deterministic, free of W1-derived model
+output, and derived from
+artifacts this stage already produces.
 **Freeze: the projection contract, the identity/anchor/membership rules, the
-sentence-splitter definition, and the builder.**
+sentence-splitter definition, `M_max`, the D0 seed procedure, and the builder.**
 
 **Stage 7C.1 — Compilation qualification (W1 build side only).** Facet compiler,
 prompt, schema, ceilings, deterministic validator, deterministic link derivation,
@@ -2250,12 +2681,19 @@ embeddings.**
 **Stage 7C.2 — Retrieval and navigation comparison (read-only).** *Entered
 whenever 7C.1 produced a **technically completed** compilation — regardless of
 Gate Q pass or fail (§9.2).* Load the frozen 7C.0 projection and frozen 7C.1 **Run
-1** facets/embeddings read-only; run the unified flow for **`N_W1` (primary),
-`N_W0` (§7.4) and `N_advisory` (diagnostic)** plus the W0 semantic control (§8B);
-run the **§8.G counterfactual probe**; emit **§8.H metrics**; run the page-quality
-rubric (§8D) and the cost ledger (§8E); perform the **mandatory §9.4 and §9.5
-attribution analyses**; apply the §9.3 retain gates; write
+1** facets/embeddings read-only; run the unified flow for the three attribution
+arms **`W1-FULL` (primary), `W1-D` and `D0` (§7.4)** plus `N_advisory`
+(diagnostic) and the W0 semantic control (§8B); run the **§8.G counterfactual
+probe**; emit **§8.H metrics**; run the page-quality rubric (§8D) and the cost
+ledger (§8E); perform the **mandatory §9.4 and §9.5 attribution analyses,
+including all three §9.5.1 deltas**; apply the §9.3 retain gates; write
 `docs/STAGE7C_WIKI_DECISION.md`.
+
+> **D0 runs at 7C.2 for sequencing convenience only.** It depends on nothing from
+> 7C.1 — no compiler, prompt, claim, adjudication verdict, facet embedding or
+> model call — and reads only the frozen 7C.0 projection plus the existing chunk
+> embeddings. It could equally have been measured at 7C.0; it is placed here so
+> that all arms share one runner, one evaluator invocation and one report.
 
 > If Gate Q failed, 7C.2 runs identically but every W1 result is emitted under the
 > `NON-QUALIFYING / DIAGNOSTIC ONLY` label (§8B), Gate A is unreachable (§9.3), and
@@ -2273,12 +2711,21 @@ Gate B or Gate C — **not** a second compiler, a new prompt, a stronger compile
 model (§3.8), a raised ceiling, a second payload recipe, or a tuned retrieval
 flow. Any such proposal is a new stage requiring fresh owner approval.
 
+> **D0 is not an exception to that rule** (R6). It adds **no** model, prompt,
+> payload, embedding representation, reranker, planner, module or table. It is an
+> **ablation** of the existing pipeline — strictly fewer inputs than every other
+> arm — and its seed procedure is frozen at 7C.0 before any measured run, so it
+> cannot be tuned toward a result. Adding an ablation removes degrees of freedom;
+> it does not expand scope.
+
 ---
 
 ## 12. Scope exclusions
 
 Another Graph experiment; **a Graph-summary variant**; multiple W1 compiler
-variants; **multiple facet payload or embedding variants (§6.2 is singular)**; a
+variants; **multiple facet payload or embedding variants (§6.2 is singular)**;
+**any second embedding representation — D0 reuses the existing V/W0 chunk
+embeddings and introduces none (§7.4.2)**; a
 stronger-model compiler run or capability-ceiling probe (§3.8); query-time answer
 generation; **query-time LLM or ADK reasoning of any kind**; agent workflows;
 query decomposition; query-planning LLM; rerankers; retrieval router; ontology
@@ -2294,7 +2741,7 @@ baselines remain on the larger roadmap but are not part of Stage 7C.
 | # | Question | Recommendation |
 |---|---|---|
 | **Q1** | **Per-facet ceilings** (§3.9) — chunks 12, input tokens 8k, claims 20, aliases 8, summary sentences 5, output tokens 4k, breach ⇒ qualification failure and no batching? | Approve; the no-workaround rule is the point |
-| **Q2** | **Bounds policy** (§6.5) — `P_seed = K`, hop budget `B`, `C = (P_seed + B) × F_max`, rank-1 seed as path origin, no backfill, saturation reported? | Approve |
+| **Q2** | **Bounds policy** (§6.5) — `P_seed = K`, hop budget `B`, **`C = (P_seed + B) × M_max × F_max` (corrected in R6; `M_max` computed and frozen at 7C.0)**, rank-1 seed as path origin, no backfill, saturation reported? | Approve. The R5 formula was not a valid upper bound — it multiplied a *per-facet* chunk ceiling by a page count without bounding facets per page. `C` remains a non-selection compute guard |
 | **Q3** | **Gate Q thresholds** (§9.2) — accepted-claim precision 0.95, expected-fact recall 0.80, summary correctness 0 incorrect, supported-alias precision 0 incorrect? | Approve or set your own; unchanged from R4 |
 | **Q4** | **Gate A improvement** — require **both** partial→solved **and** complete-chain false→true on ≥2 of Q04/Q06/Q07? | Approve; **preserved verbatim in R5** |
 | **Q5** | **Repeatability thresholds** (§8F) — N = 3, claim Jaccard ≥ 0.90, citations ≥ 0.95, false merges 0, ceiling breaches 0, Run 1 primary? | Approve |
@@ -2310,16 +2757,24 @@ baselines remain on the larger roadmap but are not part of Stage 7C.
 | **Q15** | **NEW — final-K evidence policy** (§6.6) — Tier 1 protected path-establishing chunks in hop order, Tier 2 reached-only chunks by query cosine, truncate to the question's frozen `top_k`, no backfill? | **Approve.** It meets all five stated requirements; its two limits (nearest-first truncation, one wrong hop = one lost slot at zero slack) are declared in §6.6 rather than engineered away |
 | **Q16** | **NEW — traversable anchor kinds** (§7.1) — `identifier` and `phrase` traversable; `heading_title` structural-only? | Approve; inert on this corpus, prevents a known scaling pathology |
 | **Q17** | **NEW — enriched facet payload** (§6.2) — admit an identity-bearing source passage (2 sentences, 400 chars each, selected by anchor span) and owner-adjudicated-`correct` summary sentences, with exact-match dedupe and a `PAY_max` drop order? | Approve, **with the three costs of §3.5 accepted explicitly** — a summary defect can now move a retrieval number; the representation depends on a human adjudication artifact; and residual claim/summary redundancy is tolerated |
-| **Q18** | **NEW — Gate A-7** (§9.3) — require `N_W1` to outperform the deterministic `N_W0` arm on the target questions before retaining W1? | **Approve.** Without it, R5's own redesign makes it possible for W1 to satisfy A-2 while contributing nothing (§7.4). A-7 raises the bar; A-2 is unchanged |
-| **Q19** | **NEW — §8.G probe standing** — truth-informed, therefore **not** admissible as Gate A evidence at all (stricter than "cannot satisfy Gate A by itself"), with the truth-free `N_W0` arm carrying that role? | Approve; otherwise a benchmark-truth-selected diagnostic would enter a retention decision |
+| **Q18** | **Gate A-7** (§9.3) — **REPLACED in R6.** Require `W1-FULL` to outperform the **deterministic `D0`** arm on the target questions before retaining W1 — rather than R5's requirement that `W1-FULL` beat the same-W1-seed `W1-D` arm? | **Approve.** R5's version demanded that claim-derived routing specifically carry the win, which would have discarded genuine value arriving through seed discovery, and rested on a comparison in which the compiler seeded both sides. A-7 still raises the bar over R4; A-2 and every regression rule are unchanged |
+| **Q19** | **§8.G probe standing** — truth-informed, therefore **not** admissible as Gate A evidence at all (stricter than "cannot satisfy Gate A by itself"), with the truth-free arms carrying that role — **and, per R6, the probe replaces neither attribution delta** (it covers at most `W1-FULL vs W1-D`)? | Approve; otherwise a benchmark-truth-selected diagnostic would enter a retention decision, or would be mistaken for the `D0` comparison |
+| **Q22** | **NEW (R6) — the `D0` deterministic, zero-W1-LLM ablation** (§7.4.2) — add one arm seeded from the existing V/W0 chunk embeddings via deterministic anchor postings, using the deterministic link set, the same `B`, the same §6.6 final-K policy and a deterministic prioritizer substitution; no new LLM, prompt, payload, embedding representation, module or table? | **Approve.** Without it the plan cannot distinguish "the compiler was unnecessary" from "the compiler was doing the seeding", and Gate B would be selected on evidence about a system that could not be deployed |
+| **Q23** | **NEW (R6) — the two attribution deltas plus the total** (§9.5.1) — mandate reporting `W1-D vs D0`, `W1-FULL vs W1-D` and `W1-FULL vs D0`, with the prohibition on concluding the compiler was unnecessary from any comparison excluding `D0`, and the verbatim sentence required when seed enrichment carries the value (§9.5.2)? | Approve |
+| **Q24** | **NEW (R6) — the §7.4.2 prioritizer rider** — accept that `D0` must substitute chunk embeddings for facet embeddings in branch ordering, so `W1-D vs D0` measures semantic facet enrichment across *both* seeding and branch ordering, bounded by the reported `branch_order_divergence_vs_D0`? | Approve. A W1-LLM-free arm cannot borrow a W1-derived facet vector without ceasing to be free of W1 model output; the rider is measured rather than assumed, and is expected to be near zero on this corpus |
+| **Q25** | **NEW (R6) — Gate B evidentiary requirement** (§9.3) — Gate B requires either that `D0` is sufficient or that the measured `W1-FULL vs D0` value is not worth its cost, and may **never** be selected from `W1-FULL ≈ W1-D` alone; plus the predeclared definition of "materially equivalent" (§9.5.2)? | Approve. Selecting Gate B from a same-seed comparison would retire a layer the experiment showed was working — the mirror image of the error A-7 prevents |
 | **Q20** | **NEW — corpus limitation acknowledgement** (§0.1, §8.H) — accept that this corpus **cannot** exercise hub branching ambiguity, and that every branching figure carries the mandatory caveat and may never be quoted as evidence about scale? | Approve; the alternative is a larger corpus, which is a separate stage |
 | **Q21** | **NEW — likely outcome** (§9.6) — accept that **Gate B is the most likely honest result** on this corpus, and that establishing it rigorously is a successful stage outcome rather than a failure? | Approve before 7C.0 begins; agreeing to this in advance is what prevents the result being renegotiated afterwards |
 
 ---
 
-## 14. Diff-of-intent: Revision 4 → Revision 5
+## 14. Diff-of-intent
 
-### 14.1 What changed
+### 14.1 Revision 4 → Revision 5: what changed
+
+> **Read as a historical record.** Rows 10, 13 and 14 below describe R5's
+> *measurement* decisions, which **R6 corrects** — see §14.4. R5's architecture
+> rows (1–9, 11–12, 15–20) stand unchanged.
 
 | # | Area | R4 | R5 | Why |
 |---|---|---|---|---|
@@ -2344,7 +2799,7 @@ baselines remain on the larger roadmap but are not part of Stage 7C.
 | 19 | **Regeneration** (§6.7) | five triggers | adds "adjudication verdict changes → re-embed, no model call" | direct consequence of (7)/(8); a real operational cost |
 | 20 | **Corpus grounding** (§0.1) | not present | measured corpus shape, and the two consequences that follow | several R5 sections are uninterpretable without it, and it is what bounds the stage's claims |
 
-### 14.2 What deliberately did **not** change
+### 14.2 Revision 4 → Revision 5: what deliberately did **not** change
 
 Stage 7C.0's architecture in full (§2.1, §3.2 — anchors, postings, identity,
 `display_title` / `page_type`, both extraction lanes, build-vs-query separation);
@@ -2365,8 +2820,11 @@ Graph/Vector stage.
    domain with no structural bridge. Low branching figures will be a corpus
    property. No claim about navigation cost at scale may be made from this stage.
 2. **The most likely honest outcome is Gate B** (§9.6): deterministic membership
-   and anchors reconstruct the target chain unaided, A-7 fails, and the compiled
-   claim layer is shown to be unnecessary for connectivity on this corpus.
+   and anchors reconstruct the target chain unaided **from a deterministic,
+   W1-LLM-free seed** (`D0`), A-7 fails, and the compiled claim layer is shown to be unnecessary for
+   connectivity on this corpus. *(R6: "unaided" now means unaided by any model
+   output, including the seed — which is what R5's comparison could not
+   establish.)*
 3. **Semantic enrichment buys little here** (§6.2): with one 1–2 sentence chunk
    per revision, the identity-bearing passage is nearly the whole chunk, so the
    W1 facet vector is close to the V chunk vector. The seed step is not where
@@ -2378,6 +2836,80 @@ Graph/Vector stage.
 6. **W1's representation now depends on a human artifact** (§3.5 cost 2), so it is
    deterministically *reconstructible* but not *derivable* from source + model +
    prompt alone.
+7. **`W1-D vs D0` measures facet enrichment across seeding *and* branch ordering**
+   (§7.4.2 rider), not seeding in isolation. Bounded and reported via
+   `branch_order_divergence_vs_D0`, expected near zero here (new in R6).
+
+### 14.4 Revision 5 → Revision 6: the attribution corrections
+
+**R6 changes no architecture.** Every item below concerns what is *measured*,
+what is *compared*, and what may be *concluded*. Stage 7C.0 is untouched; the
+compiler, validator, payload, flow, ceilings' *behaviour*, Gate Q thresholds, A-2
+and the regression rules are untouched.
+
+| # | Area | R5 | R6 | Why |
+|---|---|---|---|---|
+| 1 | **Attribution arms** (§7.4) | two: `N_W0` and `N_W1`, **both seeded from the W1 enriched facet representation** | three, named by role: **`D0`** (deterministic, no W1-derived model output, new), **`W1-D`** (= R5's `N_W0` arm), **`W1-FULL`** (= `N_W1`) | R5 held the W1 seed constant in both arms, so it could isolate claim-derived *routing* but could never show the compiler was unnecessary — the compiler was seeding both sides |
+| 2 | **`D0` seed procedure** (§7.4.2) | did not exist | predeclared, truth-free, untunable: existing V/W0 chunk embeddings → deterministic anchor postings → seed page identities → shared hub expansion and final-K policy. No second embedding representation | the deployable deterministic Wiki needed a seed of its own; R5 admitted the gap in its Gate B wording and had no arm to fill it |
+| 3 | **`D0` prioritizer** (§7.4.2) | n/a | deterministic substitution: chunk-embedding cosine, then link type, then stable key; the resulting rider is *named* and *measured*, not hidden | a W1-LLM-free arm cannot borrow a W1-derived facet vector for branch ordering |
+| 4 | **Attribution deltas** (§9.5.1) | one: `N_W1 − N_W0` | three, all mandatory: **`W1-D vs D0`** (seed enrichment), **`W1-FULL vs W1-D`** (claim-derived routing), **`W1-FULL vs D0`** (total) | the R5 hypothesis contains two distinct model-derived contributions; both must be measured independently |
+| 5 | **Prohibited inference** (§9.5.1) | absent | explicit: *do not conclude the compiler/validator/adjudication/model dependency was unnecessary merely because claim-derived routing did not beat deterministic routing* | this is exactly the inference R5's single delta invited |
+| 6 | **Mandated readings** (§9.5.2) | four-row table keyed on one delta | seven-row table keyed on `D0` reachability × both deltas; the verbatim "seed enrichment, not claim-derived routing" sentence; a predeclared definition of *materially equivalent*; attribution to the deterministic Wiki alone permitted **only** when all three arms are equivalent and `D0` provides the transitive win | removes the interpretive freedom that produced the confound |
+| 7 | **Gate A-7** (§9.3) | `N_W1` must beat the same-seed `N_W0` arm | **`W1-FULL` must demonstrate measurable value over `D0`**, with both deltas and the total recorded. **Claim-derived routing need not contribute** if facet enrichment produces the qualifying improvement | R5's version was too narrow (discarded genuine seed-derived value) and unfounded (same-seed comparison). A-2 and the regression rules are preserved verbatim |
+| 8 | **Gate B** (§9.3) | selectable when `N_W1` failed to beat `N_W0` | requires evidence that **`D0` is sufficient**, or that the measured `W1-FULL vs D0` value is not worth its cost. **May never be selected from `W1-FULL ≈ W1-D` alone** | selecting Gate B from a same-seed comparison would retire a layer the experiment showed was working |
+| 9 | **§8.G probe** (§8.G) | truth-informed, not Gate-A admissible | **unchanged**, plus one added limit: it **replaces neither truth-free delta** and covers at most delta 2's territory | preserved exactly as R5 wrote it, including every caveat |
+| 10 | **Candidate ceiling** (§6.5) | `C = (P_seed + B) × F_max` | `C = (P_seed + B) × M_max × F_max`, with `M_max` computed deterministically from the frozen 7C.0 projection and frozen with it | `F_max` is a **per-facet** chunk ceiling; a visited page may expose several eligible facets, so R5's formula was not a valid upper bound. Non-selection compute guard either way; **no measured evidence policy changes** |
+| 11 | **Gate Q Q-3 name** (§9.2) | "authority contamination" | **"revision-scope contamination"**; identifier `revision_scope_contamination` | the compiler is authority-blind (§3.1) and cannot contaminate an authority scope. Actual authority leakage remains a query/assembly-time hard-safety metric. **Behaviour and threshold = 0 unchanged** |
+| 12 | **Cost attribution** (§8E) | compiler ledger implicitly priced against the routing delta | priced against the **`W1-FULL vs D0`** total; `D0` is the zero-W1-LLM cost floor | pricing a layer against a benefit it only partly produces understates its value |
+| 13 | **Reporting vocabulary** (§7.4.3, §8B, §8C, §8H) | `N_W0` / `N_W1` used for both link sets and arms | `N_*` names reserved for **link sets**; `D0` / `W1-D` / `W1-FULL` required wherever an experimental role is meant | the naming collision is what made R5's confound easy to miss |
+
+### 14.5 Post-approval terminology correction (wording only)
+
+One correction was applied after the R6 attribution corrections and before
+implementation. **It changed no behaviour, no gate, no attribution logic, no
+contract, no measurement and no architecture** — only prose.
+
+**The problem.** R6 described the D0 arm as "zero-model". Read literally that
+implies no machine-learning inference is involved at all, which is false: **D0
+uses the existing embedding model** — the same query embedding and the same V/W0
+chunk embeddings as the frozen Vector baseline. What D0 actually excludes is the
+**Stage 7C.1 LLM layer**: the compiler, its claims, aliases, summary sentences,
+adjudication verdicts, facet payload and facet embeddings.
+
+**The correction.** The experimental arm identifier **`D0` is unchanged**.
+"zero-model" was replaced throughout with, as contextually appropriate:
+
+| Replacement | Used where the point is |
+|---|---|
+| **`zero-W1-LLM`** | the absence of the Stage 7C.1 compiler layer, especially in cost framing |
+| **`no W1-derived model output`** | the precise exclusion (claims, aliases, summaries, verdicts, payload, facet embeddings) |
+| **`deterministic D0`** | the Wiki-specific steps being fixed rules over frozen artifacts |
+
+`zero model calls` was likewise narrowed to **`zero LLM calls`** where it meant
+"no compiler/generative call", with an explicit note at §2.1 that the W0 semantic
+control does invoke the existing embedding model. §7.4.2 carries a binding
+reading note stating exactly what D0 does and does not exclude, and forbidding
+the unqualified phrase "no model" in reports.
+
+**Unchanged by this correction:** the D0 seed procedure and prioritizer, every
+gate, both attribution deltas and the total, `M_max` and the ceiling formula, the
+Gate Q rename, all thresholds, every contract, and every measurement.
+
+**What R6 deliberately did not change:** the R5 Wiki Hub Resilience hypothesis
+(§1.3.2); Stage 7C.0's architecture; deterministic membership independent of LLM
+output (§2.2, §4.0); facet = semantic landing unit, page = information hub with
+no page vector, anchors/links = movement, `CanonicalChunk`s = sole authoritative
+evidence (§6.3); the semantically enriched revision-scoped facet payload and its
+owner-adjudicated summaries (§6.2); no whole-page embedding; authority-first facet
+search; semantic seed → hub expansion → structural navigation → evidence (§6.4);
+no second global chunk-cosine gatekeeper; no Vector backfill; claims as routing
+enrichment rather than connectivity gates (§3.7.1); unified retrieval and
+navigation (§7.2); the fixed hop budget; the branching/resilience metrics and the
+small-corpus branching limitation (§8.H, §0.1); the claim-omission diagnostic
+(§8.G); the frozen Graph comparison and extraction attribution (§9.4); explicit
+falsification logic (§9.6); same-model compiler parity (§3.8); no query-time
+LLM/ADK; no additional W variants; no Graph rerun; and no scope expansion of any
+kind.
 
 ---
 
@@ -2415,7 +2947,13 @@ require an owner decision recorded in §13.
 | # | Tension | Resolution |
 |---|---|---|
 | **T-1** | R4 §3.5 guaranteed "a summary defect can never silently move a retrieval number"; R5 §6.2 admits adjudicated summaries into the payload. | The guarantee is **surrendered deliberately**, not quietly. §3.5 records the three costs; Q-7's `0 incorrect sentences` bar and the §4.6 pass-3 withdrawal are the mitigations; Q17 asks the owner to accept the trade. |
-| **T-2** | R4 §2.2/Gate B required that W0 never be represented as a superior retriever; R5 §7.4 expects the `N_W0` **unified arm** to be strong. | Separated by name and by definition (§2.3 boundary note, §9.3 Gate B amendment): "W0 semantic retrieval ≈ V" is preserved and remains ungated; the `N_W0` arm is a different computation and is reported as one. Conflating them is explicitly prohibited. |
+| **T-2** | R4 §2.2/Gate B required that W0 never be represented as a superior retriever; R5 §7.4 expects the deterministic **unified arms** to be strong. | Separated by name and by definition (§2.3 boundary note, §9.3 Gate B amendment): "W0 semantic retrieval ≈ V" is preserved and remains ungated; `W1-D` and `D0` are different computations and are reported as such. Conflating them is explicitly prohibited. |
+
+### 15.5 One tension R6 resolves against R5 (not frozen, but recorded)
+
+| # | Tension | Resolution |
+|---|---|---|
+| **T-3** | R5 §7.4 proposed to conclude "the compiler contributed nothing → Gate B" from `N_W1 ≈ N_W0`, while R5 §6.2 simultaneously built the seed representation those arms *both* consumed — and R5 §9.3's own Gate B amendment conceded that "a W0-only deployment would need a seed of its own". R5 therefore contained the counter-evidence to its own inference. | Resolved by **adding the missing arm rather than reinterpreting the existing ones**: `D0` (§7.4.2) supplies the deterministic, W1-LLM-free seed R5 conceded was absent; A-7 is re-pointed at `W1-FULL vs D0` (§9.3); Gate B gains an evidentiary requirement naming `D0` (§9.3); and §9.5.1 mandates all three deltas so neither misattribution can recur. No R5 architecture is altered. Raised for approval as **Q22**, **Q23** and **Q25**. |
 
 ### 15.4 One thing the request asked for that this plan declines to promise
 
@@ -2428,7 +2966,10 @@ it would cost nothing. That decision is left with the owner rather than made her
 
 ---
 
-*Plan only (Revision 5 — Wiki Hub Resilience experimental contract). No code,
-tables, fixtures, embeddings, or LLM calls created or run; no frozen stage
-modified; Stage 7C.0's architecture unchanged; Stage 7B.2a remains frozen at
-Gate D. Awaiting review and the §9/§13 decisions before any Stage 7C.0 work.*
+*Revision 6 — Wiki Hub Resilience experimental contract, attribution-corrected.
+**OWNER-APPROVED AND FROZEN.** The R5 Wiki Hub Resilience architecture and Stage
+7C.0's architecture are unchanged; R6 altered measurement, comparison and
+conclusion rules only, plus the §14.5 terminology-only correction. Stage 7C.0 is
+implemented; Stage 7C.1 and Stage 7C.2 are not started and require fresh owner
+instruction. No LLM call has been made and no frozen predecessor stage has been
+modified; Stage 7B.2a remains frozen at Gate D.*
