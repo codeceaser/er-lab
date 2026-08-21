@@ -1,0 +1,316 @@
+{
+  "generated_at": "2026-08-21T03:21:35.607437+00:00",
+  "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+  "primary_run_id": 1,
+  "gate_q_pre_status": {
+    "gate_q_status": "PENDING OWNER ADJUDICATION",
+    "mechanical_hard_failure": null,
+    "note": "This is NOT a Gate Q verdict. Four of the ten criteria (Q-5 accepted-claim precision, Q-6 expected-fact recall, Q-7 summary correctness, Q-10 supported-alias precision) are semantic and belong to the owner. They cannot be computed here without self-adjudicating.",
+    "mechanical_criteria_failing_proposed_thresholds": [
+      "accepted-claim-set pairwise Jaccard min 0.5294 < proposed 0.9",
+      "citation stability min 0.5294 < proposed 0.95"
+    ],
+    "mechanical_blocker_warning": "Q-8 (repeatability) BREACHES ITS PROPOSED THRESHOLD on mechanically measured evidence: accepted-claim-set pairwise Jaccard min 0.5294 < proposed 0.9; citation stability min 0.5294 < proposed 0.95. If the owner approves the SS8F thresholds as proposed (open question Q5), Q-8 fails, Gate Q fails, and Gate A becomes unreachable -- Stage 7C.2 would still run, with every W1 result labelled NON-QUALIFYING / DIAGNOSTIC ONLY (SS9.2). This is stated now, before adjudication effort is spent, because it is decidable without any owner verdict. It is NOT declared a Gate Q failure here: the threshold is a proposal awaiting Q5, and that decision is the owner's.",
+    "criteria": {
+      "Q-1_citation_validity": {
+        "decidable_mechanically": true,
+        "required": 1.0,
+        "observed": 1.0,
+        "basis": "26/26 claims with exact-substring citations"
+      },
+      "Q-2_invalid_source_references": {
+        "decidable_mechanically": true,
+        "required": 0,
+        "observed": 0
+      },
+      "Q-3_revision_scope_contamination": {
+        "decidable_mechanically": true,
+        "required": 0,
+        "observed": 0,
+        "note": "renamed from 'authority contamination' in Revision 6 -- the compiler is authority-blind; real authority leakage is a query/assembly-time metric"
+      },
+      "Q-4_false_merges": {
+        "decidable_mechanically": true,
+        "required": 0,
+        "observed": 0,
+        "note": "includes the C-88 / C-88A guard"
+      },
+      "Q-5_accepted_claim_precision": {
+        "decidable_mechanically": false,
+        "required": ">= 0.95 (proposed)",
+        "awaiting": "owner CORRECT/INCORRECT/UNVERIFIABLE verdict on every accepted claim",
+        "mechanical_substrate": {
+          "accepted_claims": 25
+        }
+      },
+      "Q-6_expected_fact_recall": {
+        "decidable_mechanically": false,
+        "required": ">= 0.80 (proposed)",
+        "awaiting": "owner adjudication; scoring accepted claims against the frozen expected facts is deliberately deferred so benchmark truth is not placed beside unadjudicated output"
+      },
+      "Q-7_summary_correctness": {
+        "decidable_mechanically": false,
+        "required": "0 incorrect sentences (proposed)",
+        "awaiting": "owner verdict on every summary sentence",
+        "mechanical_substrate": {
+          "reference_valid_sentences": 21
+        }
+      },
+      "Q-8_repeatability": {
+        "decidable_mechanically": true,
+        "required": "claim Jaccard >= 0.90, citations >= 0.95, false merges 0, ceiling breaches 0",
+        "required_status": "PROPOSED -- open question Q5, not yet owner-approved",
+        "observed": {
+          "claim_jaccard_min": 0.5294117647058824,
+          "citation_jaccard_min": 0.5294117647058824,
+          "false_merges_any_run": 0,
+          "ceiling_breaches_any_run": 0
+        },
+        "breaches_proposed_threshold": [
+          "accepted-claim-set pairwise Jaccard min 0.5294 < proposed 0.9",
+          "citation stability min 0.5294 < proposed 0.95"
+        ],
+        "meets_proposed_threshold": false
+      },
+      "Q-9_budget_and_ceilings": {
+        "decidable_mechanically": true,
+        "required": "no breach; within declared dollar cap",
+        "observed": {
+          "ceiling_breaches_run_1": 0,
+          "declared_dollar_cap_usd": 5.0,
+          "total_estimated_cost_usd": 0.018790499999999995
+        }
+      },
+      "Q-10_supported_alias_precision": {
+        "decidable_mechanically": false,
+        "required": "0 incorrect supported aliases",
+        "awaiting": "owner verdict on every supported alias",
+        "mechanical_substrate": {
+          "supported_aliases": 21
+        }
+      }
+    },
+    "run_1_counts": {
+      "facets": 22,
+      "claims_total": 26,
+      "claims_accepted": 25,
+      "claims_rejected": 0,
+      "claims_uncertain": 0,
+      "claims_out_of_page_scope": 1,
+      "aliases_total": 22,
+      "aliases_supported": 21,
+      "aliases_uncertain": 0,
+      "aliases_rejected": 1,
+      "summary_sentences_total": 22,
+      "summary_sentences_reference_valid": 21,
+      "derived_links": 34,
+      "unlinkable_claim_endpoints": 8,
+      "facets_with_zero_accepted_claims": 1,
+      "claims_pending_alias_adjudication": 0,
+      "generation_failures": 0,
+      "ceiling_breaches": 0
+    },
+    "owner_adjudication_item_counts": {
+      "claims": 25,
+      "aliases": 21,
+      "summary_sentences": 22,
+      "total": 68
+    }
+  },
+  "cost_ledger": {
+    "stage": "7C.1 (to owner-adjudication checkpoint)",
+    "compiler_calls_total": 66,
+    "runs_executed": [
+      1,
+      2,
+      3
+    ],
+    "per_run": [
+      {
+        "run_id": 1,
+        "is_primary": true,
+        "model": "gpt-4o-mini",
+        "input_tokens": 20714,
+        "output_tokens": 5245,
+        "estimated_cost_usd": 0.0062540999999999985,
+        "latency_seconds_total": 67.40858080005273,
+        "generation_failures": 0,
+        "facets_failed_on_ceilings": 0
+      },
+      {
+        "run_id": 2,
+        "is_primary": false,
+        "model": "gpt-4o-mini",
+        "input_tokens": 20714,
+        "output_tokens": 5262,
+        "estimated_cost_usd": 0.006264299999999999,
+        "latency_seconds_total": 69.85220040031709,
+        "generation_failures": 0,
+        "facets_failed_on_ceilings": 0
+      },
+      {
+        "run_id": 3,
+        "is_primary": false,
+        "model": "gpt-4o-mini",
+        "input_tokens": 20714,
+        "output_tokens": 5275,
+        "estimated_cost_usd": 0.006272099999999999,
+        "latency_seconds_total": 62.17889400047716,
+        "generation_failures": 0,
+        "facets_failed_on_ceilings": 0
+      }
+    ],
+    "total_estimated_cost_usd": 0.018790499999999995,
+    "declared_dollar_cap_usd": 5.0,
+    "run_1_adjudication_item_count": 68,
+    "validation_rejection_counts_by_reason": {
+      "neither subject 'Application APP-224499' nor object 'Payment Settlement business": 1
+    },
+    "out_of_page_scope_count": 1,
+    "unresolved_counts": {
+      "claims_pending_alias_adjudication": 0,
+      "supported_aliases_awaiting_verdict": 21,
+      "summary_sentences_awaiting_verdict": 22,
+      "accepted_claims_awaiting_verdict": 25
+    },
+    "representation_storage_bytes_before_embeddings": 224301,
+    "facet_embeddings_created": 0,
+    "facet_embeddings_note": "ZERO by contract at this checkpoint: SS6.2 components 2 and 7 depend on owner verdicts and SS4.6 writes facet embeddings only after adjudication pass 3.",
+    "human_adjudication_time": "NOT ESTIMATED -- actual owner effort will be measured (SS8E)"
+  },
+  "repeatability": {
+    "run_ids": [
+      1,
+      2,
+      3
+    ],
+    "claim_set_jaccard_pairwise": {
+      "run1_vs_run2": 0.625,
+      "run1_vs_run3": 0.5294117647058824,
+      "run2_vs_run3": 0.7931034482758621
+    },
+    "citation_stability_pairwise": {
+      "run1_vs_run2": 0.5757575757575758,
+      "run1_vs_run3": 0.5294117647058824,
+      "run2_vs_run3": 0.6774193548387096
+    },
+    "alias_stability_pairwise": {
+      "run1_vs_run2": 0.9130434782608695,
+      "run1_vs_run3": 0.9130434782608695,
+      "run2_vs_run3": 1.0
+    },
+    "raw_summary_stability_pairwise": {
+      "run1_vs_run2": 0.5714285714285714,
+      "run1_vs_run3": 0.41935483870967744,
+      "run2_vs_run3": 0.41935483870967744
+    },
+    "derived_link_stability_pairwise": {
+      "run1_vs_run2": 0.8235294117647058,
+      "run1_vs_run3": 0.6842105263157895,
+      "run2_vs_run3": 0.8125
+    },
+    "unsupported_claim_counts_by_run": {
+      "1": 1,
+      "2": 6,
+      "3": 4
+    },
+    "accepted_claim_counts_by_run": {
+      "1": 25,
+      "2": 20,
+      "3": 22
+    },
+    "input_tokens_by_run": {
+      "1": 20714,
+      "2": 20714,
+      "3": 20714
+    },
+    "output_tokens_by_run": {
+      "1": 5245,
+      "2": 5262,
+      "3": 5275
+    },
+    "latency_seconds_by_run": {
+      "1": 67.40858080005273,
+      "2": 69.85220040031709,
+      "3": 62.17889400047716
+    },
+    "false_merges_by_run": {
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    "ceiling_breaches_by_run": {
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    "membership_stable_across_runs": true,
+    "notes": [
+      "Membership stability is NOT measured because it is 100% by construction: facet membership, source chunks, anchors and postings are produced at Stage 7C.0 with zero LLM calls and are byte-identical across all runs (Revision 6 SS8F). The claim-set Jaccard therefore measures variance in the routing/enrichment layer ONLY, sitting on an invariant connectivity layer.",
+      "Only Run 1 is owner-adjudicated, so runs are compared on structured claims, citations, aliases, raw summary text and derived links -- NEVER on payload composition, which does not exist for runs 2 and 3. This is stated to prevent a false stability reading.",
+      "Fact-recall variance against the frozen expected facts is deliberately NOT computed at this checkpoint: it would place benchmark truth beside unadjudicated output, and SS8A permits it only once compilation is complete."
+    ]
+  },
+  "run_provenance": [
+    {
+      "run_id": 1,
+      "model_identity": "gpt-4o-mini",
+      "temperature": 0.0,
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "facets_attempted": 22,
+      "generation_failures": 0,
+      "facets_failed_on_ceilings": 0,
+      "input_tokens": 20714,
+      "output_tokens": 5245,
+      "estimated_cost_usd": 0.0062540999999999985,
+      "latency_seconds_total": 67.40858080005273,
+      "is_primary": true
+    },
+    {
+      "run_id": 2,
+      "model_identity": "gpt-4o-mini",
+      "temperature": 0.0,
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "facets_attempted": 22,
+      "generation_failures": 0,
+      "facets_failed_on_ceilings": 0,
+      "input_tokens": 20714,
+      "output_tokens": 5262,
+      "estimated_cost_usd": 0.006264299999999999,
+      "latency_seconds_total": 69.85220040031709,
+      "is_primary": false
+    },
+    {
+      "run_id": 3,
+      "model_identity": "gpt-4o-mini",
+      "temperature": 0.0,
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "facets_attempted": 22,
+      "generation_failures": 0,
+      "facets_failed_on_ceilings": 0,
+      "input_tokens": 20714,
+      "output_tokens": 5275,
+      "estimated_cost_usd": 0.006272099999999999,
+      "latency_seconds_total": 62.17889400047716,
+      "is_primary": false
+    }
+  ],
+  "adjudication_packet": {
+    "json": "reports/stage7c1_owner_adjudication_packet.json",
+    "markdown": "reports/stage7c1_owner_adjudication_packet.md",
+    "sha256": "5d08b88dc9473a07ff94ddaead911a1a2aa54aba384afeec0f85b9a97ccb2065"
+  },
+  "w1_page_previews": [
+    "artifacts/stage7c1/w1_page_previews/IDENT__APP-224510.md",
+    "artifacts/stage7c1/w1_page_previews/PHRASE__payment_settlement.md",
+    "artifacts/stage7c1/w1_page_previews/IDENT__O-31.md",
+    "artifacts/stage7c1/w1_page_previews/IDENT__C-88.md",
+    "artifacts/stage7c1/w1_page_previews/IDENT__C-88A.md",
+    "artifacts/stage7c1/w1_page_previews/IDENT__P-205.md"
+  ],
+  "facet_embeddings_created": 0,
+  "stage_7c2_started": false
+}

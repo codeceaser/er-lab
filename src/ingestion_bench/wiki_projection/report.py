@@ -474,3 +474,258 @@ def render_scorecard_markdown(result: Stage7C0Result, manifest: dict) -> str:
                  "arms, `N_advisory`, the counterfactual suppression probe, Gate Q, and the Gate A/B/C decision.")
     lines.append("")
     return "\n".join(lines) + "\n"
+
+
+# =============================================================================
+# Stage 7C.1 -- Gate Q pre-status, cost ledger, checkpoint scorecard
+# =============================================================================
+
+
+def build_gate_q_pre_status(stage_result, packet) -> dict:
+    """Gate Q at the owner-adjudication checkpoint.
+
+    Labelled **PENDING OWNER ADJUDICATION** -- never PASS and never FAIL --
+    unless a purely MECHANICAL hard failure has already made qualification
+    impossible. Q-5, Q-6, Q-7 and Q-10 all require owner semantic verdicts and
+    are therefore reported as awaiting adjudication, with the mechanical
+    substrate each one will be computed from stated explicitly.
+    """
+    run_1 = stage_result.validations_by_run[str(stage_result.primary_run_id)]
+
+    total_claims = sum(len(v.claims) for v in run_1.values())
+    accepted = sum(1 for v in run_1.values() for c in v.claims if c.validation_status == "accepted")
+    rejected = sum(1 for v in run_1.values() for c in v.claims if c.validation_status == "rejected")
+    uncertain = sum(1 for v in run_1.values() for c in v.claims if c.validation_status == "uncertain")
+    out_of_scope = sum(1 for v in run_1.values() for c in v.claims if c.validation_status == "out_of_page_scope")
+    citation_valid = sum(1 for v in run_1.values() for c in v.claims if c.citation_valid)
+
+    invalid_source_refs = sum(
+        1 for v in run_1.values() for c in v.claims
+        for reason in c.rejection_reasons if "source_ref" in reason or "does not exist" in reason
+    )
+    revision_scope = sum(
+        1 for v in run_1.values() for c in v.claims
+        for reason in c.rejection_reasons if "revision-scope contamination" in reason or "another revision" in reason
+    )
+    ceiling_breaches = sum(len(v.ceiling_breaches) for v in run_1.values())
+    generation_failures = sum(1 for v in run_1.values() if v.generation_failed)
+    false_merges = stage_result.repeatability.false_merges_by_run[str(stage_result.primary_run_id)]
+
+    repeatability = stage_result.repeatability
+    claim_jaccard = list(repeatability.claim_set_jaccard_pairwise.values())
+    citation_jaccard = list(repeatability.citation_stability_pairwise.values())
+
+    # Revision 6 SS8F's PROPOSED repeatability thresholds. Still open question Q5,
+    # so a breach is reported as failing-at-the-proposed-threshold, never as a
+    # final Gate Q verdict.
+    proposed_claim_jaccard = 0.90
+    proposed_citation_jaccard = 0.95
+    claim_jaccard_min = min(claim_jaccard) if claim_jaccard else None
+    citation_jaccard_min = min(citation_jaccard) if citation_jaccard else None
+    q8_breaches: list[str] = []
+    if claim_jaccard_min is not None and claim_jaccard_min < proposed_claim_jaccard:
+        q8_breaches.append(
+            f"accepted-claim-set pairwise Jaccard min {claim_jaccard_min:.4f} < proposed {proposed_claim_jaccard}"
+        )
+    if citation_jaccard_min is not None and citation_jaccard_min < proposed_citation_jaccard:
+        q8_breaches.append(
+            f"citation stability min {citation_jaccard_min:.4f} < proposed {proposed_citation_jaccard}"
+        )
+
+    mechanical_hard_failure = None
+    if generation_failures:
+        mechanical_hard_failure = f"{generation_failures} facet(s) failed generation"
+    elif ceiling_breaches:
+        mechanical_hard_failure = f"{ceiling_breaches} ceiling breach(es)"
+    elif false_merges:
+        mechanical_hard_failure = f"{false_merges} false merge(s)"
+
+    return {
+        "gate_q_status": "PENDING OWNER ADJUDICATION" if mechanical_hard_failure is None else "MECHANICALLY IMPOSSIBLE",
+        "mechanical_hard_failure": mechanical_hard_failure,
+        "note": (
+            "This is NOT a Gate Q verdict. Four of the ten criteria (Q-5 accepted-claim precision, Q-6 "
+            "expected-fact recall, Q-7 summary correctness, Q-10 supported-alias precision) are semantic "
+            "and belong to the owner. They cannot be computed here without self-adjudicating."
+        ),
+        # Surfaced separately and loudly: a MECHANICALLY decidable criterion that
+        # already breaches its PROPOSED threshold. Not a verdict, because the
+        # threshold itself is still open question Q5 -- but it may decide Gate Q
+        # regardless of how adjudication turns out, so the owner should see it
+        # before spending adjudication effort.
+        "mechanical_criteria_failing_proposed_thresholds": q8_breaches,
+        "mechanical_blocker_warning": (
+            None
+            if not q8_breaches
+            else (
+                "Q-8 (repeatability) BREACHES ITS PROPOSED THRESHOLD on mechanically measured evidence: "
+                + "; ".join(q8_breaches)
+                + ". If the owner approves the SS8F thresholds as proposed (open question Q5), Q-8 fails, "
+                "Gate Q fails, and Gate A becomes unreachable -- Stage 7C.2 would still run, with every W1 "
+                "result labelled NON-QUALIFYING / DIAGNOSTIC ONLY (SS9.2). This is stated now, before "
+                "adjudication effort is spent, because it is decidable without any owner verdict. It is "
+                "NOT declared a Gate Q failure here: the threshold is a proposal awaiting Q5, and that "
+                "decision is the owner's."
+            )
+        ),
+        "criteria": {
+            "Q-1_citation_validity": {
+                "decidable_mechanically": True,
+                "required": 1.00,
+                "observed": (citation_valid / total_claims) if total_claims else 1.0,
+                "basis": f"{citation_valid}/{total_claims} claims with exact-substring citations",
+            },
+            "Q-2_invalid_source_references": {
+                "decidable_mechanically": True, "required": 0, "observed": invalid_source_refs,
+            },
+            "Q-3_revision_scope_contamination": {
+                "decidable_mechanically": True, "required": 0, "observed": revision_scope,
+                "note": "renamed from 'authority contamination' in Revision 6 -- the compiler is "
+                        "authority-blind; real authority leakage is a query/assembly-time metric",
+            },
+            "Q-4_false_merges": {
+                "decidable_mechanically": True, "required": 0, "observed": false_merges,
+                "note": "includes the C-88 / C-88A guard",
+            },
+            "Q-5_accepted_claim_precision": {
+                "decidable_mechanically": False,
+                "required": ">= 0.95 (proposed)",
+                "awaiting": "owner CORRECT/INCORRECT/UNVERIFIABLE verdict on every accepted claim",
+                "mechanical_substrate": {"accepted_claims": accepted},
+            },
+            "Q-6_expected_fact_recall": {
+                "decidable_mechanically": False,
+                "required": ">= 0.80 (proposed)",
+                "awaiting": "owner adjudication; scoring accepted claims against the frozen expected facts "
+                            "is deliberately deferred so benchmark truth is not placed beside "
+                            "unadjudicated output",
+            },
+            "Q-7_summary_correctness": {
+                "decidable_mechanically": False,
+                "required": "0 incorrect sentences (proposed)",
+                "awaiting": "owner verdict on every summary sentence",
+                "mechanical_substrate": {
+                    "reference_valid_sentences": sum(
+                        1 for v in run_1.values() for s in v.summary_sentences if s.reference_valid
+                    )
+                },
+            },
+            "Q-8_repeatability": {
+                "decidable_mechanically": True,
+                "required": "claim Jaccard >= 0.90, citations >= 0.95, false merges 0, ceiling breaches 0",
+                "required_status": "PROPOSED -- open question Q5, not yet owner-approved",
+                "observed": {
+                    "claim_jaccard_min": claim_jaccard_min,
+                    "citation_jaccard_min": citation_jaccard_min,
+                    "false_merges_any_run": max(repeatability.false_merges_by_run.values()),
+                    "ceiling_breaches_any_run": max(repeatability.ceiling_breaches_by_run.values()),
+                },
+                "breaches_proposed_threshold": q8_breaches,
+                "meets_proposed_threshold": not q8_breaches,
+            },
+            "Q-9_budget_and_ceilings": {
+                "decidable_mechanically": True,
+                "required": "no breach; within declared dollar cap",
+                "observed": {
+                    "ceiling_breaches_run_1": ceiling_breaches,
+                    "declared_dollar_cap_usd": stage_result.dollar_ceiling_usd,
+                    "total_estimated_cost_usd": stage_result.total_estimated_cost_usd,
+                },
+            },
+            "Q-10_supported_alias_precision": {
+                "decidable_mechanically": False,
+                "required": "0 incorrect supported aliases",
+                "awaiting": "owner verdict on every supported alias",
+                "mechanical_substrate": {
+                    "supported_aliases": sum(
+                        1 for v in run_1.values() for a in v.aliases if a.status == "supported"
+                    )
+                },
+            },
+        },
+        "run_1_counts": {
+            "facets": len(run_1),
+            "claims_total": total_claims,
+            "claims_accepted": accepted,
+            "claims_rejected": rejected,
+            "claims_uncertain": uncertain,
+            "claims_out_of_page_scope": out_of_scope,
+            "aliases_total": sum(len(v.aliases) for v in run_1.values()),
+            "aliases_supported": sum(1 for v in run_1.values() for a in v.aliases if a.status == "supported"),
+            "aliases_uncertain": sum(1 for v in run_1.values() for a in v.aliases if a.status == "uncertain"),
+            "aliases_rejected": sum(1 for v in run_1.values() for a in v.aliases if a.status == "rejected"),
+            "summary_sentences_total": sum(len(v.summary_sentences) for v in run_1.values()),
+            "summary_sentences_reference_valid": sum(
+                1 for v in run_1.values() for s in v.summary_sentences if s.reference_valid
+            ),
+            "derived_links": sum(len(v.derived_links) for v in run_1.values()),
+            "unlinkable_claim_endpoints": sum(len(v.unlinkable_claim_endpoints) for v in run_1.values()),
+            "facets_with_zero_accepted_claims": sum(
+                1 for v in run_1.values() if not any(c.validation_status == "accepted" for c in v.claims)
+            ),
+            "claims_pending_alias_adjudication": sum(
+                1 for v in run_1.values() for c in v.claims if c.pending_alias_adjudication
+            ),
+            "generation_failures": generation_failures,
+            "ceiling_breaches": ceiling_breaches,
+        },
+        "owner_adjudication_item_counts": {
+            "claims": packet.claim_item_count,
+            "aliases": packet.alias_item_count,
+            "summary_sentences": packet.summary_item_count,
+            "total": packet.total_item_count,
+        },
+    }
+
+
+def build_stage7c1_cost_ledger(stage_result, packet) -> dict:
+    """Actual Stage 7C.1-to-checkpoint costs. Human adjudication time is
+    deliberately NOT estimated -- actual owner effort will be measured."""
+    run_1 = stage_result.validations_by_run[str(stage_result.primary_run_id)]
+    rejection_reasons: dict[str, int] = {}
+    for validation in run_1.values():
+        for claim in validation.claims:
+            for reason in claim.rejection_reasons:
+                key = reason.split(":")[0][:80]
+                rejection_reasons[key] = rejection_reasons.get(key, 0) + 1
+
+    return {
+        "stage": "7C.1 (to owner-adjudication checkpoint)",
+        "compiler_calls_total": stage_result.compiler_calls_total,
+        "runs_executed": [p.run_id for p in stage_result.run_provenance],
+        "per_run": [
+            {
+                "run_id": p.run_id, "is_primary": p.is_primary, "model": p.model_identity,
+                "input_tokens": p.input_tokens, "output_tokens": p.output_tokens,
+                "estimated_cost_usd": p.estimated_cost_usd,
+                "latency_seconds_total": p.latency_seconds_total,
+                "generation_failures": p.generation_failures,
+                "facets_failed_on_ceilings": p.facets_failed_on_ceilings,
+            }
+            for p in stage_result.run_provenance
+        ],
+        "total_estimated_cost_usd": stage_result.total_estimated_cost_usd,
+        "declared_dollar_cap_usd": stage_result.dollar_ceiling_usd,
+        "run_1_adjudication_item_count": packet.total_item_count,
+        "validation_rejection_counts_by_reason": dict(sorted(rejection_reasons.items())),
+        "out_of_page_scope_count": sum(
+            1 for v in run_1.values() for c in v.claims if c.validation_status == "out_of_page_scope"
+        ),
+        "unresolved_counts": {
+            "claims_pending_alias_adjudication": sum(
+                1 for v in run_1.values() for c in v.claims if c.pending_alias_adjudication
+            ),
+            "supported_aliases_awaiting_verdict": packet.alias_item_count,
+            "summary_sentences_awaiting_verdict": packet.summary_item_count,
+            "accepted_claims_awaiting_verdict": packet.claim_item_count,
+        },
+        "representation_storage_bytes_before_embeddings": len(
+            stage_result.model_dump_json().encode("utf-8")
+        ),
+        "facet_embeddings_created": 0,
+        "facet_embeddings_note": (
+            "ZERO by contract at this checkpoint: SS6.2 components 2 and 7 depend on owner verdicts and "
+            "SS4.6 writes facet embeddings only after adjudication pass 3."
+        ),
+        "human_adjudication_time": "NOT ESTIMATED -- actual owner effort will be measured (SS8E)",
+    }

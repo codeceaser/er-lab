@@ -1,0 +1,3683 @@
+{
+  "run_id": 1,
+  "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+  "model_identity": "gpt-4o-mini",
+  "prompt_version": "stage7c1-facet-compiler-v1",
+  "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+  "claims": [
+    {
+      "adjudication_item_id": "CLAIM::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::claim-1",
+      "item_type": "claim",
+      "page_key": "IDENT:APP-224499",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "facet_identity": "IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "display_title": "APP-224499",
+      "logical_document_id": "APP-PORTFOLIO",
+      "revision_symbol": "app_rev1",
+      "subject": "APP-224499",
+      "predicate": "supports",
+      "object": "Payment Settlement business service",
+      "claim_text": "APP-224499 supports the Payment Settlement business service.",
+      "supporting_chunk_ids": [
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+      ],
+      "supporting_quotes": [
+        "Application APP-224499 supports the Payment Settlement business service."
+      ],
+      "surrounding_source_text": {
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8": "Application APP-224499 supports the Payment Settlement business service."
+      },
+      "full_source_text": {
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8": "Application APP-224499 supports the Payment Settlement business service."
+      },
+      "source_refs": {
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8": [
+          {
+            "element_id": "e4c046d70a286e271e77c82de8fe97b4a2e469f85fa1675e74943cde777cec9f",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::claim-1",
+      "item_type": "claim",
+      "page_key": "IDENT:APP-224510",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "facet_identity": "IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "display_title": "APP-224510",
+      "logical_document_id": "APP-PORTFOLIO",
+      "revision_symbol": "app_rev2",
+      "subject": "APP-224510",
+      "predicate": "supports",
+      "object": "the Payment Settlement business service",
+      "claim_text": "APP-224510 supports the Payment Settlement business service.",
+      "supporting_chunk_ids": [
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+      ],
+      "supporting_quotes": [
+        "Application APP-224510 supports the Payment Settlement business service."
+      ],
+      "surrounding_source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "full_source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "source_refs": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": [
+          {
+            "element_id": "b4f381a4e1458e7f56e4c4c25e9a179180c6c8fb653599ccded3a05b40db2ea7",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:APP-330012",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_identity": "IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "APP-330012",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "revision_symbol": "adj_rev1",
+      "subject": "APP-330012",
+      "predicate": "supports",
+      "object": "Payment Reconciliation business service",
+      "claim_text": "APP-330012 supports the Payment Reconciliation business service.",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "supporting_quotes": [
+        "Application APP-330012 supports the Payment Reconciliation business service."
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "source_refs": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": [
+          {
+            "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+            "unit_index": 0,
+            "order_index": 3,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+            "unit_index": 0,
+            "order_index": 4,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+            "unit_index": 0,
+            "order_index": 5,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+            "unit_index": 0,
+            "order_index": 6,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:C-77",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_identity": "IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "C-77",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "revision_symbol": "adj_rev1",
+      "subject": "Obligation O-32",
+      "predicate": "is satisfied by",
+      "object": "Control C-77",
+      "claim_text": "Obligation O-32 is satisfied by Control C-77.",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "supporting_quotes": [
+        "Obligation O-32 is satisfied by Control C-77."
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "source_refs": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": [
+          {
+            "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+            "unit_index": 0,
+            "order_index": 3,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+            "unit_index": 0,
+            "order_index": 4,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+            "unit_index": 0,
+            "order_index": 5,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+            "unit_index": 0,
+            "order_index": 6,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:O-32",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-77",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:O-32",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-77",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2",
+      "item_type": "claim",
+      "page_key": "IDENT:C-77",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_identity": "IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "C-77",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "revision_symbol": "adj_rev1",
+      "subject": "Control C-77",
+      "predicate": "is implemented through",
+      "object": "Procedure P-301",
+      "claim_text": "Control C-77 is implemented through Procedure P-301.",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "supporting_quotes": [
+        "Control C-77 is implemented through Procedure P-301."
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "source_refs": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": [
+          {
+            "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+            "unit_index": 0,
+            "order_index": 3,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+            "unit_index": 0,
+            "order_index": 4,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+            "unit_index": 0,
+            "order_index": 5,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+            "unit_index": 0,
+            "order_index": 6,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-77",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-301",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-77",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-301",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "facet_identity": "IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "display_title": "C-88a",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "revision_symbol": "ctl_rev1",
+      "subject": "C-88a",
+      "predicate": "is implemented through",
+      "object": "Procedure P-204",
+      "claim_text": "C-88a is implemented through Procedure P-204.",
+      "supporting_chunk_ids": [
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+      ],
+      "supporting_quotes": [
+        "Control C-88a is implemented through Procedure P-204."
+      ],
+      "surrounding_source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "full_source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "source_refs": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": [
+          {
+            "element_id": "8e26839de1ff885561c0ebdc3197ee062120db0a684855d51ef508e556524bde",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-88A",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-204",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-88A",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-204",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "facet_identity": "IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "display_title": "C-88a",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "revision_symbol": "obl_rev1",
+      "subject": "Obligation O-31",
+      "predicate": "is satisfied by",
+      "object": "Control C-88a",
+      "claim_text": "Obligation O-31 is satisfied by Control C-88a.",
+      "supporting_chunk_ids": [
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+      ],
+      "supporting_quotes": [
+        "Obligation O-31 is satisfied by Control C-88a."
+      ],
+      "surrounding_source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "full_source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "source_refs": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": [
+          {
+            "element_id": "bff56946bc24afd4d5f343cc43daab1dad32cfe0677ac1a9e72f6e80fa2df49f",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:O-31",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-88A",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:O-31",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-88A",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "facet_identity": "IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "display_title": "C-88",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "revision_symbol": "ctl_rev2",
+      "subject": "C-88",
+      "predicate": "is implemented through",
+      "object": "Procedure P-205",
+      "claim_text": "C-88 is implemented through Procedure P-205.",
+      "supporting_chunk_ids": [
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+      ],
+      "supporting_quotes": [
+        "Control C-88 is implemented through Procedure P-205."
+      ],
+      "surrounding_source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "full_source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "source_refs": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": [
+          {
+            "element_id": "cefd0b37349f50f3e1dc027e500a7aebeaa4e4fad92b06945f8f25815f374434",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-88",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-205",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-88",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-205",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "facet_identity": "IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "display_title": "C-88",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "revision_symbol": "obl_rev2",
+      "subject": "Control C-88",
+      "predicate": "is satisfied by",
+      "object": "Obligation O-31",
+      "claim_text": "Control C-88 is satisfied by Obligation O-31.",
+      "supporting_chunk_ids": [
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+      ],
+      "supporting_quotes": [
+        "Obligation O-31 is satisfied by Control C-88."
+      ],
+      "surrounding_source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "full_source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "source_refs": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": [
+          {
+            "element_id": "2cadac731ee907f7adff182121d3dd161852e8f52d814d6faf2edb2e32fb234f",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-88",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:O-31",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-88",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:O-31",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:C-91",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "facet_identity": "IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "display_title": "C-91",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "revision_symbol": "ctl_rev3",
+      "subject": "Control C-91",
+      "predicate": "is implemented through",
+      "object": "Procedure P-205",
+      "claim_text": "Control C-91 is implemented through Procedure P-205.",
+      "supporting_chunk_ids": [
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+      ],
+      "supporting_quotes": [
+        "Control C-91 is implemented through Procedure P-205."
+      ],
+      "surrounding_source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "full_source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "source_refs": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": [
+          {
+            "element_id": "60cb174e8ec1f58f08af943484d3eb6b1716aa30b555d8b8506db28af5a6a0d8",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-91",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-205",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-91",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-205",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "facet_identity": "IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "display_title": "O-31",
+      "logical_document_id": "SERVICE-CATALOGUE",
+      "revision_symbol": "svc_rev1",
+      "subject": "Payment Settlement business service",
+      "predicate": "is governed by",
+      "object": "Obligation O-31",
+      "claim_text": "The Payment Settlement business service is governed by Obligation O-31.",
+      "supporting_chunk_ids": [
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+      ],
+      "supporting_quotes": [
+        "The Payment Settlement business service is governed by Obligation O-31."
+      ],
+      "surrounding_source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "full_source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "source_refs": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": [
+          {
+            "element_id": "64c635750aad130b5b10ee9f74a3f4237314375b7fe64db6ff763af6080df978",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "facet_identity": "IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "display_title": "O-31",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "revision_symbol": "obl_rev2",
+      "subject": "Obligation O-31",
+      "predicate": "is satisfied by",
+      "object": "Control C-88",
+      "claim_text": "Obligation O-31 is satisfied by Control C-88.",
+      "supporting_chunk_ids": [
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+      ],
+      "supporting_quotes": [
+        "Obligation O-31 is satisfied by Control C-88."
+      ],
+      "surrounding_source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "full_source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "source_refs": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": [
+          {
+            "element_id": "2cadac731ee907f7adff182121d3dd161852e8f52d814d6faf2edb2e32fb234f",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:O-31",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-88",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:O-31",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-88",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "facet_identity": "IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "display_title": "O-31",
+      "logical_document_id": "OBLIGATION-REGISTER",
+      "revision_symbol": "obl_rev1",
+      "subject": "Obligation O-31",
+      "predicate": "is satisfied by",
+      "object": "Control C-88a",
+      "claim_text": "Obligation O-31 is satisfied by Control C-88a.",
+      "supporting_chunk_ids": [
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+      ],
+      "supporting_quotes": [
+        "Obligation O-31 is satisfied by Control C-88a."
+      ],
+      "surrounding_source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "full_source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "source_refs": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": [
+          {
+            "element_id": "bff56946bc24afd4d5f343cc43daab1dad32cfe0677ac1a9e72f6e80fa2df49f",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:O-31",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-88A",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:O-31",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-88A",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:O-32",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_identity": "IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "O-32",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "revision_symbol": "adj_rev1",
+      "subject": "Obligation O-32",
+      "predicate": "is governed by",
+      "object": "Payment Reconciliation business service",
+      "claim_text": "Obligation O-32 is governed by Payment Reconciliation business service.",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "supporting_quotes": [
+        "The Payment Reconciliation business service is governed by Obligation O-32."
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "source_refs": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": [
+          {
+            "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+            "unit_index": 0,
+            "order_index": 3,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+            "unit_index": 0,
+            "order_index": 4,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+            "unit_index": 0,
+            "order_index": 5,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+            "unit_index": 0,
+            "order_index": 6,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2",
+      "item_type": "claim",
+      "page_key": "IDENT:O-32",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_identity": "IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "O-32",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "revision_symbol": "adj_rev1",
+      "subject": "Obligation O-32",
+      "predicate": "is satisfied by",
+      "object": "Control C-77",
+      "claim_text": "Obligation O-32 is satisfied by Control C-77.",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "supporting_quotes": [
+        "Obligation O-32 is satisfied by Control C-77."
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "source_refs": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": [
+          {
+            "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+            "unit_index": 0,
+            "order_index": 3,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+            "unit_index": 0,
+            "order_index": 4,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+            "unit_index": 0,
+            "order_index": 5,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+            "unit_index": 0,
+            "order_index": 6,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:O-32",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-77",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:O-32",
+          "predicate": "is satisfied by",
+          "object_page_key": "IDENT:C-77",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "facet_identity": "IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "display_title": "P-204",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "revision_symbol": "ctl_rev1",
+      "subject": "Control C-88a",
+      "predicate": "is implemented through",
+      "object": "Procedure P-204",
+      "claim_text": "Control C-88a is implemented through Procedure P-204.",
+      "supporting_chunk_ids": [
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+      ],
+      "supporting_quotes": [
+        "Control C-88a is implemented through Procedure P-204."
+      ],
+      "surrounding_source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "full_source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "source_refs": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": [
+          {
+            "element_id": "8e26839de1ff885561c0ebdc3197ee062120db0a684855d51ef508e556524bde",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-88A",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-204",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-88A",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-204",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "facet_identity": "IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "display_title": "P-204",
+      "logical_document_id": "PROCEDURE-CATALOGUE",
+      "revision_symbol": "prc_rev1",
+      "subject": "Procedure P-204",
+      "predicate": "is",
+      "object": "a retired operating procedure",
+      "claim_text": "Procedure P-204 is a retired operating procedure.",
+      "supporting_chunk_ids": [
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1"
+      ],
+      "supporting_quotes": [
+        "Procedure P-204 is a retired operating procedure."
+      ],
+      "surrounding_source_text": {
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1": "Procedure P-204 is a retired operating procedure."
+      },
+      "full_source_text": {
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1": "Procedure P-204 is a retired operating procedure."
+      },
+      "source_refs": {
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1": [
+          {
+            "element_id": "1f854b5c7752ee97efec8ce36e64a603e1d0c1b671a925fd075e10951449b6d8",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "facet_identity": "IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "display_title": "P-205",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "revision_symbol": "ctl_rev3",
+      "subject": "Control C-91",
+      "predicate": "is implemented through",
+      "object": "Procedure P-205",
+      "claim_text": "Control C-91 is implemented through Procedure P-205.",
+      "supporting_chunk_ids": [
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+      ],
+      "supporting_quotes": [
+        "Control C-91 is implemented through Procedure P-205."
+      ],
+      "surrounding_source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "full_source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "source_refs": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": [
+          {
+            "element_id": "60cb174e8ec1f58f08af943484d3eb6b1716aa30b555d8b8506db28af5a6a0d8",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-91",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-205",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-91",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-205",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "facet_identity": "IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "display_title": "P-205",
+      "logical_document_id": "CONTROL-LIBRARY",
+      "revision_symbol": "ctl_rev2",
+      "subject": "Control C-88",
+      "predicate": "is implemented through",
+      "object": "Procedure P-205",
+      "claim_text": "Control C-88 is implemented through Procedure P-205.",
+      "supporting_chunk_ids": [
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+      ],
+      "supporting_quotes": [
+        "Control C-88 is implemented through Procedure P-205."
+      ],
+      "surrounding_source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "full_source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "source_refs": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": [
+          {
+            "element_id": "cefd0b37349f50f3e1dc027e500a7aebeaa4e4fad92b06945f8f25815f374434",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-88",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-205",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-88",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-205",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "facet_identity": "IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "display_title": "P-205",
+      "logical_document_id": "PROCEDURE-CATALOGUE",
+      "revision_symbol": "prc_rev2",
+      "subject": "Procedure P-205",
+      "predicate": "is",
+      "object": "the current operating procedure",
+      "claim_text": "Procedure P-205 is the current operating procedure.",
+      "supporting_chunk_ids": [
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+      ],
+      "supporting_quotes": [
+        "Procedure P-205 is the current operating procedure."
+      ],
+      "surrounding_source_text": {
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb": "Procedure P-205 is the current operating procedure."
+      },
+      "full_source_text": {
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb": "Procedure P-205 is the current operating procedure."
+      },
+      "source_refs": {
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb": [
+          {
+            "element_id": "fe6fa1fb6d0932d39ea4b0184d053844d4195280d9a670aa66f0911eaac2abc1",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1",
+      "item_type": "claim",
+      "page_key": "IDENT:P-301",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_identity": "IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "P-301",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "revision_symbol": "adj_rev1",
+      "subject": "Obligation O-32",
+      "predicate": "is governed by",
+      "object": "Procedure P-301",
+      "claim_text": "Obligation O-32 is satisfied by Control C-77.",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "supporting_quotes": [
+        "Obligation O-32 is satisfied by Control C-77."
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "source_refs": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": [
+          {
+            "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+            "unit_index": 0,
+            "order_index": 3,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+            "unit_index": 0,
+            "order_index": 4,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+            "unit_index": 0,
+            "order_index": 5,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+            "unit_index": 0,
+            "order_index": 6,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:O-32",
+          "predicate": "is governed by",
+          "object_page_key": "IDENT:P-301",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:O-32",
+          "predicate": "is governed by",
+          "object_page_key": "IDENT:P-301",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2",
+      "item_type": "claim",
+      "page_key": "IDENT:P-301",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_identity": "IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "P-301",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "revision_symbol": "adj_rev1",
+      "subject": "Control C-77",
+      "predicate": "is implemented through",
+      "object": "Procedure P-301",
+      "claim_text": "Control C-77 is implemented through Procedure P-301.",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "supporting_quotes": [
+        "Control C-77 is implemented through Procedure P-301."
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "source_refs": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": [
+          {
+            "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+            "unit_index": 0,
+            "order_index": 3,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+            "unit_index": 0,
+            "order_index": 4,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+            "unit_index": 0,
+            "order_index": 5,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+            "unit_index": 0,
+            "order_index": 6,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:C-77",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-301",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:C-77",
+          "predicate": "is implemented through",
+          "object_page_key": "IDENT:P-301",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim3",
+      "item_type": "claim",
+      "page_key": "IDENT:P-301",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_identity": "IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "P-301",
+      "logical_document_id": "ADJACENT-DOMAIN",
+      "revision_symbol": "adj_rev1",
+      "subject": "Procedure P-301",
+      "predicate": "is the current operating procedure for",
+      "object": "reconciliation",
+      "claim_text": "Procedure P-301 is the current operating procedure for reconciliation.",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "supporting_quotes": [
+        "Procedure P-301 is the current operating procedure for reconciliation."
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "source_refs": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": [
+          {
+            "element_id": "dcc0aad4c2d3c5ba46fed5a00d9e508701c843c1dfcd009fdbb6973ec1d8dcf5",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "1a998dbc8e49642a4422c20ef7fcb4301f264e988351bc903f07edac8f69bab3",
+            "unit_index": 0,
+            "order_index": 3,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e0e17914cf92ea3ec67d4b0479ab17940c5a9c88e58c42d52f3fde746a15e4b2",
+            "unit_index": 0,
+            "order_index": 4,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "93401a943c035fac84276aae5a74de1c05763ef248736b09f4932894de7a83c9",
+            "unit_index": 0,
+            "order_index": 5,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          },
+          {
+            "element_id": "e732b7b01b0568ce1fb0bb86bbe79942922f392373699cf054b271be83c5687b",
+            "unit_index": 0,
+            "order_index": 6,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::claim1",
+      "item_type": "claim",
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "facet_identity": "PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "display_title": "Payment Settlement",
+      "logical_document_id": "SERVICE-CATALOGUE",
+      "revision_symbol": "svc_rev1",
+      "subject": "Payment Settlement",
+      "predicate": "is governed by",
+      "object": "Obligation O-31",
+      "claim_text": "Payment Settlement is governed by Obligation O-31.",
+      "supporting_chunk_ids": [
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+      ],
+      "supporting_quotes": [
+        "The Payment Settlement business service is governed by Obligation O-31."
+      ],
+      "surrounding_source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "full_source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "source_refs": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": [
+          {
+            "element_id": "64c635750aad130b5b10ee9f74a3f4237314375b7fe64db6ff763af6080df978",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_subject",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "PHRASE:payment settlement",
+          "predicate": "is governed by",
+          "object_page_key": "IDENT:O-31",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "PHRASE:payment settlement",
+          "predicate": "is governed by",
+          "object_page_key": "IDENT:O-31",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "CLAIM::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::claim1",
+      "item_type": "claim",
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "facet_identity": "PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "display_title": "Payment Settlement",
+      "logical_document_id": "APP-PORTFOLIO",
+      "revision_symbol": "app_rev2",
+      "subject": "Application APP-224510",
+      "predicate": "supports",
+      "object": "Payment Settlement",
+      "claim_text": "Application APP-224510 supports the Payment Settlement business service.",
+      "supporting_chunk_ids": [
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+      ],
+      "supporting_quotes": [
+        "Application APP-224510 supports the Payment Settlement business service."
+      ],
+      "surrounding_source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "full_source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "source_refs": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": [
+          {
+            "element_id": "b4f381a4e1458e7f56e4c4c25e9a179180c6c8fb653599ccded3a05b40db2ea7",
+            "unit_index": 0,
+            "order_index": 2,
+            "bbox": null,
+            "element_type": "paragraph",
+            "fragment_index": null,
+            "start_char": null,
+            "end_char": null
+          }
+        ]
+      },
+      "mechanical_validation_status": "accepted",
+      "mechanical_citation_valid": true,
+      "mechanical_rejection_reasons": [],
+      "mechanical_coherence_basis": "identity_object",
+      "acceptance_depends_on_alias": false,
+      "alias_dependency_ids": [],
+      "alias_dependency_text": [],
+      "derived_link_if_accepted": [
+        {
+          "subject_page_key": "IDENT:APP-224510",
+          "predicate": "supports",
+          "object_page_key": "PHRASE:payment settlement",
+          "traversal_direction": "forward",
+          "is_authoritative_lineage": false
+        },
+        {
+          "subject_page_key": "IDENT:APP-224510",
+          "predicate": "supports",
+          "object_page_key": "PHRASE:payment settlement",
+          "traversal_direction": "inverse",
+          "is_authoritative_lineage": false
+        }
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    }
+  ],
+  "aliases": [
+    {
+      "adjudication_item_id": "ALIAS::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::0",
+      "item_type": "alias",
+      "page_key": "IDENT:APP-224499",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "page_identity": "APP-224499",
+      "display_title": "APP-224499",
+      "revision_symbol": "app_rev1",
+      "alias_text": "APP-224499",
+      "supporting_chunk_ids": [
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8",
+          "start_char": 12,
+          "end_char": 22,
+          "exact_text": "APP-224499"
+        }
+      ],
+      "surrounding_source_text": {
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8": "Application APP-224499 supports the Payment Settlement business service."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::0",
+      "item_type": "alias",
+      "page_key": "IDENT:APP-224510",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "page_identity": "APP-224510",
+      "display_title": "APP-224510",
+      "revision_symbol": "app_rev2",
+      "alias_text": "APP-224510",
+      "supporting_chunk_ids": [
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "start_char": 12,
+          "end_char": 22,
+          "exact_text": "APP-224510"
+        }
+      ],
+      "surrounding_source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0",
+      "item_type": "alias",
+      "page_key": "IDENT:APP-330012",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "page_identity": "APP-330012",
+      "display_title": "APP-330012",
+      "revision_symbol": "adj_rev1",
+      "alias_text": "APP-330012",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "start_char": 12,
+          "end_char": 22,
+          "exact_text": "APP-330012"
+        }
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliat..."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0",
+      "item_type": "alias",
+      "page_key": "IDENT:C-77",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "page_identity": "C-77",
+      "display_title": "C-77",
+      "revision_symbol": "adj_rev1",
+      "alias_text": "Control C-77",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "start_char": 187,
+          "end_char": 199,
+          "exact_text": "Control C-77"
+        }
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::0",
+      "item_type": "alias",
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "page_identity": "C-88A",
+      "display_title": "C-88a",
+      "revision_symbol": "ctl_rev1",
+      "alias_text": "C-88a",
+      "supporting_chunk_ids": [
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a",
+          "start_char": 8,
+          "end_char": 13,
+          "exact_text": "C-88a"
+        }
+      ],
+      "surrounding_source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::0",
+      "item_type": "alias",
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "page_identity": "C-88A",
+      "display_title": "C-88a",
+      "revision_symbol": "obl_rev1",
+      "alias_text": "Control C-88a",
+      "supporting_chunk_ids": [
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a",
+          "start_char": 32,
+          "end_char": 45,
+          "exact_text": "Control C-88a"
+        }
+      ],
+      "surrounding_source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::0",
+      "item_type": "alias",
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "page_identity": "C-88",
+      "display_title": "C-88",
+      "revision_symbol": "ctl_rev2",
+      "alias_text": "C-88",
+      "supporting_chunk_ids": [
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+          "start_char": 8,
+          "end_char": 12,
+          "exact_text": "C-88"
+        }
+      ],
+      "surrounding_source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::0",
+      "item_type": "alias",
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "page_identity": "C-88",
+      "display_title": "C-88",
+      "revision_symbol": "obl_rev2",
+      "alias_text": "Control C-88",
+      "supporting_chunk_ids": [
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "start_char": 32,
+          "end_char": 44,
+          "exact_text": "Control C-88"
+        }
+      ],
+      "surrounding_source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::0",
+      "item_type": "alias",
+      "page_key": "IDENT:C-91",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "page_identity": "C-91",
+      "display_title": "C-91",
+      "revision_symbol": "ctl_rev3",
+      "alias_text": "Control C-91",
+      "supporting_chunk_ids": [
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c",
+          "start_char": 0,
+          "end_char": 12,
+          "exact_text": "Control C-91"
+        }
+      ],
+      "surrounding_source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::0",
+      "item_type": "alias",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "page_identity": "O-31",
+      "display_title": "O-31",
+      "revision_symbol": "svc_rev1",
+      "alias_text": "Obligation O-31",
+      "supporting_chunk_ids": [
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "start_char": 55,
+          "end_char": 70,
+          "exact_text": "Obligation O-31"
+        }
+      ],
+      "surrounding_source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::0",
+      "item_type": "alias",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "page_identity": "O-31",
+      "display_title": "O-31",
+      "revision_symbol": "obl_rev2",
+      "alias_text": "Obligation O-31",
+      "supporting_chunk_ids": [
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+          "start_char": 0,
+          "end_char": 15,
+          "exact_text": "Obligation O-31"
+        }
+      ],
+      "surrounding_source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::0",
+      "item_type": "alias",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "page_identity": "O-31",
+      "display_title": "O-31",
+      "revision_symbol": "obl_rev1",
+      "alias_text": "Obligation O-31",
+      "supporting_chunk_ids": [
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a",
+          "start_char": 0,
+          "end_char": 15,
+          "exact_text": "Obligation O-31"
+        }
+      ],
+      "surrounding_source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0",
+      "item_type": "alias",
+      "page_key": "IDENT:O-32",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "page_identity": "O-32",
+      "display_title": "O-32",
+      "revision_symbol": "adj_rev1",
+      "alias_text": "Obligation O-32",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "start_char": 137,
+          "end_char": 152,
+          "exact_text": "Obligation O-32"
+        }
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::0",
+      "item_type": "alias",
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "page_identity": "P-204",
+      "display_title": "P-204",
+      "revision_symbol": "ctl_rev1",
+      "alias_text": "Procedure P-204",
+      "supporting_chunk_ids": [
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a",
+          "start_char": 37,
+          "end_char": 52,
+          "exact_text": "Procedure P-204"
+        }
+      ],
+      "surrounding_source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::0",
+      "item_type": "alias",
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "page_identity": "P-204",
+      "display_title": "P-204",
+      "revision_symbol": "prc_rev1",
+      "alias_text": "Procedure P-204",
+      "supporting_chunk_ids": [
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1",
+          "start_char": 0,
+          "end_char": 15,
+          "exact_text": "Procedure P-204"
+        }
+      ],
+      "surrounding_source_text": {
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1": "Procedure P-204 is a retired operating procedure."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::0",
+      "item_type": "alias",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "page_identity": "P-205",
+      "display_title": "P-205",
+      "revision_symbol": "ctl_rev3",
+      "alias_text": "Procedure P-205",
+      "supporting_chunk_ids": [
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c",
+          "start_char": 36,
+          "end_char": 51,
+          "exact_text": "Procedure P-205"
+        }
+      ],
+      "surrounding_source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::0",
+      "item_type": "alias",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "page_identity": "P-205",
+      "display_title": "P-205",
+      "revision_symbol": "ctl_rev2",
+      "alias_text": "Procedure P-205",
+      "supporting_chunk_ids": [
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+          "start_char": 36,
+          "end_char": 51,
+          "exact_text": "Procedure P-205"
+        }
+      ],
+      "surrounding_source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::0",
+      "item_type": "alias",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "page_identity": "P-205",
+      "display_title": "P-205",
+      "revision_symbol": "prc_rev2",
+      "alias_text": "Procedure P-205",
+      "supporting_chunk_ids": [
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb",
+          "start_char": 0,
+          "end_char": 15,
+          "exact_text": "Procedure P-205"
+        }
+      ],
+      "surrounding_source_text": {
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb": "Procedure P-205 is the current operating procedure."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0",
+      "item_type": "alias",
+      "page_key": "IDENT:P-301",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "page_identity": "P-301",
+      "display_title": "P-301",
+      "revision_symbol": "adj_rev1",
+      "alias_text": "Procedure P-301",
+      "supporting_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+          "start_char": 238,
+          "end_char": 253,
+          "exact_text": "Procedure P-301"
+        }
+      ],
+      "surrounding_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::0",
+      "item_type": "alias",
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "page_identity": "payment settlement",
+      "display_title": "Payment Settlement",
+      "revision_symbol": "svc_rev1",
+      "alias_text": "Payment Settlement",
+      "supporting_chunk_ids": [
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+          "start_char": 4,
+          "end_char": 22,
+          "exact_text": "Payment Settlement"
+        }
+      ],
+      "surrounding_source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "ALIAS::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::0",
+      "item_type": "alias",
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "page_identity": "payment settlement",
+      "display_title": "Payment Settlement",
+      "revision_symbol": "app_rev2",
+      "alias_text": "Payment Settlement",
+      "supporting_chunk_ids": [
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+      ],
+      "exact_source_occurrences": [
+        {
+          "chunk_id": "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+          "start_char": 36,
+          "end_char": 54,
+          "exact_text": "Payment Settlement"
+        }
+      ],
+      "surrounding_source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "mechanical_status": "supported",
+      "mechanical_span_valid": true,
+      "mechanical_rejection_reasons": [],
+      "claims_whose_coherence_depends_on_this_alias": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    }
+  ],
+  "summary_sentences": [
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::sentence-1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:APP-224499",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "display_title": "APP-224499",
+      "revision_symbol": "app_rev1",
+      "summary_text": "APP-224499 supports the Payment Settlement business service (claim-1).",
+      "referenced_claim_ids": [
+        "claim-1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim-1",
+          "subject": "APP-224499",
+          "predicate": "supports",
+          "object": "Payment Settlement business service",
+          "claim_text": "APP-224499 supports the Payment Settlement business service.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Application APP-224499 supports the Payment Settlement business service."
+      ],
+      "full_source_text": {
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8": "Application APP-224499 supports the Payment Settlement business service."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::summary-1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:APP-224510",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "display_title": "APP-224510",
+      "revision_symbol": "app_rev2",
+      "summary_text": "APP-224510 supports the Payment Settlement business service (claim-1).",
+      "referenced_claim_ids": [
+        "claim-1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim-1",
+          "subject": "APP-224510",
+          "predicate": "supports",
+          "object": "the Payment Settlement business service",
+          "claim_text": "APP-224510 supports the Payment Settlement business service.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Application APP-224510 supports the Payment Settlement business service."
+      ],
+      "full_source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:APP-330012",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "APP-330012",
+      "revision_symbol": "adj_rev1",
+      "summary_text": "APP-330012 supports the Payment Reconciliation business service (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "APP-330012",
+          "predicate": "supports",
+          "object": "Payment Reconciliation business service",
+          "claim_text": "APP-330012 supports the Payment Reconciliation business service.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Application APP-330012 supports the Payment Reconciliation business service."
+      ],
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:C-77",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "C-77",
+      "revision_symbol": "adj_rev1",
+      "summary_text": "Obligation O-32 is satisfied by Control C-77, which is implemented through Procedure P-301.",
+      "referenced_claim_ids": [
+        "claim1",
+        "claim2"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Obligation O-32",
+          "predicate": "is satisfied by",
+          "object": "Control C-77",
+          "claim_text": "Obligation O-32 is satisfied by Control C-77.",
+          "validation_status": "accepted"
+        },
+        {
+          "claim_id": "claim2",
+          "subject": "Control C-77",
+          "predicate": "is implemented through",
+          "object": "Procedure P-301",
+          "claim_text": "Control C-77 is implemented through Procedure P-301.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Obligation O-32 is satisfied by Control C-77.",
+        "Control C-77 is implemented through Procedure P-301."
+      ],
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "display_title": "C-88a",
+      "revision_symbol": "ctl_rev1",
+      "summary_text": "C-88a is implemented through Procedure P-204 (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "C-88a",
+          "predicate": "is implemented through",
+          "object": "Procedure P-204",
+          "claim_text": "C-88a is implemented through Procedure P-204.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Control C-88a is implemented through Procedure P-204."
+      ],
+      "full_source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "display_title": "C-88a",
+      "revision_symbol": "obl_rev1",
+      "summary_text": "Obligation O-31 is satisfied by Control C-88a (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Obligation O-31",
+          "predicate": "is satisfied by",
+          "object": "Control C-88a",
+          "claim_text": "Obligation O-31 is satisfied by Control C-88a.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Obligation O-31 is satisfied by Control C-88a."
+      ],
+      "full_source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "display_title": "C-88",
+      "revision_symbol": "ctl_rev2",
+      "summary_text": "C-88 is implemented through Procedure P-205 (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "C-88",
+          "predicate": "is implemented through",
+          "object": "Procedure P-205",
+          "claim_text": "C-88 is implemented through Procedure P-205.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Control C-88 is implemented through Procedure P-205."
+      ],
+      "full_source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::sentence1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "display_title": "C-88",
+      "revision_symbol": "obl_rev2",
+      "summary_text": "Control C-88 is satisfied by Obligation O-31 (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Control C-88",
+          "predicate": "is satisfied by",
+          "object": "Obligation O-31",
+          "claim_text": "Control C-88 is satisfied by Obligation O-31.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Obligation O-31 is satisfied by Control C-88."
+      ],
+      "full_source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::sentence1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:C-91",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "display_title": "C-91",
+      "revision_symbol": "ctl_rev3",
+      "summary_text": "Control C-91 is implemented through Procedure P-205 as stated in claim claim1.",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Control C-91",
+          "predicate": "is implemented through",
+          "object": "Procedure P-205",
+          "claim_text": "Control C-91 is implemented through Procedure P-205.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Control C-91 is implemented through Procedure P-205."
+      ],
+      "full_source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "display_title": "O-31",
+      "revision_symbol": "svc_rev1",
+      "summary_text": "The Payment Settlement business service is governed by Obligation O-31 (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Payment Settlement business service",
+          "predicate": "is governed by",
+          "object": "Obligation O-31",
+          "claim_text": "The Payment Settlement business service is governed by Obligation O-31.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "The Payment Settlement business service is governed by Obligation O-31."
+      ],
+      "full_source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "display_title": "O-31",
+      "revision_symbol": "obl_rev2",
+      "summary_text": "Obligation O-31 is satisfied by Control C-88 (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Obligation O-31",
+          "predicate": "is satisfied by",
+          "object": "Control C-88",
+          "claim_text": "Obligation O-31 is satisfied by Control C-88.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Obligation O-31 is satisfied by Control C-88."
+      ],
+      "full_source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "display_title": "O-31",
+      "revision_symbol": "obl_rev1",
+      "summary_text": "Obligation O-31 is satisfied by Control C-88a (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Obligation O-31",
+          "predicate": "is satisfied by",
+          "object": "Control C-88a",
+          "claim_text": "Obligation O-31 is satisfied by Control C-88a.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Obligation O-31 is satisfied by Control C-88a."
+      ],
+      "full_source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:O-32",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "O-32",
+      "revision_symbol": "adj_rev1",
+      "summary_text": "Obligation O-32 is governed by the Payment Reconciliation business service and is satisfied by Control C-77.",
+      "referenced_claim_ids": [
+        "claim1",
+        "claim2"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Obligation O-32",
+          "predicate": "is governed by",
+          "object": "Payment Reconciliation business service",
+          "claim_text": "Obligation O-32 is governed by Payment Reconciliation business service.",
+          "validation_status": "accepted"
+        },
+        {
+          "claim_id": "claim2",
+          "subject": "Obligation O-32",
+          "predicate": "is satisfied by",
+          "object": "Control C-77",
+          "claim_text": "Obligation O-32 is satisfied by Control C-77.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "The Payment Reconciliation business service is governed by Obligation O-32.",
+        "Obligation O-32 is satisfied by Control C-77."
+      ],
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "display_title": "P-204",
+      "revision_symbol": "ctl_rev1",
+      "summary_text": "Control C-88a is implemented through Procedure P-204 (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Control C-88a",
+          "predicate": "is implemented through",
+          "object": "Procedure P-204",
+          "claim_text": "Control C-88a is implemented through Procedure P-204.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Control C-88a is implemented through Procedure P-204."
+      ],
+      "full_source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "display_title": "P-204",
+      "revision_symbol": "prc_rev1",
+      "summary_text": "Procedure P-204 is a retired operating procedure.",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Procedure P-204",
+          "predicate": "is",
+          "object": "a retired operating procedure",
+          "claim_text": "Procedure P-204 is a retired operating procedure.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Procedure P-204 is a retired operating procedure."
+      ],
+      "full_source_text": {
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1": "Procedure P-204 is a retired operating procedure."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::sentence1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "display_title": "P-205",
+      "revision_symbol": "ctl_rev3",
+      "summary_text": "Control C-91 is implemented through Procedure P-205 as stated in the document.",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Control C-91",
+          "predicate": "is implemented through",
+          "object": "Procedure P-205",
+          "claim_text": "Control C-91 is implemented through Procedure P-205.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Control C-91 is implemented through Procedure P-205."
+      ],
+      "full_source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::sentence1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "display_title": "P-205",
+      "revision_symbol": "ctl_rev2",
+      "summary_text": "Control C-88 is implemented through Procedure P-205 (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Control C-88",
+          "predicate": "is implemented through",
+          "object": "Procedure P-205",
+          "claim_text": "Control C-88 is implemented through Procedure P-205.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Control C-88 is implemented through Procedure P-205."
+      ],
+      "full_source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "display_title": "P-205",
+      "revision_symbol": "prc_rev2",
+      "summary_text": "Procedure P-205 is identified as the current operating procedure.",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Procedure P-205",
+          "predicate": "is",
+          "object": "the current operating procedure",
+          "claim_text": "Procedure P-205 is the current operating procedure.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Procedure P-205 is the current operating procedure."
+      ],
+      "full_source_text": {
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb": "Procedure P-205 is the current operating procedure."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "IDENT:P-301",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "display_title": "P-301",
+      "revision_symbol": "adj_rev1",
+      "summary_text": "Procedure P-301 is the current operating procedure for reconciliation (claim3).",
+      "referenced_claim_ids": [
+        "claim3"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim3",
+          "subject": "Procedure P-301",
+          "predicate": "is the current operating procedure for",
+          "object": "reconciliation",
+          "claim_text": "Procedure P-301 is the current operating procedure for reconciliation.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Procedure P-301 is the current operating procedure for reconciliation."
+      ],
+      "full_source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::summary1",
+      "item_type": "summary_sentence",
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "display_title": "Payment Settlement",
+      "revision_symbol": "svc_rev1",
+      "summary_text": "Payment Settlement is governed by Obligation O-31 (claim1).",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Payment Settlement",
+          "predicate": "is governed by",
+          "object": "Obligation O-31",
+          "claim_text": "Payment Settlement is governed by Obligation O-31.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "The Payment Settlement business service is governed by Obligation O-31."
+      ],
+      "full_source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::PHRASE:payment settlement|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::sentence_1",
+      "item_type": "summary_sentence",
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "display_title": "Payment Settlement",
+      "revision_symbol": "app_rev1",
+      "summary_text": "Application APP-224499 supports the Payment Settlement business service.",
+      "referenced_claim_ids": [
+        "claim_1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim_1",
+          "subject": "Application APP-224499",
+          "predicate": "supports",
+          "object": "Payment Settlement business service",
+          "claim_text": "Application APP-224499 supports the Payment Settlement business service.",
+          "validation_status": "out_of_page_scope"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Application APP-224499 supports the Payment Settlement business service."
+      ],
+      "full_source_text": {
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8": "Application APP-224499 supports the Payment Settlement business service."
+      },
+      "mechanical_reference_valid": false,
+      "mechanical_rejection_reasons": [
+        "references no accepted claim on this facet"
+      ],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    },
+    {
+      "adjudication_item_id": "SUMMARY::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::sentence1",
+      "item_type": "summary_sentence",
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "display_title": "Payment Settlement",
+      "revision_symbol": "app_rev2",
+      "summary_text": "Application APP-224510 supports the Payment Settlement business service as stated in claim1.",
+      "referenced_claim_ids": [
+        "claim1"
+      ],
+      "referenced_claims_readable": [
+        {
+          "claim_id": "claim1",
+          "subject": "Application APP-224510",
+          "predicate": "supports",
+          "object": "Payment Settlement",
+          "claim_text": "Application APP-224510 supports the Payment Settlement business service.",
+          "validation_status": "accepted"
+        }
+      ],
+      "referenced_claim_exact_quotes": [
+        "Application APP-224510 supports the Payment Settlement business service."
+      ],
+      "full_source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "mechanical_reference_valid": true,
+      "mechanical_rejection_reasons": [],
+      "owner": {
+        "allowed_values": [
+          "CORRECT",
+          "INCORRECT",
+          "UNVERIFIABLE"
+        ],
+        "owner_verdict": null,
+        "owner_reason": ""
+      }
+    }
+  ],
+  "claim_item_count": 25,
+  "alias_item_count": 21,
+  "summary_item_count": 22,
+  "total_item_count": 68,
+  "packet_sha256": "5d08b88dc9473a07ff94ddaead911a1a2aa54aba384afeec0f85b9a97ccb2065",
+  "instructions": [
+    "Fill ONLY `owner_verdict` (CORRECT / INCORRECT / UNVERIFIABLE) and `owner_reason` on each item.",
+    "CLAIM: does (subject, predicate, object) faithfully represent the cited passage? A valid exact citation proves the passage exists and contains the quote -- it does NOT prove the inferred predicate represents it (Revision 6 SS4.3).",
+    "ALIAS: does this alias genuinely denote THIS facet's page identity -- not a related, broader, narrower or adjacent entity? A verbatim occurrence proves the string is there, not that it names this entity (SS4.5).",
+    "SUMMARY: does the sentence faithfully represent EXACTLY the claims it references -- no addition, overstatement, merge error, direction inversion, dropped qualification or temporal/status distortion? Valid claim-id references prove only that it points at accepted claims (SS4.4).",
+    "An INCORRECT alias verdict also demotes every claim listed under `claims_whose_coherence_depends_on_this_alias` to out_of_page_scope (SS4.6 pass 3).",
+    "Nothing here is pre-filled and no recommendation is offered: these three judgements are yours alone, and the representation cannot be built without them."
+  ]
+}

@@ -509,7 +509,13 @@ def test_the_build_path_never_reads_authority_state():
     assert "RevisionAuthorityService" not in projection_source
 
 
-def test_stage_7c1_and_7c2_modules_are_not_created():
-    """Scope guard: do not pre-build 7C.1 / 7C.2 machinery."""
-    for name in ("compiler.py", "validation.py", "assembly.py", "retrieval.py", "navigation.py"):
-        assert not (WIKI_ROOT / name).exists(), f"{name} belongs to a later stage and must not exist yet"
+def test_stage_7c2_modules_are_not_created():
+    """Scope guard: do not pre-build 7C.2 machinery.
+
+    Narrowed when Stage 7C.1 was authorised: this guard originally also
+    asserted that `compiler.py`, `validation.py` and `assembly.py` did not
+    exist, which was correct while 7C.0 was the frontier and is now false by
+    design. The 7C.2 half is unchanged and still binding.
+    """
+    for name in ("retrieval.py", "navigation.py"):
+        assert not (WIKI_ROOT / name).exists(), f"{name} belongs to Stage 7C.2 and must not exist yet"
