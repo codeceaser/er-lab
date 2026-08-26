@@ -1,0 +1,1902 @@
+{
+  "analysis": "Stage 7C.1 repeatability, READ-ONLY over the frozen Runs 1/2/3",
+  "modifies_frozen_artifacts": false,
+  "reran_compilation": false,
+  "model_calls": 0,
+  "updates_gate_q": false,
+  "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+  "primary_run_id": 1,
+  "population_sizes": {
+    "all_output_claim_keys_by_run": {
+      "1": 26,
+      "2": 26,
+      "3": 26
+    },
+    "accepted_only_claim_keys_by_run": {
+      "1": 25,
+      "2": 20,
+      "3": 22
+    }
+  },
+  "claim_jaccard_all_output": {
+    "run1_vs_run2": 0.625,
+    "run1_vs_run3": 0.5294117647058824,
+    "run2_vs_run3": 0.7931034482758621
+  },
+  "claim_jaccard_accepted_only": {
+    "run1_vs_run2": 0.6666666666666666,
+    "run1_vs_run3": 0.6206896551724138,
+    "run2_vs_run3": 0.8260869565217391
+  },
+  "citation_jaccard_all_output_as_implemented": {
+    "run1_vs_run2": 0.5757575757575758,
+    "run1_vs_run3": 0.5294117647058824,
+    "run2_vs_run3": 0.6774193548387096
+  },
+  "citation_jaccard_accepted_only_as_implemented": {
+    "run1_vs_run2": 0.6666666666666666,
+    "run1_vs_run3": 0.6206896551724138,
+    "run2_vs_run3": 0.8260869565217391
+  },
+  "citation_exact_on_matched_all_output": {
+    "run1_vs_run2": {
+      "matched_claims": 20,
+      "citation_sets_exactly_equal": 19,
+      "rate": 0.95
+    },
+    "run1_vs_run3": {
+      "matched_claims": 18,
+      "citation_sets_exactly_equal": 18,
+      "rate": 1.0
+    },
+    "run2_vs_run3": {
+      "matched_claims": 23,
+      "citation_sets_exactly_equal": 21,
+      "rate": 0.9130434782608695
+    }
+  },
+  "citation_exact_on_matched_accepted_only": {
+    "run1_vs_run2": {
+      "matched_claims": 18,
+      "citation_sets_exactly_equal": 18,
+      "rate": 1.0
+    },
+    "run1_vs_run3": {
+      "matched_claims": 18,
+      "citation_sets_exactly_equal": 18,
+      "rate": 1.0
+    },
+    "run2_vs_run3": {
+      "matched_claims": 19,
+      "citation_sets_exactly_equal": 19,
+      "rate": 1.0
+    }
+  },
+  "accepted_miss_decomposition": {
+    "run1_vs_run2": {
+      "union": 27,
+      "shared": 18,
+      "misses": 9,
+      "status_change_only": 1,
+      "content_difference": 8
+    },
+    "run1_vs_run3": {
+      "union": 29,
+      "shared": 18,
+      "misses": 11,
+      "status_change_only": 0,
+      "content_difference": 11
+    },
+    "run2_vs_run3": {
+      "union": 23,
+      "shared": 19,
+      "misses": 4,
+      "status_change_only": 1,
+      "content_difference": 3
+    }
+  },
+  "classification_tally": {
+    "wording": 8,
+    "direction": 4,
+    "omitted_extra": 4,
+    "quote_span": 3,
+    "entity": 2,
+    "predicate": 1
+  },
+  "facets_total": 22,
+  "facets_identical_across_runs": 15,
+  "facets": [
+    {
+      "facet_key": "IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "page_key": "IDENT:APP-224499",
+      "revision_symbol": "app_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": false,
+      "source_text": {
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8": "Application APP-224499 supports the Payment Settlement business service."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim-1",
+            "subject": "APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim-1",
+            "subject": "APP-224499",
+            "predicate": "supports",
+            "object": "the Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim-1",
+            "subject": "APP-224499",
+            "predicate": "supports",
+            "object": "the Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        ]
+      },
+      "differences": [
+        {
+          "pair": "run1_vs_run2",
+          "code": "wording",
+          "label": "noun-phrase/canonical wording variation",
+          "run1": {
+            "claim_id": "claim-1",
+            "subject": "APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          },
+          "run2": {
+            "claim_id": "claim-1",
+            "subject": "APP-224499",
+            "predicate": "supports",
+            "object": "the Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        },
+        {
+          "pair": "run1_vs_run3",
+          "code": "wording",
+          "label": "noun-phrase/canonical wording variation",
+          "run1": {
+            "claim_id": "claim-1",
+            "subject": "APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim-1",
+            "subject": "APP-224499",
+            "predicate": "supports",
+            "object": "the Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "facet_key": "IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "page_key": "IDENT:APP-224510",
+      "revision_symbol": "app_rev2",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim-1",
+            "subject": "APP-224510",
+            "predicate": "supports",
+            "object": "the Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim-1",
+            "subject": "APP-224510",
+            "predicate": "supports",
+            "object": "the Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "APP-224510",
+            "predicate": "supports",
+            "object": "the Payment Settlement business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "page_key": "IDENT:APP-330012",
+      "revision_symbol": "adj_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": false,
+      "source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "APP-330012",
+            "predicate": "supports",
+            "object": "Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-330012 supports the Payment Reconciliation business service."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "APP-330012",
+            "predicate": "supports",
+            "object": "the Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-330012 supports the Payment Reconciliation business service."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "APP-330012",
+            "predicate": "supports",
+            "object": "the Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-330012 supports the Payment Reconciliation business service."
+            ]
+          }
+        ]
+      },
+      "differences": [
+        {
+          "pair": "run1_vs_run2",
+          "code": "wording",
+          "label": "noun-phrase/canonical wording variation",
+          "run1": {
+            "claim_id": "claim1",
+            "subject": "APP-330012",
+            "predicate": "supports",
+            "object": "Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-330012 supports the Payment Reconciliation business service."
+            ]
+          },
+          "run2": {
+            "claim_id": "claim1",
+            "subject": "APP-330012",
+            "predicate": "supports",
+            "object": "the Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-330012 supports the Payment Reconciliation business service."
+            ]
+          }
+        },
+        {
+          "pair": "run1_vs_run3",
+          "code": "wording",
+          "label": "noun-phrase/canonical wording variation",
+          "run1": {
+            "claim_id": "claim1",
+            "subject": "APP-330012",
+            "predicate": "supports",
+            "object": "Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-330012 supports the Payment Reconciliation business service."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim1",
+            "subject": "APP-330012",
+            "predicate": "supports",
+            "object": "the Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-330012 supports the Payment Reconciliation business service."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "facet_key": "IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "page_key": "IDENT:C-77",
+      "revision_symbol": "adj_rev1",
+      "claim_counts_by_run": {
+        "1": 2,
+        "2": 2,
+        "3": 2
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is satisfied by",
+            "object": "Control C-77",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is implemented through",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Control C-77 is implemented through Procedure P-301."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is satisfied by",
+            "object": "Control C-77",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is implemented through",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Control C-77 is implemented through Procedure P-301."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is satisfied by",
+            "object": "Control C-77",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is implemented through",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Control C-77 is implemented through Procedure P-301."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "page_key": "IDENT:C-88A",
+      "revision_symbol": "ctl_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "C-88a",
+            "predicate": "is implemented through",
+            "object": "Procedure P-204",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88a is implemented through Procedure P-204."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "C-88a",
+            "predicate": "is implemented through",
+            "object": "Procedure P-204",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88a is implemented through Procedure P-204."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "C-88a",
+            "predicate": "is implemented through",
+            "object": "Procedure P-204",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88a is implemented through Procedure P-204."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "page_key": "IDENT:C-88A",
+      "revision_symbol": "obl_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88a",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88a."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88a",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88a."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88a",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88a."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "page_key": "IDENT:C-88",
+      "revision_symbol": "ctl_rev2",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "C-88",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88 is implemented through Procedure P-205."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "C-88",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88 is implemented through Procedure P-205."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "C-88",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88 is implemented through Procedure P-205."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "page_key": "IDENT:C-88",
+      "revision_symbol": "obl_rev2",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": false,
+      "source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-88",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-88",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          }
+        ]
+      },
+      "differences": [
+        {
+          "pair": "run1_vs_run3",
+          "code": "direction",
+          "label": "SEMANTIC direction change (subject/object swapped)",
+          "run1": {
+            "claim_id": "claim1",
+            "subject": "Control C-88",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          }
+        },
+        {
+          "pair": "run2_vs_run3",
+          "code": "direction",
+          "label": "SEMANTIC direction change (subject/object swapped)",
+          "run2": {
+            "claim_id": "claim1",
+            "subject": "Control C-88",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "facet_key": "IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "page_key": "IDENT:C-91",
+      "revision_symbol": "ctl_rev3",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-91",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-91 is implemented through Procedure P-205."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-91",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-91 is implemented through Procedure P-205."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-91",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-91 is implemented through Procedure P-205."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "page_key": "IDENT:O-31",
+      "revision_symbol": "svc_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Payment Settlement business service",
+            "predicate": "is governed by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Settlement business service is governed by Obligation O-31."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Payment Settlement business service",
+            "predicate": "is governed by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Settlement business service is governed by Obligation O-31."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Payment Settlement business service",
+            "predicate": "is governed by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Settlement business service is governed by Obligation O-31."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "page_key": "IDENT:O-31",
+      "revision_symbol": "obl_rev2",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8": "Obligation O-31 is satisfied by Control C-88."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "page_key": "IDENT:O-31",
+      "revision_symbol": "obl_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a": "Obligation O-31 is satisfied by Control C-88a."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88a",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88a."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88a",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88a."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "1",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88a",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-31 is satisfied by Control C-88a."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "page_key": "IDENT:O-32",
+      "revision_symbol": "adj_rev1",
+      "claim_counts_by_run": {
+        "1": 2,
+        "2": 2,
+        "3": 2
+      },
+      "identical_across_runs": false,
+      "source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Obligation O-32",
+            "predicate": "is satisfied by",
+            "object": "Control C-77",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "rejected",
+            "quotes": [
+              "Obligation O-32 is governed by Payment Reconciliation business service."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Obligation O-32",
+            "predicate": "is satisfied by",
+            "object": "Control C-77",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Obligation O-32",
+            "predicate": "is satisfied by",
+            "object": "Control C-77",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          }
+        ]
+      },
+      "differences": [
+        {
+          "pair": "run1_vs_run2",
+          "code": "quote_span",
+          "label": "quote-span variation",
+          "run1": {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          },
+          "run2": {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "rejected",
+            "quotes": [
+              "Obligation O-32 is governed by Payment Reconciliation business service."
+            ]
+          }
+        },
+        {
+          "pair": "run2_vs_run3",
+          "code": "quote_span",
+          "label": "quote-span variation",
+          "run2": {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "rejected",
+            "quotes": [
+              "Obligation O-32 is governed by Payment Reconciliation business service."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "facet_key": "IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "page_key": "IDENT:P-204",
+      "revision_symbol": "ctl_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a": "Control C-88a is implemented through Procedure P-204."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-88a",
+            "predicate": "is implemented through",
+            "object": "Procedure P-204",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88a is implemented through Procedure P-204."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-88a",
+            "predicate": "is implemented through",
+            "object": "Procedure P-204",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88a is implemented through Procedure P-204."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-88a",
+            "predicate": "is implemented through",
+            "object": "Procedure P-204",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88a is implemented through Procedure P-204."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "page_key": "IDENT:P-204",
+      "revision_symbol": "prc_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1": "Procedure P-204 is a retired operating procedure."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Procedure P-204",
+            "predicate": "is",
+            "object": "a retired operating procedure",
+            "status": "accepted",
+            "quotes": [
+              "Procedure P-204 is a retired operating procedure."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Procedure P-204",
+            "predicate": "is",
+            "object": "a retired operating procedure",
+            "status": "accepted",
+            "quotes": [
+              "Procedure P-204 is a retired operating procedure."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Procedure P-204",
+            "predicate": "is",
+            "object": "a retired operating procedure",
+            "status": "accepted",
+            "quotes": [
+              "Procedure P-204 is a retired operating procedure."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "page_key": "IDENT:P-205",
+      "revision_symbol": "ctl_rev3",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c": "Control C-91 is implemented through Procedure P-205."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-91",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-91 is implemented through Procedure P-205."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-91",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-91 is implemented through Procedure P-205."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-91",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-91 is implemented through Procedure P-205."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "page_key": "IDENT:P-205",
+      "revision_symbol": "ctl_rev2",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d": "Control C-88 is implemented through Procedure P-205."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-88",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88 is implemented through Procedure P-205."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-88",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88 is implemented through Procedure P-205."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Control C-88",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "status": "accepted",
+            "quotes": [
+              "Control C-88 is implemented through Procedure P-205."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "page_key": "IDENT:P-205",
+      "revision_symbol": "prc_rev2",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb": "Procedure P-205 is the current operating procedure."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Procedure P-205",
+            "predicate": "is",
+            "object": "the current operating procedure",
+            "status": "accepted",
+            "quotes": [
+              "Procedure P-205 is the current operating procedure."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Procedure P-205",
+            "predicate": "is",
+            "object": "the current operating procedure",
+            "status": "accepted",
+            "quotes": [
+              "Procedure P-205 is the current operating procedure."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Procedure P-205",
+            "predicate": "is",
+            "object": "the current operating procedure",
+            "status": "accepted",
+            "quotes": [
+              "Procedure P-205 is the current operating procedure."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "page_key": "IDENT:P-301",
+      "revision_symbol": "adj_rev1",
+      "claim_counts_by_run": {
+        "1": 3,
+        "2": 3,
+        "3": 3
+      },
+      "identical_across_runs": false,
+      "source_text": {
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011": "Application APP-330012 supports the Payment Reconciliation business service.\n\nThe Payment Reconciliation business service is governed by Obligation O-32.\n\nObligation O-32 is satisfied by Control C-77.\n\nControl C-77 is implemented through Procedure P-301.\n\nProcedure P-301 is the current operating procedure for reconciliation."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is implemented through",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Control C-77 is implemented through Procedure P-301."
+            ]
+          },
+          {
+            "claim_id": "claim3",
+            "subject": "Procedure P-301",
+            "predicate": "is the current operating procedure for",
+            "object": "reconciliation",
+            "status": "accepted",
+            "quotes": [
+              "Procedure P-301 is the current operating procedure for reconciliation."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Procedure P-301",
+            "predicate": "is implemented through",
+            "object": "Control C-77",
+            "status": "rejected",
+            "quotes": [
+              "Procedure P-301 is implemented through Control C-77."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-32",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          },
+          {
+            "claim_id": "claim3",
+            "subject": "Obligation O-32",
+            "predicate": "governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Procedure P-301",
+            "predicate": "is implemented through",
+            "object": "Control C-77",
+            "status": "rejected",
+            "quotes": [
+              "Procedure P-301 is implemented through Control C-77."
+            ]
+          },
+          {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-32",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Control C-77 is satisfied by Obligation O-32."
+            ]
+          },
+          {
+            "claim_id": "claim3",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          }
+        ]
+      },
+      "differences": [
+        {
+          "pair": "run1_vs_run2",
+          "code": "direction",
+          "label": "SEMANTIC direction change (subject/object swapped)",
+          "run1": {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is implemented through",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Control C-77 is implemented through Procedure P-301."
+            ]
+          },
+          "run2": {
+            "claim_id": "claim1",
+            "subject": "Procedure P-301",
+            "predicate": "is implemented through",
+            "object": "Control C-77",
+            "status": "rejected",
+            "quotes": [
+              "Procedure P-301 is implemented through Control C-77."
+            ]
+          }
+        },
+        {
+          "pair": "run1_vs_run2",
+          "code": "entity",
+          "label": "ENTITY/endpoint change",
+          "run1": {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          },
+          "run2": {
+            "claim_id": "claim3",
+            "subject": "Obligation O-32",
+            "predicate": "governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          }
+        },
+        {
+          "pair": "run1_vs_run2",
+          "code": "omitted_extra",
+          "label": "present in run1, absent in run2",
+          "claim": {
+            "claim_id": "claim3",
+            "subject": "Procedure P-301",
+            "predicate": "is the current operating procedure for",
+            "object": "reconciliation",
+            "status": "accepted"
+          }
+        },
+        {
+          "pair": "run1_vs_run2",
+          "code": "omitted_extra",
+          "label": "present in run2, absent in run1",
+          "claim": {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-32",
+            "status": "out_of_page_scope"
+          }
+        },
+        {
+          "pair": "run1_vs_run3",
+          "code": "direction",
+          "label": "SEMANTIC direction change (subject/object swapped)",
+          "run1": {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is implemented through",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Control C-77 is implemented through Procedure P-301."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim1",
+            "subject": "Procedure P-301",
+            "predicate": "is implemented through",
+            "object": "Control C-77",
+            "status": "rejected",
+            "quotes": [
+              "Procedure P-301 is implemented through Control C-77."
+            ]
+          }
+        },
+        {
+          "pair": "run1_vs_run3",
+          "code": "entity",
+          "label": "ENTITY/endpoint change",
+          "run1": {
+            "claim_id": "claim1",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Procedure P-301",
+            "status": "accepted",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim3",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          }
+        },
+        {
+          "pair": "run1_vs_run3",
+          "code": "omitted_extra",
+          "label": "present in run1, absent in run3",
+          "claim": {
+            "claim_id": "claim3",
+            "subject": "Procedure P-301",
+            "predicate": "is the current operating procedure for",
+            "object": "reconciliation",
+            "status": "accepted"
+          }
+        },
+        {
+          "pair": "run1_vs_run3",
+          "code": "omitted_extra",
+          "label": "present in run3, absent in run1",
+          "claim": {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-32",
+            "status": "out_of_page_scope"
+          }
+        },
+        {
+          "pair": "run2_vs_run3",
+          "code": "quote_span",
+          "label": "quote-span variation",
+          "run2": {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-32",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim2",
+            "subject": "Control C-77",
+            "predicate": "is satisfied by",
+            "object": "Obligation O-32",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Control C-77 is satisfied by Obligation O-32."
+            ]
+          }
+        },
+        {
+          "pair": "run2_vs_run3",
+          "code": "predicate",
+          "label": "SEMANTIC predicate change",
+          "run2": {
+            "claim_id": "claim3",
+            "subject": "Obligation O-32",
+            "predicate": "governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim3",
+            "subject": "Obligation O-32",
+            "predicate": "is governed by",
+            "object": "Payment Reconciliation business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "The Payment Reconciliation business service is governed by Obligation O-32."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "facet_key": "PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "page_key": "PHRASE:payment settlement",
+      "revision_symbol": "svc_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": true,
+      "source_text": {
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614": "The Payment Settlement business service is governed by Obligation O-31."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Payment Settlement",
+            "predicate": "is governed by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Settlement business service is governed by Obligation O-31."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Payment Settlement",
+            "predicate": "is governed by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Settlement business service is governed by Obligation O-31."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim1",
+            "subject": "Payment Settlement",
+            "predicate": "is governed by",
+            "object": "Obligation O-31",
+            "status": "accepted",
+            "quotes": [
+              "The Payment Settlement business service is governed by Obligation O-31."
+            ]
+          }
+        ]
+      },
+      "differences": []
+    },
+    {
+      "facet_key": "PHRASE:payment settlement|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "page_key": "PHRASE:payment settlement",
+      "revision_symbol": "app_rev1",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": false,
+      "source_text": {
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8": "Application APP-224499 supports the Payment Settlement business service."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        ]
+      },
+      "differences": [
+        {
+          "pair": "run1_vs_run3",
+          "code": "wording",
+          "label": "noun-phrase/canonical wording variation",
+          "run1": {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        },
+        {
+          "pair": "run2_vs_run3",
+          "code": "wording",
+          "label": "noun-phrase/canonical wording variation",
+          "run2": {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "facet_key": "PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "page_key": "PHRASE:payment settlement",
+      "revision_symbol": "app_rev2",
+      "claim_counts_by_run": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "identical_across_runs": false,
+      "source_text": {
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2": "Application APP-224510 supports the Payment Settlement business service."
+      },
+      "claims_by_run": {
+        "1": [
+          {
+            "claim_id": "claim1",
+            "subject": "Application APP-224510",
+            "predicate": "supports",
+            "object": "Payment Settlement",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          }
+        ],
+        "2": [
+          {
+            "claim_id": "claim1",
+            "subject": "Application APP-224510",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          }
+        ],
+        "3": [
+          {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224510",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          }
+        ]
+      },
+      "differences": [
+        {
+          "pair": "run1_vs_run2",
+          "code": "wording",
+          "label": "noun-phrase/canonical wording variation",
+          "run1": {
+            "claim_id": "claim1",
+            "subject": "Application APP-224510",
+            "predicate": "supports",
+            "object": "Payment Settlement",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          },
+          "run2": {
+            "claim_id": "claim1",
+            "subject": "Application APP-224510",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          }
+        },
+        {
+          "pair": "run1_vs_run3",
+          "code": "wording",
+          "label": "noun-phrase/canonical wording variation",
+          "run1": {
+            "claim_id": "claim1",
+            "subject": "Application APP-224510",
+            "predicate": "supports",
+            "object": "Payment Settlement",
+            "status": "accepted",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          },
+          "run3": {
+            "claim_id": "claim_1",
+            "subject": "Application APP-224510",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "status": "out_of_page_scope",
+            "quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "metric_definition_note": "SS8F states the repeatability quantity twice and the two statements differ. The metric list leaves the population unqualified; the threshold names the ACCEPTED-claim set and, for citations, 'citation sets on matched claims >= 0.95 exact' -- which is an exact-agreement rate, not a Jaccard. benchmark._normalized_claim_keys implements the metric-list wording; benchmark._citation_keys implements neither. Every variant is reported here side by side."
+}
