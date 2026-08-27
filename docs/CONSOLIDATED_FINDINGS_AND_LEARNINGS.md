@@ -1,14 +1,18 @@
 # Consolidated Findings, Limitations, and Engineering Learnings
 
 Cross-cutting record for the authority-aware retrieval and Graph
-investigation (Stages 7R.1 → 7B.2). Per-stage detail lives in the
-stage decision docs; this document captures the *transferable* findings,
-limitations, and engineering learnings so they are not rediscovered.
+investigation (Stages 7R.1 → 7B.2), extended with the in-progress Wiki
+investigation (Stage 7C). Per-stage detail lives in the stage decision
+docs; this document captures the *transferable* findings, limitations,
+and engineering learnings so they are not rediscovered.
 
 Companion documents:
 - `docs/STAGE7B0_CROSS_DOCUMENT_QUALIFICATION.md`
 - `docs/STAGE7B1_GRAPH_VS_VECTOR_DECISION.md`
 - `docs/STAGE7B2_HYBRID_GRAPH_CLOSURE_DECISION.md`
+- `docs/STAGE7C_WIKI_PLAN.md` (Revision 6 — the frozen Stage 7C contract)
+- `reports/stage7c0_wiki_projection_scorecard.md` (7C.0 qualification)
+- `reports/stage7c1_repeatability_analysis.md` (7C.1 repeatability, read-only)
 - `docs/POC_STATUS_AND_EVIDENCE.md` (per-stage table)
 
 ---
@@ -61,6 +65,29 @@ Companion documents:
    (gate D): do not retain Graph in the online retrieval path. Navigation
    or offline relationship analysis remains a separate, unevaluated use
    case.**
+
+6. **A bounded compiler at `temperature = 0` was repeatable on simple
+   input and unstable on compound input.** (Stage 7C.1, three identical
+   runs, 22 facets each.) **15 of 22 facets were byte-identical across
+   all three runs.** All variance sat in seven facets, and it was not
+   randomly distributed: `adj_rev1` — the corpus's *only* multi-sentence
+   chunk — hosted three of the seven and *every* entity and predicate
+   change. Of 22 pairwise difference instances, 7 were semantic
+   (4 direction swaps, 2 endpoint changes, 1 predicate change) and 15
+   were wording, quote-span or omission. Direction swaps are the sharpest
+   case: for `IDENT:C-88`/obl_rev2 the runs asserted `C-88 → is satisfied
+   by → O-31` and the exact reverse, from the *same* quote, and **all
+   three were mechanically accepted** — the practical demonstration of why
+   §4.3 reserves claim correctness to a human. Accepted-claim pairwise
+   Jaccard bottomed at **0.6207** against a proposed ≥ 0.90, so Q-8
+   breaches; but citation exact-agreement on matched claims was
+   **1.0000**, so the citation half of the originally reported breach did
+   not exist. Only 2 of 24 accepted-set misses were the same output
+   judged differently — the instability is genuine model variance, not
+   validator flicker. *Scoped: one corpus, one model, 3 runs; the
+   single-sentence stability is the encouraging half and the compound-
+   sentence instability is the warning half, and neither generalizes on
+   this evidence.*
 
 **Net architectural conclusion (scoped):** for this corpus, this
 embedding model, this fixed evidence budget, and these constraints,
@@ -153,6 +180,26 @@ dilution).
   `eligible_hit_precision_at_k` is precision over eligible hits. Add
   `distinct_..._count` where multiplicity matters. Ambiguous names caused
   a correction (7R.2a).
+- **When a contract states a metric twice, the two statements will
+  diverge — measure what the *threshold* names, not what the prose
+  names.** Stage 7C's §8F described "claim-set stability" with an
+  unqualified population and then gated on the *accepted-claim* set;
+  the implementation followed the prose, and the report printed the
+  resulting number under the threshold's label. Half the reported Gate
+  Q-8 breach was an artifact of that gap (7C.1). Two guards, both cheap:
+  compute the gated quantity in the same function that compares it to its
+  threshold, and assert the population in the metric's own name
+  (`accepted_claim_set_jaccard`, not `claim_jaccard`).
+- **A "stability" number over a mixed-status population conflates two
+  different failures.** Splitting Jaccard misses into *same output,
+  different validation outcome* versus *genuinely different output* took
+  ten lines and changed the reading: 22 of 24 misses were real model
+  variance, so the instability could not be blamed on validator
+  sensitivity (7C.1).
+- Aggregate stability hides its own distribution. A single 0.62 read as
+  broad instability; per-facet it was 15 of 22 facets perfectly stable
+  and the variance concentrated in the one structurally complex chunk.
+  Report the distribution beside the aggregate (7C.1).
 
 ### Contract/scenario discipline
 - Scenario comparison must be **exact equality** (eligible set, excluded
