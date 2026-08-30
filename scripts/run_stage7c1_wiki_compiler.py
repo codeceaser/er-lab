@@ -127,7 +127,7 @@ def main() -> None:
         # Regenerate reports from the ALREADY-EXECUTED runs. No model call, no
         # cost, and -- critically -- no possibility of re-rolling Run 1 and
         # picking a different one, which SS8F forbids.
-        from ingestion_bench.wiki_projection.benchmark import Stage7C1Result
+        from ingestion_bench.wiki_projection.benchmark import load_frozen_runs
 
         stored = REPO_ROOT / "artifacts" / "stage7c1" / "stage7c1_runs.json"
         if not stored.exists():
@@ -137,7 +137,9 @@ def main() -> None:
         if not stored.exists():
             print(f"STOP -- no stored runs found; nothing to regenerate.")
             sys.exit(2)
-        result = Stage7C1Result.model_validate_json(stored.read_text(encoding="utf-8"))
+        # Repeatability is RECOMPUTED from the frozen evidence with the current
+        # (SS8F-threshold-correct) metrics; the stored metric block is ignored.
+        result = load_frozen_runs(stored, pages_by_key={p.page_key: p for p in projection.page_identities})
         if result.projection_hash != projection.projection_hash:
             print("STOP -- stored runs were compiled against a different projection.")
             sys.exit(2)
@@ -188,21 +190,25 @@ def main() -> None:
     previews_dir = artifacts / "w1_page_previews"
     previews_dir.mkdir(parents=True, exist_ok=True)
 
-    (artifacts / "stage7c1_runs.json").write_text(result.model_dump_json(indent=2), encoding="utf-8")
-    # ALSO written to tracked reports/. `artifacts/` is gitignored as
-    # "regenerable", but these runs are NOT: SS8F designates Run 1 the primary
-    # representation before execution and forbids selecting a run, and the
-    # measured run-to-run variance means re-running would produce a DIFFERENT
-    # Run 1. Losing this file would destroy irreplaceable frozen evidence.
-    if not use_fake:
-        (config.REPORTS_ROOT / "stage7c1_compilation_runs.json").write_text(
-            result.model_dump_json(indent=2), encoding="utf-8"
-        )
-    for run_id, validations in result.validations_by_run.items():
-        (artifacts / "compilation_audit" / f"run_{run_id}.json").write_text(
-            json.dumps({key: json.loads(v.model_dump_json()) for key, v in sorted(validations.items())}, indent=2),
-            encoding="utf-8",
-        )
+    # The raw run evidence is written ONLY by a run that actually compiled. Under
+    # --from-artifacts it is an INPUT, and rewriting it would mutate the frozen
+    # Runs 1/2/3 that SS8F designates the primary representation.
+    #
+    # It is also mirrored into tracked reports/, because `artifacts/` is
+    # gitignored as "regenerable" and these runs are NOT: the measured
+    # run-to-run variance means re-running would produce a DIFFERENT Run 1, so
+    # losing this file would destroy irreplaceable frozen evidence.
+    if not reuse_artifacts:
+        (artifacts / "stage7c1_runs.json").write_text(result.model_dump_json(indent=2), encoding="utf-8")
+        if not use_fake:
+            (config.REPORTS_ROOT / "stage7c1_compilation_runs.json").write_text(
+                result.model_dump_json(indent=2), encoding="utf-8"
+            )
+        for run_id, validations in result.validations_by_run.items():
+            (artifacts / "compilation_audit" / f"run_{run_id}.json").write_text(
+                json.dumps({key: json.loads(v.model_dump_json()) for key, v in sorted(validations.items())}, indent=2),
+                encoding="utf-8",
+            )
     (artifacts / "payload_previews.json").write_text(
         json.dumps({k: json.loads(v.model_dump_json()) for k, v in sorted(payload_previews.items())}, indent=2),
         encoding="utf-8",

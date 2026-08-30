@@ -26,7 +26,12 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ingestion_bench.wiki_projection.model import Facet, PageIdentity, WikiSection
-from ingestion_bench.wiki_projection.validation import FacetValidationResult
+from ingestion_bench.wiki_projection.validation import (
+    FacetValidationResult,
+    alias_item_id,
+    claim_item_id,
+    summary_item_id,
+)
 
 OWNER_VERDICT_VALUES = ("CORRECT", "INCORRECT", "UNVERIFIABLE")
 
@@ -214,7 +219,7 @@ def build_adjudication_packet(
             ]
             claim_items.append(
                 ClaimAdjudicationItem(
-                    adjudication_item_id=f"CLAIM::{facet_key}::{claim.claim_id}",
+                    adjudication_item_id=claim_item_id(facet_key, claim.claim_id),
                     page_key=validation.page_key, document_revision_id=validation.document_revision_id,
                     facet_identity=facet_key, display_title=page.display_title,
                     logical_document_id=facet.logical_document_id, revision_symbol=symbol,
@@ -267,7 +272,7 @@ def build_adjudication_packet(
             ]
             alias_items.append(
                 AliasAdjudicationItem(
-                    adjudication_item_id=f"ALIAS::{facet_key}::{alias.alias_id.rsplit('|', 1)[-1]}",
+                    adjudication_item_id=alias_item_id(facet_key, alias.alias_id),
                     page_key=validation.page_key, document_revision_id=validation.document_revision_id,
                     page_identity=page.normalized_identity, display_title=page.display_title,
                     revision_symbol=symbol,
@@ -303,7 +308,7 @@ def build_adjudication_packet(
                       for q in claims_by_id[cid].supporting_quotes]
             summary_items.append(
                 SummaryAdjudicationItem(
-                    adjudication_item_id=f"SUMMARY::{facet_key}::{sentence.sentence_id}",
+                    adjudication_item_id=summary_item_id(facet_key, sentence.sentence_id),
                     page_key=validation.page_key, document_revision_id=validation.document_revision_id,
                     display_title=page.display_title, revision_symbol=symbol,
                     summary_text=sentence.text, referenced_claim_ids=list(sentence.supported_claim_ids),

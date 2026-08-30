@@ -719,3 +719,181 @@ def test_runner_takes_provenance_from_run_provenance_not_the_compiler_object():
     source = (REPO_ROOT / "scripts" / "run_stage7c1_wiki_compiler.py").read_text(encoding="utf-8")
     assert "model_identity=primary_provenance.model_identity" in source
     assert "model_identity=facet_compiler.model_identity" not in source
+
+
+# =============================================================================
+# SS8F metric correction, and the immutability of the committed Run-1 packet
+# =============================================================================
+
+FROZEN_RUNS_PATH = REPO_ROOT / "reports" / "stage7c1_compilation_runs.json"
+COMMITTED_PACKET_JSON = REPO_ROOT / "reports" / "stage7c1_owner_adjudication_packet.json"
+
+
+def _skip_without_frozen_runs():
+    if not FROZEN_RUNS_PATH.exists():
+        pytest.skip(f"{FROZEN_RUNS_PATH} not present")
+
+
+@pytest.fixture(scope="module")
+def frozen_runs():
+    _skip_without_frozen_runs()
+    from ingestion_bench.wiki_projection.benchmark import load_frozen_runs
+
+    return load_frozen_runs(FROZEN_RUNS_PATH, pages_by_key={})
+
+
+def test_gated_claim_metric_is_over_accepted_claims_only(projection):
+    """SS8F's THRESHOLD names the accepted-claim set. The gated key is the frozen
+    normalized (facet, subject, predicate, object, sorted supporting_chunk_ids)."""
+    from ingestion_bench.wiki_projection.benchmark import _claim_keys, normalized_claim_key
+
+    compiled = run_stage7c1_compilation(projection, FakeFacetCompiler(), dollar_ceiling_usd=1.0, run_ids=(1,))
+    run_1 = compiled.validations_by_run["1"]
+
+    accepted_only = _claim_keys(run_1, accepted_only=True)
+    all_outputs = _claim_keys(run_1, accepted_only=False)
+    assert accepted_only < all_outputs, "this fixture must contain at least one non-accepted claim"
+    assert all(
+        key in accepted_only
+        for facet_key, validation in run_1.items()
+        for claim in validation.claims
+        if claim.validation_status == "accepted"
+        for key in [normalized_claim_key(facet_key, claim)]
+    )
+    sample_key = next(iter(accepted_only))
+    assert len(sample_key) == 5, "facet identity + subject + predicate + object + sorted chunk ids"
+
+
+def test_corrected_metrics_reproduce_the_read_only_analysis(frozen_runs):
+    """The corrected implementation must reproduce, from the untouched frozen
+    Runs 1/2/3, exactly the figures the read-only analysis reported."""
+    metrics = frozen_runs.repeatability
+
+    assert metrics.accepted_claim_set_jaccard == pytest.approx({
+        "run1_vs_run2": 0.6666666666666666,
+        "run1_vs_run3": 0.6206896551724138,
+        "run2_vs_run3": 0.8260869565217391,
+    })
+    for pair, entry in metrics.citation_exact_agreement_on_matched_accepted_claims.items():
+        assert entry["rate"] == 1.0, pair
+        assert entry["matched_accepted_claims"] == entry["citation_sets_exactly_equal"]
+
+    # The descriptive all-output metric is preserved and still differs -- which
+    # is the whole point of separating them.
+    assert metrics.claim_set_jaccard_all_outputs_descriptive == pytest.approx({
+        "run1_vs_run2": 0.625,
+        "run1_vs_run3": 0.5294117647058824,
+        "run2_vs_run3": 0.7931034482758621,
+    })
+
+
+def test_citation_metric_is_an_agreement_rate_not_a_jaccard(frozen_runs):
+    """The corrected citation metric matches claims FIRST, then compares
+    citation sets exactly -- so it reports a rate with a denominator, never a
+    set-overlap coefficient."""
+    for entry in frozen_runs.repeatability.citation_exact_agreement_on_matched_accepted_claims.values():
+        assert set(entry) == {"matched_accepted_claims", "citation_sets_exactly_equal", "rate"}
+        assert entry["matched_accepted_claims"] > 0
+        assert entry["rate"] == entry["citation_sets_exactly_equal"] / entry["matched_accepted_claims"]
+
+
+def test_accepted_miss_decomposition_separates_variance_from_status_flips(frozen_runs):
+    decomposition = frozen_runs.repeatability.accepted_miss_decomposition
+    assert set(decomposition) == {"run1_vs_run2", "run1_vs_run3", "run2_vs_run3"}
+    for entry in decomposition.values():
+        assert entry["misses"] == entry["status_change_only"] + entry["content_difference"]
+        assert entry["union"] - entry["shared"] == entry["misses"]
+    assert sum(e["status_change_only"] for e in decomposition.values()) == 2
+    assert sum(e["content_difference"] for e in decomposition.values()) == 22
+
+
+def test_gate_q_gates_on_the_corrected_metrics_and_labels_them(frozen_runs, packet):
+    """Gate Q must compare the THRESHOLD's quantities, under names that say
+    which population they cover."""
+    status = build_gate_q_pre_status(frozen_runs, packet)
+    q8 = status["criteria"]["Q-8_repeatability"]
+
+    assert q8["observed"]["accepted_claim_set_jaccard_min"] == pytest.approx(0.6206896551724138)
+    assert q8["observed"]["citation_exact_agreement_min"] == 1.0
+    assert "accepted_claim_set_jaccard" in q8["required"]
+    assert "citation_exact_agreement_on_matched_accepted_claims" in q8["required"]
+    assert "ACCEPTED" in q8["metric_semantics"]
+    assert "not a Jaccard" in q8["metric_semantics"]
+
+    # The descriptive figure is reported but never gated.
+    assert q8["descriptive_not_gated"]["claim_set_jaccard_all_outputs_min"] == pytest.approx(0.5294117647058824)
+    assert "Never compared to a threshold" in q8["descriptive_not_gated"]["note"]
+
+
+def test_the_claim_breach_survives_correction_and_the_citation_breach_does_not(frozen_runs, packet):
+    """The correction narrows the breach: the accepted-claim Jaccard is still
+    below 0.90, but citation agreement is above 0.95, so only ONE cause stands.
+    Thresholds themselves are unchanged."""
+    status = build_gate_q_pre_status(frozen_runs, packet)
+    breaches = status["criteria"]["Q-8_repeatability"]["breaches_proposed_threshold"]
+
+    assert len(breaches) == 1
+    assert "accepted_claim_set_jaccard" in breaches[0]
+    assert not any("citation" in b for b in breaches)
+    assert status["criteria"]["Q-8_repeatability"]["meets_proposed_threshold"] is False
+    assert "0.90" in status["criteria"]["Q-8_repeatability"]["required"]
+    assert "0.95" in status["criteria"]["Q-8_repeatability"]["required"]
+
+
+def test_loading_frozen_runs_never_writes_to_them(frozen_runs):
+    """`load_frozen_runs` recomputes metrics from the raw evidence; the file it
+    reads must be byte-identical afterwards."""
+    import hashlib
+
+    from ingestion_bench.wiki_projection.benchmark import load_frozen_runs
+
+    before = hashlib.sha256(FROZEN_RUNS_PATH.read_bytes()).hexdigest()
+    load_frozen_runs(FROZEN_RUNS_PATH, pages_by_key={})
+    assert hashlib.sha256(FROZEN_RUNS_PATH.read_bytes()).hexdigest() == before
+
+
+# --- the committed Run-1 packet stays unadjudicated --------------------------
+
+
+def test_committed_packet_contains_no_pre_filled_owner_decision():
+    """The 68 verdicts in the committed packet must remain empty. Nothing in
+    Stage 7C.1B may populate one."""
+    if not COMMITTED_PACKET_JSON.exists():
+        pytest.skip(f"{COMMITTED_PACKET_JSON} not present")
+    committed = json.loads(COMMITTED_PACKET_JSON.read_text(encoding="utf-8"))
+
+    total = 0
+    for group in ("claims", "aliases", "summary_sentences"):
+        for item in committed[group]:
+            total += 1
+            assert item["owner"]["owner_verdict"] is None, item["adjudication_item_id"]
+            assert item["owner"]["owner_reason"] == ""
+    assert total == committed["total_item_count"] == 68
+
+
+def test_pass3_item_ids_match_the_committed_packet_exactly():
+    """Pass 3 resolves verdicts by adjudication_item_id, so its id construction
+    must reproduce the ids the owner will actually fill in."""
+    if not COMMITTED_PACKET_JSON.exists():
+        pytest.skip(f"{COMMITTED_PACKET_JSON} not present")
+    from ingestion_bench.wiki_projection.validation import claim_item_id, facet_key_of, summary_item_id
+
+    committed = json.loads(COMMITTED_PACKET_JSON.read_text(encoding="utf-8"))
+    for item in committed["claims"]:
+        key = facet_key_of(item["page_key"], item["document_revision_id"])
+        assert item["adjudication_item_id"].startswith("CLAIM::")
+        assert item["adjudication_item_id"] == claim_item_id(key, item["adjudication_item_id"].split("::")[-1])
+    for item in committed["summary_sentences"]:
+        key = facet_key_of(item["page_key"], item["document_revision_id"])
+        assert item["adjudication_item_id"] == summary_item_id(key, item["adjudication_item_id"].split("::")[-1])
+
+
+def test_packet_building_is_unchanged_by_the_7c1b_refactor(projection, compiled, packet):
+    """Routing packet ids through the shared helpers must not have altered a
+    single id."""
+    from ingestion_bench.wiki_projection.validation import claim_item_id, facet_key_of
+
+    for item in packet.claims:
+        key = facet_key_of(item.page_key, item.document_revision_id)
+        assert item.adjudication_item_id == claim_item_id(key, item.adjudication_item_id.split("::")[-1])
+    assert all(i.owner.owner_verdict is None for i in packet.claims)

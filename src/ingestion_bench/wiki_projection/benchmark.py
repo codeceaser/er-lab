@@ -30,7 +30,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from ingestion_bench.cross_document_benchmark.benchmark_runner import (
     FactEvidence,
@@ -319,11 +319,34 @@ class RunProvenance(BaseModel):
 
 
 class RepeatabilityMetrics(BaseModel):
+    """Revision 6 SS8F states the repeatability quantity TWICE, and the two
+    statements differ:
+
+      * the METRIC LIST leaves the population unqualified -- "claim-set
+        stability (Jaccard over normalized (subject, predicate, object, sorted
+        supporting_chunk_ids))";
+      * the THRESHOLD names the ACCEPTED-claim set, and for citations asks for
+        "citation sets on matched claims >= 0.95 exact" -- an exact-agreement
+        rate, not a Jaccard.
+
+    Both are reported. Only the threshold's quantities are GATED, and their
+    names say so, so a future reader cannot compare one against the other's
+    bar. `claim_set_jaccard_all_outputs_descriptive` preserves SS8F's
+    descriptive metric and is never gated.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     run_ids: list[int]
-    claim_set_jaccard_pairwise: dict[str, float]
-    citation_stability_pairwise: dict[str, float]
+
+    # --- GATED (SS8F threshold semantics) ---------------------------------
+    accepted_claim_set_jaccard: dict[str, float] = Field(default_factory=dict)
+    citation_exact_agreement_on_matched_accepted_claims: dict[str, dict] = Field(default_factory=dict)
+
+    # --- DESCRIPTIVE (SS8F metric list; unqualified population) -- NOT gated
+    claim_set_jaccard_all_outputs_descriptive: dict[str, float] = Field(default_factory=dict)
+    accepted_miss_decomposition: dict[str, dict] = Field(default_factory=dict)
+
     alias_stability_pairwise: dict[str, float]
     raw_summary_stability_pairwise: dict[str, float]
     derived_link_stability_pairwise: dict[str, float]
@@ -366,34 +389,44 @@ def _jaccard(left: set, right: set) -> float:
     return len(left & right) / len(left | right)
 
 
-def _normalized_claim_keys(validations: dict[str, FacetValidationResult]) -> set[tuple]:
-    """SS8F: Jaccard over normalized (subject, predicate, object, sorted
-    supporting_chunk_ids)."""
+def normalized_claim_key(facet_key: str, claim: FacetValidationResult) -> tuple:
+    """THE frozen normalized claim key (SS8F): normalized
+    (facet identity, subject, predicate, object, sorted supporting_chunk_ids).
+
+    Used both to compute `accepted_claim_set_jaccard` and to MATCH claims
+    between runs before comparing their citation sets, so the two gated metrics
+    cannot drift apart.
+    """
+    return (
+        facet_key,
+        normalize_triple_part(claim.subject),
+        claim.predicate.strip().casefold(),
+        normalize_triple_part(claim.object),
+        tuple(sorted(claim.supporting_chunk_ids)),
+    )
+
+
+def _claim_keys(validations: dict[str, FacetValidationResult], *, accepted_only: bool) -> set[tuple]:
     return {
-        (
-            key,
-            normalize_triple_part(claim.subject),
-            claim.predicate.strip().casefold(),
-            normalize_triple_part(claim.object),
-            tuple(sorted(claim.supporting_chunk_ids)),
-        )
+        normalized_claim_key(key, claim)
         for key, validation in validations.items()
         for claim in validation.claims
+        if not accepted_only or claim.validation_status == "accepted"
     }
 
 
-def _citation_keys(validations: dict[str, FacetValidationResult]) -> set[tuple]:
-    return {
-        (
-            key,
-            normalize_triple_part(claim.subject),
-            claim.predicate.strip().casefold(),
-            normalize_triple_part(claim.object),
-            tuple(sorted(normalize_whitespace(q) for q in claim.supporting_quotes)),
-        )
-        for key, validation in validations.items()
-        for claim in validation.claims
-    }
+def _citation_sets_by_claim_key(validations: dict[str, FacetValidationResult]) -> dict[tuple, set[str]]:
+    """Accepted claims indexed by the frozen normalized claim key, each mapped
+    to its normalized citation set."""
+    index: dict[tuple, set[str]] = {}
+    for key, validation in validations.items():
+        for claim in validation.claims:
+            if claim.validation_status != "accepted":
+                continue
+            index.setdefault(normalized_claim_key(key, claim), set()).update(
+                normalize_whitespace(q) for q in claim.supporting_quotes
+            )
+    return index
 
 
 def _alias_keys(validations: dict[str, FacetValidationResult]) -> set[tuple]:
@@ -545,6 +578,40 @@ def run_stage7c1_compilation(
     )
 
 
+def load_frozen_runs(path, *, pages_by_key: dict) -> Stage7C1Result:
+    """Load already-executed runs and RECOMPUTE repeatability with the current
+    implementation.
+
+    The stored `repeatability` block is deliberately ignored rather than trusted:
+    the frozen Runs 1/2/3 were written when the repeatability metrics did not
+    match SS8F's threshold semantics, and re-deriving from `validations_by_run`
+    -- the raw evidence, which is what the freeze actually protects -- applies
+    the corrected metrics without touching a single stored claim.
+
+    Reads only; never writes back.
+    """
+    import json as _json
+    from pathlib import Path as _Path
+
+    raw = _json.loads(_Path(path).read_text(encoding="utf-8"))
+    validations_by_run = {
+        run_id: {key: FacetValidationResult.model_validate(value) for key, value in facets.items()}
+        for run_id, facets in raw["validations_by_run"].items()
+    }
+    return Stage7C1Result(
+        generated_at=raw["generated_at"],
+        projection_hash=raw["projection_hash"],
+        primary_run_id=raw["primary_run_id"],
+        run_provenance=[RunProvenance.model_validate(p) for p in raw["run_provenance"]],
+        validations_by_run=validations_by_run,
+        repeatability=_compute_repeatability(validations_by_run, pages_by_key),
+        dollar_ceiling_usd=raw["dollar_ceiling_usd"],
+        total_estimated_cost_usd=raw["total_estimated_cost_usd"],
+        membership_unchanged=raw["membership_unchanged"],
+        compiler_calls_total=raw["compiler_calls_total"],
+    )
+
+
 def _compute_repeatability(
     validations_by_run: dict[str, dict[str, FacetValidationResult]], page_by_key: dict
 ) -> RepeatabilityMetrics:
@@ -561,10 +628,52 @@ def _compute_repeatability(
         values = [getattr(v, field) for v in validations_by_run[run].values()]
         return None if any(value is None for value in values) else sum(values)
 
+    # --- GATED: SS8F threshold semantics ----------------------------------
+    accepted_jaccard = {
+        f"run{a}_vs_run{b}": _jaccard(
+            _claim_keys(validations_by_run[a], accepted_only=True),
+            _claim_keys(validations_by_run[b], accepted_only=True),
+        )
+        for a, b in pairs
+    }
+    citation_agreement: dict[str, dict] = {}
+    miss_decomposition: dict[str, dict] = {}
+    for a, b in pairs:
+        left, right = _citation_sets_by_claim_key(validations_by_run[a]), _citation_sets_by_claim_key(validations_by_run[b])
+        matched = set(left) & set(right)
+        exact = sum(1 for key in matched if left[key] == right[key])
+        citation_agreement[f"run{a}_vs_run{b}"] = {
+            "matched_accepted_claims": len(matched),
+            "citation_sets_exactly_equal": exact,
+            "rate": (exact / len(matched)) if matched else 1.0,
+        }
+        # Splitting the Jaccard misses shows whether instability is the model
+        # saying something different, or the same output judged differently.
+        accepted_a, accepted_b = set(left), set(right)
+        all_a = _claim_keys(validations_by_run[a], accepted_only=False)
+        all_b = _claim_keys(validations_by_run[b], accepted_only=False)
+        misses = (accepted_a | accepted_b) - (accepted_a & accepted_b)
+        status_only = sum(1 for key in misses if key in all_a and key in all_b)
+        miss_decomposition[f"run{a}_vs_run{b}"] = {
+            "union": len(accepted_a | accepted_b),
+            "shared": len(accepted_a & accepted_b),
+            "misses": len(misses),
+            "status_change_only": status_only,
+            "content_difference": len(misses) - status_only,
+        }
+
     return RepeatabilityMetrics(
         run_ids=[int(r) for r in run_ids],
-        claim_set_jaccard_pairwise=pairwise(_normalized_claim_keys),
-        citation_stability_pairwise=pairwise(_citation_keys),
+        accepted_claim_set_jaccard=accepted_jaccard,
+        citation_exact_agreement_on_matched_accepted_claims=citation_agreement,
+        claim_set_jaccard_all_outputs_descriptive={
+            f"run{a}_vs_run{b}": _jaccard(
+                _claim_keys(validations_by_run[a], accepted_only=False),
+                _claim_keys(validations_by_run[b], accepted_only=False),
+            )
+            for a, b in pairs
+        },
+        accepted_miss_decomposition=miss_decomposition,
         alias_stability_pairwise=pairwise(_alias_keys),
         raw_summary_stability_pairwise=pairwise(_summary_keys),
         derived_link_stability_pairwise=pairwise(_link_keys),
@@ -603,5 +712,9 @@ def _compute_repeatability(
             "Fact-recall variance against the frozen expected facts is deliberately NOT computed at this "
             "checkpoint: it would place benchmark truth beside unadjudicated output, and SS8A permits it "
             "only once compilation is complete.",
+            "GATED vs DESCRIPTIVE: only `accepted_claim_set_jaccard` and "
+            "`citation_exact_agreement_on_matched_accepted_claims` are compared against SS8F's thresholds. "
+            "`claim_set_jaccard_all_outputs_descriptive` preserves SS8F's metric-list wording (unqualified "
+            "population) and is never gated -- the two must not be compared against each other's bar.",
         ],
     )

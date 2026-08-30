@@ -512,24 +512,30 @@ def build_gate_q_pre_status(stage_result, packet) -> dict:
     false_merges = stage_result.repeatability.false_merges_by_run[str(stage_result.primary_run_id)]
 
     repeatability = stage_result.repeatability
-    claim_jaccard = list(repeatability.claim_set_jaccard_pairwise.values())
-    citation_jaccard = list(repeatability.citation_stability_pairwise.values())
+    # GATED quantities only -- SS8F's threshold names the ACCEPTED-claim set, and
+    # for citations an exact-agreement rate on MATCHED accepted claims rather
+    # than a Jaccard. The descriptive all-output metric is never gated here.
+    claim_jaccard = list(repeatability.accepted_claim_set_jaccard.values())
+    citation_agreement = [
+        entry["rate"] for entry in repeatability.citation_exact_agreement_on_matched_accepted_claims.values()
+    ]
 
     # Revision 6 SS8F's PROPOSED repeatability thresholds. Still open question Q5,
     # so a breach is reported as failing-at-the-proposed-threshold, never as a
     # final Gate Q verdict.
     proposed_claim_jaccard = 0.90
-    proposed_citation_jaccard = 0.95
+    proposed_citation_agreement = 0.95
     claim_jaccard_min = min(claim_jaccard) if claim_jaccard else None
-    citation_jaccard_min = min(citation_jaccard) if citation_jaccard else None
+    citation_agreement_min = min(citation_agreement) if citation_agreement else None
     q8_breaches: list[str] = []
     if claim_jaccard_min is not None and claim_jaccard_min < proposed_claim_jaccard:
         q8_breaches.append(
-            f"accepted-claim-set pairwise Jaccard min {claim_jaccard_min:.4f} < proposed {proposed_claim_jaccard}"
+            f"accepted_claim_set_jaccard min {claim_jaccard_min:.4f} < proposed {proposed_claim_jaccard}"
         )
-    if citation_jaccard_min is not None and citation_jaccard_min < proposed_citation_jaccard:
+    if citation_agreement_min is not None and citation_agreement_min < proposed_citation_agreement:
         q8_breaches.append(
-            f"citation stability min {citation_jaccard_min:.4f} < proposed {proposed_citation_jaccard}"
+            f"citation_exact_agreement_on_matched_accepted_claims min {citation_agreement_min:.4f} "
+            f"< proposed {proposed_citation_agreement}"
         )
 
     mechanical_hard_failure = None
@@ -612,13 +618,32 @@ def build_gate_q_pre_status(stage_result, packet) -> dict:
             },
             "Q-8_repeatability": {
                 "decidable_mechanically": True,
-                "required": "claim Jaccard >= 0.90, citations >= 0.95, false merges 0, ceiling breaches 0",
+                "required": (
+                    "accepted_claim_set_jaccard >= 0.90, "
+                    "citation_exact_agreement_on_matched_accepted_claims >= 0.95, "
+                    "false merges 0, ceiling breaches 0"
+                ),
                 "required_status": "PROPOSED -- open question Q5, not yet owner-approved",
+                "metric_semantics": (
+                    "SS8F THRESHOLD semantics: the claim metric is over MECHANICALLY ACCEPTED claims only, "
+                    "keyed on normalized (facet identity, subject, predicate, object, sorted "
+                    "supporting_chunk_ids); the citation metric matches accepted claims on that same key "
+                    "and then compares their citation sets EXACTLY, reporting an agreement rate -- it is "
+                    "not a Jaccard."
+                ),
                 "observed": {
-                    "claim_jaccard_min": claim_jaccard_min,
-                    "citation_jaccard_min": citation_jaccard_min,
+                    "accepted_claim_set_jaccard_min": claim_jaccard_min,
+                    "citation_exact_agreement_min": citation_agreement_min,
                     "false_merges_any_run": max(repeatability.false_merges_by_run.values()),
                     "ceiling_breaches_any_run": max(repeatability.ceiling_breaches_by_run.values()),
+                },
+                "descriptive_not_gated": {
+                    "claim_set_jaccard_all_outputs_min": (
+                        min(repeatability.claim_set_jaccard_all_outputs_descriptive.values())
+                        if repeatability.claim_set_jaccard_all_outputs_descriptive
+                        else None
+                    ),
+                    "note": "SS8F metric-list wording, unqualified population. Never compared to a threshold.",
                 },
                 "breaches_proposed_threshold": q8_breaches,
                 "meets_proposed_threshold": not q8_breaches,

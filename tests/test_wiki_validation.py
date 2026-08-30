@@ -650,3 +650,302 @@ def test_nothing_is_discarded_silently(projection, context):
     bad = next(c for c in result.claims if c.claim_id == "bad")
     assert bad.validation_status == "rejected"
     assert bad.rejection_reasons
+
+
+# =============================================================================
+# PASS 3 -- deterministic re-validation after owner adjudication (SS4.6)
+# =============================================================================
+
+
+def _pass3(projection, context, validation, verdict_map):
+    """Apply pass 3 to one validated facet with an explicit verdict map."""
+    from ingestion_bench.wiki_projection.validation import AdjudicationVerdictSet, apply_pass3
+
+    return apply_pass3(
+        validation, page=context["pages_by_key"][validation.page_key],
+        sections_by_chunk=context["sections_by_chunk"], all_page_keys=context["all_page_keys"],
+        verdicts=AdjudicationVerdictSet(verdicts=verdict_map),
+    )
+
+
+def _all_correct(validation):
+    from ingestion_bench.wiki_projection.validation import required_adjudication_item_ids
+
+    return {item_id: "CORRECT" for item_id in required_adjudication_item_ids(validation)}
+
+
+def _postings_by_chunk(projection):
+    out: dict[str, list] = {}
+    for posting in projection.postings:
+        out.setdefault(posting.chunk_id, []).append(posting)
+    return out
+
+
+def _c88_payload(chunk_id):
+    """One supported alias, one accepted claim, one summary referencing it."""
+    return {
+        "aliases": [{"alias": "C-88", "supporting_chunk_ids": [chunk_id],
+                     "supporting_quotes": ["C-88"], "status": "supported"}],
+        "claims": [_claim(chunk_id)],
+        "summary_sentences": [{"sentence_id": "s1", "text": "C-88 is implemented through P-205.",
+                               "supported_claim_ids": ["clm_1"]}],
+    }
+
+
+@pytest.fixture
+def c88_validation(projection, context):
+    facet = _facet(projection, "IDENT:C-88", "CONTROL-LIBRARY")
+    return facet, _run(projection, context, facet, _c88_payload(facet.chunk_ids[0]))
+
+
+def test_all_correct_verdicts_keep_everything(projection, context, c88_validation):
+    _facet_obj, validation = c88_validation
+    result = _pass3(projection, context, validation, _all_correct(validation))
+
+    assert result.surviving_accepted_claim_ids == ["clm_1"]
+    assert result.surviving_summary_sentence_ids == ["s1"]
+    assert result.payload_eligible_alias_texts == ["C-88"]
+    assert result.withdrawn_claim_ids == []
+    assert result.derived_links, "a surviving accepted claim must still derive its links"
+
+
+@pytest.mark.parametrize("failing_verdict", ["INCORRECT", "UNVERIFIABLE"])
+def test_owner_failed_claim_is_withdrawn_from_payload_links_and_summary(
+    projection, context, c88_validation, failing_verdict
+):
+    """SS4.6's binding invariant: nothing that failed adjudication reaches a
+    vector, a summary, or a derived link. SS3.3/SS3.5 treat INCORRECT and
+    UNVERIFIABLE alike."""
+    from ingestion_bench.wiki_projection.assembly import compose_payload_preview
+    from ingestion_bench.wiki_projection.validation import claim_item_id, facet_key_of
+
+    facet, validation = c88_validation
+    verdicts = _all_correct(validation)
+    key = facet_key_of(validation.page_key, validation.document_revision_id)
+    verdicts[claim_item_id(key, "clm_1")] = failing_verdict
+
+    result = _pass3(projection, context, validation, verdicts)
+
+    # the mechanical record is preserved; withdrawal is tracked separately
+    assert validation.claims[0].validation_status == "accepted"
+    assert result.withdrawn_claim_ids == ["clm_1"]
+    assert result.surviving_accepted_claim_ids == []
+    # ... it reaches no derived link ...
+    assert result.derived_links == []
+    # ... nor the summary that depended on it ...
+    assert result.surviving_summary_sentence_ids == []
+    assert "s1" in result.withdrawn_summary_ids
+    # ... nor the vector payload.
+    payload = compose_payload_preview(
+        validation, facet=facet, page=context["pages_by_key"][validation.page_key],
+        sections_by_chunk=context["sections_by_chunk"],
+        postings_by_chunk=_postings_by_chunk(projection), pass3=result,
+    )
+    component_5 = next(c for c in payload.components if c.number == 5)
+    component_6 = next(c for c in payload.components if c.number == 6)
+    component_7 = next(c for c in payload.components if c.number == 7)
+    assert component_6.text == "", "the withdrawn claim must not reach the vector payload"
+    assert component_7.text == ""
+    # ... while the SOURCE passage is untouched. Component 5 is `source_derived`
+    # and no owner verdict may remove it, even though this corpus's source
+    # sentence happens to read the same as the withdrawn claim_text.
+    assert "Control C-88 is implemented through Procedure P-205." in component_5.text
+    assert component_5.label == "source_derived"
+
+
+def test_correct_claim_remains_in_the_final_payload(projection, context, c88_validation):
+    from ingestion_bench.wiki_projection.assembly import compose_payload_preview
+
+    facet, validation = c88_validation
+    result = _pass3(projection, context, validation, _all_correct(validation))
+    payload = compose_payload_preview(
+        validation, facet=facet, page=context["pages_by_key"][validation.page_key],
+        sections_by_chunk=context["sections_by_chunk"],
+        postings_by_chunk=_postings_by_chunk(projection), pass3=result,
+    )
+    component_6 = next(c for c in payload.components if c.number == 6)
+    assert "Control C-88 is implemented through Procedure P-205." in component_6.text
+    assert payload.is_final is True
+    assert payload.pending_components == []
+
+
+def test_a_correct_summary_dies_with_its_only_withdrawn_claim(projection, context, c88_validation):
+    """Its OWN verdict is CORRECT, but SS4.1.8 reference validity no longer
+    holds once the claim it references is withdrawn."""
+    from ingestion_bench.wiki_projection.validation import claim_item_id, facet_key_of, summary_item_id
+
+    _facet_obj, validation = c88_validation
+    key = facet_key_of(validation.page_key, validation.document_revision_id)
+    verdicts = _all_correct(validation)
+    verdicts[claim_item_id(key, "clm_1")] = "INCORRECT"
+    assert verdicts[summary_item_id(key, "s1")] == "CORRECT"
+
+    result = _pass3(projection, context, validation, verdicts)
+    assert result.surviving_summary_sentence_ids == []
+    assert "every claim it references was withdrawn" in result.withdrawal_reasons["s1"]
+
+
+def test_a_summary_survives_if_another_referenced_claim_survives(projection, context):
+    """The rule is SS4.1.8's '>= 1 accepted claim', not 'all of them'."""
+    from ingestion_bench.wiki_projection.validation import claim_item_id, facet_key_of
+
+    # adj_rev1 is the corpus's only multi-sentence chunk, so it is the only
+    # facet that can carry two independently-quotable claims about one identity.
+    facet = _facet(projection, "IDENT:C-77", "ADJACENT-DOMAIN")
+    chunk_id = facet.chunk_ids[0]
+    validation = _run(
+        projection, context, facet,
+        {"claims": [
+            {"claim_id": "a", "subject": "Obligation O-32", "predicate": "is satisfied by",
+             "object": "Control C-77", "claim_text": "Obligation O-32 is satisfied by Control C-77.",
+             "supporting_chunk_ids": [chunk_id],
+             "supporting_quotes": ["Obligation O-32 is satisfied by Control C-77"]},
+            {"claim_id": "b", "subject": "Control C-77", "predicate": "is implemented through",
+             "object": "Procedure P-301", "claim_text": "Control C-77 is implemented through Procedure P-301.",
+             "supporting_chunk_ids": [chunk_id],
+             "supporting_quotes": ["Control C-77 is implemented through Procedure P-301"]},
+        ],
+         "summary_sentences": [{"sentence_id": "s1", "text": "C-77 satisfies O-32 and uses P-301.",
+                                "supported_claim_ids": ["a", "b"]}]},
+    )
+    assert [c.validation_status for c in validation.claims] == ["accepted", "accepted"]
+    key = facet_key_of(validation.page_key, validation.document_revision_id)
+    verdicts = _all_correct(validation)
+    verdicts[claim_item_id(key, "a")] = "INCORRECT"
+
+    result = _pass3(projection, context, validation, verdicts)
+    assert result.withdrawn_claim_ids == ["a"]
+    assert result.surviving_accepted_claim_ids == ["b"]
+    assert result.surviving_summary_sentence_ids == ["s1"]
+
+
+def test_a_failed_summary_verdict_withdraws_only_the_summary(projection, context, c88_validation):
+    from ingestion_bench.wiki_projection.validation import facet_key_of, summary_item_id
+
+    _facet_obj, validation = c88_validation
+    key = facet_key_of(validation.page_key, validation.document_revision_id)
+    verdicts = _all_correct(validation)
+    verdicts[summary_item_id(key, "s1")] = "INCORRECT"
+
+    result = _pass3(projection, context, validation, verdicts)
+    assert result.withdrawn_summary_ids == ["s1"]
+    assert result.surviving_accepted_claim_ids == ["clm_1"], "the claim itself is unaffected"
+    assert result.derived_links, "its links survive too"
+
+
+def test_incorrect_alias_cascade_is_preserved(projection, context):
+    """The pre-existing SS4.6 cascade must still fire: a claim whose coherence
+    rested SOLELY on a withdrawn alias becomes out_of_page_scope."""
+    from ingestion_bench.wiki_projection.validation import alias_item_id, facet_key_of
+
+    facet = _facet(projection, "PHRASE:payment settlement", "SERVICE-CATALOGUE")
+    chunk_id = facet.chunk_ids[0]
+    validation = _run(
+        projection, context, facet,
+        {
+            "aliases": [{"alias": "Payment Settlement business service", "supporting_chunk_ids": [chunk_id],
+                         "supporting_quotes": ["Payment Settlement business service"], "status": "supported"}],
+            "claims": [{
+                "claim_id": "clm_1", "subject": "Payment Settlement business service",
+                "predicate": "is governed by", "object": "O-31",
+                "claim_text": "The Payment Settlement business service is governed by Obligation O-31.",
+                "supporting_chunk_ids": [chunk_id],
+                "supporting_quotes": ["The Payment Settlement business service is governed by Obligation O-31"],
+            }],
+        },
+    )
+    assert validation.claims[0].depends_on_alias is True
+
+    key = facet_key_of(validation.page_key, validation.document_revision_id)
+    verdicts = _all_correct(validation)
+    alias_id = validation.aliases[0].alias_id
+    verdicts[alias_item_id(key, alias_id)] = "INCORRECT"
+
+    result = _pass3(projection, context, validation, verdicts)
+    assert result.withdrawn_alias_ids == [alias_id]
+    assert result.payload_eligible_alias_texts == []
+    assert result.demoted_to_out_of_page_scope == ["clm_1"]
+    assert result.surviving_accepted_claim_ids == []
+    assert result.derived_links == []
+
+
+def test_an_absent_verdict_is_not_a_pass(projection, context, c88_validation):
+    """SS4.6 requires EVERY accepted claim to be adjudicated; a missing verdict
+    must not be silently treated as approval."""
+    from ingestion_bench.wiki_projection.validation import (
+        AdjudicationVerdictSet,
+        required_adjudication_item_ids,
+    )
+
+    _facet_obj, validation = c88_validation
+    result = _pass3(projection, context, validation, {})
+    assert result.surviving_accepted_claim_ids == []
+    assert result.surviving_summary_sentence_ids == []
+    assert result.payload_eligible_alias_texts == []
+
+    missing = AdjudicationVerdictSet().missing_items(required_adjudication_item_ids(validation))
+    assert len(missing) == 3  # one claim, one alias, one summary
+
+
+def test_pass3_reports_before_and_after_counts(projection, context, c88_validation):
+    """SS4.6: 'Counts are reported before and after pass 3.'"""
+    from ingestion_bench.wiki_projection.validation import claim_item_id, facet_key_of
+
+    _facet_obj, validation = c88_validation
+    key = facet_key_of(validation.page_key, validation.document_revision_id)
+    verdicts = _all_correct(validation)
+    verdicts[claim_item_id(key, "clm_1")] = "INCORRECT"
+    result = _pass3(projection, context, validation, verdicts)
+
+    assert result.counts_before["accepted_claims"] == 1
+    assert result.counts_after["accepted_claims"] == 0
+    assert result.counts_before["derived_links"] == 2  # forward + inverse
+    assert result.counts_after["derived_links"] == 0
+    assert result.withdrawal_reasons["clm_1"]
+
+
+@pytest.mark.parametrize(
+    "verdict_scenario",
+    ["all_correct", "all_incorrect", "all_unverifiable", "none_recorded", "mixed"],
+)
+def test_no_owner_verdict_can_alter_deterministic_membership_or_hashes(
+    projection, context, c88_validation, verdict_scenario
+):
+    """SS4.0/SS2.2: membership is untouched by all three passes. No verdict may
+    move a facet, a chunk, an anchor, a posting or the projection hash."""
+    from ingestion_bench.wiki_projection.projection import compute_projection_hash
+    from ingestion_bench.wiki_projection.validation import required_adjudication_item_ids
+
+    before_hash = projection.projection_hash
+    before_membership = {(f.page_key, f.document_revision_id): f.membership_hash for f in projection.facets}
+    before_postings = len(projection.postings)
+    before_links = len(projection.links)
+
+    _facet_obj, validation = c88_validation
+    item_ids = required_adjudication_item_ids(validation)
+    verdicts = {
+        "all_correct": {i: "CORRECT" for i in item_ids},
+        "all_incorrect": {i: "INCORRECT" for i in item_ids},
+        "all_unverifiable": {i: "UNVERIFIABLE" for i in item_ids},
+        "none_recorded": {},
+        "mixed": {i: ("CORRECT" if n % 2 else "INCORRECT") for n, i in enumerate(item_ids)},
+    }[verdict_scenario]
+
+    _pass3(projection, context, validation, verdicts)
+
+    assert projection.projection_hash == before_hash
+    assert compute_projection_hash(projection) == before_hash
+    assert {(f.page_key, f.document_revision_id): f.membership_hash for f in projection.facets} == before_membership
+    assert len(projection.postings) == before_postings
+    assert len(projection.links) == before_links
+
+
+def test_verdict_set_hash_is_stable_and_order_independent():
+    from ingestion_bench.wiki_projection.validation import AdjudicationVerdictSet
+
+    a = AdjudicationVerdictSet(verdicts={"X": "CORRECT", "Y": "INCORRECT"})
+    b = AdjudicationVerdictSet(verdicts={"Y": "INCORRECT", "X": "CORRECT"})
+    assert a.verdict_set_sha256() == b.verdict_set_sha256()
+    assert len(a.verdict_set_sha256()) == 64
+    c = AdjudicationVerdictSet(verdicts={"X": "CORRECT", "Y": "CORRECT"})
+    assert c.verdict_set_sha256() != a.verdict_set_sha256()
