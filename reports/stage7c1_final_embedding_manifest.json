@@ -1,0 +1,1959 @@
+{
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_count": 22,
+  "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+  "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+  "records": [
+    {
+      "page_key": "IDENT:APP-224499",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "facet_membership_hash": "5dfa423509ab1f85bfd7040a766d507f2ea4c42655e84eac1915b029970e82e9",
+      "payload_text": "APP-224499\nAPP-224499\nApplication Portfolio > Registered Applications\nAPP-224499\nApplication APP-224499 supports the Payment Settlement business service.\nAPP-224499 supports the Payment Settlement business service.\nAPP-224499 supports the Payment Settlement business service (claim-1).",
+      "payload_sha256": "72c2674964c83dcd21d15bffdd1c8f5bb55eee9d3a2dc86a52a315394a8892af",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:APP-224499"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8[0:72]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim-1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "sentence-1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+      ],
+      "source_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:APP-224510",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "facet_membership_hash": "8381dfcab8911ce99368f38dc529dc7638b2d7bd9b93d6c3a8850a5440d6dce7",
+      "payload_text": "APP-224510\nAPP-224510\nApplication Portfolio > Registered Applications\nAPP-224510\nApplication APP-224510 supports the Payment Settlement business service.\nAPP-224510 supports the Payment Settlement business service.\nAPP-224510 supports the Payment Settlement business service (claim-1).",
+      "payload_sha256": "17ed68e5639cd06da1caba2048c1f72a95104a5f9efd91361508d225b98ea62f",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:APP-224510"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2[0:72]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim-1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary-1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+      ],
+      "source_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:APP-330012",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_membership_hash": "ba7c57fdd559d727bf1387fa27b07f79285df5e2aed537f65cdfaeffc46e4fbc",
+      "payload_text": "APP-330012\nAPP-330012\nAdjacent Domain Reference > Payment Reconciliation Chain\nAPP-330012\nC-77\nO-32\nP-301\nApplication APP-330012 supports the Payment Reconciliation business service.\nAPP-330012 supports the Payment Reconciliation business service.\nAPP-330012 supports the Payment Reconciliation business service (claim1).",
+      "payload_sha256": "cc9107881efc8ca9e8b5c30c105dac2c85991b2914d649b205b9484f2b81d2f7",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:APP-330012"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011[0:76]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "source_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:C-77",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_membership_hash": "8ccdd747c5a5d571ac0037c971f33f2c07aadacf376dfd5b2b78cd328c428de9",
+      "payload_text": "C-77\nControl C-77\nAdjacent Domain Reference > Payment Reconciliation Chain\nAPP-330012\nC-77\nO-32\nP-301\nObligation O-32 is satisfied by Control C-77.\nControl C-77 is implemented through Procedure P-301.\nObligation O-32 is satisfied by Control C-77.\nControl C-77 is implemented through Procedure P-301.\nObligation O-32 is satisfied by Control C-77, which is implemented through Procedure P-301.",
+      "payload_sha256": "63f687eeb288ed291e798a075abde90bf4f8ed46a1c7e3f04d7d17ed38c07bd8",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:C-77"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011[155:200]",
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011[202:254]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1",
+            "claim2"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "source_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "facet_membership_hash": "88f7c9b237f9ae41fc979a93c0c9498814c7df714cd6c5bfdaa1789fcd4bf07b",
+      "payload_text": "C-88a\nC-88a\nControl Library > Control Implementations\nC-88A\nP-204\nControl C-88a is implemented through Procedure P-204.\nC-88a is implemented through Procedure P-204.\nC-88a is implemented through Procedure P-204 (claim1).",
+      "payload_sha256": "e4dc5618faba14b1fda96518bd7ae39b3ea8d2484e726b903252aef2ff666db0",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:C-88A"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a[0:53]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+      ],
+      "source_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "facet_membership_hash": "9889bfe775410de9c4ea663cf38f2a514f148b087d2293d05ebc24958b9c450e",
+      "payload_text": "C-88a\nControl C-88a\nObligation Register > Obligation Coverage\nC-88A\nO-31\nObligation O-31 is satisfied by Control C-88a.\nObligation O-31 is satisfied by Control C-88a.\nObligation O-31 is satisfied by Control C-88a (claim1).",
+      "payload_sha256": "8869317533cbd5e1de3f9c609fb5b1fe2a176496afa64204925e9effa1e21570",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:C-88A"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a[0:46]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+      ],
+      "source_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "facet_membership_hash": "211ae6145a64b192dec7bb86d508c5e9b4649953c45df467f080a708269e3f71",
+      "payload_text": "C-88\nC-88\nControl Library > Control Implementations\nC-88\nP-205\nControl C-88 is implemented through Procedure P-205.\nC-88 is implemented through Procedure P-205.\nC-88 is implemented through Procedure P-205 (claim1).",
+      "payload_sha256": "fcb99b7c950140d3ffd9c809b836e57cfb2c9cb2060f398a92d837285eef1b42",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:C-88"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d[0:52]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+      ],
+      "source_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "facet_membership_hash": "d213dbf72b2e607708f853702d3570619aa60fc54f1ec4d7f6cf0eb8a519d4eb",
+      "payload_text": "C-88\nControl C-88\nObligation Register > Obligation Coverage\nC-88\nO-31\nObligation O-31 is satisfied by Control C-88.",
+      "payload_sha256": "54f71dba082e589872650e6d2fede5ee6e154ba4b4e1a1a38990f1a03fa7eb9b",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:C-88"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8[0:45]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": false,
+          "provenance": []
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": false,
+          "provenance": []
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+      ],
+      "source_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:C-91",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "facet_membership_hash": "b038b0bb2452b8e4c0ef2de8f5c336946fcbd630b176b5ce558816f12f0f48ec",
+      "payload_text": "C-91\nControl C-91\nControl Library > Control Implementations\nC-91\nP-205\nControl C-91 is implemented through Procedure P-205.\nControl C-91 is implemented through Procedure P-205.\nControl C-91 is implemented through Procedure P-205 as stated in claim claim1.",
+      "payload_sha256": "613820aa987bede83bf39d7227511a6662334d7f0c570f673c6fdc340e856b7e",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:C-91"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c[0:52]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "sentence1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+      ],
+      "source_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "facet_membership_hash": "9a5728157327bffda2d11bf990ca2b2e48376e43e82fa3ff75e0e9cb26848733",
+      "payload_text": "O-31\nObligation O-31\nBusiness Service Catalogue > Governed Services\nO-31\nThe Payment Settlement business service is governed by Obligation O-31.\nThe Payment Settlement business service is governed by Obligation O-31.\nThe Payment Settlement business service is governed by Obligation O-31 (claim1).",
+      "payload_sha256": "b36971d5cfcb2f75d158ce2ad951697c9c8371819399f6b1294de32c935e68a5",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:O-31"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614[0:71]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+      ],
+      "source_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "facet_membership_hash": "d10fbe05f19c45f38f592f5c3cd5a7d61d944b9a7161d22070abdbccc6c0d43a",
+      "payload_text": "O-31\nObligation O-31\nObligation Register > Obligation Coverage\nC-88\nO-31\nObligation O-31 is satisfied by Control C-88.\nObligation O-31 is satisfied by Control C-88.\nObligation O-31 is satisfied by Control C-88 (claim1).",
+      "payload_sha256": "dc817a2c98b7d05ae99069d0335dbee64f3d15243060b49e4f024f8fb337da87",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:O-31"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8[0:45]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+      ],
+      "source_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "facet_membership_hash": "1186a65017bfea5ce4d075fb60052930e82a2c505c83ee82a30f75d9b989fd31",
+      "payload_text": "O-31\nObligation O-31\nObligation Register > Obligation Coverage\nC-88A\nO-31\nObligation O-31 is satisfied by Control C-88a.\nObligation O-31 is satisfied by Control C-88a.\nObligation O-31 is satisfied by Control C-88a (claim1).",
+      "payload_sha256": "519d6190f8afa77619646cbb2b795c0e081f8c50f9013f779f01a5c889d79b24",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:O-31"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a[0:46]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+      ],
+      "source_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:O-32",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_membership_hash": "4fd6609206d38272cf2dcfe26d808c6639aefbe9085b071999143dd8c6e27203",
+      "payload_text": "O-32\nObligation O-32\nAdjacent Domain Reference > Payment Reconciliation Chain\nAPP-330012\nC-77\nO-32\nP-301\nThe Payment Reconciliation business service is governed by Obligation O-32.\nObligation O-32 is satisfied by Control C-77.\nObligation O-32 is satisfied by Control C-77.",
+      "payload_sha256": "20f3df9d2e249c8e815cabc8dcecf0bade4cde234aca5f57c9846d10974f37c6",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:O-32"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011[78:153]",
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011[155:200]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim2"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": false,
+          "provenance": []
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "source_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "facet_membership_hash": "c924367b929081b6e9397f66aac68fa5990f122666de363f715e6530525192d5",
+      "payload_text": "P-204\nProcedure P-204\nControl Library > Control Implementations\nC-88A\nP-204\nControl C-88a is implemented through Procedure P-204.\nControl C-88a is implemented through Procedure P-204.\nControl C-88a is implemented through Procedure P-204 (claim1).",
+      "payload_sha256": "ba335fb0050ad7aed0a46174a9c20b9d0291abd904aa6ec4a80fda3402376b9c",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:P-204"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a[0:53]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+      ],
+      "source_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "facet_membership_hash": "f5252b022faf9058c628ea587b4f58443547fc57b9423818caf23a9000cf912a",
+      "payload_text": "P-204\nProcedure P-204\nProcedure Catalogue > Operating Procedures\nP-204\nProcedure P-204 is a retired operating procedure.\nProcedure P-204 is a retired operating procedure.",
+      "payload_sha256": "5662c09d2c760df7d1b188d2cfd8fca52f57bbf6f87f8369f692675fdd263f7e",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:P-204"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1[0:49]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": false,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 1,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1"
+      ],
+      "source_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "facet_membership_hash": "059032c50b98954bad72ce4a9ad26e2d61b39a2b92dffa54b43d18f16b68d941",
+      "payload_text": "P-205\nProcedure P-205\nControl Library > Control Implementations\nC-91\nP-205\nControl C-91 is implemented through Procedure P-205.\nControl C-91 is implemented through Procedure P-205.\nControl C-91 is implemented through Procedure P-205 as stated in the document.",
+      "payload_sha256": "8f2930ebb3de7e68e58e1c128b0caeb9e24d701b85673f874e609e3a836322eb",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:P-205"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c[0:52]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "sentence1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+      ],
+      "source_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "facet_membership_hash": "4619f3a82913ddc76da38688a507f1fe416ff79aaed248993ac218222bb83ddd",
+      "payload_text": "P-205\nProcedure P-205\nControl Library > Control Implementations\nC-88\nP-205\nControl C-88 is implemented through Procedure P-205.\nControl C-88 is implemented through Procedure P-205.\nControl C-88 is implemented through Procedure P-205 (claim1).",
+      "payload_sha256": "191e32e29c359af1419e646dfbd8e8fa09d1e26c72c11844b7aba76eba566375",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:P-205"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d[0:52]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "sentence1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+      ],
+      "source_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "facet_membership_hash": "295bf02b718d343c3241a4a6315d53c7aa0ddcd06aa398c6566e0090b514a202",
+      "payload_text": "P-205\nProcedure P-205\nProcedure Catalogue > Operating Procedures\nP-205\nProcedure P-205 is the current operating procedure.\nProcedure P-205 is the current operating procedure.\nProcedure P-205 is identified as the current operating procedure.",
+      "payload_sha256": "d0e1ea521028cd4c86b6a472c26dcae9f0e4fc3bf232c166aa54fb45892e3cec",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:P-205"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb[0:51]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+      ],
+      "source_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "IDENT:P-301",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "facet_membership_hash": "da3c3133a4c13286e36a1ee221ed621b95b7cf8c4a6bd13426fbe2ebe25b5840",
+      "payload_text": "P-301\nProcedure P-301\nAdjacent Domain Reference > Payment Reconciliation Chain\nAPP-330012\nC-77\nO-32\nP-301\nControl C-77 is implemented through Procedure P-301.\nProcedure P-301 is the current operating procedure for reconciliation.\nControl C-77 is implemented through Procedure P-301.\nProcedure P-301 is the current operating procedure for reconciliation.\nProcedure P-301 is the current operating procedure for reconciliation (claim3).",
+      "payload_sha256": "ca625877135229487e9ee808933e5df0dc335890d2c331f8adfd168eff4510f8",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:IDENT:P-301"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011[202:254]",
+            "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011[256:326]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim2",
+            "claim3"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+      ],
+      "source_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "facet_membership_hash": "5aeb43a3eef1c4021d5d0ec35d0b4e65ff467397b461bd5ffa7f62e7a517516e",
+      "payload_text": "Payment Settlement\nPayment Settlement\nBusiness Service Catalogue > Governed Services\nO-31\nThe Payment Settlement business service is governed by Obligation O-31.\nPayment Settlement is governed by Obligation O-31.\nPayment Settlement is governed by Obligation O-31 (claim1).",
+      "payload_sha256": "138f79fd5be4ca783b8c465329d7d3c2c757255d12a51280153efe3ce198770e",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:PHRASE:payment settlement"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614[0:71]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "summary1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+      ],
+      "source_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "facet_membership_hash": "0fd23fc8498313ae62ab93c16998ec1415faf663413a252454be510de404e496",
+      "payload_text": "Payment Settlement\nApplication Portfolio > Registered Applications\nAPP-224499\nApplication APP-224499 supports the Payment Settlement business service.",
+      "payload_sha256": "f402aeb8797df5996790c9a06087d36a217648a3f828e39eb0e66b6626febbe6",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:PHRASE:payment settlement"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": false,
+          "provenance": []
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8[0:72]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": false,
+          "provenance": []
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": false,
+          "provenance": []
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+      ],
+      "source_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "facet_membership_hash": "1c052f6abe1921f6a41d9ee5da586ed1109bc5d4f3673c9b9d8ec56c9d681264",
+      "payload_text": "Payment Settlement\nPayment Settlement\nApplication Portfolio > Registered Applications\nAPP-224510\nApplication APP-224510 supports the Payment Settlement business service.\nApplication APP-224510 supports the Payment Settlement business service.\nApplication APP-224510 supports the Payment Settlement business service as stated in claim1.",
+      "payload_sha256": "ec8ddd16357b4f8481c69e95c8ce0e93c60b391338bb6355b4f1dc60550a76f1",
+      "component_manifest": [
+        {
+          "number": 1,
+          "name": "display_title",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "page_identity:PHRASE:payment settlement"
+          ]
+        },
+        {
+          "number": 2,
+          "name": "validated_supported_aliases",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a|alias|0"
+          ]
+        },
+        {
+          "number": 3,
+          "name": "revision_headings",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+          ]
+        },
+        {
+          "number": 4,
+          "name": "source_identifiers",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+          ]
+        },
+        {
+          "number": 5,
+          "name": "identity_bearing_source_passage",
+          "label": "source_derived",
+          "present": true,
+          "provenance": [
+            "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2[0:72]"
+          ]
+        },
+        {
+          "number": 6,
+          "name": "accepted_claim_texts",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "claim1"
+          ]
+        },
+        {
+          "number": 7,
+          "name": "owner_adjudicated_summary_sentences",
+          "label": "model_derived",
+          "present": true,
+          "provenance": [
+            "sentence1"
+          ]
+        }
+      ],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+      "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+      "compiler_model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "repeatability_run_id": 1,
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "source_chunk_ids": [
+        "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+      ],
+      "source_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "generated_at": "2026-08-31T22:22:46.792364+00:00",
+      "representation_derivation": "post_adjudication_w1_facet_payload",
+      "is_authoritative_lineage": false
+    }
+  ]
+}

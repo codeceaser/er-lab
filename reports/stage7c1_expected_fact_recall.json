@@ -1,0 +1,226 @@
+{
+  "numerator": 13,
+  "denominator": 15,
+  "recall": 0.8666666666666667,
+  "mapping_rule": "PRIMARY: a frozen expected fact is recalled when a SURVIVING post-pass-3 accepted claim cites that fact's supporting chunk AND its ENTITY-normalized endpoints equal the fact's {subject, object} as a set. Entity normalization strips determiners and generic type nouns, mirroring the normalization under which the frozen Stage 7B.1 Graph recall (0.80) was measured, so SS9.4 compares like with like. Direction is not re-tested mechanically: SS4.3 makes it an owner judgement already applied in pass 3.",
+  "entries": [
+    {
+      "fact_id": "F_app_current",
+      "subject": "APP-224510",
+      "predicate": "supports",
+      "object": "Payment Settlement",
+      "supporting_chunk_id": "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim-1",
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_svc",
+      "subject": "Payment Settlement",
+      "predicate": "is_governed_by",
+      "object": "Obligation O-31",
+      "supporting_chunk_id": "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1",
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_obl_current",
+      "subject": "Obligation O-31",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-88",
+      "supporting_chunk_id": "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_ctl_current",
+      "subject": "Control C-88",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-205",
+      "supporting_chunk_id": "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1",
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_prc_current",
+      "subject": "Procedure P-205",
+      "predicate": "has_status",
+      "object": "current operating procedure",
+      "supporting_chunk_id": "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": true,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_app_historical",
+      "subject": "APP-224499",
+      "predicate": "supports",
+      "object": "Payment Settlement",
+      "supporting_chunk_id": "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim-1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": true,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_obl_historical",
+      "subject": "Obligation O-31",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-88a",
+      "supporting_chunk_id": "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1",
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_ctl_historical",
+      "subject": "Control C-88a",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-204",
+      "supporting_chunk_id": "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1",
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_prc_historical",
+      "subject": "Procedure P-204",
+      "predicate": "has_status",
+      "object": "retired operating procedure",
+      "supporting_chunk_id": "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": true,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_ctl_draft",
+      "subject": "Control C-91",
+      "predicate": "is_proposed_to_implement",
+      "object": "Procedure P-205",
+      "supporting_chunk_id": "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1",
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_adj_app",
+      "subject": "APP-330012",
+      "predicate": "supports",
+      "object": "Payment Reconciliation",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": true,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_adj_svc",
+      "subject": "Payment Reconciliation",
+      "predicate": "is_governed_by",
+      "object": "Obligation O-32",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "matched": false,
+      "matched_by_claim_ids": [],
+      "match_basis": null,
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": "surviving claims cite the chunk but state different endpoints"
+    },
+    {
+      "fact_id": "F_adj_obl",
+      "subject": "Obligation O-32",
+      "predicate": "is_satisfied_by",
+      "object": "Control C-77",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim1",
+        "claim2"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_adj_ctl",
+      "subject": "Control C-77",
+      "predicate": "is_implemented_through",
+      "object": "Procedure P-301",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "matched": true,
+      "matched_by_claim_ids": [
+        "claim2",
+        "claim2"
+      ],
+      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": null
+    },
+    {
+      "fact_id": "F_adj_prc",
+      "subject": "Procedure P-301",
+      "predicate": "has_status",
+      "object": "current operating procedure for reconciliation",
+      "supporting_chunk_id": "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011",
+      "matched": false,
+      "matched_by_claim_ids": [],
+      "match_basis": null,
+      "matched_only_after_entity_normalization": false,
+      "miss_reason": "surviving claims cite the chunk but state different endpoints"
+    }
+  ],
+  "surviving_claim_count": 22,
+  "strict_numerator": 9,
+  "strict_recall": 0.6,
+  "strict_rule": "SENSITIVITY: the same computation requiring EXACT normalized endpoints (no determiner or type-noun stripping). Reported for transparency; not the gated figure, because the frozen Graph comparator was not measured this way."
+}

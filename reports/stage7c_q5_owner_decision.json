@@ -1,0 +1,30 @@
+{
+  "decision_id": "STAGE7C-Q5-REPEATABILITY-THRESHOLDS",
+  "decision": "APPROVED",
+  "stage": "7C",
+  "question": "Q5",
+  "decision_text": "Adopt the predeclared Stage 7C repeatability thresholds exactly as proposed in frozen Revision 6. No threshold is changed in response to Stage 7C.1 results.",
+  "thresholds": {
+    "runs_n": 3,
+    "primary_run": 1,
+    "accepted_claim_set_pairwise_jaccard_min": 0.9,
+    "citation_exact_agreement_on_matched_accepted_claims_min": 0.95,
+    "false_merges_max_each_run": 0,
+    "ceiling_breaches_max_each_run": 0
+  },
+  "metric_semantics": {
+    "claim_population": "mechanically accepted claims only",
+    "claim_key": "normalized (facet identity, subject, predicate, object, sorted supporting_chunk_ids)",
+    "citation_metric": "exact citation-set agreement rate on matched accepted claims; not Jaccard"
+  },
+  "governance": {
+    "frozen_revision_6_is_not_modified": true,
+    "post_result_threshold_tuning_permitted": false,
+    "note": "This record resolves the outstanding Q5 implementation/reporting ambiguity without altering the frozen experiment."
+  },
+  "frozen_basis": {
+    "commit": "a443535ab6aaed294f98af10ef5fe5e30739b9b8",
+    "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+    "adjudication_packet_sha256": "5d08b88dc9473a07ff94ddaead911a1a2aa54aba384afeec0f85b9a97ccb2065"
+  }
+}

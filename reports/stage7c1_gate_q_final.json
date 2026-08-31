@@ -1,0 +1,102 @@
+{
+  "criteria": [
+    {
+      "criterion": "Q-1",
+      "description": "Citation validity",
+      "required": "1.00",
+      "observed": 1.0,
+      "status": "PASS",
+      "detail": "26/26 claims with exact-substring citations"
+    },
+    {
+      "criterion": "Q-2",
+      "description": "Invalid source references",
+      "required": "0",
+      "observed": 0,
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "criterion": "Q-3",
+      "description": "Revision-scope contamination",
+      "required": "0",
+      "observed": 0,
+      "status": "PASS",
+      "detail": "renamed from 'authority contamination' in Revision 6; the compiler is authority-blind"
+    },
+    {
+      "criterion": "Q-4",
+      "description": "False merges (incl. C-88 / C-88A)",
+      "required": "0",
+      "observed": 0,
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "criterion": "Q-5",
+      "description": "Accepted-claim precision (owner-adjudicated)",
+      "required": ">= 0.95",
+      "observed": 0.88,
+      "status": "FAIL",
+      "detail": "22 owner-CORRECT / 25 mechanically accepted"
+    },
+    {
+      "criterion": "Q-6",
+      "description": "Expected-fact recall in surviving accepted claims",
+      "required": ">= 0.80",
+      "observed": 0.8666666666666667,
+      "status": "PASS",
+      "detail": "13/15 frozen facts recalled"
+    },
+    {
+      "criterion": "Q-7",
+      "description": "Summary correctness (owner-adjudicated)",
+      "required": "0 incorrect",
+      "observed": 2,
+      "status": "FAIL",
+      "detail": "20 correct / 2 incorrect of 22 sentences"
+    },
+    {
+      "criterion": "Q-8",
+      "description": "Repeatability (Q5-approved thresholds)",
+      "required": "accepted-claim Jaccard >= 0.9, citation exact agreement >= 0.95, false merges 0, ceiling breaches 0",
+      "observed": {
+        "accepted_claim_set_jaccard_min": 0.6206896551724138,
+        "citation_exact_agreement_min": 1.0,
+        "false_merges_any_run": 0,
+        "ceiling_breaches_any_run": 0
+      },
+      "status": "FAIL",
+      "detail": "accepted_claim_set_jaccard min 0.620690 < 0.9"
+    },
+    {
+      "criterion": "Q-9",
+      "description": "Budget and ceilings",
+      "required": "no breach; within declared cap",
+      "observed": {
+        "ceiling_breaches": 0,
+        "generation_failures": 0
+      },
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "criterion": "Q-10",
+      "description": "Supported-alias precision (owner-adjudicated)",
+      "required": "0 incorrect supported aliases",
+      "observed": 0,
+      "status": "PASS",
+      "detail": "21/21 supported aliases owner-CORRECT"
+    }
+  ],
+  "overall_status": "FAIL",
+  "failing_criteria": [
+    "Q-5",
+    "Q-7",
+    "Q-8"
+  ],
+  "evaluation_rule": "conjunctive: every criterion must PASS; no averaging, no partial credit",
+  "q5_decision_id": "STAGE7C-Q5-REPEATABILITY-THRESHOLDS",
+  "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+  "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613"
+}
