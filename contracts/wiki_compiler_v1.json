@@ -1,0 +1,206 @@
+{
+  "contract_version": "wiki_compiler_v1",
+  "stage": "7C.1",
+  "status": "frozen",
+  "frozen_after": "owner adjudication and SS4.6 pass 3",
+  "plan_revision": "Revision 6 (owner-approved, frozen)",
+  "compiler_model": "gpt-4o-mini",
+  "compiler_model_parity_rationale": "pinned to the frozen Stage 7B.1 Real Graph extraction model so SS9.4's extraction attribution holds extraction capability constant; cost is not the reason (SS3.8)",
+  "temperature": 0,
+  "temperature_note": "the lowest-variance setting available for a hosted model; NOT a determinism guarantee -- which is why SS8F measures repeatability and every claim is mechanically validated",
+  "prompt_version": "stage7c1-facet-compiler-v1",
+  "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+  "model_output_schema": {
+    "fields": [
+      "aliases",
+      "claims",
+      "summary_sentences"
+    ],
+    "additional_properties_permitted": false,
+    "schema_sha256": "503e2df73ce713768a2d69ce9d4a02838007c3d430c7a912ebef47b344e5790c",
+    "note": "the LLM's structured output is EXACTLY aliases + claims + summary_sentences; page identity, display_title, page_type, membership, links, validation status and authority are all deterministic and never model-supplied"
+  },
+  "ceilings": {
+    "input_chunks_per_facet_F_max": 12,
+    "input_tokens_per_facet": 8000,
+    "accepted_plus_uncertain_claims_per_facet": 20,
+    "aliases_per_facet": 8,
+    "summary_sentences_per_facet": 5,
+    "output_tokens_per_facet": 4000,
+    "payload_characters_PAY_max": 4000,
+    "whole_run_dollar_ceiling_usd": 5.0,
+    "breach_behaviour": "any model input/output ceiling breach FAILS THE FACET; no batching, no map-reduce, no hierarchical summarization, no truncate-and-continue, no mid-run ceiling raise. PAY_max is the one exception and triggers the declared whole-component drop order below."
+  },
+  "validation": {
+    "status_lexicon": [
+      "current",
+      "currently",
+      "effective",
+      "in force",
+      "active",
+      "latest",
+      "now applies",
+      "supersedes",
+      "superseded",
+      "up to date",
+      "up-to-date",
+      "presently",
+      "at present"
+    ],
+    "status_lexicon_is_closed": true,
+    "status_rule": "a status term is rejected in predicate / claim_text / summary text UNLESS it appears inside an exact quoted source span (SS4.1.11)",
+    "validation_statuses": [
+      "accepted",
+      "rejected",
+      "uncertain",
+      "out_of_page_scope"
+    ],
+    "status_assigned_by": "the deterministic validator, never the model (SS3.4)",
+    "citation_rule": "every supporting quote must be an exact substring of a cited chunk's source_text",
+    "whitespace_normalization": "one declared collapse of whitespace runs",
+    "page_coherence_rule": "every accepted claim must directly involve this facet's page identity as subject or object, or a validated supported alias of it (SS4.1.15)",
+    "membership_independence": "no validation outcome, adjudication verdict or compiler failure may alter facet membership, source chunks, anchors or postings (SS2.2, SS4.0)"
+  },
+  "owner_adjudication": {
+    "required": true,
+    "scope": "every accepted claim, every summary sentence, every supported alias",
+    "run_adjudicated": 1,
+    "verdict_values": [
+      "CORRECT",
+      "INCORRECT",
+      "UNVERIFIABLE"
+    ],
+    "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+    "pass_3_rule": "withdraw failed aliases; re-apply SS4.1.15 and SS4.1.6 without them; withdraw claims whose OWN verdict failed; withdraw summaries whose verdict failed AND any left with no surviving accepted claim; re-derive links from survivors only. Nothing that failed adjudication reaches a vector, a summary, or a derived link.",
+    "mechanical_status_preserved": "owner withdrawal never rewrites a mechanical validation_status; SS4.2 keeps the mechanical record in the audit"
+  },
+  "payload_composition": {
+    "component_order": [
+      {
+        "number": 1,
+        "name": "display_title",
+        "label": "source_derived"
+      },
+      {
+        "number": 2,
+        "name": "validated_supported_aliases",
+        "label": "model_derived"
+      },
+      {
+        "number": 3,
+        "name": "revision_headings",
+        "label": "source_derived"
+      },
+      {
+        "number": 4,
+        "name": "source_identifiers",
+        "label": "source_derived"
+      },
+      {
+        "number": 5,
+        "name": "identity_bearing_source_passage",
+        "label": "source_derived"
+      },
+      {
+        "number": 6,
+        "name": "accepted_claim_texts",
+        "label": "model_derived"
+      },
+      {
+        "number": 7,
+        "name": "owner_adjudicated_summary_sentences",
+        "label": "model_derived"
+      }
+    ],
+    "owner_dependent_components": [
+      2,
+      6,
+      7
+    ],
+    "identity_passage_max_sentences": 2,
+    "identity_passage_max_chars": 400,
+    "identity_passage_selection": "sentences containing an occurrence of this page's identity, matched by anchor posting char_span rather than by re-searching text, so the match is the one that created membership",
+    "summary_dedupe": "a summary sentence whose normalized text exactly equals a claim_text already in component 6 is dropped",
+    "pay_max_drop_order": [
+      7,
+      6,
+      5,
+      2
+    ],
+    "never_dropped_components": [
+      1,
+      3,
+      4
+    ],
+    "sentence_splitter": {
+      "version": "wiki_sentence_splitter_v1",
+      "specification": "split source_text on blank-line block boundaries, then within each block after a '.', '!' or '?' that is followed by whitespace or end-of-block; spans are half-open over the ORIGINAL text; leading/trailing whitespace is excluded from a sentence span but never removed from the underlying text",
+      "pattern": "[.!?](?=\\s|$)",
+      "sha256": "30ddb7d3484deabdfcee23a9969d8adcccb84ab2f276a46a00d54ece0ca0abbb"
+    }
+  },
+  "embedding": {
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "unit": "facet",
+    "one_vector_per": "(page_key, document_revision_id)",
+    "page_level_vector_permitted": false,
+    "written_only_after": "SS4.6 adjudication pass 3",
+    "reranker": null,
+    "query_time_llm": null
+  },
+  "retrieval_rules_frozen_for_stage_7c2": {
+    "executed_in_stage_7c1": false,
+    "final_k_policy": "two tiers: Tier 1 protected path-establishing chunks in hop order, deduplicated preserving first position; Tier 2 remaining structurally reached chunks ranked by existing chunk cosine then stable tie-breakers; concatenate and truncate to the question's frozen top_k",
+    "vector_backfill_permitted": false,
+    "seed_bound_P_seed": "K (the question's frozen top_k)",
+    "hop_budget_B": 6,
+    "m_max": 3,
+    "candidate_ceiling_rule": "C = (P_seed + B) x M_max x F_max",
+    "traversable_anchor_kinds": [
+      "identifier",
+      "phrase"
+    ],
+    "non_traversable_anchor_kinds": [
+      "heading_title"
+    ]
+  },
+  "gate_q_thresholds": {
+    "Q-1_citation_validity": 1.0,
+    "Q-2_invalid_source_references": 0,
+    "Q-3_revision_scope_contamination": 0,
+    "Q-4_false_merges": 0,
+    "Q-5_accepted_claim_precision_min": 0.95,
+    "Q-6_expected_fact_recall_min": 0.8,
+    "Q-7_incorrect_summary_sentences_max": 0,
+    "Q-8_repeatability": {
+      "runs_n": 3,
+      "primary_run": 1,
+      "accepted_claim_set_pairwise_jaccard_min": 0.9,
+      "citation_exact_agreement_on_matched_accepted_claims_min": 0.95,
+      "false_merges_max_each_run": 0,
+      "ceiling_breaches_max_each_run": 0,
+      "approved_by": "STAGE7C-Q5-REPEATABILITY-THRESHOLDS",
+      "metric_semantics": {
+        "claim_population": "mechanically accepted claims only",
+        "claim_key": "normalized (facet identity, subject, predicate, object, sorted supporting_chunk_ids)",
+        "citation_metric": "exact citation-set agreement rate on matched accepted claims; not Jaccard"
+      }
+    },
+    "Q-9_budget_and_ceilings": "no breach; total estimated cost <= declared dollar cap",
+    "Q-10_incorrect_supported_aliases_max": 0,
+    "evaluation": "conjunctive; every criterion must PASS; no averaging, no partial credit"
+  },
+  "retain_gates": {
+    "gate_a": "requires Gate Q passed, >=2 of Q04/Q06/Q07 improved (partial->solved AND complete-chain false->true), zero regressions, same final K, zero authority leakage, page quality over W0, the SS9.4 extraction attribution, A-7 (W1-FULL demonstrates value over the deterministic D0 arm), and cost justified against V and D0",
+    "gate_b": "requires evidence that D0 is sufficient, or that W1-FULL's measured incremental value over D0 is not worth its cost; may NEVER be selected from W1-FULL ~ W1-D alone",
+    "gate_c": "no arm preserves transitive reachability, or the value does not justify the cost",
+    "attribution_deltas_required": [
+      "W1-D vs D0 (semantic facet enrichment)",
+      "W1-FULL vs W1-D (claim-derived routing)",
+      "W1-FULL vs D0 (total marginal value of the LLM-assisted Wiki)"
+    ],
+    "prohibited_inference": "do not conclude the compiler was unnecessary merely because claim-derived routing did not beat deterministic routing; only a comparison against D0 supports that statement"
+  },
+  "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
+  "contract_sha256": "35ccad855b10e6e8c08f6699136dff590dbd37abcef3c64147500a94edcad793"
+}

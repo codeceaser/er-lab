@@ -1,0 +1,2496 @@
+{
+  "tables": [
+    "edib_stage7c_facet",
+    "edib_stage7c_facet_embedding",
+    "edib_stage7c_compilation_audit"
+  ],
+  "row_counts": {
+    "facet": 22,
+    "facet_embedding": 22,
+    "compilation_audit": 22
+  },
+  "authority_state_stored": false,
+  "authority_read_pattern": "document_revision_id = ANY(:eligible) in the SAME statement as ORDER BY / LIMIT",
+  "stage_7c2_retrieval_implemented": false,
+  "facets": [
+    {
+      "page_key": "IDENT:APP-224499",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "5dfa423509ab1f85bfd7040a766d507f2ea4c42655e84eac1915b029970e82e9",
+      "facet_hash": "72c2674964c83dcd21d15bffdd1c8f5bb55eee9d3a2dc86a52a315394a8892af",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim-1",
+            "page_key": "IDENT:APP-224499",
+            "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+            "subject": "APP-224499",
+            "predicate": "supports",
+            "object": "Payment Settlement business service",
+            "claim_text": "APP-224499 supports the Payment Settlement business service.",
+            "supporting_chunk_ids": [
+              "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+            ],
+            "supporting_quotes": [
+              "Application APP-224499 supports the Payment Settlement business service."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "APP-224499"
+        ],
+        "surviving_summary_sentence_ids": [
+          "sentence-1"
+        ],
+        "final_derived_links": [],
+        "final_payload_sha256": "72c2674964c83dcd21d15bffdd1c8f5bb55eee9d3a2dc86a52a315394a8892af",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:APP-224510",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "8381dfcab8911ce99368f38dc529dc7638b2d7bd9b93d6c3a8850a5440d6dce7",
+      "facet_hash": "17ed68e5639cd06da1caba2048c1f72a95104a5f9efd91361508d225b98ea62f",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim-1",
+            "page_key": "IDENT:APP-224510",
+            "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+            "subject": "APP-224510",
+            "predicate": "supports",
+            "object": "the Payment Settlement business service",
+            "claim_text": "APP-224510 supports the Payment Settlement business service.",
+            "supporting_chunk_ids": [
+              "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+            ],
+            "supporting_quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "APP-224510"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary-1"
+        ],
+        "final_derived_links": [],
+        "final_payload_sha256": "17ed68e5639cd06da1caba2048c1f72a95104a5f9efd91361508d225b98ea62f",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:APP-330012",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "ba7c57fdd559d727bf1387fa27b07f79285df5e2aed537f65cdfaeffc46e4fbc",
+      "facet_hash": "cc9107881efc8ca9e8b5c30c105dac2c85991b2914d649b205b9484f2b81d2f7",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:APP-330012",
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "subject": "APP-330012",
+            "predicate": "supports",
+            "object": "Payment Reconciliation business service",
+            "claim_text": "APP-330012 supports the Payment Reconciliation business service.",
+            "supporting_chunk_ids": [
+              "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+            ],
+            "supporting_quotes": [
+              "Application APP-330012 supports the Payment Reconciliation business service."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "APP-330012"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [],
+        "final_payload_sha256": "cc9107881efc8ca9e8b5c30c105dac2c85991b2914d649b205b9484f2b81d2f7",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:C-77",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "8ccdd747c5a5d571ac0037c971f33f2c07aadacf376dfd5b2b78cd328c428de9",
+      "facet_hash": "63f687eeb288ed291e798a075abde90bf4f8ed46a1c7e3f04d7d17ed38c07bd8",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:C-77",
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "subject": "Obligation O-32",
+            "predicate": "is satisfied by",
+            "object": "Control C-77",
+            "claim_text": "Obligation O-32 is satisfied by Control C-77.",
+            "supporting_chunk_ids": [
+              "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+            ],
+            "supporting_quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_object",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          },
+          {
+            "claim_id": "claim2",
+            "page_key": "IDENT:C-77",
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "subject": "Control C-77",
+            "predicate": "is implemented through",
+            "object": "Procedure P-301",
+            "claim_text": "Control C-77 is implemented through Procedure P-301.",
+            "supporting_chunk_ids": [
+              "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+            ],
+            "supporting_quotes": [
+              "Control C-77 is implemented through Procedure P-301."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Control C-77"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "323311f267c36363b633515bbb6d9246d15960721f69d555a9cc89356bde3ae8",
+            "claim_id": "claim2",
+            "subject_page_key": "IDENT:C-77",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-301",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+              ],
+              "supporting_quotes": [
+                "Control C-77 is implemented through Procedure P-301."
+              ]
+            },
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "80d455204e6a131e2c6d267e0c1b0df6e57e8e497e1f8076f4eaa9e7a3373dff",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:O-32",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-77",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+              ],
+              "supporting_quotes": [
+                "Obligation O-32 is satisfied by Control C-77."
+              ]
+            },
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "bca4c921eee692f851ef789f98b1ed3889f3f420dc054f9a202842d2efac54de",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:O-32",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-77",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+              ],
+              "supporting_quotes": [
+                "Obligation O-32 is satisfied by Control C-77."
+              ]
+            },
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "ee487f15b7c753a64ddbf2ff63f5b00467ea65531ac9f2b55d77d34d80110a79",
+            "claim_id": "claim2",
+            "subject_page_key": "IDENT:C-77",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-301",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+              ],
+              "supporting_quotes": [
+                "Control C-77 is implemented through Procedure P-301."
+              ]
+            },
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "63f687eeb288ed291e798a075abde90bf4f8ed46a1c7e3f04d7d17ed38c07bd8",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "88f7c9b237f9ae41fc979a93c0c9498814c7df714cd6c5bfdaa1789fcd4bf07b",
+      "facet_hash": "e4dc5618faba14b1fda96518bd7ae39b3ea8d2484e726b903252aef2ff666db0",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:C-88A",
+            "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+            "subject": "C-88a",
+            "predicate": "is implemented through",
+            "object": "Procedure P-204",
+            "claim_text": "C-88a is implemented through Procedure P-204.",
+            "supporting_chunk_ids": [
+              "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+            ],
+            "supporting_quotes": [
+              "Control C-88a is implemented through Procedure P-204."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "C-88a"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "4bbc4cd4614fdde0d88cf538b91f61087f6600368b6e40a2e4d2c0fba2207840",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-88A",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-204",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+              ],
+              "supporting_quotes": [
+                "Control C-88a is implemented through Procedure P-204."
+              ]
+            },
+            "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "ac9ceea3cedd9e7a17d139a6eede54523381776550f17fd92a6d91d5c6e57c75",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-88A",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-204",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+              ],
+              "supporting_quotes": [
+                "Control C-88a is implemented through Procedure P-204."
+              ]
+            },
+            "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "e4dc5618faba14b1fda96518bd7ae39b3ea8d2484e726b903252aef2ff666db0",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "9889bfe775410de9c4ea663cf38f2a514f148b087d2293d05ebc24958b9c450e",
+      "facet_hash": "8869317533cbd5e1de3f9c609fb5b1fe2a176496afa64204925e9effa1e21570",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:C-88A",
+            "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88a",
+            "claim_text": "Obligation O-31 is satisfied by Control C-88a.",
+            "supporting_chunk_ids": [
+              "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+            ],
+            "supporting_quotes": [
+              "Obligation O-31 is satisfied by Control C-88a."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_object",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Control C-88a"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "741d817b4c89f7b35b04d9a5f25a2ff065e1a0c5b342ba3cb7f252386b10f52a",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:O-31",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-88A",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+              ],
+              "supporting_quotes": [
+                "Obligation O-31 is satisfied by Control C-88a."
+              ]
+            },
+            "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "aa7db88476e57bbef8ce107614a4c7a544ecccb47a50cdeb43bee72aea5a815d",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:O-31",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-88A",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+              ],
+              "supporting_quotes": [
+                "Obligation O-31 is satisfied by Control C-88a."
+              ]
+            },
+            "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "8869317533cbd5e1de3f9c609fb5b1fe2a176496afa64204925e9effa1e21570",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "211ae6145a64b192dec7bb86d508c5e9b4649953c45df467f080a708269e3f71",
+      "facet_hash": "fcb99b7c950140d3ffd9c809b836e57cfb2c9cb2060f398a92d837285eef1b42",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:C-88",
+            "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+            "subject": "C-88",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "claim_text": "C-88 is implemented through Procedure P-205.",
+            "supporting_chunk_ids": [
+              "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+            ],
+            "supporting_quotes": [
+              "Control C-88 is implemented through Procedure P-205."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "C-88"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "01feb14c7ffa8664ab0d48fd771146575396a21a598ec364c3a4aa6402938367",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-88",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-205",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+              ],
+              "supporting_quotes": [
+                "Control C-88 is implemented through Procedure P-205."
+              ]
+            },
+            "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "b716b6249310337749600c82bf4c751bef55f50d9fc32d2c6a91350ef4f3badc",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-88",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-205",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+              ],
+              "supporting_quotes": [
+                "Control C-88 is implemented through Procedure P-205."
+              ]
+            },
+            "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "fcb99b7c950140d3ffd9c809b836e57cfb2c9cb2060f398a92d837285eef1b42",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "d213dbf72b2e607708f853702d3570619aa60fc54f1ec4d7f6cf0eb8a519d4eb",
+      "facet_hash": "54f71dba082e589872650e6d2fede5ee6e154ba4b4e1a1a38990f1a03fa7eb9b",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [],
+        "payload_eligible_aliases": [
+          "Control C-88"
+        ],
+        "surviving_summary_sentence_ids": [],
+        "final_derived_links": [],
+        "final_payload_sha256": "54f71dba082e589872650e6d2fede5ee6e154ba4b4e1a1a38990f1a03fa7eb9b",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:C-91",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "b038b0bb2452b8e4c0ef2de8f5c336946fcbd630b176b5ce558816f12f0f48ec",
+      "facet_hash": "613820aa987bede83bf39d7227511a6662334d7f0c570f673c6fdc340e856b7e",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:C-91",
+            "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+            "subject": "Control C-91",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "claim_text": "Control C-91 is implemented through Procedure P-205.",
+            "supporting_chunk_ids": [
+              "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+            ],
+            "supporting_quotes": [
+              "Control C-91 is implemented through Procedure P-205."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Control C-91"
+        ],
+        "surviving_summary_sentence_ids": [
+          "sentence1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "4510fcfadb0b63163be32d91069d237b5db334da23b63671d4ed9742cc4976cd",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-91",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-205",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+              ],
+              "supporting_quotes": [
+                "Control C-91 is implemented through Procedure P-205."
+              ]
+            },
+            "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "7a7eca4eb4636446714213e3c701e50772424e962e36c1738fcee9032939d9e9",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-91",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-205",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+              ],
+              "supporting_quotes": [
+                "Control C-91 is implemented through Procedure P-205."
+              ]
+            },
+            "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "613820aa987bede83bf39d7227511a6662334d7f0c570f673c6fdc340e856b7e",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "9a5728157327bffda2d11bf990ca2b2e48376e43e82fa3ff75e0e9cb26848733",
+      "facet_hash": "b36971d5cfcb2f75d158ce2ad951697c9c8371819399f6b1294de32c935e68a5",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:O-31",
+            "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+            "subject": "Payment Settlement business service",
+            "predicate": "is governed by",
+            "object": "Obligation O-31",
+            "claim_text": "The Payment Settlement business service is governed by Obligation O-31.",
+            "supporting_chunk_ids": [
+              "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+            ],
+            "supporting_quotes": [
+              "The Payment Settlement business service is governed by Obligation O-31."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_object",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Obligation O-31"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [],
+        "final_payload_sha256": "b36971d5cfcb2f75d158ce2ad951697c9c8371819399f6b1294de32c935e68a5",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "d10fbe05f19c45f38f592f5c3cd5a7d61d944b9a7161d22070abdbccc6c0d43a",
+      "facet_hash": "dc817a2c98b7d05ae99069d0335dbee64f3d15243060b49e4f024f8fb337da87",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:O-31",
+            "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88",
+            "claim_text": "Obligation O-31 is satisfied by Control C-88.",
+            "supporting_chunk_ids": [
+              "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+            ],
+            "supporting_quotes": [
+              "Obligation O-31 is satisfied by Control C-88."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Obligation O-31"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "11b77f8b5b159e99f94a8cc72b1a83d9e585b5e52ddcbc5c7f3d0e9636fe93f5",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:O-31",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-88",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+              ],
+              "supporting_quotes": [
+                "Obligation O-31 is satisfied by Control C-88."
+              ]
+            },
+            "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "6bf0798805b1ba18f37e7dd62246f2dd96574c64b95dfaab3d61092e908dac0f",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:O-31",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-88",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
+              ],
+              "supporting_quotes": [
+                "Obligation O-31 is satisfied by Control C-88."
+              ]
+            },
+            "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "dc817a2c98b7d05ae99069d0335dbee64f3d15243060b49e4f024f8fb337da87",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "1186a65017bfea5ce4d075fb60052930e82a2c505c83ee82a30f75d9b989fd31",
+      "facet_hash": "519d6190f8afa77619646cbb2b795c0e081f8c50f9013f779f01a5c889d79b24",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:O-31",
+            "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+            "subject": "Obligation O-31",
+            "predicate": "is satisfied by",
+            "object": "Control C-88a",
+            "claim_text": "Obligation O-31 is satisfied by Control C-88a.",
+            "supporting_chunk_ids": [
+              "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+            ],
+            "supporting_quotes": [
+              "Obligation O-31 is satisfied by Control C-88a."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Obligation O-31"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "741d817b4c89f7b35b04d9a5f25a2ff065e1a0c5b342ba3cb7f252386b10f52a",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:O-31",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-88A",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+              ],
+              "supporting_quotes": [
+                "Obligation O-31 is satisfied by Control C-88a."
+              ]
+            },
+            "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "aa7db88476e57bbef8ce107614a4c7a544ecccb47a50cdeb43bee72aea5a815d",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:O-31",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-88A",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
+              ],
+              "supporting_quotes": [
+                "Obligation O-31 is satisfied by Control C-88a."
+              ]
+            },
+            "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "519d6190f8afa77619646cbb2b795c0e081f8c50f9013f779f01a5c889d79b24",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:O-32",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "4fd6609206d38272cf2dcfe26d808c6639aefbe9085b071999143dd8c6e27203",
+      "facet_hash": "20f3df9d2e249c8e815cabc8dcecf0bade4cde234aca5f57c9846d10974f37c6",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim2",
+            "page_key": "IDENT:O-32",
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "subject": "Obligation O-32",
+            "predicate": "is satisfied by",
+            "object": "Control C-77",
+            "claim_text": "Obligation O-32 is satisfied by Control C-77.",
+            "supporting_chunk_ids": [
+              "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+            ],
+            "supporting_quotes": [
+              "Obligation O-32 is satisfied by Control C-77."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Obligation O-32"
+        ],
+        "surviving_summary_sentence_ids": [],
+        "final_derived_links": [
+          {
+            "link_id": "6df05021ea7012d3b5eacae78e181072100aff7ab301b2c4d2c722ae3ab13e7d",
+            "claim_id": "claim2",
+            "subject_page_key": "IDENT:O-32",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-77",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+              ],
+              "supporting_quotes": [
+                "Obligation O-32 is satisfied by Control C-77."
+              ]
+            },
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "fc10171c46950855192f88065c3381727e52f6a8e7f0a35901faea27a2e7f837",
+            "claim_id": "claim2",
+            "subject_page_key": "IDENT:O-32",
+            "predicate": "is satisfied by",
+            "object_page_key": "IDENT:C-77",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+              ],
+              "supporting_quotes": [
+                "Obligation O-32 is satisfied by Control C-77."
+              ]
+            },
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "20f3df9d2e249c8e815cabc8dcecf0bade4cde234aca5f57c9846d10974f37c6",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "c924367b929081b6e9397f66aac68fa5990f122666de363f715e6530525192d5",
+      "facet_hash": "ba335fb0050ad7aed0a46174a9c20b9d0291abd904aa6ec4a80fda3402376b9c",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:P-204",
+            "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+            "subject": "Control C-88a",
+            "predicate": "is implemented through",
+            "object": "Procedure P-204",
+            "claim_text": "Control C-88a is implemented through Procedure P-204.",
+            "supporting_chunk_ids": [
+              "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+            ],
+            "supporting_quotes": [
+              "Control C-88a is implemented through Procedure P-204."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_object",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Procedure P-204"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "4bbc4cd4614fdde0d88cf538b91f61087f6600368b6e40a2e4d2c0fba2207840",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-88A",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-204",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+              ],
+              "supporting_quotes": [
+                "Control C-88a is implemented through Procedure P-204."
+              ]
+            },
+            "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "ac9ceea3cedd9e7a17d139a6eede54523381776550f17fd92a6d91d5c6e57c75",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-88A",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-204",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
+              ],
+              "supporting_quotes": [
+                "Control C-88a is implemented through Procedure P-204."
+              ]
+            },
+            "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "ba335fb0050ad7aed0a46174a9c20b9d0291abd904aa6ec4a80fda3402376b9c",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "f5252b022faf9058c628ea587b4f58443547fc57b9423818caf23a9000cf912a",
+      "facet_hash": "5662c09d2c760df7d1b188d2cfd8fca52f57bbf6f87f8369f692675fdd263f7e",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:P-204",
+            "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+            "subject": "Procedure P-204",
+            "predicate": "is",
+            "object": "a retired operating procedure",
+            "claim_text": "Procedure P-204 is a retired operating procedure.",
+            "supporting_chunk_ids": [
+              "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1"
+            ],
+            "supporting_quotes": [
+              "Procedure P-204 is a retired operating procedure."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Procedure P-204"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [],
+        "final_payload_sha256": "5662c09d2c760df7d1b188d2cfd8fca52f57bbf6f87f8369f692675fdd263f7e",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "059032c50b98954bad72ce4a9ad26e2d61b39a2b92dffa54b43d18f16b68d941",
+      "facet_hash": "8f2930ebb3de7e68e58e1c128b0caeb9e24d701b85673f874e609e3a836322eb",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:P-205",
+            "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+            "subject": "Control C-91",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "claim_text": "Control C-91 is implemented through Procedure P-205.",
+            "supporting_chunk_ids": [
+              "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+            ],
+            "supporting_quotes": [
+              "Control C-91 is implemented through Procedure P-205."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_object",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Procedure P-205"
+        ],
+        "surviving_summary_sentence_ids": [
+          "sentence1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "4510fcfadb0b63163be32d91069d237b5db334da23b63671d4ed9742cc4976cd",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-91",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-205",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+              ],
+              "supporting_quotes": [
+                "Control C-91 is implemented through Procedure P-205."
+              ]
+            },
+            "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "7a7eca4eb4636446714213e3c701e50772424e962e36c1738fcee9032939d9e9",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-91",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-205",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
+              ],
+              "supporting_quotes": [
+                "Control C-91 is implemented through Procedure P-205."
+              ]
+            },
+            "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "8f2930ebb3de7e68e58e1c128b0caeb9e24d701b85673f874e609e3a836322eb",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "4619f3a82913ddc76da38688a507f1fe416ff79aaed248993ac218222bb83ddd",
+      "facet_hash": "191e32e29c359af1419e646dfbd8e8fa09d1e26c72c11844b7aba76eba566375",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:P-205",
+            "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+            "subject": "Control C-88",
+            "predicate": "is implemented through",
+            "object": "Procedure P-205",
+            "claim_text": "Control C-88 is implemented through Procedure P-205.",
+            "supporting_chunk_ids": [
+              "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+            ],
+            "supporting_quotes": [
+              "Control C-88 is implemented through Procedure P-205."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_object",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Procedure P-205"
+        ],
+        "surviving_summary_sentence_ids": [
+          "sentence1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "01feb14c7ffa8664ab0d48fd771146575396a21a598ec364c3a4aa6402938367",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-88",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-205",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+              ],
+              "supporting_quotes": [
+                "Control C-88 is implemented through Procedure P-205."
+              ]
+            },
+            "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "b716b6249310337749600c82bf4c751bef55f50d9fc32d2c6a91350ef4f3badc",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:C-88",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-205",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
+              ],
+              "supporting_quotes": [
+                "Control C-88 is implemented through Procedure P-205."
+              ]
+            },
+            "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "191e32e29c359af1419e646dfbd8e8fa09d1e26c72c11844b7aba76eba566375",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "295bf02b718d343c3241a4a6315d53c7aa0ddcd06aa398c6566e0090b514a202",
+      "facet_hash": "d0e1ea521028cd4c86b6a472c26dcae9f0e4fc3bf232c166aa54fb45892e3cec",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "IDENT:P-205",
+            "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+            "subject": "Procedure P-205",
+            "predicate": "is",
+            "object": "the current operating procedure",
+            "claim_text": "Procedure P-205 is the current operating procedure.",
+            "supporting_chunk_ids": [
+              "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
+            ],
+            "supporting_quotes": [
+              "Procedure P-205 is the current operating procedure."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Procedure P-205"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [],
+        "final_payload_sha256": "d0e1ea521028cd4c86b6a472c26dcae9f0e4fc3bf232c166aa54fb45892e3cec",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "IDENT:P-301",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "da3c3133a4c13286e36a1ee221ed621b95b7cf8c4a6bd13426fbe2ebe25b5840",
+      "facet_hash": "ca625877135229487e9ee808933e5df0dc335890d2c331f8adfd168eff4510f8",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim2",
+            "page_key": "IDENT:P-301",
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "subject": "Control C-77",
+            "predicate": "is implemented through",
+            "object": "Procedure P-301",
+            "claim_text": "Control C-77 is implemented through Procedure P-301.",
+            "supporting_chunk_ids": [
+              "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+            ],
+            "supporting_quotes": [
+              "Control C-77 is implemented through Procedure P-301."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_object",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          },
+          {
+            "claim_id": "claim3",
+            "page_key": "IDENT:P-301",
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "subject": "Procedure P-301",
+            "predicate": "is the current operating procedure for",
+            "object": "reconciliation",
+            "claim_text": "Procedure P-301 is the current operating procedure for reconciliation.",
+            "supporting_chunk_ids": [
+              "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+            ],
+            "supporting_quotes": [
+              "Procedure P-301 is the current operating procedure for reconciliation."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Procedure P-301"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "323311f267c36363b633515bbb6d9246d15960721f69d555a9cc89356bde3ae8",
+            "claim_id": "claim2",
+            "subject_page_key": "IDENT:C-77",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-301",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+              ],
+              "supporting_quotes": [
+                "Control C-77 is implemented through Procedure P-301."
+              ]
+            },
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "ee487f15b7c753a64ddbf2ff63f5b00467ea65531ac9f2b55d77d34d80110a79",
+            "claim_id": "claim2",
+            "subject_page_key": "IDENT:C-77",
+            "predicate": "is implemented through",
+            "object_page_key": "IDENT:P-301",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
+              ],
+              "supporting_quotes": [
+                "Control C-77 is implemented through Procedure P-301."
+              ]
+            },
+            "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "ca625877135229487e9ee808933e5df0dc335890d2c331f8adfd168eff4510f8",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "5aeb43a3eef1c4021d5d0ec35d0b4e65ff467397b461bd5ffa7f62e7a517516e",
+      "facet_hash": "138f79fd5be4ca783b8c465329d7d3c2c757255d12a51280153efe3ce198770e",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "PHRASE:payment settlement",
+            "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+            "subject": "Payment Settlement",
+            "predicate": "is governed by",
+            "object": "Obligation O-31",
+            "claim_text": "Payment Settlement is governed by Obligation O-31.",
+            "supporting_chunk_ids": [
+              "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+            ],
+            "supporting_quotes": [
+              "The Payment Settlement business service is governed by Obligation O-31."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_subject",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Payment Settlement"
+        ],
+        "surviving_summary_sentence_ids": [
+          "summary1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "2b4a93480769114dd2010e9b9f66e8e133608caacf7c16bea419dc2ae322e102",
+            "claim_id": "claim1",
+            "subject_page_key": "PHRASE:payment settlement",
+            "predicate": "is governed by",
+            "object_page_key": "IDENT:O-31",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+              ],
+              "supporting_quotes": [
+                "The Payment Settlement business service is governed by Obligation O-31."
+              ]
+            },
+            "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "b2563a0826324ba1d92bce6188cc2631bf1f8b6059927b07fbb8d7e757d2440b",
+            "claim_id": "claim1",
+            "subject_page_key": "PHRASE:payment settlement",
+            "predicate": "is governed by",
+            "object_page_key": "IDENT:O-31",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
+              ],
+              "supporting_quotes": [
+                "The Payment Settlement business service is governed by Obligation O-31."
+              ]
+            },
+            "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "138f79fd5be4ca783b8c465329d7d3c2c757255d12a51280153efe3ce198770e",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "0fd23fc8498313ae62ab93c16998ec1415faf663413a252454be510de404e496",
+      "facet_hash": "f402aeb8797df5996790c9a06087d36a217648a3f828e39eb0e66b6626febbe6",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [],
+        "payload_eligible_aliases": [],
+        "surviving_summary_sentence_ids": [],
+        "final_derived_links": [],
+        "final_payload_sha256": "f402aeb8797df5996790c9a06087d36a217648a3f828e39eb0e66b6626febbe6",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "validation_state": "final_post_pass3",
+      "facet_membership_hash": "1c052f6abe1921f6a41d9ee5da586ed1109bc5d4f3673c9b9d8ec56c9d681264",
+      "facet_hash": "ec8ddd16357b4f8481c69e95c8ce0e93c60b391338bb6355b4f1dc60550a76f1",
+      "run_id": 1,
+      "compiled": {
+        "surviving_accepted_claims": [
+          {
+            "claim_id": "claim1",
+            "page_key": "PHRASE:payment settlement",
+            "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+            "subject": "Application APP-224510",
+            "predicate": "supports",
+            "object": "Payment Settlement",
+            "claim_text": "Application APP-224510 supports the Payment Settlement business service.",
+            "supporting_chunk_ids": [
+              "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+            ],
+            "supporting_quotes": [
+              "Application APP-224510 supports the Payment Settlement business service."
+            ],
+            "derivation": "model_derived",
+            "validation_status": "accepted",
+            "rejection_reasons": [],
+            "citation_valid": true,
+            "coherence_basis": "identity_object",
+            "depends_on_alias": false,
+            "alias_dependency_ids": [],
+            "pending_alias_adjudication": false,
+            "duplicate_of": null,
+            "contradicts_claim_ids": [],
+            "owner_semantic_verdict": null
+          }
+        ],
+        "payload_eligible_aliases": [
+          "Payment Settlement"
+        ],
+        "surviving_summary_sentence_ids": [
+          "sentence1"
+        ],
+        "final_derived_links": [
+          {
+            "link_id": "9547920d0442fe63d6817eaed51453edf4cc708ae9330047b3a39d81f26cbee9",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:APP-224510",
+            "predicate": "supports",
+            "object_page_key": "PHRASE:payment settlement",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+              ],
+              "supporting_quotes": [
+                "Application APP-224510 supports the Payment Settlement business service."
+              ]
+            },
+            "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+            "traversal_direction": "forward",
+            "is_authoritative_lineage": false
+          },
+          {
+            "link_id": "d54c4df45a4ddc0ce1be9656c76b75f3b4d58fc15e9088a1dde9bee5a4d8e510",
+            "claim_id": "claim1",
+            "subject_page_key": "IDENT:APP-224510",
+            "predicate": "supports",
+            "object_page_key": "PHRASE:payment settlement",
+            "source_citations": {
+              "supporting_chunk_ids": [
+                "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
+              ],
+              "supporting_quotes": [
+                "Application APP-224510 supports the Payment Settlement business service."
+              ]
+            },
+            "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+            "traversal_direction": "inverse",
+            "is_authoritative_lineage": false
+          }
+        ],
+        "final_payload_sha256": "ec8ddd16357b4f8481c69e95c8ce0e93c60b391338bb6355b4f1dc60550a76f1",
+        "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+      }
+    }
+  ],
+  "compilation_audit": [
+    {
+      "page_key": "IDENT:APP-224499",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [
+        {
+          "claim_id": "claim-1",
+          "endpoint_role": "object",
+          "endpoint_text": "Payment Settlement business service"
+        }
+      ],
+      "unresolved_identity_mentions": [
+        "Payment Settlement business service"
+      ],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::claim-1": "CORRECT",
+        "ALIAS::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::0": "CORRECT",
+        "SUMMARY::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::sentence-1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::claim-1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::0": "Alias denotes the same page identity APP-224499.",
+        "SUMMARY::IDENT:APP-224499|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::sentence-1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 936,
+      "output_tokens": 228,
+      "estimated_cost_usd": 0.0002772,
+      "latency_seconds": 8.853204000042751,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:APP-224510",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [
+        {
+          "claim_id": "claim-1",
+          "endpoint_role": "object",
+          "endpoint_text": "the Payment Settlement business service"
+        }
+      ],
+      "unresolved_identity_mentions": [
+        "the Payment Settlement business service"
+      ],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::claim-1": "CORRECT",
+        "ALIAS::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::0": "CORRECT",
+        "SUMMARY::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::summary-1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::claim-1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::0": "Alias denotes the same page identity APP-224510.",
+        "SUMMARY::IDENT:APP-224510|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::summary-1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 931,
+      "output_tokens": 219,
+      "estimated_cost_usd": 0.00027105,
+      "latency_seconds": 2.3311886000446975,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:APP-330012",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [
+        {
+          "claim_id": "claim1",
+          "endpoint_role": "object",
+          "endpoint_text": "Payment Reconciliation business service"
+        }
+      ],
+      "unresolved_identity_mentions": [
+        "Payment Reconciliation business service"
+      ],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1": "CORRECT",
+        "ALIAS::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0": "CORRECT",
+        "SUMMARY::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0": "Alias denotes the same page identity APP-330012.",
+        "SUMMARY::IDENT:APP-330012|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 986,
+      "output_tokens": 217,
+      "estimated_cost_usd": 0.0002781,
+      "latency_seconds": 2.2206088999519125,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:C-77",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1": "CORRECT",
+        "CLAIM::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2": "CORRECT",
+        "ALIAS::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0": "CORRECT",
+        "SUMMARY::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1": "Faithfully represents the cited source.",
+        "CLAIM::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0": "Alias denotes the same control identity C-77.",
+        "SUMMARY::IDENT:C-77|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1": "Faithfully composes the two referenced supported claims without changing their relationships."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 983,
+      "output_tokens": 328,
+      "estimated_cost_usd": 0.00034424999999999994,
+      "latency_seconds": 4.630547599983402,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::claim1": "CORRECT",
+        "ALIAS::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::0": "CORRECT",
+        "SUMMARY::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::0": "Alias denotes the same page identity C-88A and does not conflate it with C-88.",
+        "SUMMARY::IDENT:C-88A|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::summary1": "Faithfully summarizes the referenced supported claim; C-88a denotes the same control identity."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 932,
+      "output_tokens": 222,
+      "estimated_cost_usd": 0.00027299999999999997,
+      "latency_seconds": 3.0624028999591246,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:C-88A",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::claim1": "CORRECT",
+        "ALIAS::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::0": "CORRECT",
+        "SUMMARY::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::0": "Alias denotes the same control identity C-88A.",
+        "SUMMARY::IDENT:C-88A|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::summary1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 932,
+      "output_tokens": 217,
+      "estimated_cost_usd": 0.00026999999999999995,
+      "latency_seconds": 2.4026730000041425,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::claim1": "CORRECT",
+        "ALIAS::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::0": "CORRECT",
+        "SUMMARY::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::0": "Alias denotes the same page identity C-88.",
+        "SUMMARY::IDENT:C-88|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::summary1": "Faithfully summarizes the referenced supported claim; C-88 denotes the same control identity."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 933,
+      "output_tokens": 222,
+      "estimated_cost_usd": 0.00027315,
+      "latency_seconds": 3.3660596000263467,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:C-88",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::claim1": "INCORRECT",
+        "ALIAS::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::0": "CORRECT",
+        "SUMMARY::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::sentence1": "INCORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::claim1": "Relationship direction is reversed. The source states that Obligation O-31 is satisfied by Control C-88.",
+        "ALIAS::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::0": "Alias denotes the same control identity C-88 and does not conflate it with C-88A.",
+        "SUMMARY::IDENT:C-88|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::sentence1": "Relationship direction is reversed. The source states that Obligation O-31 is satisfied by Control C-88."
+      },
+      "withdrawn_claim_ids": [
+        "claim1"
+      ],
+      "withdrawn_summary_ids": [
+        "sentence1"
+      ],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 936,
+      "output_tokens": 225,
+      "estimated_cost_usd": 0.00027539999999999997,
+      "latency_seconds": 2.508414600044489,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:C-91",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::claim1": "CORRECT",
+        "ALIAS::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::0": "CORRECT",
+        "SUMMARY::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::sentence1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::0": "Alias denotes the same control identity C-91.",
+        "SUMMARY::IDENT:C-91|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::sentence1": "Faithfully summarizes the referenced supported claim; awkward claim-reference wording does not alter its meaning."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 934,
+      "output_tokens": 225,
+      "estimated_cost_usd": 0.0002751,
+      "latency_seconds": 2.5657107000006363,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [
+        {
+          "claim_id": "claim1",
+          "endpoint_role": "subject",
+          "endpoint_text": "Payment Settlement business service"
+        }
+      ],
+      "unresolved_identity_mentions": [
+        "Payment Settlement business service"
+      ],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::claim1": "CORRECT",
+        "ALIAS::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::0": "CORRECT",
+        "SUMMARY::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::0": "Alias denotes the same obligation identity O-31.",
+        "SUMMARY::IDENT:O-31|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::summary1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 936,
+      "output_tokens": 228,
+      "estimated_cost_usd": 0.0002772,
+      "latency_seconds": 2.3325468000257388,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::claim1": "CORRECT",
+        "ALIAS::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::0": "CORRECT",
+        "SUMMARY::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::0": "Alias denotes the same obligation identity O-31.",
+        "SUMMARY::IDENT:O-31|7e11f49c9d7b8b53d319fa11b629c60ae00ed138d33fa4f50d1bf7415241d9cc::summary1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 937,
+      "output_tokens": 234,
+      "estimated_cost_usd": 0.00028094999999999997,
+      "latency_seconds": 2.5744142999174073,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:O-31",
+      "document_revision_id": "ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::claim1": "CORRECT",
+        "ALIAS::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::0": "CORRECT",
+        "SUMMARY::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::0": "Alias denotes the same obligation identity O-31.",
+        "SUMMARY::IDENT:O-31|ad26ab9483b67f2540f5bd6da379c37887fd8762e5e966b46221274a6fe97689::summary1": "Faithfully summarizes the referenced supported claim and preserves the C-88a identity."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 931,
+      "output_tokens": 217,
+      "estimated_cost_usd": 0.00026984999999999997,
+      "latency_seconds": 2.5430178999667987,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:O-32",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [
+        {
+          "claim_id": "claim1",
+          "endpoint_role": "object",
+          "endpoint_text": "Payment Reconciliation business service"
+        }
+      ],
+      "unresolved_identity_mentions": [
+        "Payment Reconciliation business service"
+      ],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1": "INCORRECT",
+        "CLAIM::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2": "CORRECT",
+        "ALIAS::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0": "CORRECT",
+        "SUMMARY::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1": "INCORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1": "Relationship direction is reversed. The source states that the Payment Reconciliation business service is governed by Obligation O-32.",
+        "CLAIM::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0": "Alias denotes the same obligation identity O-32.",
+        "SUMMARY::IDENT:O-32|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1": "Summary reverses the governance relationship. The source states that the Payment Reconciliation business service is governed by Obligation O-32; only the second assertion, that O-32 is satisfied by C-77, is supported."
+      },
+      "withdrawn_claim_ids": [
+        "claim1"
+      ],
+      "withdrawn_summary_ids": [
+        "summary1"
+      ],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 984,
+      "output_tokens": 338,
+      "estimated_cost_usd": 0.00035039999999999995,
+      "latency_seconds": 3.7859174999175593,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::claim1": "CORRECT",
+        "ALIAS::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::0": "CORRECT",
+        "SUMMARY::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::0": "Alias denotes the same procedure identity P-204.",
+        "SUMMARY::IDENT:P-204|049930b3b215c7ad5fb5e8f1ea0b303a2111312f42293ebafa4336da9563d25b::summary1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 930,
+      "output_tokens": 217,
+      "estimated_cost_usd": 0.0002697,
+      "latency_seconds": 3.2454062000615522,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:P-204",
+      "document_revision_id": "27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [
+        {
+          "claim_id": "claim1",
+          "endpoint_role": "object",
+          "endpoint_text": "a retired operating procedure"
+        }
+      ],
+      "unresolved_identity_mentions": [
+        "a retired operating procedure"
+      ],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::claim1": "CORRECT",
+        "ALIAS::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::0": "CORRECT",
+        "SUMMARY::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::claim1": "Faithfully represents the cited source, including the stated retired status.",
+        "ALIAS::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::0": "Alias denotes the same procedure identity P-204.",
+        "SUMMARY::IDENT:P-204|27f1d2453664009f3eee76a12010b1bddf7be434343cbfbbb47cebe2900bacea::summary1": "Faithfully summarizes the referenced supported claim, including the stated retired-status qualification."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 1,
+      "input_tokens": 922,
+      "output_tokens": 198,
+      "estimated_cost_usd": 0.0002571,
+      "latency_seconds": 2.250539500033483,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::claim1": "CORRECT",
+        "ALIAS::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::0": "CORRECT",
+        "SUMMARY::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::sentence1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::0": "Alias denotes the same procedure identity P-205.",
+        "SUMMARY::IDENT:P-205|02827f19b5553859742110cbcffa8bdf01251d923399741bea8d5bf0bd9eff82::sentence1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 934,
+      "output_tokens": 224,
+      "estimated_cost_usd": 0.0002745,
+      "latency_seconds": 2.4386642000172287,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::claim1": "CORRECT",
+        "ALIAS::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::0": "CORRECT",
+        "SUMMARY::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::sentence1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::claim1": "Faithfully represents the cited source.",
+        "ALIAS::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::0": "Alias denotes the same procedure identity P-205.",
+        "SUMMARY::IDENT:P-205|1ccf46cdf6b68534932b46efff0fa5f15673b3934f7aa79ec05697ce0df68f23::sentence1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 933,
+      "output_tokens": 219,
+      "estimated_cost_usd": 0.00027134999999999995,
+      "latency_seconds": 2.3660130000207573,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:P-205",
+      "document_revision_id": "cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [
+        {
+          "claim_id": "claim1",
+          "endpoint_role": "object",
+          "endpoint_text": "the current operating procedure"
+        }
+      ],
+      "unresolved_identity_mentions": [
+        "the current operating procedure"
+      ],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::claim1": "CORRECT",
+        "ALIAS::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::0": "CORRECT",
+        "SUMMARY::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::claim1": "Faithfully represents the cited source, including the stated current-status qualification.",
+        "ALIAS::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::0": "Alias denotes the same procedure identity P-205.",
+        "SUMMARY::IDENT:P-205|cc8084b399bab8de5222c7b465033da3e77d1f85e38ccf94805d69a18126c0a4::summary1": "Faithfully summarizes the referenced supported claim, including the stated current-status qualification."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 922,
+      "output_tokens": 198,
+      "estimated_cost_usd": 0.0002571,
+      "latency_seconds": 2.3086738999700174,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "IDENT:P-301",
+      "document_revision_id": "8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [
+        {
+          "claim_id": "claim3",
+          "endpoint_role": "object",
+          "endpoint_text": "reconciliation"
+        }
+      ],
+      "unresolved_identity_mentions": [
+        "reconciliation"
+      ],
+      "adjudication_verdicts": {
+        "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1": "INCORRECT",
+        "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2": "CORRECT",
+        "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim3": "CORRECT",
+        "ALIAS::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0": "CORRECT",
+        "SUMMARY::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim1": "Structured subject/predicate/object do not represent the cited passage. The source states that O-32 is satisfied by C-77, not governed by P-301.",
+        "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim2": "Faithfully represents the cited source.",
+        "CLAIM::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::claim3": "Faithfully represents the cited source, including the stated current-status qualification.",
+        "ALIAS::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::0": "Alias denotes the same procedure identity P-301.",
+        "SUMMARY::IDENT:P-301|8b2000480b7b2cf4b4b38e9f479e090137b3a978c6a7b0bfe421dbdb44322cec::summary1": "Faithfully summarizes the referenced supported claim, including its reconciliation scope and current-status qualification."
+      },
+      "withdrawn_claim_ids": [
+        "claim1"
+      ],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 983,
+      "output_tokens": 420,
+      "estimated_cost_usd": 0.00039945,
+      "latency_seconds": 4.30239970004186,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::claim1": "CORRECT",
+        "ALIAS::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::0": "CORRECT",
+        "SUMMARY::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::summary1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::claim1": "Faithfully represents the cited source; the shortened subject denotes the same Payment Settlement business-service identity.",
+        "ALIAS::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::0": "Alias exactly denotes the phrase-page identity payment settlement.",
+        "SUMMARY::PHRASE:payment settlement|56a7b958d0522a0402a16bee101ad10b41e66297129f9cb988bb65b52735e868::summary1": "Faithfully summarizes the referenced supported claim; Payment Settlement denotes the same business-service phrase identity."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 936,
+      "output_tokens": 225,
+      "estimated_cost_usd": 0.00027539999999999997,
+      "latency_seconds": 2.3800087000709027,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [
+        {
+          "claim_id": "claim_1",
+          "page_key": "PHRASE:payment settlement",
+          "document_revision_id": "895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da",
+          "subject": "Application APP-224499",
+          "predicate": "supports",
+          "object": "Payment Settlement business service",
+          "claim_text": "Application APP-224499 supports the Payment Settlement business service.",
+          "supporting_chunk_ids": [
+            "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
+          ],
+          "supporting_quotes": [
+            "Application APP-224499 supports the Payment Settlement business service."
+          ],
+          "derivation": "model_derived",
+          "validation_status": "out_of_page_scope",
+          "rejection_reasons": [
+            "neither subject 'Application APP-224499' nor object 'Payment Settlement business service' is this page's identity ('payment settlement') or a supported alias of it"
+          ],
+          "citation_valid": true,
+          "coherence_basis": null,
+          "depends_on_alias": false,
+          "alias_dependency_ids": [],
+          "pending_alias_adjudication": false,
+          "duplicate_of": null,
+          "contradicts_claim_ids": [],
+          "owner_semantic_verdict": null
+        }
+      ],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "SUMMARY::PHRASE:payment settlement|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::sentence_1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "SUMMARY::PHRASE:payment settlement|895467b2b856639286818a30384b0bea8e3b16b3068770ef1c70b0c97bd364da::sentence_1": "The summary faithfully represents the cited source. Its referenced claim is out of page scope, which is a separate mechanical validity failure and prevents the summary from surviving Pass 3."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 934,
+      "output_tokens": 219,
+      "estimated_cost_usd": 0.0002715,
+      "latency_seconds": 2.4781738999299705,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    },
+    {
+      "page_key": "PHRASE:payment settlement",
+      "document_revision_id": "a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a",
+      "run_id": 1,
+      "rejected_claims": [],
+      "out_of_page_scope_claims": [],
+      "uncertain_claims": [],
+      "unlinkable_claim_endpoints": [],
+      "unresolved_identity_mentions": [],
+      "adjudication_verdicts": {
+        "CLAIM::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::claim1": "CORRECT",
+        "ALIAS::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::0": "CORRECT",
+        "SUMMARY::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::sentence1": "CORRECT"
+      },
+      "adjudication_reasons": {
+        "CLAIM::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::claim1": "Faithfully represents the cited source; the shortened object denotes the same Payment Settlement business-service identity.",
+        "ALIAS::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::0": "Alias denotes the same Payment Settlement phrase-page identity.",
+        "SUMMARY::PHRASE:payment settlement|a6441298d656c12d1a36a4ce1367d4ef5cb5ca148ef02733c68f277b96e0657a::sentence1": "Faithfully summarizes the referenced supported claim."
+      },
+      "withdrawn_claim_ids": [],
+      "withdrawn_summary_ids": [],
+      "withdrawn_alias_ids": [],
+      "demoted_to_out_of_page_scope": [],
+      "payload_truncated_components": [],
+      "summary_payload_dedup_count": 0,
+      "input_tokens": 929,
+      "output_tokens": 205,
+      "estimated_cost_usd": 0.00026234999999999995,
+      "latency_seconds": 2.461995300021954,
+      "model_identity": "gpt-4o-mini",
+      "prompt_version": "stage7c1-facet-compiler-v1",
+      "prompt_sha256": "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53",
+      "ceiling_breaches": [],
+      "generation_failed": false,
+      "generation_error": null
+    }
+  ]
+}

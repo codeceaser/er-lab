@@ -72,13 +72,16 @@
     {
       "criterion": "Q-9",
       "description": "Budget and ceilings",
-      "required": "no breach; within declared cap",
+      "required": "no ceiling breach; no generation failure; total estimated cost <= declared dollar cap",
       "observed": {
         "ceiling_breaches": 0,
-        "generation_failures": 0
+        "generation_failures": 0,
+        "declared_dollar_cap_usd": 5.0,
+        "total_estimated_cost_usd": 0.018790499999999995,
+        "within_declared_dollar_cap": true
       },
       "status": "PASS",
-      "detail": ""
+      "detail": "$0.0187905 <= $5.00"
     },
     {
       "criterion": "Q-10",

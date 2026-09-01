@@ -754,3 +754,223 @@ def build_stage7c1_cost_ledger(stage_result, packet) -> dict:
         ),
         "human_adjudication_time": "NOT ESTIMATED -- actual owner effort will be measured (SS8E)",
     }
+
+
+# =============================================================================
+# Stage 7C.1 -- the frozen compiler contract (Revision 6 SS10.2, SS11)
+# =============================================================================
+
+
+def build_compiler_contract(
+    *,
+    projection_hash: str,
+    m_max: int,
+    verdict_set_sha256: str,
+    declared_dollar_cap_usd: float,
+    embedding_model: str,
+    q5_decision: dict,
+) -> dict:
+    """`contracts/wiki_compiler_v1.json` -- FROZEN at Stage 7C.1.
+
+    The machine-readable record of the ALREADY-APPROVED Revision 6 contract as
+    actually implemented. It invents no experimental rule: every value is either
+    read from the frozen implementation or copied from the frozen plan / the
+    owner's Q5 decision, so a later reader can verify what Stage 7C.1 ran under
+    without re-deriving it from source.
+    """
+    from ingestion_bench.wiki_projection import assembly, compiler, validation
+
+    contract = {
+        "contract_version": "wiki_compiler_v1",
+        "stage": "7C.1",
+        "status": "frozen",
+        "frozen_after": "owner adjudication and SS4.6 pass 3",
+        "plan_revision": "Revision 6 (owner-approved, frozen)",
+
+        # --- the compiler ------------------------------------------------
+        "compiler_model": compiler.STAGE7B1_EXTRACTION_MODEL,
+        "compiler_model_parity_rationale": (
+            "pinned to the frozen Stage 7B.1 Real Graph extraction model so SS9.4's extraction attribution "
+            "holds extraction capability constant; cost is not the reason (SS3.8)"
+        ),
+        "temperature": compiler.COMPILER_TEMPERATURE,
+        "temperature_note": (
+            "the lowest-variance setting available for a hosted model; NOT a determinism guarantee -- which "
+            "is why SS8F measures repeatability and every claim is mechanically validated"
+        ),
+        "prompt_version": compiler.PROMPT_VERSION,
+        "prompt_sha256": compiler.prompt_sha256(),
+        "model_output_schema": {
+            "fields": sorted(compiler.FACET_JSON_SCHEMA["required"]),
+            "additional_properties_permitted": False,
+            "schema_sha256": _sha256(_canonical_json(compiler.FACET_JSON_SCHEMA)),
+            "note": (
+                "the LLM's structured output is EXACTLY aliases + claims + summary_sentences; page identity, "
+                "display_title, page_type, membership, links, validation status and authority are all "
+                "deterministic and never model-supplied"
+            ),
+        },
+
+        # --- ceilings (SS3.9) ---------------------------------------------
+        "ceilings": {
+            "input_chunks_per_facet_F_max": compiler.F_MAX_INPUT_CHUNKS_PER_FACET,
+            "input_tokens_per_facet": compiler.MAX_INPUT_TOKENS_PER_FACET,
+            "accepted_plus_uncertain_claims_per_facet": compiler.MAX_CLAIMS_PER_FACET,
+            "aliases_per_facet": compiler.MAX_ALIASES_PER_FACET,
+            "summary_sentences_per_facet": compiler.MAX_SUMMARY_SENTENCES_PER_FACET,
+            "output_tokens_per_facet": compiler.MAX_OUTPUT_TOKENS_PER_FACET,
+            "payload_characters_PAY_max": compiler.PAY_MAX_PAYLOAD_CHARACTERS,
+            "whole_run_dollar_ceiling_usd": declared_dollar_cap_usd,
+            "breach_behaviour": (
+                "any model input/output ceiling breach FAILS THE FACET; no batching, no map-reduce, no "
+                "hierarchical summarization, no truncate-and-continue, no mid-run ceiling raise. PAY_max is "
+                "the one exception and triggers the declared whole-component drop order below."
+            ),
+        },
+
+        # --- validation (SS4) ---------------------------------------------
+        "validation": {
+            "status_lexicon": list(validation.STATUS_LEXICON),
+            "status_lexicon_is_closed": True,
+            "status_rule": (
+                "a status term is rejected in predicate / claim_text / summary text UNLESS it appears inside "
+                "an exact quoted source span (SS4.1.11)"
+            ),
+            "validation_statuses": ["accepted", "rejected", "uncertain", "out_of_page_scope"],
+            "status_assigned_by": "the deterministic validator, never the model (SS3.4)",
+            "citation_rule": "every supporting quote must be an exact substring of a cited chunk's source_text",
+            "whitespace_normalization": "one declared collapse of whitespace runs",
+            "page_coherence_rule": (
+                "every accepted claim must directly involve this facet's page identity as subject or object, "
+                "or a validated supported alias of it (SS4.1.15)"
+            ),
+            "membership_independence": (
+                "no validation outcome, adjudication verdict or compiler failure may alter facet membership, "
+                "source chunks, anchors or postings (SS2.2, SS4.0)"
+            ),
+        },
+
+        # --- owner adjudication (SS4.6) -----------------------------------
+        "owner_adjudication": {
+            "required": True,
+            "scope": "every accepted claim, every summary sentence, every supported alias",
+            "run_adjudicated": 1,
+            "verdict_values": ["CORRECT", "INCORRECT", "UNVERIFIABLE"],
+            "verdict_set_sha256": verdict_set_sha256,
+            "pass_3_rule": (
+                "withdraw failed aliases; re-apply SS4.1.15 and SS4.1.6 without them; withdraw claims whose "
+                "OWN verdict failed; withdraw summaries whose verdict failed AND any left with no surviving "
+                "accepted claim; re-derive links from survivors only. Nothing that failed adjudication "
+                "reaches a vector, a summary, or a derived link."
+            ),
+            "mechanical_status_preserved": (
+                "owner withdrawal never rewrites a mechanical validation_status; SS4.2 keeps the mechanical "
+                "record in the audit"
+            ),
+        },
+
+        # --- the representation (SS6.2) -----------------------------------
+        "payload_composition": {
+            "component_order": [
+                {"number": 1, "name": "display_title", "label": "source_derived"},
+                {"number": 2, "name": "validated_supported_aliases", "label": "model_derived"},
+                {"number": 3, "name": "revision_headings", "label": "source_derived"},
+                {"number": 4, "name": "source_identifiers", "label": "source_derived"},
+                {"number": 5, "name": "identity_bearing_source_passage", "label": "source_derived"},
+                {"number": 6, "name": "accepted_claim_texts", "label": "model_derived"},
+                {"number": 7, "name": "owner_adjudicated_summary_sentences", "label": "model_derived"},
+            ],
+            "owner_dependent_components": [2, 6, 7],
+            "identity_passage_max_sentences": assembly.IDENTITY_PASSAGE_MAX_SENTENCES,
+            "identity_passage_max_chars": assembly.IDENTITY_PASSAGE_MAX_CHARS,
+            "identity_passage_selection": (
+                "sentences containing an occurrence of this page's identity, matched by anchor posting "
+                "char_span rather than by re-searching text, so the match is the one that created membership"
+            ),
+            "summary_dedupe": (
+                "a summary sentence whose normalized text exactly equals a claim_text already in component 6 "
+                "is dropped"
+            ),
+            "pay_max_drop_order": list(assembly.PAY_MAX_DROP_ORDER),
+            "never_dropped_components": sorted(assembly.NEVER_DROPPED_COMPONENTS),
+            "sentence_splitter": identity.sentence_splitter_identity(),
+        },
+        "embedding": {
+            "embedding_model": embedding_model,
+            "unit": "facet",
+            "one_vector_per": "(page_key, document_revision_id)",
+            "page_level_vector_permitted": False,
+            "written_only_after": "SS4.6 adjudication pass 3",
+            "reranker": None,
+            "query_time_llm": None,
+        },
+
+        # --- retrieval-side rules frozen here, EXECUTED in Stage 7C.2 ------
+        "retrieval_rules_frozen_for_stage_7c2": {
+            "executed_in_stage_7c1": False,
+            "final_k_policy": (
+                "two tiers: Tier 1 protected path-establishing chunks in hop order, deduplicated preserving "
+                "first position; Tier 2 remaining structurally reached chunks ranked by existing chunk cosine "
+                "then stable tie-breakers; concatenate and truncate to the question's frozen top_k"
+            ),
+            "vector_backfill_permitted": False,
+            "seed_bound_P_seed": "K (the question's frozen top_k)",
+            "hop_budget_B": 6,
+            "m_max": m_max,
+            "candidate_ceiling_rule": "C = (P_seed + B) x M_max x F_max",
+            "traversable_anchor_kinds": ["identifier", "phrase"],
+            "non_traversable_anchor_kinds": ["heading_title"],
+        },
+
+        # --- gates (SS9) ---------------------------------------------------
+        "gate_q_thresholds": {
+            "Q-1_citation_validity": 1.00,
+            "Q-2_invalid_source_references": 0,
+            "Q-3_revision_scope_contamination": 0,
+            "Q-4_false_merges": 0,
+            "Q-5_accepted_claim_precision_min": 0.95,
+            "Q-6_expected_fact_recall_min": 0.80,
+            "Q-7_incorrect_summary_sentences_max": 0,
+            "Q-8_repeatability": {
+                "runs_n": q5_decision["thresholds"]["runs_n"],
+                "primary_run": q5_decision["thresholds"]["primary_run"],
+                "accepted_claim_set_pairwise_jaccard_min":
+                    q5_decision["thresholds"]["accepted_claim_set_pairwise_jaccard_min"],
+                "citation_exact_agreement_on_matched_accepted_claims_min":
+                    q5_decision["thresholds"]["citation_exact_agreement_on_matched_accepted_claims_min"],
+                "false_merges_max_each_run": q5_decision["thresholds"]["false_merges_max_each_run"],
+                "ceiling_breaches_max_each_run": q5_decision["thresholds"]["ceiling_breaches_max_each_run"],
+                "approved_by": q5_decision["decision_id"],
+                "metric_semantics": q5_decision["metric_semantics"],
+            },
+            "Q-9_budget_and_ceilings": "no breach; total estimated cost <= declared dollar cap",
+            "Q-10_incorrect_supported_aliases_max": 0,
+            "evaluation": "conjunctive; every criterion must PASS; no averaging, no partial credit",
+        },
+        "retain_gates": {
+            "gate_a": (
+                "requires Gate Q passed, >=2 of Q04/Q06/Q07 improved (partial->solved AND complete-chain "
+                "false->true), zero regressions, same final K, zero authority leakage, page quality over W0, "
+                "the SS9.4 extraction attribution, A-7 (W1-FULL demonstrates value over the deterministic D0 "
+                "arm), and cost justified against V and D0"
+            ),
+            "gate_b": (
+                "requires evidence that D0 is sufficient, or that W1-FULL's measured incremental value over "
+                "D0 is not worth its cost; may NEVER be selected from W1-FULL ~ W1-D alone"
+            ),
+            "gate_c": "no arm preserves transitive reachability, or the value does not justify the cost",
+            "attribution_deltas_required": [
+                "W1-D vs D0 (semantic facet enrichment)",
+                "W1-FULL vs W1-D (claim-derived routing)",
+                "W1-FULL vs D0 (total marginal value of the LLM-assisted Wiki)",
+            ],
+            "prohibited_inference": (
+                "do not conclude the compiler was unnecessary merely because claim-derived routing did not "
+                "beat deterministic routing; only a comparison against D0 supports that statement"
+            ),
+        },
+
+        "projection_hash": projection_hash,
+    }
+    contract["contract_sha256"] = _sha256(_canonical_json(contract))
+    return contract

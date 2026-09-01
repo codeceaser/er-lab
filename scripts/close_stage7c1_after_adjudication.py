@@ -54,13 +54,24 @@ from ingestion_bench.wiki_projection.benchmark import (  # noqa: E402
     load_frozen_runs,
 )
 from ingestion_bench.wiki_projection.closure import (  # noqa: E402
+    EMBEDDING_HASH_SERIALIZATION,
     ClosurePreflightError,
+    FacetEmbeddingRecord,
     Stage7C1ClosureResult,
     build_final_embeddings,
     compute_expected_fact_recall,
+    embedding_set_sha256,
+    embedding_sha256,
     evaluate_final_gate_q,
     run_preflight,
 )
+from ingestion_bench.wiki_projection.facet_store import (  # noqa: E402
+    CompilationAuditRow,
+    FacetEmbeddingRow,
+    FacetRecord,
+    InMemoryStage7C1Store,
+)
+from ingestion_bench.wiki_projection.report import build_compiler_contract  # noqa: E402
 from ingestion_bench.wiki_projection.projection import build_projection  # noqa: E402
 from ingestion_bench.wiki_projection.validation import AdjudicationVerdictSet, apply_pass3  # noqa: E402
 
@@ -68,12 +79,72 @@ from ingestion_bench.wiki_projection.validation import AdjudicationVerdictSet, a
 FROZEN_PROJECTION_HASH = "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613"
 FROZEN_PACKET_SHA256 = "5d08b88dc9473a07ff94ddaead911a1a2aa54aba384afeec0f85b9a97ccb2065"
 EXPECTED_VERDICT_SET_SHA256 = "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd"
+DECLARED_DOLLAR_CAP_USD = 5.0
+M_MAX = 3
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
+# The exact vectors produced by the d67ebfe closure. Reused rather than
+# regenerated: a regenerated set would be a DIFFERENT frozen representation even
+# if numerically close, and calling it the same one would be false.
+FROZEN_VECTORS_PATH = REPO_ROOT / "artifacts" / "stage7c1_closure" / "facet_embeddings.json"
 
 REPORTS = config.REPORTS_ROOT
 Q5_DECISION_PATH = REPORTS / "stage7c_q5_owner_decision.json"
 VERDICT_SET_PATH = REPORTS / "stage7c1_adjudication_verdict_set.json"
 FROZEN_RUNS_PATH = REPORTS / "stage7c1_compilation_runs.json"
 FROZEN_PACKET_PATH = REPORTS / "stage7c1_owner_adjudication_packet.json"
+
+
+
+def _load_frozen_vectors(final_payloads) -> tuple[list, str]:
+    """Reuse the EXACT vectors produced by the d67ebfe closure.
+
+    Every vector is verified against the payload it must belong to before it is
+    accepted. If the artifact is absent the closure STOPS rather than silently
+    regenerating: a replacement set would be a DIFFERENT frozen representation,
+    and presenting it as the same one would be false.
+    """
+    if not FROZEN_VECTORS_PATH.exists():
+        print(f"STOP -- the exact frozen vector set is unavailable at {FROZEN_VECTORS_PATH}.")
+        print()
+        print("Not regenerating. A replacement embedding set would be a DIFFERENT frozen Stage 7C.1")
+        print("representation, and calling it the same one would be false. Restore the artifact, or")
+        print("explicitly authorise generating and re-freezing a new embedding set.")
+        sys.exit(2)
+
+    raw = json.loads(FROZEN_VECTORS_PATH.read_text(encoding="utf-8"))
+    records: list[FacetEmbeddingRecord] = []
+    problems: list[str] = []
+    for entry in raw:
+        key = f"{entry['page_key']}|{entry['document_revision_id']}"
+        payload = final_payloads.get(key)
+        if payload is None:
+            problems.append(f"{key}: no matching final payload")
+            continue
+        checks = {
+            "payload_text": entry["payload_text"] == payload.preview_text,
+            "payload_sha256": entry["payload_sha256"] == payload.preview_sha256,
+            "recomputed_sha": hashlib.sha256(entry["payload_text"].encode("utf-8")).hexdigest()
+            == payload.preview_sha256,
+            "verdict_set_sha256": entry["verdict_set_sha256"] == EXPECTED_VERDICT_SET_SHA256,
+            "projection_hash": entry["projection_hash"] == FROZEN_PROJECTION_HASH,
+            "embedding_model": entry["embedding_model"] == EMBEDDING_MODEL,
+        }
+        if not all(checks.values()):
+            problems.append(f"{key}: {[k for k, v in checks.items() if not v]}")
+            continue
+        records.append(
+            FacetEmbeddingRecord(**{**entry, "embedding_sha256": embedding_sha256(entry["embedding"])})
+        )
+
+    if problems or len(records) != len(final_payloads):
+        print("STOP -- the stored vector set does not verify against the final payloads:")
+        for problem in problems[:10]:
+            print(f"  - {problem}")
+        if len(records) != len(final_payloads):
+            print(f"  - verified {len(records)} of {len(final_payloads)} payloads")
+        sys.exit(2)
+    return records, f"reused the exact d67ebfe vectors, all {len(records)} verified"
 
 
 def main() -> None:
@@ -106,12 +177,27 @@ def main() -> None:
     print()
 
     # --- preflight: fail closed -------------------------------------------
+    compiler_contract = build_compiler_contract(
+        projection_hash=projection.projection_hash, m_max=M_MAX,
+        verdict_set_sha256=EXPECTED_VERDICT_SET_SHA256,
+        declared_dollar_cap_usd=DECLARED_DOLLAR_CAP_USD, embedding_model=EMBEDDING_MODEL,
+        q5_decision=q5_decision,
+    )
+    committed_contract_path = config.CONTRACTS_ROOT / "wiki_compiler_v1.json"
+    expected_contract_sha = (
+        json.loads(committed_contract_path.read_text(encoding="utf-8")).get("contract_sha256")
+        if committed_contract_path.exists()
+        else None
+    )
+
     try:
         preflight = run_preflight(
             projection=projection, runs=runs, verdicts=verdicts,
             expected_projection_hash=FROZEN_PROJECTION_HASH,
             expected_verdict_set_sha256=EXPECTED_VERDICT_SET_SHA256,
             expected_packet_sha256=FROZEN_PACKET_SHA256, packet_sha256=packet_sha,
+            q5_decision=q5_decision, compiler_contract=compiler_contract,
+            expected_compiler_contract_sha256=expected_contract_sha,
         )
     except ClosurePreflightError as exc:
         print("STOP -- preflight failed. No pass 3 was run and no embedding was created.\n")
@@ -164,16 +250,21 @@ def main() -> None:
     print(f"Final payloads: {len(final_payloads)} | final claim-derived links: {len(final_links)}")
 
     # --- final facet embeddings (permitted only now) -----------------------
-    provider = FakeEmbeddingProvider() if use_fake else SentenceTransformerEmbeddingProvider()
     primary = next(p for p in runs.run_provenance if p.run_id == PRIMARY_RUN_ID)
-    embeddings = build_final_embeddings(
-        payloads=final_payloads, projection=projection, embedding_provider=provider,
-        verdict_set_sha256=EXPECTED_VERDICT_SET_SHA256,
-        compiler_model_identity=primary.model_identity,
-        prompt_version=primary.prompt_version, prompt_sha256_value=primary.prompt_sha256,
-    )
-    print(f"Final facet embeddings: {len(embeddings)} ({provider.model_identity}, "
-          f"dim={embeddings[0].embedding_dimension})")
+    if use_fake:
+        embeddings = build_final_embeddings(
+            payloads=final_payloads, projection=projection, embedding_provider=FakeEmbeddingProvider(),
+            verdict_set_sha256=EXPECTED_VERDICT_SET_SHA256,
+            compiler_model_identity=primary.model_identity,
+            prompt_version=primary.prompt_version, prompt_sha256_value=primary.prompt_sha256,
+        )
+        source_note = "fake provider (diagnostic only)"
+    else:
+        embeddings, source_note = _load_frozen_vectors(final_payloads)
+    print(f"Final facet embeddings: {len(embeddings)} ({embeddings[0].embedding_model}, "
+          f"dim={embeddings[0].embedding_dimension}) -- {source_note}")
+    set_sha = embedding_set_sha256(embeddings)
+    print(f"Embedding set SHA-256: {set_sha}")
 
     # --- membership must be untouched by all of the above ------------------
     membership_after = {(f.page_key, f.document_revision_id): f.membership_hash for f in projection.facets}
@@ -195,6 +286,8 @@ def main() -> None:
         run_1=run_1, pass3_by_facet=pass3_by_facet, verdicts=verdicts,
         repeatability=runs.repeatability, recall=recall, q5_decision=q5_decision,
         verdict_set_sha256=EXPECTED_VERDICT_SET_SHA256, projection_hash=projection.projection_hash,
+        declared_dollar_cap_usd=DECLARED_DOLLAR_CAP_USD,
+        total_estimated_cost_usd=runs.total_estimated_cost_usd,
     )
     print()
     for criterion in gate_q.criteria:
@@ -218,8 +311,100 @@ def main() -> None:
     )
     result.closure_sha256 = result.semantic_hash()
 
+    # --- Stage 7C.1 persistence (SS10.3): facet / facet_embedding / audit ---
+    # In-memory reference store by default; the Postgres implementation shares
+    # the same protocol. No authority state is stored in any of the three.
+    store = InMemoryStage7C1Store()
+    facet_rows = []
+    embedding_rows = []
+    audit_rows = []
+    embedding_by_key = {f"{e.page_key}|{e.document_revision_id}": e for e in embeddings}
+    for key in sorted(pass3_by_facet):
+        validation, result_3, payload = run_1[key], pass3_by_facet[key], final_payloads[key]
+        facet = facets_by_key[key]
+        surviving_ids = set(result_3.surviving_accepted_claim_ids)
+        compiled = {
+            "surviving_accepted_claims": [
+                json.loads(c.model_dump_json()) for c in validation.claims if c.claim_id in surviving_ids
+            ],
+            "payload_eligible_aliases": result_3.payload_eligible_alias_texts,
+            "surviving_summary_sentence_ids": result_3.surviving_summary_sentence_ids,
+            "final_derived_links": [json.loads(link.model_dump_json()) for link in result_3.derived_links],
+            "final_payload_sha256": payload.preview_sha256,
+            "verdict_set_sha256": EXPECTED_VERDICT_SET_SHA256,
+        }
+        facet_rows.append(
+            FacetRecord(
+                page_key=validation.page_key, document_revision_id=validation.document_revision_id,
+                validation_state="final_post_pass3", facet_membership_hash=facet.membership_hash,
+                facet_hash=payload.preview_sha256, run_id=PRIMARY_RUN_ID, compiled=compiled,
+            )
+        )
+        record = embedding_by_key[key]
+        embedding_rows.append(
+            FacetEmbeddingRow(
+                page_key=record.page_key, document_revision_id=record.document_revision_id,
+                embedding=record.embedding, embedding_dimension=record.embedding_dimension,
+                embedding_sha256=record.embedding_sha256, payload_sha256=record.payload_sha256,
+                payload_text=record.payload_text, component_manifest=record.component_manifest,
+                verdict_set_sha256=record.verdict_set_sha256, projection_hash=record.projection_hash,
+                embedding_model=record.embedding_model,
+                compiler_model_identity=record.compiler_model_identity,
+                prompt_version=record.prompt_version, prompt_sha256=record.prompt_sha256,
+                run_id=record.repeatability_run_id, source_chunk_ids=record.source_chunk_ids,
+            )
+        )
+        audit_rows.append(
+            CompilationAuditRow(
+                page_key=validation.page_key, document_revision_id=validation.document_revision_id,
+                run_id=PRIMARY_RUN_ID,
+                rejected_claims=[
+                    json.loads(c.model_dump_json()) for c in validation.claims
+                    if c.validation_status == "rejected"
+                ],
+                out_of_page_scope_claims=[
+                    json.loads(c.model_dump_json()) for c in validation.claims
+                    if c.validation_status == "out_of_page_scope"
+                ],
+                uncertain_claims=[
+                    json.loads(c.model_dump_json()) for c in validation.claims
+                    if c.validation_status == "uncertain"
+                ],
+                unlinkable_claim_endpoints=validation.unlinkable_claim_endpoints,
+                unresolved_identity_mentions=validation.unresolved_identity_mentions,
+                adjudication_verdicts={
+                    item: verdict for item, verdict in verdicts.verdicts.items() if f"::{key}::" in item
+                },
+                adjudication_reasons={
+                    item: reason for item, reason in verdicts.reasons.items() if f"::{key}::" in item
+                },
+                withdrawn_claim_ids=result_3.withdrawn_claim_ids,
+                withdrawn_summary_ids=result_3.withdrawn_summary_ids,
+                withdrawn_alias_ids=result_3.withdrawn_alias_ids,
+                demoted_to_out_of_page_scope=result_3.demoted_to_out_of_page_scope,
+                payload_truncated_components=payload.payload_truncated_components,
+                summary_payload_dedup_count=payload.summary_payload_dedup_count,
+                input_tokens=validation.input_tokens, output_tokens=validation.output_tokens,
+                estimated_cost_usd=validation.estimated_cost_usd,
+                latency_seconds=validation.latency_seconds, model_identity=validation.model_identity,
+                prompt_version=validation.prompt_version, prompt_sha256=validation.prompt_sha256,
+                ceiling_breaches=validation.ceiling_breaches,
+                generation_failed=validation.generation_failed, generation_error=validation.generation_error,
+            )
+        )
+    store.upsert_facets(facet_rows)
+    store.upsert_facet_embeddings(embedding_rows)
+    store.upsert_compilation_audit(audit_rows)
+    print(f"Persisted: facet={store.facet_count()} facet_embedding={store.facet_embedding_count()} "
+          f"compilation_audit={store.compilation_audit_count()}")
+
     # --- tracked artifacts -------------------------------------------------
     REPORTS.mkdir(parents=True, exist_ok=True)
+    if not use_fake:
+        config.CONTRACTS_ROOT.mkdir(parents=True, exist_ok=True)
+        (config.CONTRACTS_ROOT / "wiki_compiler_v1.json").write_text(
+            json.dumps(compiler_contract, indent=2), encoding="utf-8"
+        )
     _write(REPORTS / f"stage7c1_pass3_results{suffix}.json", {
         "projection_hash": projection.projection_hash,
         "verdict_set_sha256": EXPECTED_VERDICT_SET_SHA256,
@@ -239,10 +424,22 @@ def main() -> None:
     # The manifest omits raw vectors (they live with the records); it carries the
     # provenance that binds each vector to its payload and verdict set.
     _write(REPORTS / f"stage7c1_final_embedding_manifest{suffix}.json", {
-        "embedding_model": provider.model_identity,
+        "embedding_model": embeddings[0].embedding_model,
         "embedding_count": len(embeddings),
         "projection_hash": projection.projection_hash,
         "verdict_set_sha256": EXPECTED_VERDICT_SET_SHA256,
+        # Identifies the exact VECTOR SET without carrying the raw vectors, so
+        # the frozen record is complete even though the values live in the
+        # Stage 7C.1 store.
+        "embedding_set_sha256": set_sha,
+        "embedding_hash_serialization": EMBEDDING_HASH_SERIALIZATION,
+        "vector_source": source_note,
+        "compiler_contract_sha256": compiler_contract["contract_sha256"],
+        "persisted_row_counts": {
+            "facet": store.facet_count(),
+            "facet_embedding": store.facet_embedding_count(),
+            "compilation_audit": store.compilation_audit_count(),
+        },
         "records": [
             {k: v for k, v in json.loads(record.model_dump_json()).items() if k != "embedding"}
             for record in embeddings
@@ -256,6 +453,21 @@ def main() -> None:
     (artifacts_dir / f"facet_embeddings{suffix}.json").write_text(
         json.dumps([json.loads(r.model_dump_json()) for r in embeddings], indent=2), encoding="utf-8"
     )
+
+    _write(REPORTS / f"stage7c1_persistence_manifest{suffix}.json", {
+        "tables": ["edib_stage7c_facet", "edib_stage7c_facet_embedding", "edib_stage7c_compilation_audit"],
+        "row_counts": {
+            "facet": store.facet_count(),
+            "facet_embedding": store.facet_embedding_count(),
+            "compilation_audit": store.compilation_audit_count(),
+        },
+        "authority_state_stored": False,
+        "authority_read_pattern":
+            "document_revision_id = ANY(:eligible) in the SAME statement as ORDER BY / LIMIT",
+        "stage_7c2_retrieval_implemented": False,
+        "facets": [json.loads(r.model_dump_json()) for r in facet_rows],
+        "compilation_audit": [json.loads(r.model_dump_json()) for r in audit_rows],
+    })
 
     print(f"\nClosure semantic hash: {result.closure_sha256}")
     print(f"Artifacts written under {REPORTS} and {artifacts_dir}")

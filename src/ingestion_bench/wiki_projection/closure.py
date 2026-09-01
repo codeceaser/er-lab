@@ -48,6 +48,36 @@ from ingestion_bench.wiki_projection.validation import (
 
 CLOSURE_CONTRACT_VERSION = "stage7c1_closure_v1"
 
+# Frozen identities the closure refuses to run without. Preflight compares
+# against these explicitly rather than merely recording what it found -- a
+# recorded value proves nothing if nothing checks it.
+EXPECTED_COMPILER_MODEL = "gpt-4o-mini"
+EXPECTED_PROMPT_VERSION = "stage7c1-facet-compiler-v1"
+EXPECTED_PROMPT_SHA256 = "1144ceff32112796aa698a1a2508373cd5d3617989aa0f5e5af8e02950d85b53"
+EXPECTED_Q5_DECISION_ID = "STAGE7C-Q5-REPEATABILITY-THRESHOLDS"
+
+# The Q5 owner decision is immutable owner input. Two hashes, different jobs:
+#   * the Git blob SHA-1 identifies the exact committed file;
+#   * a canonical content SHA-256 (sorted-key, separator-normalized JSON) is what
+#     preflight verifies at runtime, because it is stable across formatting-only
+#     rewrites while still changing if any value changes.
+# The threshold VALUES are additionally compared field by field, so a decision
+# file cannot silently alter Gate Q even if a hash convention were relaxed.
+EXPECTED_Q5_GIT_BLOB_SHA1 = "60f26ea7aa304490bfb88ed304f862fa0fa2588b"
+EXPECTED_Q5_THRESHOLDS = {
+    "runs_n": 3,
+    "primary_run": 1,
+    "accepted_claim_set_pairwise_jaccard_min": 0.9,
+    "citation_exact_agreement_on_matched_accepted_claims_min": 0.95,
+    "false_merges_max_each_run": 0,
+    "ceiling_breaches_max_each_run": 0,
+}
+
+
+def q5_content_sha256(decision: dict) -> str:
+    """Canonical content hash of the Q5 owner decision (formatting-independent)."""
+    return _sha256(_canonical(decision))
+
 
 class ClosurePreflightError(RuntimeError):
     """A frozen-input or verdict-set integrity check failed. Raised BEFORE pass
@@ -60,6 +90,43 @@ def _sha256(text: str) -> str:
 
 def _canonical(payload) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+# --- cryptographic identity for the vectors themselves -----------------------
+#
+# ONE canonical serialization, documented and environment-independent:
+# each coordinate as IEEE-754 binary32 (float32), little-endian, concatenated in
+# the vector's own order. Chosen over string formatting because repr/format of a
+# float varies with platform and Python version, which would make the "frozen"
+# identity of a vector set depend on where it was hashed.
+#
+# float32 is exact for these values: the provider returns float32 internally and
+# JSON round-trips through float64, so narrowing back to float32 is lossless for
+# any coordinate that originated as float32.
+
+EMBEDDING_HASH_SERIALIZATION = (
+    "IEEE-754 binary32 (float32) little-endian bytes, coordinates concatenated in vector order, "
+    "SHA-256 over the resulting byte string"
+)
+
+
+def embedding_sha256(vector: list[float]) -> str:
+    """Deterministic identity of one vector's VALUES."""
+    import struct
+
+    return hashlib.sha256(struct.pack(f"<{len(vector)}f", *vector)).hexdigest()
+
+
+def embedding_set_sha256(records: list["FacetEmbeddingRecord"]) -> str:
+    """Aggregate identity over the ordered (facet key, embedding SHA) pairs.
+
+    Ordered by facet key so the set hash is independent of iteration order but
+    still sensitive to which facet carries which vector.
+    """
+    ordered = sorted(
+        (f"{r.page_key}|{r.document_revision_id}", r.embedding_sha256) for r in records
+    )
+    return _sha256(_canonical(ordered))
 
 
 # --- preflight ---------------------------------------------------------------
@@ -77,6 +144,10 @@ class PreflightReport(BaseModel):
     prompt_sha256: str
     packet_sha256: str | None
     verdict_set_sha256: str
+    q5_decision_id: str | None = None
+    q5_content_sha256: str | None = None
+    q5_git_blob_sha1_expected: str = EXPECTED_Q5_GIT_BLOB_SHA1
+    compiler_contract_sha256: str | None = None
     required_item_count: int
     supplied_item_count: int
     missing_item_ids: list[str]
@@ -95,6 +166,9 @@ def run_preflight(
     expected_packet_sha256: str | None = None,
     packet_sha256: str | None = None,
     expected_item_count: int = 68,
+    q5_decision: dict | None = None,
+    compiler_contract: dict | None = None,
+    expected_compiler_contract_sha256: str | None = None,
 ) -> PreflightReport:
     """Every check the closure must pass before pass 3 or embedding creation.
 
@@ -128,6 +202,12 @@ def run_preflight(
         raise ClosurePreflightError("stored runs carry no Run-1 provenance record")
     if not primary.is_primary:
         failures.append("Run-1 provenance is not flagged primary")
+    if primary.model_identity != EXPECTED_COMPILER_MODEL:
+        failures.append(f"Run-1 compiler model {primary.model_identity!r} != {EXPECTED_COMPILER_MODEL!r}")
+    if primary.prompt_version != EXPECTED_PROMPT_VERSION:
+        failures.append(f"Run-1 prompt version {primary.prompt_version!r} != {EXPECTED_PROMPT_VERSION!r}")
+    if primary.prompt_sha256 != EXPECTED_PROMPT_SHA256:
+        failures.append(f"Run-1 prompt SHA {primary.prompt_sha256} != {EXPECTED_PROMPT_SHA256}")
 
     # 5 -- the owner packet is the frozen packet.
     if expected_packet_sha256 is not None and packet_sha256 is not None:
@@ -154,6 +234,39 @@ def run_preflight(
     if observed_sha != expected_verdict_set_sha256:
         failures.append(f"verdict-set SHA {observed_sha} != expected {expected_verdict_set_sha256}")
 
+    # 11 -- the Q5 owner decision is the one that was approved, by identity,
+    # by canonical content hash, and by every threshold value.
+    q5_id = q5_sha = None
+    if q5_decision is not None:
+        q5_id = q5_decision.get("decision_id")
+        q5_sha = q5_content_sha256(q5_decision)
+        if q5_id != EXPECTED_Q5_DECISION_ID:
+            failures.append(f"Q5 decision id {q5_id!r} != {EXPECTED_Q5_DECISION_ID!r}")
+        if q5_decision.get("decision") != "APPROVED":
+            failures.append(f"Q5 decision is {q5_decision.get('decision')!r}, expected APPROVED")
+        supplied_thresholds = q5_decision.get("thresholds", {})
+        for field, expected_value in EXPECTED_Q5_THRESHOLDS.items():
+            if supplied_thresholds.get(field) != expected_value:
+                failures.append(
+                    f"Q5 threshold {field} = {supplied_thresholds.get(field)!r}, expected {expected_value!r}"
+                )
+
+    # 12 -- the frozen Stage 7C.1 compiler contract, once it exists.
+    contract_sha = None
+    if compiler_contract is not None:
+        contract_sha = compiler_contract.get("contract_sha256")
+        if expected_compiler_contract_sha256 is not None and contract_sha != expected_compiler_contract_sha256:
+            failures.append(
+                f"compiler contract SHA {contract_sha} != frozen {expected_compiler_contract_sha256}"
+            )
+        for field, expected_value in (
+            ("compiler_model", EXPECTED_COMPILER_MODEL),
+            ("prompt_version", EXPECTED_PROMPT_VERSION),
+            ("prompt_sha256", EXPECTED_PROMPT_SHA256),
+        ):
+            if compiler_contract.get(field) != expected_value:
+                failures.append(f"compiler contract {field} = {compiler_contract.get(field)!r}, expected {expected_value!r}")
+
     distribution: dict[str, int] = {}
     for verdict in verdicts.verdicts.values():
         distribution[verdict] = distribution.get(verdict, 0) + 1
@@ -168,6 +281,8 @@ def run_preflight(
         prompt_sha256=primary.prompt_sha256,
         packet_sha256=packet_sha256,
         verdict_set_sha256=observed_sha,
+        q5_decision_id=q5_id, q5_content_sha256=q5_sha,
+        compiler_contract_sha256=contract_sha,
         required_item_count=len(required),
         supplied_item_count=len(supplied),
         missing_item_ids=missing,
@@ -215,6 +330,11 @@ class FacetEmbeddingRecord(BaseModel):
     embedding_model: str
     embedding_dimension: int
     embedding: list[float]
+    # Cryptographic identity of the VECTOR VALUES (see EMBEDDING_HASH_SERIALIZATION).
+    # Without it the manifest identifies a payload but not the vector derived
+    # from it, so two different vector sets over the same payloads would be
+    # indistinguishable in the frozen record.
+    embedding_sha256: str
 
     source_chunk_ids: list[str]
     source_revision_id: str
@@ -269,6 +389,7 @@ def build_final_embeddings(
                 repeatability_run_id=PRIMARY_RUN_ID,
                 embedding_model=embedding_provider.model_identity,
                 embedding_dimension=len(vector), embedding=list(vector),
+                embedding_sha256=embedding_sha256(list(vector)),
                 source_chunk_ids=list(facet.chunk_ids), source_revision_id=facet.document_revision_id,
                 generated_at=generated_at,
             )
@@ -378,10 +499,14 @@ def compute_expected_fact_recall(
       relative to Graph by construction and make the attribution unsound. The
       stricter exact-endpoint figure is computed and reported alongside, so the
       sensitivity is visible rather than buried.
-    * **Direction is not re-tested.** Direction correctness is an owner semantic
-      judgement (SS4.3) already applied in pass 3; a surviving claim has been
-      judged faithful, and re-testing direction mechanically here would
-      double-count that judgement.
+    * **Endpoints are matched DIRECTIONALLY** -- expected subject to claim
+      subject, expected object to claim object -- because the frozen Stage 7B.1
+      evaluator this must be comparable to did exactly that. An unordered set
+      comparison would credit a direction-reversed claim that the Graph
+      comparator would have scored as a miss. Predicate equality is deliberately
+      NOT added, because the Graph comparator did not require it either; the
+      purpose is comparator parity, not a new metric. Owner adjudication remains
+      the semantic-quality guard.
     """
     from ingestion_bench.wiki_projection.validation import normalize_triple_part
 
@@ -392,8 +517,8 @@ def compute_expected_fact_recall(
     for fact in contract_facts:
         evidence = evidence_by_fact[fact["fact_id"]]
         target_chunk = evidence.supporting_chunk_id
-        fact_entity = {entity_normalize(fact["subject"]), entity_normalize(fact["object"])}
-        fact_exact = {normalize_triple_part(fact["subject"]), normalize_triple_part(fact["object"])}
+        fact_entity = (entity_normalize(fact["subject"]), entity_normalize(fact["object"]))
+        fact_exact = (normalize_triple_part(fact["subject"]), normalize_triple_part(fact["object"]))
 
         matched_ids: list[str] = []
         strict_ids: list[str] = []
@@ -402,9 +527,19 @@ def compute_expected_fact_recall(
             if target_chunk not in claim.supporting_chunk_ids:
                 continue
             cites_chunk = True
-            if {entity_normalize(claim.subject), entity_normalize(claim.object)} == fact_entity:
+            # DIRECTIONAL, matching the frozen Stage 7B.1 evaluator: expected
+            # subject vs claim subject AND expected object vs claim object.
+            # An unordered set comparison would credit a direction-reversed
+            # claim, which the Graph comparator would not have credited.
+            if (
+                entity_normalize(claim.subject) == fact_entity[0]
+                and entity_normalize(claim.object) == fact_entity[1]
+            ):
                 matched_ids.append(claim.claim_id)
-            if {normalize_triple_part(claim.subject), normalize_triple_part(claim.object)} == fact_exact:
+            if (
+                normalize_triple_part(claim.subject) == fact_exact[0]
+                and normalize_triple_part(claim.object) == fact_exact[1]
+            ):
                 strict_ids.append(claim.claim_id)
 
         if strict_ids:
@@ -414,14 +549,14 @@ def compute_expected_fact_recall(
             miss_reason = (
                 "no surviving claim cites this fact's supporting chunk"
                 if not cites_chunk
-                else "surviving claims cite the chunk but state different endpoints"
+                else "surviving claims cite the chunk but state different or reversed endpoints"
             )
         entries.append(
             RecallLedgerEntry(
                 fact_id=fact["fact_id"], subject=fact["subject"], predicate=fact["predicate"],
                 object=fact["object"], supporting_chunk_id=target_chunk,
                 matched=bool(matched_ids), matched_by_claim_ids=sorted(matched_ids),
-                match_basis="chunk_and_entity_normalized_endpoints" if matched_ids else None,
+                match_basis="chunk_and_directional_entity_normalized_endpoints" if matched_ids else None,
                 matched_only_after_entity_normalization=bool(matched_ids) and not strict_ids,
                 miss_reason=miss_reason,
             )
@@ -434,19 +569,20 @@ def compute_expected_fact_recall(
         recall=(numerator / denominator) if denominator else 0.0,
         mapping_rule=(
             "PRIMARY: a frozen expected fact is recalled when a SURVIVING post-pass-3 accepted claim cites "
-            "that fact's supporting chunk AND its ENTITY-normalized endpoints equal the fact's "
-            "{subject, object} as a set. Entity normalization strips determiners and generic type nouns, "
+            "that fact's supporting chunk AND its ENTITY-normalized subject equals the fact's subject AND "
+            "its ENTITY-normalized object equals the fact's object (DIRECTIONAL, as the frozen Stage 7B.1 "
+            "evaluator compared them). Entity normalization strips determiners and generic type nouns, "
             "mirroring the normalization under which the frozen Stage 7B.1 Graph recall (0.80) was measured, "
-            "so SS9.4 compares like with like. Direction is not re-tested mechanically: SS4.3 makes it an "
-            "owner judgement already applied in pass 3."
+            "so SS9.4 compares like with like. Predicate equality is not required, because the Graph "
+            "comparator did not require it."
         ),
         entries=entries, surviving_claim_count=len(surviving),
         strict_numerator=strict_hits,
         strict_recall=(strict_hits / denominator) if denominator else 0.0,
         strict_rule=(
-            "SENSITIVITY: the same computation requiring EXACT normalized endpoints (no determiner or "
-            "type-noun stripping). Reported for transparency; not the gated figure, because the frozen "
-            "Graph comparator was not measured this way."
+            "SENSITIVITY: the same DIRECTIONAL computation requiring EXACT normalized endpoints (no "
+            "determiner or type-noun stripping). Reported for transparency; not the gated figure, because "
+            "the frozen Graph comparator was not measured this way."
         ),
     )
 
@@ -487,6 +623,8 @@ def evaluate_final_gate_q(
     q5_decision: dict,
     verdict_set_sha256: str,
     projection_hash: str,
+    declared_dollar_cap_usd: float,
+    total_estimated_cost_usd: float | None,
 ) -> FinalGateQ:
     """All ten criteria, computed independently and combined conjunctively.
 
@@ -538,6 +676,8 @@ def evaluate_final_gate_q(
     ]
     claim_jaccard_min = min(claim_jaccard) if claim_jaccard else None
     citation_min = min(citation_rates) if citation_rates else None
+
+    within_cap = total_estimated_cost_usd is not None and total_estimated_cost_usd <= declared_dollar_cap_usd
 
     precision = (accepted_correct / len(accepted)) if accepted else 1.0
     citation_validity = (citation_valid / total_claims) if total_claims else 1.0
@@ -613,9 +753,21 @@ def evaluate_final_gate_q(
             detail="; ".join(q8_detail),
         ),
         GateQCriterion(
-            criterion="Q-9", description="Budget and ceilings", required="no breach; within declared cap",
-            observed={"ceiling_breaches": ceiling_breaches, "generation_failures": generation_failures},
-            status="PASS" if ceiling_breaches == 0 and generation_failures == 0 else "FAIL",
+            criterion="Q-9", description="Budget and ceilings",
+            required="no ceiling breach; no generation failure; total estimated cost <= declared dollar cap",
+            observed={
+                "ceiling_breaches": ceiling_breaches,
+                "generation_failures": generation_failures,
+                "declared_dollar_cap_usd": declared_dollar_cap_usd,
+                "total_estimated_cost_usd": total_estimated_cost_usd,
+                "within_declared_dollar_cap": within_cap,
+            },
+            status="PASS" if (ceiling_breaches == 0 and generation_failures == 0 and within_cap) else "FAIL",
+            detail=(
+                f"${total_estimated_cost_usd:.7f} <= ${declared_dollar_cap_usd:.2f}"
+                if total_estimated_cost_usd is not None
+                else "cost unavailable for this model -- cap condition cannot be evaluated"
+            ),
         ),
         GateQCriterion(
             criterion="Q-10", description="Supported-alias precision (owner-adjudicated)",
@@ -670,7 +822,13 @@ class Stage7C1ClosureResult(BaseModel):
             "pass3": {k: v.model_dump(mode="json") for k, v in sorted(self.pass3_by_facet.items())},
             "payload_sha256": {k: v.preview_sha256 for k, v in sorted(self.final_payloads.items())},
             "links": sorted(link.link_id for link in self.final_derived_links),
+            # Payload SHAs alone would let two different vector sets over identical
+            # payloads share a closure hash; the vector identities close that hole.
             "embedding_payload_sha256": sorted(e.payload_sha256 for e in self.embeddings),
+            "embedding_sha256": sorted(
+                (f"{e.page_key}|{e.document_revision_id}", e.embedding_sha256) for e in self.embeddings
+            ),
+            "embedding_set_sha256": embedding_set_sha256(self.embeddings),
             "recall": self.recall.model_dump(mode="json"),
             "gate_q": [c.model_dump(mode="json") for c in self.gate_q.criteria],
             "overall": self.gate_q.overall_status,

@@ -3,6 +3,15 @@
   "embedding_count": 22,
   "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
   "verdict_set_sha256": "d49cc8643388f830ffbcf5097faa8335a40c366b06b8f54a176aa978b06158bd",
+  "embedding_set_sha256": "bbc233f68a6b7ccdbdebabf9dfe6e35f3a13ee27309077100aec2662e921a5a0",
+  "embedding_hash_serialization": "IEEE-754 binary32 (float32) little-endian bytes, coordinates concatenated in vector order, SHA-256 over the resulting byte string",
+  "vector_source": "reused the exact d67ebfe vectors, all 22 verified",
+  "compiler_contract_sha256": "35ccad855b10e6e8c08f6699136dff590dbd37abcef3c64147500a94edcad793",
+  "persisted_row_counts": {
+    "facet": 22,
+    "facet_embedding": 22,
+    "compilation_audit": 22
+  },
   "records": [
     {
       "page_key": "IDENT:APP-224499",
@@ -85,6 +94,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "41fa38e2a5d631ee88787c683cd2d1589f35f47dac464832d13a342d5c4bb8b1",
       "source_chunk_ids": [
         "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
       ],
@@ -174,6 +184,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "d6159bb25804b8cd1f0d1c2729556a2d26a994c824a98dd92e4186c2a4ed75ac",
       "source_chunk_ids": [
         "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
       ],
@@ -263,6 +274,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "e2ccb8017bdc9032415a1a24b8dce02b70dc6cb899d0a69ab36af20421edd32a",
       "source_chunk_ids": [
         "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
       ],
@@ -354,6 +366,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "41a8b8c064a964b7eccff43003c539c3ad3918f5440794845ed705dc148ddb8e",
       "source_chunk_ids": [
         "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
       ],
@@ -443,6 +456,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "aa87d322fe9aeccdc8bd63e944594a93c5a6884b811e86b84c0cf34800db28ee",
       "source_chunk_ids": [
         "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
       ],
@@ -532,6 +546,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "c7edb5c1ff3e00d8951a3c499eee5820c9f1600b876c1201135fd0a72abd315d",
       "source_chunk_ids": [
         "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
       ],
@@ -621,6 +636,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "8674221527aab9118e6270930e37f26a3e808b81720f0d91a2cdf01af4876865",
       "source_chunk_ids": [
         "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
       ],
@@ -706,6 +722,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "ee46371d2158b3d3d15cebdb9f9b863ec018380954de88ee12e807b2af1dab36",
       "source_chunk_ids": [
         "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
       ],
@@ -795,6 +812,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "f1cca2b7c36073340e52fa35c2cb01ebd225d314248de964078c91f4335fc67e",
       "source_chunk_ids": [
         "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
       ],
@@ -884,6 +902,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "ae2aacf20b4a5d58baa5d95908a0824177756dac2385470d9f19e195512fc169",
       "source_chunk_ids": [
         "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
       ],
@@ -973,6 +992,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "849662a1f56b79b6d7b9e4caa76ee7f76a40e80a1f3ea5578f1b04cd67b57236",
       "source_chunk_ids": [
         "5f10b139bf62039fc587b84fa08f251fb9a2be835c1e5865b8d29c6f2c9196a8"
       ],
@@ -1062,6 +1082,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "63a04614e76ee8ba370bfeaa2cdf3a1e9b0d56c767ce3e7567def785d0151d80",
       "source_chunk_ids": [
         "54188cb210abf626030baa93b61a999b2db6018ab85fbc2592039ab7ddf4235a"
       ],
@@ -1150,6 +1171,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "8e931d2e6480af00f5e3b88f6e5f9c8dc6eace4dddbe9a67fbf8c5f7cccc68c6",
       "source_chunk_ids": [
         "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
       ],
@@ -1239,6 +1261,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "71c44bca0f95c2065edf947462a8d0fe63ca1b3aca9fa337ba41e19b499cfb95",
       "source_chunk_ids": [
         "dfca23730d4262d1947b10fc27e2357139a0ef7c6716a016fff70e89a32d461a"
       ],
@@ -1328,6 +1351,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "741d23cc6dd1460cbc96ebaaba3947162308503f432fd6662f766a6f65946700",
       "source_chunk_ids": [
         "cb11a682186470d08cb42d0ccb60029cca3974165bb2220d78d4636f21216ec1"
       ],
@@ -1417,6 +1441,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "e3e952c5a884eaa8671ea4ec6881d4249c9b8ff1771da0c927acfdf73af85c48",
       "source_chunk_ids": [
         "fac4d4cba8c743cb31248aaa614b1c8928b8c7a3fc4d1510c3c041b749a4c21c"
       ],
@@ -1506,6 +1531,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "a402045ae05fc9a32079083b7058fb4b7810bfefe37d2dee15ffd7c6fed669c1",
       "source_chunk_ids": [
         "57aae7e4f9ee474d03f50711d0d3a8c3bcdaa265b004afa582a6b6c48156b00d"
       ],
@@ -1595,6 +1621,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "680fe01def69bd5aac57a79f275062b64864bf89120ea899a2b9a80374f9552f",
       "source_chunk_ids": [
         "1528d94345257125ba196f7c615f798a04f5844284c086338052f515d664eaeb"
       ],
@@ -1686,6 +1713,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "8b7a99fcf407de9f8f0b764f0476f9968d01a931d6699c4ad2a447046da8aac2",
       "source_chunk_ids": [
         "ced1fc0535981101f44ecc6dd7cd00302d7f9d03d017735d9d360eb92a760011"
       ],
@@ -1775,6 +1803,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "53deaf76f5473d394fd8f87218d57b49098b6f911b44a1cd7fd0ac7ff16c64ea",
       "source_chunk_ids": [
         "d00ddb9a8090249bd214a1ee50ac8b1fe5a1d7e307e4948048f3ab9ed2b44614"
       ],
@@ -1858,6 +1887,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "fe0e0df4eda8b756c355002988ce7416378f37ef5ffa763804c2b6ec32a86bd5",
       "source_chunk_ids": [
         "1a5af9b5351cdb8dd8b97af698c83c6208746b972fc6edc69d3b8bdc595dfac8"
       ],
@@ -1947,6 +1977,7 @@
       "repeatability_run_id": 1,
       "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
       "embedding_dimension": 384,
+      "embedding_sha256": "f4377af133c104ad5f67a2a58c1b7b3064dd57c7af8e13bed87927f983e2179a",
       "source_chunk_ids": [
         "2e409298eff569e23010445d05ffcd32b1276aacb0bc48525bf4a07cbcb1a8b2"
       ],

@@ -2,7 +2,7 @@
   "numerator": 13,
   "denominator": 15,
   "recall": 0.8666666666666667,
-  "mapping_rule": "PRIMARY: a frozen expected fact is recalled when a SURVIVING post-pass-3 accepted claim cites that fact's supporting chunk AND its ENTITY-normalized endpoints equal the fact's {subject, object} as a set. Entity normalization strips determiners and generic type nouns, mirroring the normalization under which the frozen Stage 7B.1 Graph recall (0.80) was measured, so SS9.4 compares like with like. Direction is not re-tested mechanically: SS4.3 makes it an owner judgement already applied in pass 3.",
+  "mapping_rule": "PRIMARY: a frozen expected fact is recalled when a SURVIVING post-pass-3 accepted claim cites that fact's supporting chunk AND its ENTITY-normalized subject equals the fact's subject AND its ENTITY-normalized object equals the fact's object (DIRECTIONAL, as the frozen Stage 7B.1 evaluator compared them). Entity normalization strips determiners and generic type nouns, mirroring the normalization under which the frozen Stage 7B.1 Graph recall (0.80) was measured, so SS9.4 compares like with like. Predicate equality is not required, because the Graph comparator did not require it.",
   "entries": [
     {
       "fact_id": "F_app_current",
@@ -15,7 +15,7 @@
         "claim-1",
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -30,7 +30,7 @@
         "claim1",
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -44,7 +44,7 @@
       "matched_by_claim_ids": [
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -59,7 +59,7 @@
         "claim1",
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -73,7 +73,7 @@
       "matched_by_claim_ids": [
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": true,
       "miss_reason": null
     },
@@ -87,7 +87,7 @@
       "matched_by_claim_ids": [
         "claim-1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": true,
       "miss_reason": null
     },
@@ -102,7 +102,7 @@
         "claim1",
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -117,7 +117,7 @@
         "claim1",
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -131,7 +131,7 @@
       "matched_by_claim_ids": [
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": true,
       "miss_reason": null
     },
@@ -146,7 +146,7 @@
         "claim1",
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -160,7 +160,7 @@
       "matched_by_claim_ids": [
         "claim1"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": true,
       "miss_reason": null
     },
@@ -174,7 +174,7 @@
       "matched_by_claim_ids": [],
       "match_basis": null,
       "matched_only_after_entity_normalization": false,
-      "miss_reason": "surviving claims cite the chunk but state different endpoints"
+      "miss_reason": "surviving claims cite the chunk but state different or reversed endpoints"
     },
     {
       "fact_id": "F_adj_obl",
@@ -187,7 +187,7 @@
         "claim1",
         "claim2"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -202,7 +202,7 @@
         "claim2",
         "claim2"
       ],
-      "match_basis": "chunk_and_entity_normalized_endpoints",
+      "match_basis": "chunk_and_directional_entity_normalized_endpoints",
       "matched_only_after_entity_normalization": false,
       "miss_reason": null
     },
@@ -216,11 +216,11 @@
       "matched_by_claim_ids": [],
       "match_basis": null,
       "matched_only_after_entity_normalization": false,
-      "miss_reason": "surviving claims cite the chunk but state different endpoints"
+      "miss_reason": "surviving claims cite the chunk but state different or reversed endpoints"
     }
   ],
   "surviving_claim_count": 22,
   "strict_numerator": 9,
   "strict_recall": 0.6,
-  "strict_rule": "SENSITIVITY: the same computation requiring EXACT normalized endpoints (no determiner or type-noun stripping). Reported for transparency; not the gated figure, because the frozen Graph comparator was not measured this way."
+  "strict_rule": "SENSITIVITY: the same DIRECTIONAL computation requiring EXACT normalized endpoints (no determiner or type-noun stripping). Reported for transparency; not the gated figure, because the frozen Graph comparator was not measured this way."
 }
