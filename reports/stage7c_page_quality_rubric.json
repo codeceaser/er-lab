@@ -1,0 +1,58 @@
+{
+  "instructions": "Owner scores only. Claude must not populate any score.",
+  "scale": {
+    "0": "poor",
+    "1": "adequate",
+    "2": "good"
+  },
+  "dimensions": [
+    "readability",
+    "understanding_why_sources_are_connected",
+    "source_vs_model_derived_visibility",
+    "citation_usability",
+    "revision_clarity",
+    "qualification_preservation",
+    "usefulness_to_business_user",
+    "usefulness_to_downstream_agent"
+  ],
+  "pages": [
+    "IDENT:APP-224499",
+    "IDENT:APP-330012",
+    "IDENT:O-31",
+    "IDENT:O-32",
+    "IDENT:P-204",
+    "PHRASE:payment settlement"
+  ],
+  "variants": [
+    "A",
+    "B"
+  ],
+  "blind": true,
+  "scores": {
+    "IDENT:APP-224499": {
+      "A": {},
+      "B": {}
+    },
+    "IDENT:APP-330012": {
+      "A": {},
+      "B": {}
+    },
+    "IDENT:O-31": {
+      "A": {},
+      "B": {}
+    },
+    "IDENT:O-32": {
+      "A": {},
+      "B": {}
+    },
+    "IDENT:P-204": {
+      "A": {},
+      "B": {}
+    },
+    "PHRASE:payment settlement": {
+      "A": {},
+      "B": {}
+    }
+  },
+  "single_rater_limitation": "Owner alone rates; recorded as a stated limitation (Q7)."
+}

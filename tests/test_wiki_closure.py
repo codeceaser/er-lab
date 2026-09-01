@@ -774,12 +774,13 @@ def test_the_postgres_store_filters_authority_in_the_same_statement_as_limit():
     assert where < statement.index("ORDER BY embedding") < statement.index("LIMIT :k")
 
 
-def test_the_stage_7c2_pipeline_is_not_implemented_here():
+def test_the_stage_7c2_pipeline_is_not_implemented_in_the_store():
+    """Narrowed when Stage 7C.2 was authorised. The store must remain storage:
+    it may serve an authority-first vector read, but must not expand hubs,
+    traverse, or assemble final evidence."""
     source = (WIKI_ROOT / "facet_store.py").read_text(encoding="utf-8")
     for forbidden in ("hub_expansion", "traverse", "final_k", "hop_budget", "seed_page_priority"):
         assert forbidden not in source
-    for name in ("retrieval.py", "navigation.py"):
-        assert not (WIKI_ROOT / name).exists()
 
 
 # --- C: cryptographic identity for the vectors -------------------------------

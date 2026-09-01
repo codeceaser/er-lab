@@ -641,9 +641,14 @@ def test_model_parity_value_is_named_not_imported_from_the_frozen_graph_package(
         assert "graph_retrieval_benchmark" not in module
 
 
-def test_stage_7c2_modules_still_do_not_exist():
-    for name in ("retrieval.py", "navigation.py"):
-        assert not (WIKI_ROOT / name).exists(), f"{name} belongs to Stage 7C.2"
+def test_stage_7c1_modules_do_not_perform_retrieval():
+    """Narrowed when Stage 7C.2 was authorised: `retrieval.py` and
+    `navigation.py` now legitimately exist. The boundary still worth guarding is
+    that the 7C.1 compilation modules do not themselves retrieve or traverse."""
+    for name in ("compiler.py", "validation.py", "assembly.py", "adjudication.py"):
+        source = (WIKI_ROOT / name).read_text(encoding="utf-8")
+        for forbidden in ("hop_budget", "expose_neighbours", "final_chunk_ids", "seed_page_priority"):
+            assert forbidden not in source, f"{name} performs retrieval: {forbidden}"
 
 
 def test_gate_q_surfaces_a_mechanically_failing_proposed_threshold(projection):

@@ -509,13 +509,15 @@ def test_the_build_path_never_reads_authority_state():
     assert "RevisionAuthorityService" not in projection_source
 
 
-def test_stage_7c2_modules_are_not_created():
-    """Scope guard: do not pre-build 7C.2 machinery.
+def test_stage_7c0_modules_remain_projection_only():
+    """Scope guard, narrowed twice as the frontier moved.
 
-    Narrowed when Stage 7C.1 was authorised: this guard originally also
-    asserted that `compiler.py`, `validation.py` and `assembly.py` did not
-    exist, which was correct while 7C.0 was the frontier and is now false by
-    design. The 7C.2 half is unchanged and still binding.
+    It originally asserted the 7C.1 modules did not exist, then the 7C.2 ones;
+    both are now authorised and present. What it still protects is the boundary
+    that matters: the Stage 7C.0 projection modules must not acquire retrieval,
+    navigation or compilation responsibilities.
     """
-    for name in ("retrieval.py", "navigation.py"):
-        assert not (WIKI_ROOT / name).exists(), f"{name} belongs to Stage 7C.2 and must not exist yet"
+    for name in ("identity.py", "model.py", "projection.py", "store.py", "pg_store.py"):
+        source = (WIKI_ROOT / name).read_text(encoding="utf-8")
+        for forbidden in ("hop_budget", "final_k", "seed_page_priority", "compile_facet", "claim_derived"):
+            assert forbidden not in source, f"{name} acquired a later-stage responsibility: {forbidden}"
