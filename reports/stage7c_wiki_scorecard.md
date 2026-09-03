@@ -17,6 +17,8 @@
 | facets / pages / links / vectors | 22 / 13 / 30 / 22 |
 | scorer (imported by identity) | `ingestion_bench.cross_document_benchmark.benchmark_runner._evaluate_question` |
 
+**Owner-facing summary of these findings:** `reports/stage7c2_findings.html` (published at <https://claude.ai/code/artifact/0c8f8c9b-1959-444d-b720-208f35f8a455>). Every figure there derives from `stage7c_wiki_results.json`.
+
 ## 1. Outcomes per arm
 
 | Arm | solved | partial | failed | Label |

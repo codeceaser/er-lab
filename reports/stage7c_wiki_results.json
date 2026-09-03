@@ -1,6 +1,6 @@
 {
   "stage": "7C.2",
-  "generated_at": "2026-09-01T19:48:43.231988+00:00",
+  "generated_at": "2026-09-03T02:07:13.785299+00:00",
   "frozen_basis": {
     "observed": {
       "projection_hash": "4162fa515cf29d09391c0d963b76c7e63b1d454c4439ee0568805d1a31e3b613",
@@ -248,7 +248,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 2,
-          "latency_seconds": 0.0045698999892920256,
+          "latency_seconds": 0.005150299984961748,
           "query_embedding_calls": 1,
           "cosine_operations": 31,
           "path": [
@@ -375,7 +375,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 2,
-          "latency_seconds": 0.005980500020086765,
+          "latency_seconds": 0.0025289999321103096,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -509,7 +509,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 2,
-          "latency_seconds": 0.006378700025379658,
+          "latency_seconds": 0.002998900134116411,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -643,7 +643,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 2,
-          "latency_seconds": 0.011232400080189109,
+          "latency_seconds": 0.006076199933886528,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -828,7 +828,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 1,
-          "latency_seconds": 0.0072142998687922955,
+          "latency_seconds": 0.0032198999542742968,
           "query_embedding_calls": 1,
           "cosine_operations": 26,
           "path": [
@@ -943,7 +943,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.0022722999565303326,
+          "latency_seconds": 0.0021355999633669853,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -1065,7 +1065,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.002706400118768215,
+          "latency_seconds": 0.0035539998207241297,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -1187,7 +1187,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.0025341000873595476,
+          "latency_seconds": 0.0023910999298095703,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -1363,7 +1363,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.004552099853754044,
+          "latency_seconds": 0.008790699997916818,
           "query_embedding_calls": 1,
           "cosine_operations": 30,
           "path": [
@@ -1491,7 +1491,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.0033515000250190496,
+          "latency_seconds": 0.0059309001080691814,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -1626,7 +1626,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.002614400116726756,
+          "latency_seconds": 0.002621399937197566,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -1761,7 +1761,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.0033629999961704016,
+          "latency_seconds": 0.0023424001410603523,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -1949,7 +1949,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 1,
-          "latency_seconds": 0.004969400120899081,
+          "latency_seconds": 0.00477410014718771,
           "query_embedding_calls": 1,
           "cosine_operations": 20,
           "path": [
@@ -2050,7 +2050,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 1,
-          "latency_seconds": 0.0029718000441789627,
+          "latency_seconds": 0.003076600143685937,
           "query_embedding_calls": 1,
           "cosine_operations": 23,
           "path": [
@@ -2161,7 +2161,7 @@
           "path_truncated": false,
           "tier1_slots": 2,
           "tier2_slots": 2,
-          "latency_seconds": 0.004402399994432926,
+          "latency_seconds": 0.0041853999719023705,
           "query_embedding_calls": 1,
           "cosine_operations": 25,
           "path": [
@@ -2272,7 +2272,7 @@
           "path_truncated": false,
           "tier1_slots": 2,
           "tier2_slots": 2,
-          "latency_seconds": 0.002390800043940544,
+          "latency_seconds": 0.001975699793547392,
           "query_embedding_calls": 1,
           "cosine_operations": 25,
           "path": [
@@ -2442,7 +2442,7 @@
           "path_truncated": false,
           "tier1_slots": 2,
           "tier2_slots": 3,
-          "latency_seconds": 0.004457599949091673,
+          "latency_seconds": 0.005911699961870909,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -2553,7 +2553,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.002209699945524335,
+          "latency_seconds": 0.003159599844366312,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -2697,7 +2697,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.0022864998318254948,
+          "latency_seconds": 0.0024139999877661467,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -2841,7 +2841,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.007787800161167979,
+          "latency_seconds": 0.0026882998645305634,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -3054,7 +3054,7 @@
           "path_truncated": false,
           "tier1_slots": 4,
           "tier2_slots": 2,
-          "latency_seconds": 0.011653599794954062,
+          "latency_seconds": 0.0035746002104133368,
           "query_embedding_calls": 1,
           "cosine_operations": 33,
           "path": [
@@ -3202,7 +3202,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.003916499903425574,
+          "latency_seconds": 0.002681800164282322,
           "query_embedding_calls": 1,
           "cosine_operations": 30,
           "path": [
@@ -3357,7 +3357,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.005168700125068426,
+          "latency_seconds": 0.0028129001148045063,
           "query_embedding_calls": 1,
           "cosine_operations": 31,
           "path": [
@@ -3512,7 +3512,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.006350100040435791,
+          "latency_seconds": 0.0026265999767929316,
           "query_embedding_calls": 1,
           "cosine_operations": 31,
           "path": [
@@ -3729,7 +3729,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 1,
-          "latency_seconds": 0.003743200097233057,
+          "latency_seconds": 0.003626900026574731,
           "query_embedding_calls": 1,
           "cosine_operations": 22,
           "path": [
@@ -3855,7 +3855,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 1,
-          "latency_seconds": 0.0038660999853163958,
+          "latency_seconds": 0.0014891999308019876,
           "query_embedding_calls": 1,
           "cosine_operations": 23,
           "path": [
@@ -3988,7 +3988,7 @@
           "path_truncated": false,
           "tier1_slots": 2,
           "tier2_slots": 2,
-          "latency_seconds": 0.0030678999610245228,
+          "latency_seconds": 0.0016979998908936977,
           "query_embedding_calls": 1,
           "cosine_operations": 25,
           "path": [
@@ -4121,7 +4121,7 @@
           "path_truncated": false,
           "tier1_slots": 2,
           "tier2_slots": 2,
-          "latency_seconds": 0.0024367000441998243,
+          "latency_seconds": 0.0033554998226463795,
           "query_embedding_calls": 1,
           "cosine_operations": 25,
           "path": [
@@ -4279,7 +4279,7 @@
           "path_truncated": false,
           "tier1_slots": 2,
           "tier2_slots": 2,
-          "latency_seconds": 0.0025633000768721104,
+          "latency_seconds": 0.0022915999870747328,
           "query_embedding_calls": 1,
           "cosine_operations": 22,
           "path": [
@@ -4378,7 +4378,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.002378899836912751,
+          "latency_seconds": 0.0028756000101566315,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -4510,7 +4510,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.0025025999639183283,
+          "latency_seconds": 0.005241800099611282,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -4642,7 +4642,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.0049103000201284885,
+          "latency_seconds": 0.004787700017914176,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -4827,7 +4827,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.008666899986565113,
+          "latency_seconds": 0.005819199839606881,
           "query_embedding_calls": 1,
           "cosine_operations": 30,
           "path": [
@@ -4955,7 +4955,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.00540050002746284,
+          "latency_seconds": 0.0021482999436557293,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -5090,7 +5090,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.004734500078484416,
+          "latency_seconds": 0.0034998999908566475,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -5225,7 +5225,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.00599429989233613,
+          "latency_seconds": 0.0022916998714208603,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -5422,7 +5422,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.00751759996637702,
+          "latency_seconds": 0.003543199971318245,
           "query_embedding_calls": 1,
           "cosine_operations": 32,
           "path": [
@@ -5547,7 +5547,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.004921999992802739,
+          "latency_seconds": 0.005011100089177489,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -5679,7 +5679,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.002248199889436364,
+          "latency_seconds": 0.0038858000189065933,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -5811,7 +5811,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 3,
-          "latency_seconds": 0.0022046000231057405,
+          "latency_seconds": 0.0025551998987793922,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -5983,7 +5983,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.0062512001022696495,
+          "latency_seconds": 0.004585500108078122,
           "query_embedding_calls": 1,
           "cosine_operations": 30,
           "path": [
@@ -6111,7 +6111,7 @@
           "path_truncated": true,
           "tier1_slots": 4,
           "tier2_slots": 1,
-          "latency_seconds": 0.002365600084885955,
+          "latency_seconds": 0.0022817000281065702,
           "query_embedding_calls": 1,
           "cosine_operations": 28,
           "path": [
@@ -6246,7 +6246,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.004704199964180589,
+          "latency_seconds": 0.004072200041264296,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -6381,7 +6381,7 @@
           "path_truncated": false,
           "tier1_slots": 3,
           "tier2_slots": 2,
-          "latency_seconds": 0.002248600125312805,
+          "latency_seconds": 0.002722900127992034,
           "query_embedding_calls": 1,
           "cosine_operations": 29,
           "path": [
@@ -6546,7 +6546,7 @@
           "path_truncated": false,
           "tier1_slots": 1,
           "tier2_slots": 0,
-          "latency_seconds": 0.00047129997983574867,
+          "latency_seconds": 0.0006314001511782408,
           "query_embedding_calls": 1,
           "cosine_operations": 2,
           "path": []
@@ -6610,7 +6610,7 @@
           "path_truncated": false,
           "tier1_slots": 1,
           "tier2_slots": 0,
-          "latency_seconds": 0.0004656000528484583,
+          "latency_seconds": 0.0005061998963356018,
           "query_embedding_calls": 1,
           "cosine_operations": 3,
           "path": [
@@ -6695,7 +6695,7 @@
           "path_truncated": false,
           "tier1_slots": 1,
           "tier2_slots": 0,
-          "latency_seconds": 0.0007223000284284353,
+          "latency_seconds": 0.0004459000192582607,
           "query_embedding_calls": 1,
           "cosine_operations": 4,
           "path": [
@@ -6780,7 +6780,7 @@
           "path_truncated": false,
           "tier1_slots": 1,
           "tier2_slots": 0,
-          "latency_seconds": 0.0007068000268191099,
+          "latency_seconds": 0.0003962998744100332,
           "query_embedding_calls": 1,
           "cosine_operations": 4,
           "path": [
@@ -9872,9 +9872,9 @@
         "W1-FULL": 39
       },
       "latency_seconds": {
-        "D0": 0.06663039978593588,
-        "W1-D": 0.04010099987499416,
-        "W1-FULL": 0.04153680009767413
+        "D0": 0.05191910034045577,
+        "W1-D": 0.03382560005411506,
+        "W1-FULL": 0.03743020002730191
       }
     },
     "pricing_rule": "W1-FULL is priced against D0 (the deployable deterministic Wiki), not against W1-D: charging the compiler ledger against the routing delta alone would price a layer against a benefit it only partly produces."

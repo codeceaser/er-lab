@@ -572,6 +572,10 @@ def render_stage7c2_scorecard(results: dict) -> str:
     lines.append(f"| scorer (imported by identity) | `{results['evaluator_identity']}` |")
     lines.append("")
 
+    lines.append("**Owner-facing summary of these findings:** `reports/stage7c2_findings.html` "
+                 "(published at <https://claude.ai/code/artifact/0c8f8c9b-1959-444d-b720-208f35f8a455>). "
+                 "Every figure there derives from `stage7c_wiki_results.json`.")
+    lines.append("")
     lines.append("## 1. Outcomes per arm")
     lines.append("")
     lines.append("| Arm | solved | partial | failed | Label |")

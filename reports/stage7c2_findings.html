@@ -1,0 +1,531 @@
+<!--
+  Stage 7C.2 findings — source of the published Artifact page.
+
+  Published at: https://claude.ai/code/artifact/0c8f8c9b-1959-444d-b720-208f35f8a455
+  Republish by redeploying THIS file unchanged; it keeps the same URL.
+
+  This is deliberately a document FRAGMENT: the <!doctype>, <html>, <head> and
+  <body> wrapper is supplied by the Artifact host at publish time. Browsers
+  open it directly regardless. It is kept byte-identical to what was published
+  so the tracked source and the live page cannot drift.
+
+  Every figure derives from reports/stage7c_wiki_results.json (commit b6605e9).
+  The evidence-slot ledger reconciles cell-by-cell to that file: 33 Tier-1 +
+  6 Tier-2 + 3 unfilled = 42 slots across the 12 frozen questions.
+-->
+<title>The Evidence Budget</title>
+<style>
+  /* ---------- tokens: complete light palette on bare :root ---------- */
+  :root {
+    --ground:      #eef1f5;
+    --surface:     #ffffff;
+    --sunk:        #e4e9ef;
+    --ink:         #0d1218;
+    --ink-soft:    #38424e;
+    --ink-mute:    #626d7c;
+    --rule:        #d7dee6;
+    --rule-firm:   #b9c4d0;
+
+    --path:        #b0500c;   /* slots consumed by path protection */
+    --path-soft:   #fbeee2;
+    --evidence:    #0b7a4b;   /* slots spent on query-ranked evidence */
+    --evidence-soft:#e4f2ea;
+    --accent:      #4a45b0;
+    --accent-soft: #ebeaf8;
+    --empty:       #cbd4de;
+
+    --shadow: 0 1px 2px rgba(13,18,24,.05), 0 10px 28px -20px rgba(13,18,24,.4);
+
+    --display: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --body: Georgia, "Iowan Old Style", "Source Serif Pro", "Times New Roman", serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+
+    --measure: 66ch;
+    --shell: 1060px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0d1116;
+      --surface:     #12161c;
+      --sunk:        #0a0e13;
+      --ink:         #e8ecf2;
+      --ink-soft:    #c3cbd6;
+      --ink-mute:    #8e99a8;
+      --rule:        #232b35;
+      --rule-firm:   #38424e;
+
+      --path:        #cc7a20;
+      --path-soft:   #2a1c0c;
+      --evidence:    #23a06a;
+      --evidence-soft:#0d2419;
+      --accent:      #7a76e0;
+      --accent-soft: #1a1930;
+      --empty:       #2c343f;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #0d1116;
+    --surface:     #12161c;
+    --sunk:        #0a0e13;
+    --ink:         #e8ecf2;
+    --ink-soft:    #c3cbd6;
+    --ink-mute:    #8e99a8;
+    --rule:        #232b35;
+    --rule-firm:   #38424e;
+
+    --path:        #cc7a20;
+    --path-soft:   #2a1c0c;
+    --evidence:    #23a06a;
+    --evidence-soft:#0d2419;
+    --accent:      #7a76e0;
+    --accent-soft: #1a1930;
+    --empty:       #2c343f;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16.5px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 24px 100px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell { max-width: var(--shell); margin: 0 auto; }
+  .prose { max-width: var(--measure); }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  h1 {
+    font-size: clamp(2.1rem, 5.2vw, 3.4rem); font-weight: 800;
+    letter-spacing: -.035em; line-height: 1.04;
+  }
+  h2 { font-size: clamp(1.3rem, 2.5vw, 1.65rem); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+  h3 { font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em; }
+  p { margin: 0; }
+  code, .mono { font-family: var(--mono); font-size: .86em; }
+  code { background: var(--sunk); padding: .1em .35em; border-radius: 3px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: .69rem; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--ink-mute);
+  }
+
+  /* ---------- masthead ---------- */
+  header.top { padding: 76px 0 40px; display: flex; flex-direction: column; gap: 22px; }
+  .thesis {
+    font-family: var(--display); font-size: clamp(1.05rem, 2.1vw, 1.3rem);
+    font-weight: 500; line-height: 1.45; color: var(--ink-soft); max-width: 34ch;
+  }
+  .thesis b { color: var(--ink); font-weight: 700; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 24px; padding-top: 6px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono); font-size: .72rem; color: var(--ink-mute);
+  }
+  .meta b { color: var(--ink-soft); font-weight: 500; }
+
+  section { padding-top: 60px; display: flex; flex-direction: column; gap: 22px; }
+  .head { display: flex; flex-direction: column; gap: 9px; }
+
+  /* ---------- headline stat row ---------- */
+  .stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .stat {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 9px;
+    padding: 18px 20px; display: flex; flex-direction: column; gap: 5px; box-shadow: var(--shadow);
+  }
+  .stat .n {
+    font-family: var(--mono); font-size: 2.05rem; font-weight: 600;
+    font-variant-numeric: tabular-nums; letter-spacing: -.03em; line-height: 1;
+  }
+  .stat .l { font-family: var(--display); font-size: .82rem; color: var(--ink-mute); line-height: 1.35; }
+  .stat.path .n { color: var(--path); }
+  .stat.evidence .n { color: var(--evidence); }
+
+  /* ---------- the ledger (centrepiece) ---------- */
+  .ledger { display: flex; flex-direction: column; gap: 3px; }
+  .lrow {
+    display: grid; grid-template-columns: 54px 1fr 116px; gap: 14px; align-items: center;
+    padding: 5px 0;
+  }
+  .lrow.header {
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-mute); border-bottom: 1px solid var(--rule); padding-bottom: 8px; margin-bottom: 4px;
+  }
+  .qid { font-family: var(--mono); font-size: .78rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .slots { display: flex; gap: 3px; }
+  .slot {
+    width: 30px; height: 26px; border-radius: 4px; position: relative; overflow: hidden;
+    border: 1px solid transparent;
+  }
+  /* Secondary encoding beyond hue: path slots are hatched, evidence slots solid,
+     empty slots are an open dashed outline. */
+  .slot.path {
+    background-color: var(--path-soft); border-color: var(--path);
+    background-image: repeating-linear-gradient(
+      45deg, transparent 0 4px, var(--path) 4px 6px
+    );
+  }
+  .slot.evidence { background: var(--evidence); border-color: var(--evidence); }
+  .slot.empty { background: transparent; border: 1px dashed var(--empty); }
+  .cov {
+    font-family: var(--mono); font-size: .76rem; font-variant-numeric: tabular-nums;
+    color: var(--ink-soft); text-align: right; white-space: nowrap;
+  }
+  .cov .drop { color: var(--path); font-weight: 600; }
+  .cov .same { color: var(--ink-mute); }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 26px; font-size: .85rem; color: var(--ink-soft); }
+  .key { display: inline-flex; align-items: center; gap: 8px; }
+  .key .slot { width: 22px; height: 18px; }
+
+  /* ---------- delta cards ---------- */
+  .deltas { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .delta {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 9px;
+    padding: 20px; display: flex; flex-direction: column; gap: 11px; box-shadow: var(--shadow);
+    border-top: 3px solid var(--rule-firm);
+  }
+  .delta.null-result { border-top-color: var(--path); }
+  .delta .pair { font-family: var(--mono); font-size: .95rem; font-weight: 600; letter-spacing: -.01em; }
+  .delta .measures { font-size: .84rem; color: var(--ink-mute); }
+  .delta .verdict { font-family: var(--display); font-size: .95rem; font-weight: 600; line-height: 1.4; }
+  .delta.null-result .verdict { color: var(--path); }
+
+  /* ---------- tables ---------- */
+  .scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 9px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; font-family: var(--display); }
+  caption { text-align: left; padding: 14px 16px 12px; font-size: .84rem; color: var(--ink-mute); border-bottom: 1px solid var(--rule); }
+  th, td { padding: 9px 16px; text-align: left; border-bottom: 1px solid var(--rule); }
+  thead th {
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-mute); font-weight: 500; background: var(--sunk); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+  .tag {
+    font-family: var(--mono); font-size: .64rem; letter-spacing: .06em; padding: 2px 7px;
+    border-radius: 100px; white-space: nowrap;
+  }
+  .tag.nq { background: var(--path-soft); color: var(--path); }
+  .tag.ok { background: var(--evidence-soft); color: var(--evidence); }
+
+  /* ---------- callouts ---------- */
+  .note {
+    border-left: 3px solid var(--accent); background: var(--accent-soft);
+    padding: 15px 19px; border-radius: 0 7px 7px 0; max-width: var(--measure);
+    font-size: .95rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: 9px;
+  }
+  .note.warn { border-left-color: var(--path); background: var(--path-soft); }
+  .note .eyebrow { color: inherit; opacity: .75; }
+
+  ul.clean { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 10px; }
+  li::marker { color: var(--ink-mute); }
+
+  footer {
+    margin-top: 78px; padding-top: 24px; border-top: 1px solid var(--rule);
+    font-size: .85rem; color: var(--ink-mute); max-width: var(--measure);
+    display: flex; flex-direction: column; gap: 8px; font-family: var(--display);
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="shell">
+
+  <header class="top">
+    <div class="eyebrow">Stage 7C.2 · Wiki hub retrieval qualification · read-only measurement</div>
+    <h1>The Wiki found the evidence.<br>It couldn&rsquo;t afford to return it.</h1>
+    <p class="thesis">
+      Across twelve authority-scoped questions, the Wiki reached <b>4&ndash;6 of the 6</b> eligible source
+      chunks every time. Reachability was never the problem. <b>79% of its evidence budget</b> was already
+      spent before query relevance got a vote.
+    </p>
+    <div class="meta">
+      <span><b>arms</b> V · W0 · D0 · W1-D · W1-FULL</span>
+      <span><b>questions</b> 12</span>
+      <span><b>scorer</b> frozen Stage 7B.0, by identity</span>
+      <span><b>compiler calls</b> 0</span>
+      <span><b>authority leakage</b> 0</span>
+      <span><b>commit</b> b6605e9</span>
+    </div>
+  </header>
+
+  <!-- ============ headline ============ -->
+  <section>
+    <div class="stats">
+      <div class="stat path">
+        <span class="n">33 / 42</span>
+        <span class="l">evidence slots consumed by path protection</span>
+      </div>
+      <div class="stat evidence">
+        <span class="n">6 / 42</span>
+        <span class="l">slots left for query-ranked evidence</span>
+      </div>
+      <div class="stat">
+        <span class="n">9 &rarr; 7</span>
+        <span class="l">questions solved, flat Vector &rarr; deterministic Wiki</span>
+      </div>
+      <div class="stat">
+        <span class="n">0</span>
+        <span class="l">outcomes changed by suppressing 20 claim links</span>
+      </div>
+    </div>
+    <p class="prose">
+      Stage 7C.2 asked one question: does an authority-aware Wiki &mdash; deterministic, or enriched by a
+      bounded LLM &mdash; recover cross-document evidence that flat Vector retrieval misses? The experiment
+      was built so that it could say no. It said no.
+    </p>
+  </section>
+
+  <!-- ============ the ledger ============ -->
+  <section>
+    <div class="head">
+      <div class="eyebrow">The mechanism</div>
+      <h2>Where every evidence slot went</h2>
+      <p class="prose">
+        Each question returns exactly <code>K</code> source chunks &mdash; the same budget Vector gets. The
+        frozen final-K policy fills <strong>Tier&nbsp;1</strong> first with the chunks that established the
+        traversed path, then <strong>Tier&nbsp;2</strong> with everything else reached, ranked by query
+        cosine. One row per question below, one cell per slot, for the deterministic Wiki (D0).
+      </p>
+    </div>
+
+    <div class="legend">
+      <span class="key"><span class="slot path"></span> Tier&nbsp;1 &mdash; path protection (chosen by traversal order)</span>
+      <span class="key"><span class="slot evidence"></span> Tier&nbsp;2 &mdash; query-ranked evidence</span>
+      <span class="key"><span class="slot empty"></span> unfilled (short list)</span>
+    </div>
+
+    <div class="ledger">
+      <div class="lrow header"><span>Question</span><span>Evidence slots (K)</span><span>coverage V &rarr; D0</span></div>
+
+      <div class="lrow"><span class="qid">Q01</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i></span>
+        <span class="cov"><span class="same">1.00 &rarr; 1.00</span></span></div>
+      <div class="lrow"><span class="qid">Q02</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i></span>
+        <span class="cov"><span class="same">1.00 &rarr; 1.00</span></span></div>
+      <div class="lrow"><span class="qid">Q03</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i></span>
+        <span class="cov"><span class="same">1.00 &rarr; 1.00</span></span></div>
+      <div class="lrow"><span class="qid">Q04</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i></span>
+        <span class="cov"><span class="same">0.50 &rarr; 0.50</span></span></div>
+      <div class="lrow"><span class="qid">Q05</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot evidence"></i><i class="slot evidence"></i></span>
+        <span class="cov"><span class="drop">1.00 &rarr; 0.33</span></span></div>
+      <div class="lrow"><span class="qid">Q06</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i><i class="slot evidence"></i></span>
+        <span class="cov"><span class="drop">0.80 &rarr; 0.40</span></span></div>
+      <div class="lrow"><span class="qid">Q07</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i><i class="slot evidence"></i><i class="slot empty"></i></span>
+        <span class="cov"><span class="drop">0.80 &rarr; 0.60</span></span></div>
+      <div class="lrow"><span class="qid">Q08</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot evidence"></i></span>
+        <span class="cov"><span class="same">1.00 &rarr; 1.00</span></span></div>
+      <div class="lrow"><span class="qid">Q09</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i></span>
+        <span class="cov"><span class="same">1.00 &rarr; 1.00</span></span></div>
+      <div class="lrow"><span class="qid">Q10</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i><i class="slot evidence"></i></span>
+        <span class="cov"><span class="drop">1.00 &rarr; 0.33</span></span></div>
+      <div class="lrow"><span class="qid">Q11</span>
+        <span class="slots"><i class="slot path"></i><i class="slot path"></i><i class="slot path"></i></span>
+        <span class="cov"><span class="same">1.00 &rarr; 1.00</span></span></div>
+      <div class="lrow"><span class="qid">Q12</span>
+        <span class="slots"><i class="slot path"></i><i class="slot empty"></i><i class="slot empty"></i></span>
+        <span class="cov"><span class="same">1.00 &rarr; 1.00</span></span></div>
+    </div>
+
+    <div class="note warn">
+      <div class="eyebrow">What the four drops have in common</div>
+      <p>
+        On Q05, Q06, Q07 and Q10 the required evidence <em>was reached</em> &mdash; it sat in the candidate
+        set. It lost its slot to a chunk that established the path rather than answered the question. Vector
+        spends all <code>K</code> slots on query relevance and keeps those facts; the Wiki spends most of
+        them proving how it got there.
+      </p>
+    </div>
+
+    <p class="prose">
+      This is not an unanticipated defect. The frozen contract predicted it in advance &mdash; &ldquo;one
+      wrong hop costs one required fact&rdquo; at zero slack &mdash; and named it the price of hub
+      navigation. Stage 7C.2 measured how often the price is charged.
+    </p>
+  </section>
+
+  <!-- ============ arms ============ -->
+  <section>
+    <div class="head">
+      <div class="eyebrow">Outcomes</div>
+      <h2>Five arms, one scorer, one budget</h2>
+    </div>
+    <div class="scroll">
+      <table>
+        <caption>Every arm scored by the frozen Stage 7B.0 evaluator, imported by identity. Same questions, same K, same authority scope, same hop budget.</caption>
+        <thead>
+          <tr><th>Arm</th><th>What it consumes</th><th class="num">solved</th><th class="num">partial</th><th class="num">failed</th><th>Standing</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>V</strong></td><td>flat authority-aware chunk vectors</td><td class="num">9</td><td class="num">3</td><td class="num">0</td><td>frozen baseline</td></tr>
+          <tr><td><strong>W0</strong></td><td>the same vectors, wrapped as Wiki sections</td><td class="num">9</td><td class="num">3</td><td class="num">0</td><td>control &mdash; equivalent to V, as predeclared</td></tr>
+          <tr><td><strong>D0</strong></td><td>deterministic Wiki, <em>no</em> LLM output</td><td class="num">7</td><td class="num">5</td><td class="num">0</td><td><span class="tag ok">QUALIFYING</span></td></tr>
+          <tr><td><strong>W1-D</strong></td><td>+ LLM facet seed</td><td class="num">6</td><td class="num">5</td><td class="num">1</td><td><span class="tag nq">NON-QUALIFYING</span></td></tr>
+          <tr><td><strong>W1-FULL</strong></td><td>+ LLM claim routing</td><td class="num">6</td><td class="num">5</td><td class="num">1</td><td><span class="tag nq">NON-QUALIFYING</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">
+      The W1 arms carry <code>NON-QUALIFYING / DIAGNOSTIC ONLY</code> because Gate&nbsp;Q failed at Stage
+      7C.1 on claim precision, summary correctness and repeatability. D0 is unlabelled: it consumes no
+      model-derived output, so that failure does not reach it.
+    </p>
+  </section>
+
+  <!-- ============ attribution ============ -->
+  <section>
+    <div class="head">
+      <div class="eyebrow">Attribution</div>
+      <h2>Which layer earned its complexity</h2>
+      <p class="prose">
+        The experiment was restructured specifically so this question could be answered. Three deltas, each
+        isolating one variable.
+      </p>
+    </div>
+    <div class="deltas">
+      <div class="delta null-result">
+        <span class="pair">W1-D vs D0</span>
+        <span class="measures">marginal value of LLM semantic seed enrichment</span>
+        <span class="verdict">Worse on 1 question. No value added.</span>
+      </div>
+      <div class="delta null-result">
+        <span class="pair">W1-FULL vs W1-D</span>
+        <span class="measures">marginal value of claim-derived routing</span>
+        <span class="verdict">Materially equivalent &mdash; identical on every axis, every question.</span>
+      </div>
+      <div class="delta null-result">
+        <span class="pair">W1-FULL vs D0</span>
+        <span class="measures">total value of the LLM-assisted Wiki</span>
+        <span class="verdict">Worse on 1 question. The model layer added nothing measurable.</span>
+      </div>
+    </div>
+    <div class="note">
+      <div class="eyebrow">Why the third card is the only one that licenses a conclusion</div>
+      <p>
+        An earlier revision of this experiment compared the claim-routing arm against a baseline that
+        <em>also</em> consumed the compiler&rsquo;s output. That design could show whether claims helped
+        routing, but it could never show whether the compiler was needed &mdash; it was seeding both sides.
+        D0 exists to close that gap, and only <strong>W1-FULL vs D0</strong> supports a statement about
+        whether the model-derived layer was necessary at all.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ suppression ============ -->
+  <section>
+    <div class="head">
+      <div class="eyebrow">Counterfactual probe</div>
+      <h2>Deleting the claims changed nothing</h2>
+    </div>
+    <div class="scroll">
+      <table>
+        <caption>Path-relevant claim links hidden at read time on the three transitive target questions. Nothing was mutated. <strong>TRUTH-INFORMED / DIAGNOSTIC ONLY / NOT GATE-A ADMISSIBLE.</strong></caption>
+        <thead>
+          <tr><th>Question</th><th class="num">links suppressed</th><th>natural</th><th>suppressed</th><th class="num">anchor fallbacks</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Q04</td><td class="num">4</td><td>partial 0.50</td><td>partial 0.50</td><td class="num">2</td></tr>
+          <tr><td>Q06</td><td class="num">8</td><td>partial 0.40</td><td>partial 0.40</td><td class="num">4</td></tr>
+          <tr><td>Q07</td><td class="num">8</td><td>partial 0.60</td><td>partial 0.60</td><td class="num">2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">
+      Twenty claim-derived links removed; every outcome and every coverage figure unchanged. Deterministic
+      source anchors absorbed each hop. The connectivity the claims were meant to provide was already there
+      without them &mdash; which is what the redesigned architecture predicted, and is weak-positive
+      evidence by construction rather than a triumph.
+    </p>
+  </section>
+
+  <!-- ============ cost ============ -->
+  <section>
+    <div class="head">
+      <div class="eyebrow">Price</div>
+      <h2>What each layer costs to keep</h2>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Layer</th><th class="num">LLM calls</th><th class="num">Cost</th><th>Standing operational dependency</th></tr></thead>
+        <tbody>
+          <tr><td>Deterministic Wiki (D0)</td><td class="num">0</td><td class="num">$0.00</td><td>none &mdash; reuses the existing projection and chunk vectors</td></tr>
+          <tr><td>LLM-assisted Wiki (W1)</td><td class="num">66</td><td class="num">$0.0188</td><td>68 owner adjudications; re-adjudication required on any compiler, prompt, model or source change</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">
+      The dollar figure is trivial. The dependency is not: the W1 representation cannot be rebuilt without a
+      human re-judging every claim, alias and summary. That recurring cost is charged against
+      <strong>W1-FULL vs D0</strong> &mdash; the total &mdash; not against the routing delta alone, because
+      pricing a layer against a benefit it only partly produces understates what it is really for.
+    </p>
+  </section>
+
+  <!-- ============ boundaries ============ -->
+  <section>
+    <div class="head">
+      <div class="eyebrow">Boundaries</div>
+      <h2>What this does not establish</h2>
+    </div>
+    <ul class="clean prose">
+      <li>
+        <strong>The corpus cannot test hub fan-out at scale.</strong> Six documents, eleven single-chunk
+        revisions, one cross-document phrase anchor. Low branching here is a property of the corpus, not
+        evidence that Wiki navigation behaves well on an enterprise graph. No scaling claim follows.
+      </li>
+      <li>
+        <strong>Wiki extraction is not shown to beat Graph extraction.</strong> The frozen Graph figures
+        (0.80 recall, 0.86 precision) and the frozen Wiki figures (0.87, 0.88) are one non-deterministic
+        snapshot each, on one small corpus, with only approximately aligned definitions.
+      </li>
+      <li>
+        <strong>Gate A was unreachable before this stage began</strong> &mdash; Stage 7C.1&rsquo;s Gate&nbsp;Q
+        failed. Nothing measured here could have rescued it, and nothing here was allowed to weaken it.
+      </li>
+      <li>
+        <strong>The architecture decision is not made here.</strong> Gate&nbsp;B and Gate&nbsp;C both remain
+        live, and both depend on an owner page-quality rating that is deliberately not self-scored.
+      </li>
+    </ul>
+    <div class="note">
+      <div class="eyebrow">Where it stands</div>
+      <p>
+        On the measured evidence, <strong>Gate&nbsp;B</strong> is the better-supported reading: W1-FULL shows
+        no qualifying improvement over D0, so the compiler&rsquo;s incremental value is not merely
+        unjustified by cost &mdash; it is not measurable on this corpus. But <strong>Gate&nbsp;C</strong> is
+        not ruled out, because D0 also trails Vector on four questions, so the deterministic Wiki has not
+        demonstrated retrieval value either. The blind six-page quality packet is the remaining input.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      Sources in repository: <code>reports/stage7c_wiki_results.json</code> ·
+      <code>reports/stage7c_wiki_scorecard.md</code> ·
+      <code>reports/stage7c_page_quality_blind_packet.md</code>.
+      Regenerate with <code>python scripts/run_stage7c2_wiki_retrieval.py</code>.
+    </div>
+    <div>
+      Read-only measurement over the frozen Stage 7C.0 and 7C.1 artifacts. Zero compiler calls; the 22 frozen
+      facet vectors were loaded, never regenerated; no frozen artifact was written.
+    </div>
+  </footer>
+
+</div>
