@@ -2888,3 +2888,84 @@ measured baseline: 0 questions had `excluded_required_fact_count > 0`
 against `baseline_demo` (every required fact across all 12 questions was
 available in this corpus), confirmed in
 `reports/stage7a_vector_retrieval_results.json`.
+
+---
+
+## D-056 — Stage 8 is the Agent/Wiki experiment; the OpenAI vision and vendor-native ingestion lanes are renumbered Stage 10A/10B
+
+**Status:** Accepted
+**Stage:** Stage 8.0
+**Date/commit:** Stage 8.0 plan commit (`ad71820`), renumbering landed in the follow-up commit
+
+### Problem
+Two different bodies of work claimed the same stage number. This
+repository's roadmap had reserved **Stage 8A/8B** for the selective
+OpenAI vision-enrichment lane (path B) and the OpenAI vendor-native
+ingestion lane (path C) — a *dimension-1* (ingestion approach) pair. The
+Stage 8.0 experimental design (`docs/STAGE8_AGENT_WIKI_PLAN.md`) uses
+**Stage 8A** for its first text-only static measured run and **Stage 8C**
+for a possible later multimodal extension — a *dimension-2* (retrieval
+projection / knowledge interface) sequence. Leaving both numberings in
+place would make every future reference to "Stage 8A" ambiguous between
+a vision lane and a retrieval arm, in exactly the documents (status
+table, handoff seed, walkthrough) whose purpose is to be unambiguous.
+
+### Alternatives considered
+(a) Give the Agent/Wiki experiment a non-numeric or suffixed name (e.g.
+"Stage 8W") and leave the vision lanes at 8A/8B. (b) Keep the vision
+lanes at 8A/8B and renumber the Agent/Wiki experiment to Stage 10.
+(c) Give Stage 8 to the Agent/Wiki experiment and renumber the vision
+and vendor-native lanes to Stage 10A/10B.
+
+### Decision
+(c). Stage 8 is the Agent/Wiki experiment (`8.0` design, `8A` static,
+`8B` Agent, `8C` optional multimodal). Path B becomes **Stage 10A** and
+path C becomes **Stage 10B**. Stage 9 (cross-lane quality/cost/latency/ROI)
+keeps its number and now depends on Stages 6A–10B.
+
+### Rationale
+Stage 8 is the work that is actually active and already has a committed
+contract document, whose internal numbering (`8A`/`8B`/`8C`) is
+load-bearing across ~1,470 lines of freeze boundaries, gates and stage
+plan; renumbering it would mean rewriting that contract for the sake of
+two lanes that have no code, no contract and no start date. The vision
+and vendor-native lanes have never been started (no `vision/` package,
+no `openai_adapter.py`), so they carry no artifacts whose names or
+reports would go stale. Stage 9 stays put because it is defined by what
+it consumes, not by its position.
+
+### Trade-offs and consequences
+Earlier entries in this log, and earlier report text, refer to "Stage 8A"
+meaning **vision enrichment** — for example D-040's roadmap correction
+and the `visible_text_annotation` discussion. Per this log's own rule,
+historical entries are never silently rewritten: **any reference to
+"Stage 8A"/"Stage 8B" in an entry or report predating D-056 means what is
+now Stage 10A/10B.** The forward-looking documents — the status table and
+"Corrected roadmap" in `docs/POC_STATUS_AND_EVIDENCE.md`, the stage
+sequence in `docs/IMPLEMENTATION_WALKTHROUGH.md`, and the target
+architecture and stage list in `docs/DEVIN_HANDOFF_SEED.md` — are updated
+to the new numbering and say what each was renumbered from.
+
+One stale reference is deliberately left untouched: the "[PLANNED —
+Stage 8, no evaluator]" annotation in the walkthrough's ingestion diagram
+predates Stage 6A and refers to the *evaluator* under a much earlier
+numbering, not to either Stage 8 or Stage 10 lane. It is a separate
+staleness, and correcting it under cover of this renumbering would
+misrepresent what changed.
+
+### Deferred questions or reconsideration trigger
+None. If the owner declines the Stage 8.0 design (§12 Q1 of
+`docs/STAGE8_AGENT_WIKI_PLAN.md`), this decision is marked **Superseded**
+and the 8A/8B numbering returns to the ingestion lanes.
+
+### Implementation and evidence
+`docs/POC_STATUS_AND_EVIDENCE.md` (status rows `8.0`/`8A`/`8B`/`8C`
+added, `8A`/`8B` ingestion rows renumbered to `10A`/`10B`, Stage 9
+dependency updated to `6A–10B`, dimension-1 and dimension-2 lists and
+the "Corrected roadmap" block updated);
+`docs/IMPLEMENTATION_WALKTHROUGH.md`; `docs/DEVIN_HANDOFF_SEED.md`;
+`docs/CONSOLIDATED_FINDINGS_AND_LEARNINGS.md` (companion-document
+pointer plus an explicit "no Stage 8 findings exist yet" statement);
+`docs/STAGE8_AGENT_WIKI_PLAN.md` §0 (the conflict and this resolution).
+No code, contract, fixture or database table is touched by the
+renumbering.

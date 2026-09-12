@@ -110,9 +110,13 @@ snapshot):
 | 7C.1 | Bounded, source-grounded W1 facet compiler **and its post-adjudication closure**: one frozen compiler treatment over the frozen 7C.0 projection (model output limited to exactly `aliases`/`claims`/`summary_sentences`), every SS4.1 deterministic rule, SS3.7 claim-derived links, an owner-adjudication checkpoint at which Claude adjudicated nothing, then SS4.6 pass 3 -> final payloads -> final facet embeddings -> expected-fact recall -> final Gate Q | **Completed, frozen. GATE Q = FAIL (Q-5, Q-7, Q-8)** | `src/ingestion_bench/wiki_projection/{compiler,validation,assembly,adjudication,closure}.py`, `scripts/run_stage7c1_wiki_compiler.py` (checkpoint only, boundary retained), `scripts/close_stage7c1_after_adjudication.py` (closure; ZERO compiler calls), `scripts/analyze_stage7c1_repeatability.py` | `tests/test_wiki_{compiler,validation,closure}.py` (128); `reports/stage7c1_{compilation_runs,owner_adjudication_packet.{json,md},checkpoint_results,repeatability_analysis.{md,json},pass3_results,final_payloads,final_embedding_manifest,expected_fact_recall,gate_q_final,closure_report.md}`, `reports/stage7c_q5_owner_decision.json`, `reports/stage7c1_adjudication_verdict_set.json`, `reports/stage7c1_persistence_manifest.json`, `contracts/wiki_compiler_v1.json` (frozen 7C.1 compiler contract), `src/ingestion_bench/wiki_projection/facet_store.py` (the three SS10.3 surfaces) | 66 real `gpt-4o-mini` calls (22 facets x 3 runs) at **$0.0188**; Run 1 primary, designated before execution. Owner adjudicated all **68** items (63 CORRECT / 5 INCORRECT / 0 UNVERIFIABLE; verdict-set SHA `d49cc864…`); **Q5 APPROVED** the predeclared thresholds unchanged. Pass 3: supported aliases 21->21, accepted claims **25->22**, reference-valid summaries **21->19**, claim-derived links **34->30**; membership, page identity and projection hash untouched under every verdict; mechanical `validation_status` never rewritten. **22 final facet payloads** (`is_final`, no pending components) and **22 final facet embeddings** (all-MiniLM-L6-v2, dim 384, one per facet, no page vector). Expected-fact recall, deferred until now: **13/15 = 0.8667** under entity normalization mirroring the frozen 7B.1 Graph comparator, with the stricter exact-endpoint figure **9/15 = 0.60** reported alongside. **Final Gate Q = FAIL** on exactly three criteria: Q-5 accepted-claim precision 0.88 < 0.95; Q-7 two owner-INCORRECT summaries against a zero bar; Q-8 accepted-claim Jaccard 0.620690 < 0.90 **solely** on claim-set instability (citation exact agreement 1.0000 passes — the pre-correction citation failure was a metric artifact). Q-1/2/3/4/6/9/10 PASS. Consequence recorded, not executed: W1-D and W1-FULL must later carry `NON-QUALIFYING / DIAGNOSTIC ONLY`, **Gate A is unreachable for W1**, and D0 remains fully qualifying for a later Gate-B analysis. **Closure hardening (post-`d67ebfe`)**: the Stage 7C.1 compiler contract is frozen at `contracts/wiki_compiler_v1.json` (SHA `35ccad85…`); the exact 22-vector set is reused (not regenerated) and cryptographically identified by per-vector `embedding_sha256` plus an aggregate `embedding_set_sha256` `bbc233f6…` over a documented float32 serialization; the three SS10.3 surfaces (`facet`, `facet_embedding`, `compilation_audit`) are persisted 22/22/22 in a dedicated `facet_store.py` with authority-first reads and **no stored authority state**; the closure semantic hash now covers vector values; Q-9 checks `$0.0187905 <= $5.00`; preflight compares (not merely records) model/prompt/Q5/contract identities; and Q-6 endpoint matching is **directional** for Stage 7B.1 comparator parity (13/15 = 0.8667 unchanged, derived not forced) |
 | 7C.2 | Wiki Hub Retrieval / Navigation Qualification: the three frozen truth-free arms (D0 / W1-D / W1-FULL), the attribution deltas, the counterfactual resilience probe, and the Gate A/B/C decision | **Not started — unblocked, pending owner instruction** | — | — | Revision 6 §0's preconditions are now **all satisfied**: the owner verdict set, the final post-adjudication accepted claim set (22 surviving claims, 30 links), the final W1 facet embedding manifest (22 vectors) and the final Gate Q result (**FAIL**) all exist. Because Gate Q failed, W1-D and W1-FULL results must carry `NON-QUALIFYING / DIAGNOSTIC ONLY` and **Gate A is unreachable for W1**; D0 consumes no W1-derived model output and remains fully qualifying, so Gate-B analysis stays available. Not started: requires fresh owner instruction |
 | 7C | Wiki page/link projection | **In progress — 7C.0 and 7C.1 frozen (Gate Q = FAIL), 7C.2 unblocked and not started** | — | — | Experimental contract frozen as `docs/STAGE7C_WIKI_PLAN.md` **Revision 6** (owner-approved). R6's core correction: R5 compared `N_W0` against `N_W1` while holding the W1 enriched facet seed constant in BOTH arms, so it could isolate claim-derived routing but could never show the compiler was unnecessary — the compiler was seeding both sides. R6 adds the **D0** arm (chunk-embedding seed, no W1-derived model output) and names three arms **D0 / W1-D / W1-FULL**; Gate A-7 now requires W1-FULL to beat **D0**, and Gate B may never be selected from `W1-FULL ≈ W1-D` alone. Terminology: never write "zero-model" for D0 — it uses the existing embedding model; use **zero-W1-LLM**, **no W1-derived model output**, or **deterministic D0** |
-| 8A | Selective OpenAI vision enrichment (`VisionEnricher` framework + `OpenAIVisionEnricher`, path B) | **Not started** | — | — | No `vision/` package. Corrected roadmap position — no longer "Stage 6"; see D-040 and "Corrected roadmap" below |
-| 8B | OpenAI vendor-native ingestion (path C) | **Not started** | — | — | — |
-| 9 | Cross-lane quality, cost, latency, and ROI comparison | **Not started** | — | — | Depends on Stages 6A–8B |
+| 8.0 | Stage 8 experimental design: deterministic source-grounded Wiki as an **Agent** knowledge interface vs authority-aware Vector — hypothesis, S0/S1/S2 corpus blueprint, task taxonomy, `gemini-embedding-2` binding, deterministic Wiki (no W1 compiler), Agent-V/Agent-W tool contracts, mandatory metric set, decision gates, 19 confounds | **Design complete, awaiting owner review** | `docs/STAGE8_AGENT_WIKI_PLAN.md` (plan document only — no code, contracts, fixtures or tables added) | — | Design only: no corpus, no embeddings, no retrieval, no Agent run, no measured result of any kind. 12 open owner decisions in §12. Stage numbering resolved by **D-056** |
+| 8A | Static measured run: `V` / `V-lex` / `V+` / `W` at S0/S1/S2, one embedding config, one evaluator, per-question final `K = U + 2` | **Not started** | — | — | Blocked on owner approval of `docs/STAGE8_AGENT_WIKI_PLAN.md` |
+| 8B | Agent measured run: `Agent-V` vs `Agent-W` at S0/S1/S2 at equal tool-call **and information-return** budgets, plus the `Agent-V+` payload control | **Not started** | — | — | Blocked on Stage 8A |
+| 8C | Optional: source-native image/multimodal evidence on the same embedding model | **Not proposed** | — | — | Explicitly out of the first measured run; needs its own plan |
+| 10A | Selective OpenAI vision enrichment (`VisionEnricher` framework + `OpenAIVisionEnricher`, path B) | **Not started** | — | — | No `vision/` package. **Renumbered from Stage 8A by D-056** (Stage 8 is now the Agent/Wiki experiment). Corrected roadmap position — no longer "Stage 6"; see D-040 and "Corrected roadmap" below |
+| 10B | OpenAI vendor-native ingestion (path C) | **Not started** | — | — | **Renumbered from Stage 8B by D-056** |
+| 9 | Cross-lane quality, cost, latency, and ROI comparison | **Not started** | — | — | Depends on Stages 6A–10B |
 | D | Local Granite Vision enrichment (path D) | **Deferred** (decision D-009) | — | — | Revisit only on a concrete local-only-deployment requirement |
 
 ## Generated fixture inventory
@@ -166,8 +170,8 @@ combination yet:
 
 **Dimension 1 — ingestion approach:**
 - Docling Standard Local (path A — **implemented, frozen**)
-- Docling plus selective OpenAI vision enrichment (path B — Stage 8A, not started)
-- OpenAI vendor-native document processing (path C — Stage 8B, not started)
+- Docling plus selective OpenAI vision enrichment (path B — Stage 10A, not started; was Stage 8A before D-056)
+- OpenAI vendor-native document processing (path C — Stage 10B, not started; was Stage 8B before D-056)
 - Optional local vision lane (path D — deferred, D-009)
 
 **Dimension 2 — retrieval projection:**
@@ -176,6 +180,7 @@ combination yet:
 - Revision authority registry and effective-knowledge resolution (Stage 7R.1 — **implemented**; a narrow registry/resolver, not yet wired into retrieval; that wiring is Stage 7R.2, after review)
 - Graph-enriched RAG (Stage 7B, not started — will consume Stage 7R's resolver)
 - Wiki page/link retrieval (Stage 7C — **in progress**, consuming Stage 7R's resolver at query time: 7C.0 deterministic projection **frozen**; 7C.1 bounded W1 compiler **closed and frozen** after owner adjudication of all 68 items, with **final Gate Q = FAIL** on Q-5/Q-7/Q-8, 22 final facet embeddings built; 7C.2 retrieval/navigation **unblocked but not started**, and W1 results there will be `NON-QUALIFYING / DIAGNOSTIC ONLY`)
+- Deterministic source-grounded Wiki as an **Agent** knowledge interface, versus authority-aware Vector, on a new S0/S1/S2 richness ladder (Stage 8 — **design only**, `docs/STAGE8_AGENT_WIKI_PLAN.md`, awaiting owner review; no corpus, embeddings, retrieval or Agent run exists, so **no Stage 8 result of any kind may be quoted yet**). Stage 8 does not reuse the Stage 7C corpus and modifies nothing in Stage 7C
 
 Per D-040, every retrieval projection is independently derived from the
 same `CanonicalDocument`/`CanonicalChunk` corpus and the same Stage 6A
@@ -184,7 +189,8 @@ authoritative over another, and none of vector-, graph-, or wiki-specific
 state may enter `CanonicalDocument`/`CanonicalChunk`.
 
 **Corrected roadmap** (supersedes any earlier "Stage 6 = VisionEnricher"
-framing in this project's history — vision enrichment moved to Stage 8A):
+framing in this project's history — vision enrichment moved to Stage 10A,
+renumbered from Stage 8A by D-056):
 
 ```
 Stage 6A       Deterministic ingestion-fidelity evaluator          <- DONE, FROZEN
@@ -199,8 +205,13 @@ Stage 7C       Wiki page/link projection                           <- IN PROGRES
                7C.0 deterministic projection (W0)                  <- DONE, FROZEN
                7C.1 bounded W1 compiler + closure                  <- DONE, FROZEN (Gate Q = FAIL)
                7C.2 retrieval/navigation qualification             <- NOT STARTED (unblocked)
-Stage 8A       Selective OpenAI vision enrichment (path B)
-Stage 8B       OpenAI vendor-native ingestion (path C)
+Stage 8        Deterministic Wiki as an AGENT knowledge interface
+               8.0 experimental design                             <- DESIGN COMPLETE, OWNER REVIEW
+               8A  static V / V-lex / V+ / W at S0/S1/S2           <- NOT STARTED
+               8B  Agent-V vs Agent-W at S0/S1/S2                  <- NOT STARTED
+               8C  optional multimodal evidence                    <- NOT PROPOSED
+Stage 10A      Selective OpenAI vision enrichment (path B)         <- was Stage 8A (D-056)
+Stage 10B      OpenAI vendor-native ingestion (path C)             <- was Stage 8B (D-056)
 Stage 9        Cross-lane quality, cost, latency, and ROI comparison
 ```
 

@@ -20,7 +20,7 @@ baseline) are both complete.**
 
 ```
 Source documents (DOCX/PDF/PPTX)
-  -> Parser Adapter (path A DONE, frozen; B/C/D not implemented — Stage 8A/8B/D)
+  -> Parser Adapter (path A DONE, frozen; B/C/D not implemented — Stage 10A/10B/D)
   -> CanonicalDocument                  [implemented — do not redesign]
   -> DocumentRevisionContext            [implemented — supplied by caller]
   -> chunk_document(...)                [implemented — do not redesign]
@@ -257,12 +257,17 @@ more *ingestion* lane, not a prerequisite for retrieval work.
    frozen Stage 6B contract so results are directly comparable to Stage
    7A.1's.
 10. Stage 7C — wiki page/link projection.
-11. Stage 8A — selective OpenAI vision enrichment, `VisionEnricher`
-    framework + `OpenAIVisionEnricher` (path B).
-12. Stage 8B — OpenAI vendor-native adapter (path C).
-13. Stage 9 — cross-lane quality, cost, latency, and ROI comparison across
+11. Stage 8 — deterministic source-grounded Wiki as an **Agent** knowledge
+    interface versus authority-aware Vector (`docs/STAGE8_AGENT_WIKI_PLAN.md`;
+    8.0 design complete and awaiting owner review, 8A/8B not started).
+12. Stage 10A — selective OpenAI vision enrichment, `VisionEnricher`
+    framework + `OpenAIVisionEnricher` (path B). *Renumbered from Stage 8A
+    by D-056.*
+13. Stage 10B — OpenAI vendor-native adapter (path C). *Renumbered from
+    Stage 8B by D-056.*
+14. Stage 9 — cross-lane quality, cost, latency, and ROI comparison across
     every ingestion-approach × retrieval-projection combination.
-14. Optional/deferred — local Granite Vision (path D), revisit only on a
+15. Optional/deferred — local Granite Vision (path D), revisit only on a
     concrete local-only-deployment requirement.
 
 ## Acceptance tests another implementation must satisfy

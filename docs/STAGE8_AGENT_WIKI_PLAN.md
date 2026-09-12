@@ -28,11 +28,18 @@ cross-lane quality/cost/latency/ROI comparison. The owner's briefing uses
 **Stage 8A** for this experiment's first text-only measured run and **Stage 8C**
 for a later multimodal extension. These cannot both be Stage 8.
 
-**Recommended resolution (owner sign-off required — Q1):** this experiment takes
+**RESOLVED — owner-approved, landed as decision D-056.** This experiment takes
 Stage 8 (`8.0` design, `8A` static, `8B` Agent, `8C` optional multimodal). The
 previously pencilled vision/vendor-native ingestion comparison is renumbered
-**Stage 10A/10B**, and the status table is updated in the same commit that lands
-this plan. Nothing else in the roadmap moves.
+**Stage 10A/10B**. Stage 9 keeps its number and now depends on Stages 6A–10B.
+Nothing else in the roadmap moves. The status table, the "Corrected roadmap"
+block, the walkthrough stage sequence and the handoff-seed stage list are updated
+to match; per the decision log's own append-only rule, any "Stage 8A"/"Stage 8B"
+reference in an entry or report predating D-056 means what is now Stage 10A/10B.
+
+*The resolution of this item does not imply approval of the rest of this plan:
+§12's remaining eleven decisions are still open, and no Stage 8A/8B work may
+begin until they are settled.*
 
 ---
 
@@ -1430,9 +1437,12 @@ report; `wiki_projection/compiler.py` is not imported by anything in Stage 8
 
 ## 12. Open questions requiring owner decision before implementation
 
+Q1 is resolved (D-056). Eleven remain open, and Stage 8A cannot begin until
+they are settled.
+
 | # | Question | Recommendation |
 |---|---|---|
-| **Q1** | Stage-numbering collision with the pencilled Stage 8A/8B vision lane (§0) | this experiment takes Stage 8; vision lane → Stage 10A/10B |
+| ~~**Q1**~~ | ~~Stage-numbering collision with the pencilled Stage 8A/8B vision lane (§0)~~ | **RESOLVED — approved and landed as D-056: Stage 8 is this experiment; vision lane → Stage 10A/10B** |
 | **Q2** | Output dimensionality: 1,536 frozen, with 3,072 as an `S1` sensitivity run? | yes — 1,536 (§4.2) |
 | **Q3** | Is the `L4` table-derived typed-link lane inside the core `W`, or a declared ablation only? | inside core `W`; lane ablation mandatory either way (§10.18) |
 | **Q4** | Commission the blind-authored `S1-B` replication corpus? | yes if a Gate R publication is intended (§10.1) |

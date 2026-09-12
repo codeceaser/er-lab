@@ -1109,7 +1109,8 @@ integration tests to `tests/test_evaluation_visual_claims.py`.
    asserts the error message concerns the duplicate fixture specifically.
 6. **Corrected two documentation references** describing Stage 7A as a
    vision-enrichment stage. Stage 7A is Regular Vector RAG; selective
-   vision enrichment is Stage 8A.
+   vision enrichment is Stage 10A (Stage 8A at the time of that patch;
+   renumbered by D-056).
 
 475 tests pass (up from 472 at Stage 6A.2). Miss/evidence-alignment
 counts unchanged (56 misses, 147 alignments) -- this patch corrected
@@ -1348,8 +1349,9 @@ Stage 7R.1     Revision authority registry + resolver               <- DONE
 Stage 7R.2     Authority-aware vector retrieval (Stage 7A.1 wiring)  <- NEXT, after 7R.1 review
 Stage 7B       Graph-enriched RAG projection
 Stage 7C       Wiki page/link projection
-Stage 8A       Selective OpenAI vision enrichment (path B)
-Stage 8B       OpenAI vendor-native ingestion (path C)
+Stage 8        Deterministic Wiki as an AGENT knowledge interface  <- 8.0 DESIGN COMPLETE
+Stage 10A      Selective OpenAI vision enrichment (path B)         <- was Stage 8A (D-056)
+Stage 10B      OpenAI vendor-native ingestion (path C)             <- was Stage 8B (D-056)
 Stage 9        Cross-lane quality, cost, latency, and ROI comparison
 ```
 
@@ -1364,7 +1366,7 @@ CanonicalPicture (already extracted, path A)
         |
         v
 VisionEnricher.enrich(picture, caption, surrounding_text)     [PLANNED --
-   src/ingestion_bench/vision/ -- does not exist; protocol shape only      Stage 8A]
+   src/ingestion_bench/vision/ -- does not exist; protocol shape only      Stage 10A]
    documented in fixtures/BENCHMARK_CONTRACT.md section 2
         |
         v

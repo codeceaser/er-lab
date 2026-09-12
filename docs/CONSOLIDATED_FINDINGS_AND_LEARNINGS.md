@@ -6,11 +6,25 @@ investigation (Stage 7C). Per-stage detail lives in the stage decision
 docs; this document captures the *transferable* findings, limitations,
 and engineering learnings so they are not rediscovered.
 
+**Stage 8 (deterministic Wiki as an Agent knowledge interface) is design
+only and contributes no findings here.** Its contract is committed as
+`docs/STAGE8_AGENT_WIKI_PLAN.md` and is awaiting owner review; no Stage 8
+corpus, embedding, retrieval result or Agent run exists, so nothing in
+this document may be attributed to Stage 8 until it has run. Stage 8 does
+inherit the learnings below — in particular the metric-naming and
+metric-population rules in "Metric naming precision", which forced two
+explicit design corrections in that plan (final `K` defined on required
+*evidence units* rather than required *facts*, and fact-level coverage
+computed beside the frozen chunk-level quantity rather than reusing it
+under a fact-level name).
+
 Companion documents:
 - `docs/STAGE7B0_CROSS_DOCUMENT_QUALIFICATION.md`
 - `docs/STAGE7B1_GRAPH_VS_VECTOR_DECISION.md`
 - `docs/STAGE7B2_HYBRID_GRAPH_CLOSURE_DECISION.md`
 - `docs/STAGE7C_WIKI_PLAN.md` (Revision 6 — the frozen Stage 7C contract)
+- `docs/STAGE8_AGENT_WIKI_PLAN.md` (Revision 1 — the proposed Stage 8
+  contract; design only, no measured result)
 - `reports/stage7c0_wiki_projection_scorecard.md` (7C.0 qualification)
 - `reports/stage7c1_repeatability_analysis.md` (7C.1 repeatability, read-only)
 - `docs/POC_STATUS_AND_EVIDENCE.md` (per-stage table)
