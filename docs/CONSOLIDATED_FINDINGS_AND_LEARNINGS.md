@@ -27,6 +27,8 @@ Companion documents:
   contract; design only, no measured result)
 - `reports/stage7c0_wiki_projection_scorecard.md` (7C.0 qualification)
 - `reports/stage7c1_repeatability_analysis.md` (7C.1 repeatability, read-only)
+- `reports/stage7c_wiki_scorecard.md` (7C.2 retrieval/navigation qualification,
+  measured read-only; the Gate B vs Gate C decision is not made there)
 - `docs/POC_STATUS_AND_EVIDENCE.md` (per-stage table)
 
 ---
