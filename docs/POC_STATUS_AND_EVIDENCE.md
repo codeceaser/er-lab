@@ -217,17 +217,24 @@ Stage 9        Cross-lane quality, cost, latency, and ROI comparison
 
 ## Current limitations
 
-- Extraction quality has now been measured against `reference_manifest.json`
+- Extraction quality has been measured against `reference_manifest.json`
   for path A only (Stage 6A) — see "Stage 6A.2b findings" below and
-  `reports/stage6a_docling_baseline_scorecard.md`. No retrieval, answer-
-  quality, or cross-lane (path B/C, vector/graph/wiki) comparison has been
-  measured yet (Stages 6B–9, not started).
+  `reports/stage6a_docling_baseline_scorecard.md`. Retrieval and answer
+  quality have since been measured for path A's corpus (Stages 6B, 7A.*,
+  7R.*, 7B.*, 7C.*), but **no cross-lane comparison exists**: every
+  retrieval number to date is path-A-only, one embedding model, one small
+  synthetic corpus. The ingestion-lane comparison (paths B/C) is Stages
+  10A/10B, and the cross-lane quality/cost/latency/ROI comparison is
+  Stage 9 — none of the three has been started.
 - Paths B, C, D (OpenAI vision enrichment, OpenAI vendor-native, local
   Granite Vision) are not implemented — only path A
   (`DOCLING_STANDARD_LOCAL`) exists.
-- No embedding, vector index, graph projection, or retrieval code exists
-  for this pipeline (the unrelated, hand-seeded `src/` GraphRAG POC is a
-  separate proof of concept — see `docs/POC_ARCHITECTURE.md` section G).
+- Embedding, vector index, graph projection and wiki projection code now
+  exist for this pipeline under `src/ingestion_bench/` (the unrelated,
+  hand-seeded `src/` GraphRAG POC remains a separate proof of concept —
+  see `docs/POC_ARCHITECTURE.md` section G). Graph is **not retained in
+  the online retrieval path** (Stage 7B.2a, gate D); the Wiki projection
+  is measured but **not** decided (Stage 7C.2; Gate B vs Gate C open).
 - `ModelArtifact`/`RemoteInferenceCall` remain implemented models with no
   code that constructs a real instance (`ExtractionRun` itself is now
   populated by the Docling adapter for every successful/partial
@@ -799,8 +806,12 @@ review) or Stage 7B/7C's own work.
   as a failure and never invented.
 - OpenAI extraction/comparison quality (paths B/C) — not implemented, not
   evaluated.
-- Retrieval relevance or answer quality — no retrieval layer exists for
-  this pipeline (Stages 6B–7C, not started).
+- Retrieval relevance and answer quality **beyond the small controlled
+  corpora these benchmarks use**. Stages 6B/7A.*/7R.*/7B.*/7C.* measure
+  both, but on ~11 single-chunk revisions with ~6 authority-eligible
+  chunks per query, one embedding model and one ingestion lane — absolute
+  scores there overstate large-corpus performance and compress every arm
+  delta. Stage 8 exists to attack exactly that limitation and has not run.
 - Production scalability, latency, or cost under real load (Stage 5A's
   timings are for 9 small synthetic fixtures on one CPU-only laptop-class
   machine, not a load test).
@@ -821,18 +832,42 @@ chunk contract frozen (Stage 4.2a, done)
         -> produce deterministic CanonicalChunks (DONE -- existing chunker, unmodified; determinism now backed by 5 independent component comparisons, D-039)
         -> compare output against reference_manifest.json ground truth (DONE -- Stage 6A)
         -> report extraction metrics + gold fact-to-chunk evidence alignment (per BENCHMARK_CONTRACT.md section 9) (DONE -- Stage 6A)
-        -> retrieval benchmark contract + vector/graph/wiki projections (NOT STARTED -- Stages 6B/7A/7B/7C)
-        -> add selective vision/vendor-native comparison (paths B/C) as time permits (NOT STARTED -- Stages 8A/8B)
+        -> retrieval benchmark contract + gold evidence set (DONE -- Stage 6B; 12 frozen questions)
+        -> regular vector RAG baseline + auditable answer layer + demo viewer (DONE, FROZEN -- Stages 7A.1/7A.2/7A.2a, 7A.3)
+        -> revision authority registry/resolver, then authority-aware vector retrieval (DONE, FROZEN -- Stages 7R.1/7R.1a/7R.1b, 7R.2/7R.2a)
+        -> cross-document relationship holdout, graph projection, hybrid probe (DONE, FROZEN -- Stages 7B.0/7B.1/7B.2/7B.2a; gate D: Graph NOT retained in the online retrieval path)
+        -> wiki page/link projection (MEASURED -- Stages 7C.0/7C.1/7C.2 complete and frozen; Gate Q = FAIL so Gate A is unreachable; Gate B vs Gate C NOT decided)
+        -> deterministic Wiki as an AGENT knowledge interface vs Vector (DESIGN ONLY -- Stage 8.0 committed and awaiting owner review; 8A/8B NOT STARTED, nothing measured)
+        -> add selective vision/vendor-native comparison (paths B/C) as time permits (NOT STARTED -- Stages 10A/10B, renumbered from 8A/8B by D-056)
         -> cross-lane quality/cost/latency/ROI comparison (NOT STARTED -- Stage 9)
 ```
 
-The first *measurable* result (accuracy/recall against the manifest, not
-just "did conversion succeed") now exists — see "Stage 6A.2b findings" above
-and `reports/stage6a_docling_baseline_scorecard.md`. The remaining gap to
-a *retrieval-relevant* measurable result is Stage 6B (the retrieval
-benchmark contract, built on the Stage 6A evidence-alignment catalog) —
-Stage 6A intentionally stops at ingestion-fidelity scoring, never
-retrieval or answer-quality evaluation.
+Both the ingestion-fidelity and the retrieval-relevant measurable results
+now exist. Ingestion fidelity: "Stage 6A.2b findings" above and
+`reports/stage6a_docling_baseline_scorecard.md`. Retrieval: Stage 6B's
+frozen question contract, scored through Stage 7A.1's vector baseline and
+every authority-, graph- and wiki-aware benchmark built on it, all of them
+reusing ONE evaluator by import identity.
+
+**What the retrieval line has actually settled, and what it has not.**
+Graph is closed: Stage 7B.2a's gate D decided *not* to retain Graph in the
+online retrieval path (navigation and offline relationship analysis remain
+a separate, unevaluated use case). Wiki is measured but *not* decided:
+Stage 7C.2 ran read-only over the frozen 7C.0/7C.1 artifacts, Gate Q's
+failure makes Gate A unreachable, and the Gate B vs Gate C choice awaits
+the owner's page-quality rating — `docs/STAGE7C_WIKI_DECISION.md` does not
+exist, so no Stage 7C retain/retire outcome may be quoted from this
+document. Stage 8 is a *design*: it proposes testing whether a
+deterministic Wiki is a better interface for an **Agent** than for static
+top-K, and it has no corpus, no embeddings, no retrieval and no Agent run,
+so it contributes no result of any kind yet.
+
+Every number on this path is scoped to a small controlled synthetic corpus
+(the Stage 3 fixtures for ingestion; ~11 single-chunk revisions for the
+cross-document benchmarks) and to one embedding model and one ingestion
+lane (path A, DOCX). None of it is a scalability, latency or cost result,
+and none of it is a cross-lane comparison — that is still Stage 9, and it
+still depends on ingestion lanes B and C that have not been started.
 
 ## Explicitly deferred scope
 
