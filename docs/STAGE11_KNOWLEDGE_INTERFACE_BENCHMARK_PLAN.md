@@ -1,10 +1,28 @@
-# Stage 11 Plan (Revision 1 — design only, owner review) — Rich-Corpus Knowledge-Interface Benchmark: Vector / Source-Grounded Graph / Deterministic Wiki / Enriched Wiki / Neo4j-Native GraphRAG, Static and Agent
+# Stage 11 Plan (Revision 3 — design only, owner review) — Rich-Corpus Knowledge-Interface Benchmark: Vector / Source-Grounded Graph / Deterministic Wiki / Enriched Wiki / Neo4j-Native GraphRAG, Static and Agent
 
 > **Status: DESIGN ONLY.** No corpus exists, no parser has been run, no
 > embedding has been generated, no graph or wiki has been projected, no Neo4j
 > instance has been created, no retrieval has executed and no Agent has run for
 > this experiment. Work stops at the end of this document for owner review
 > (§19). Nothing here may be cited as a result.
+>
+> **Revision 3 adds a decision-oriented fast path (§1.6–§1.8).** The objective is
+> a defensible strategic direction for RAG architecture, reached quickly — not an
+> exhaustive ablation. Phase 1 is `S1`-only: six static arms, a 30-run Agent
+> pilot, and roughly **100** human adjudications. Everything else — `S0`/`S2`,
+> the factorials, the full Agent campaign, the parser study, second-model
+> confirmation — sits behind explicit preregistered triggers, and a **Strategic
+> Decision Checkpoint** (§1.8) decides what, if anything, runs next. **Breadth is
+> reduced; integrity is not.** Every freeze, leakage, authority, provenance and
+> fairness discipline in this document applies unchanged to Phase 1, and §23 is
+> the R2 → R3 diff.
+>
+> **Revision 2** resolves eleven review findings against Revision 1 without
+> redesigning the experiment. §22 is the complete diff of intent. Unchanged by
+> instruction and by intent: the SRS principle (§3.4), the four-stage Wiki
+> decision model (§9.4), `W-D0-rev` / `W1-R-det` as core arms (§9.1), Gate P0
+> (§5.3), exact similarity in the primary benchmark, a fresh Gate Q2 that
+> inherits nothing (§11), and the pre-static Agent contract freeze (F6, §15).
 >
 > **This is a new experiment.** Per the briefing, no measured outcome, tuning
 > choice, threshold or question-specific observation from Stages 7A/7B/7C is
@@ -95,7 +113,7 @@ Only three holders may carry relationships the SRS does not:
 | Holder | Extra relationships | Consequence |
 |---|---|---|
 | `W1-R` | model-derived enrichment (aliases, summaries, statements, derived links) | must pass **Gate Q2** (§11) or every `W1-R` number is `NON-QUALIFYING / DIAGNOSTIC` |
-| `G-N4J` | vendor LLM-extracted graph | labelled **vendor-native / LLM-derived**; preceded by **Gate X** extraction measurement (§10.4) |
+| `G-N4J-canon` / `G-N4J-native` | vendor LLM-extracted graph | labelled **vendor-native / LLM-derived**; preceded by **Gate X** extraction measurement (§10.4) |
 | *(nothing else)* | — | — |
 
 ### 1.3 Hypotheses, stated so each can fail
@@ -138,7 +156,8 @@ change that. H0 is a publishable outcome and no test asserts against it.
 | `V+` | Postgres/pgvector | `V` plus an index of the **identical** facet payloads `W` embeds, **no** page structure or links | isolates payload repacking from navigation |
 | `V-lex` | Postgres/pgvector | `V` plus a deterministic exact-identifier channel | isolates "structure = exact match" |
 | `G-SG` | Neo4j | source-grounded graph over the SRS; semantic seeds, bounded traversal | Graph treatment |
-| `G-N4J` | Neo4j | Neo4j GraphRAG / KG Builder near stock | vendor reference, **LLM-derived** |
+| `G-N4J-canon` | Neo4j | vendor extraction + retriever over Canonical chunks, full corpus | **primary** vendor reference, LLM-derived |
+| `G-N4J-native` | Neo4j | vendor loader + splitter + extraction + retriever | vendor reference, **PDF subset only** (§10.4) |
 | `W-D0` | Neo4j | deterministic source-grounded Wiki; structure selects the neighbourhood, bounded local selection picks the evidence | Wiki treatment |
 | `W1-R` | Neo4j | `W-D0` topology + preregistered semantic enrichment + revised two-stage retrieval | enriched Wiki treatment, gated |
 
@@ -150,6 +169,124 @@ a second independent variable — §6.1); the ingestion-lane comparison (Stages
 production deployment concerns; more than one domain, one generator, one
 embedding capability, one primary agent model; any claim about corpora larger
 than `S2`.
+
+### 1.6 Execution strategy — Phase 1, `S1` only (new in R3)
+
+The full matrix in §9 remains the design of record. What changes in R3 is **what
+runs first, and what has to be true before anything else runs.**
+
+**Phase 1 answers one question:** does explicit navigable structure, or a vendor
+graph, beat flat Vector on a rich corpus at a fixed evidence budget — clearly
+enough to change an architectural recommendation? A single tier answers that. The
+richness *interaction* (H2c-style claims) needs the ladder; the existence of an
+effect does not.
+
+**Phase 1 static arms — six, all at `S1`:**
+
+| Arm | Why it is in the minimum set |
+|---|---|
+| `V` | the baseline; without it nothing is interpretable |
+| `V+` | the payload control. Cheapest possible guard against the most likely false positive ("structure" = more source text per index entry). Reuses frozen vectors; no new build |
+| `W-D0` | the deterministic Wiki treatment — the cheapest structured representation, and the one that needs no LLM |
+| `G-SG` | the Graph treatment over the same relationship universe; Wiki-vs-Graph is a live architectural fork |
+| `W1-R` | the enrichment fork: is an LLM layer over the Wiki worth its build and adjudication cost? |
+| `G-N4J-canon` | the build-versus-buy fork, full corpus (§10.4) |
+
+**Deferred out of Phase 1** (each behind a named trigger in §1.7): `V-lex`,
+`G-SG-explicit`, `G-SG[path-sem]`, `G-N4J-native`, `W-D0-rev`, `W1-R-det`, the
+six-cell §9.6 factorial, `W-D0[−R]`, sub-experiment P, `S0`, `S2`, the full Agent
+campaign, repeat campaigns, and second-model confirmation.
+
+**Phase 1 Agent pilot — 30 runs.** `Agent-V`, `Agent-W-D0` and `Agent-G-SG`, on a
+**preregistered 10-question pilot subset** of the 16-question agent subset,
+stratified across `T1`–`T13` with at least three `T6` questions, single pass, at
+`S1`. The arms are named in F6 **before** any static result is seen, so the pilot
+cannot be aimed at whichever arm won statically.
+
+> **What a 30-run pilot can and cannot do, stated before it runs.** It is powered
+> to expose a *large* interface effect and to surface harness, budget and
+> tool-parity problems. It is **not** powered to certify a small one, and it may
+> never be reported as a Gate A reading. Its only outputs are: *signal*, *no
+> signal*, or *harness defect*. A formal agent claim requires the full campaign,
+> which trigger **T-D** unlocks.
+
+**What Phase 1 costs, against the R2 full design:**
+
+| | R2 full design | R3 Phase 1 |
+|---|---|---|
+| tiers built and embedded | 3 | **1** (`S1`) |
+| static arms | 12 + 6 factorial cells | **6** |
+| agent runs | 192 (hard stop 260) | **30** |
+| enrichment compiles | ~7,840 + ~1,570 repeat | **~1,700 + ~510 repeat** (`S1` only) |
+| vendor extractions | ~6,200 | **~1,000** (`S1`, canon only) |
+| human adjudications | ~550 expected, 1,010 cap | **~100 initial, 200 Phase-1 cap** |
+
+### 1.7 Conditional triggers — preregistered, frozen in F5-S and F6
+
+Every trigger is declared **before Phase 1 runs**, states the condition, what it
+unlocks, and — equally binding — **what is recorded if it does not fire**. A
+follow-on stage that no trigger unlocks does not run.
+
+*Throughout, "clears" means the Phase-1 static bar: **≥ 3 of 52 questions improved,
+≤ 1 regressed, net ≥ +2**, on `required_evidence_unit_coverage_at_k` with neither
+citation validity nor authority correctness degraded — counts first, rates second,
+and every regression counted.*
+
+| Trigger | Fires when | Unlocks | If it does not fire |
+|---|---|---|---|
+| **T-A** attribution | `W1-R` clears `W-D0` | `W-D0-rev` + `W1-R-det` — **mandatory before any H4 claim** | H4 is reported as unsupported at `S1`; no separator is built |
+| **T-B** exact-match | a structured arm clears `V`, and ≥ half its improved questions carry a corpus identifier | `V-lex` | the advantage is recorded as not identifier-concentrated |
+| **T-C** richness | any structured or vendor arm clears `V` at `S1` | build + run `S0` and `S2` for the arms that cleared, plus `V` and `V+` | **no ladder is built.** H0 is the finding and the recommendation is Vector |
+| **T-D** agent | the pilot shows a structured arm ahead on `source_backed_lineage_correctness` on ≥ 3 of 10 with ≤ 1 regression | the full Agent campaign under the frozen F6 contract | H5 is reported as unsupported at pilot power, with the power limit stated |
+| **T-E** vendor | \|`G-N4J-canon` − `G-SG`\| ≥ 2 questions net | Gate X expansion + `G-N4J-native` + sub-experiment P | the vendor and custom graphs are recorded as indistinguishable here; parsing attribution is moot and is not measured |
+| **T-F** mechanism | a structured arm clears `V` but `final_k_admission_source_mix` and `required_fact_contribution_by_admission_source` do not agree on which lane delivered it | the §9.6 six-cell factorial | the mechanism is recorded as already attributed by the process metrics |
+| **T-G** model dependence | a headline claim rests on Agent behaviour | second-model confirmation on the pilot subset | the claim is labelled single-model |
+| **T-H** gate certification | Gate Q2 or Gate X is `undecided` **and** the arm it governs is load-bearing for the recommendation (§1.8) | adjudication expansion to the certifying sample size (§11.1) | the gate stays provisional and the arm it governs is reported as provisional |
+| **T-I** repeats | any Phase-1 or campaign claim is within one question of its bar | repeat campaign on the repeat core | the claim is labelled unreplicated |
+
+**T-C is the fast path's whole economics.** If nothing clears `V` at `S1`, no
+second or third tier is ever built, and the experiment terminates at the
+checkpoint with a real answer: on this corpus, at this budget, flat Vector is the
+right architecture. The null is the cheapest outcome, not the most expensive one.
+
+### 1.8 The Strategic Decision Checkpoint (new in R3)
+
+**Formal, mandatory, and the only gateway to any further spend.** Convened after
+the Phase-1 static run and the Agent pilot, with these inputs and no others: the
+Phase-1 static scorecard across the full §12 metric set; the §12.2 process
+metrics; the pilot's outcome class; Gate P0/P1; Gate Q2 and Gate X in whatever
+state Phase 1 left them; and the corpus profile.
+
+**Output 1 — one preregistered recommendation class:**
+
+| Class | Condition | Architectural recommendation |
+|---|---|---|
+| **D-1 Vector** | nothing clears `V` | flat authority-aware vector RAG; do not build structure |
+| **D-2 Deterministic structure** | `W-D0` and/or `G-SG` clear, `W1-R` adds nothing over them | build source-grounded structure; **no LLM enrichment layer** |
+| **D-3 Enriched structure** | `W1-R` clears `W-D0`, survives T-A's separators, and Gate Q2 is at least provisionally passed | build the enrichment layer, with its adjudication and rebuild cost stated |
+| **D-4 Vendor-sufficient** | `G-N4J-canon` matches or beats the custom arms | buy rather than build, with the Gate X extraction caveat and the §10.4 stock deviation attached |
+| **D-5 Agent-conditional** | no static advantage, but the pilot signals one | structure as an *Agent interface*, not as a static retriever; the full Agent campaign is the one justified follow-on |
+| **D-6 Ambiguous** | two or more classes remain live | no recommendation; §1.8's ambiguity register governs what runs next |
+
+**Output 2 — the ambiguity register.** For every follow-on stage proposed, the
+checkpoint must record, in writing and before the stage is approved:
+
+1. which recommendation class is currently favoured;
+2. which **other** class the stage could move the recommendation to;
+3. which trigger unlocks it; and
+4. what result would count as resolving the ambiguity.
+
+**A stage that cannot flip a recommendation does not run**, however interesting it
+is. Scientific curiosity is not a trigger. Items that fail this test are recorded
+in a *deferred questions* appendix so they are visible rather than lost — and so a
+later decision to fund them is deliberate.
+
+**What the checkpoint may not do.** It may not alter any frozen contract, may not
+add or reword a question, may not retune a bound, threshold or budget, and may not
+change a gate definition. It selects among **preregistered** classes and
+**preregistered** triggers. If the Phase-1 result fits no class, the correct
+output is D-6 plus the ambiguity register — never a new class invented after
+seeing the data.
 
 ---
 
@@ -344,10 +481,17 @@ attributed to the projection.
 Run **only** on a small declared subset (the `S0` document set, all formats), and
 **never** feeding the primary comparison.
 
-| Lane | Ingestion |
-|---|---|
-| **P-A** | Canonical / Docling parsing (the frozen contract) |
-| **P-B** | Neo4j native loader / `SimpleKGPipeline` ingestion, near stock |
+| Lane | Ingestion | Format scope |
+|---|---|---|
+| **P-A** | Canonical / Docling parsing (the frozen contract) | `docx`, `pptx`, `pdf` |
+| **P-B** | Neo4j native loader / `SimpleKGPipeline` ingestion, near stock | **`pdf` only** — see below |
+
+**Format-scope correction (R2).** `SimpleKGPipeline`'s native file loading covers
+PDF; it has no out-of-box DOCX or PPTX loader. Revision 1 implied a full-corpus
+native ingestion lane, which is not executable. P-B therefore runs on the **PDF
+subset only**, and the parser comparison is reported as a PDF-scoped result. Any
+DOCX/PPTX handling would require a loader we wrote, which would make the lane our
+parsing, not the vendor's, and would defeat the lane's only purpose.
 
 Compared mechanically, per document, with no retrieval and no arm involved:
 
@@ -364,10 +508,11 @@ Compared mechanically, per document, with no retrieval and no arm involved:
 | `reading_order_agreement` | Kendall's tau over the common element sequence |
 
 Output: `reports/stage11p_parser_comparison.md` plus per-document JSON. **No
-threshold, no gate, no winner.** Its only binding effect on the main experiment
-is interpretive: if P shows P-B loses material content, then any `G-N4J` deficit
-must be reported as *possibly parsing*, and §10.5's `G-N4J-canon` variant becomes
-mandatory rather than diagnostic.
+threshold, no gate, no winner.** Its binding effect is interpretive: it is the
+only measurement that separates vendor *parsing* from vendor *extraction*, and it
+can do so only on PDF. Because the native lane cannot cover the whole corpus,
+`G-N4J-canon` — not `G-N4J-native` — is the full-corpus vendor comparison (§10.5),
+and P supplies the PDF-scoped parsing delta beside it.
 
 **Contamination controls.** P runs after F2 on the same frozen bytes; it writes
 no vector, no node and no row that any arm reads; its tables are not inputs to
@@ -385,16 +530,43 @@ node/edge/property hash equality asserted.
 
 This is a deliberate reversal of the project's earlier position ("Postgres is
 sufficient at this scale — no Neo4j"). That position was correct *for Stage 7B's
-scale and question*. It is not correct here: `S2` fan-out of up to 120 and 3–6
-hop traversal budgets are what Neo4j exists for, and the briefing asks for a
+scale and question*. It is not correct here: `S2` fan-out of up to 120 and a
+six-hop traversal budget are what Neo4j exists for, and the briefing asks for a
 vendor-native comparison that only exists on Neo4j. The reversal is recorded as a
 decision, not slipped in.
 
-**Deployment.** `neo4j:5-community` added to `docker-compose.yml` on host ports
-**7688** (bolt) and **7475** (http) to avoid clashing with any local default
-install, mirroring the existing choice of Postgres 5434. A separate database per
-tier (`s11s0`, `s11s1`, `s11s2`) and per projection family, so no arm can read
-another's nodes.
+**Deployment and isolation (corrected in R2).** Revision 1 asked for "a separate
+database per tier and per projection family" on `neo4j:*-community`. That is not
+executable: Community Edition serves exactly one user database (`neo4j`) plus
+`system`; multi-database is an Enterprise feature. The frozen model replaces
+logical databases with **physical store swapping**, which Community supports and
+which gives stronger isolation than a database boundary would:
+
+| Element | Frozen value |
+|---|---|
+| image | `neo4j:<pinned tag>-community`, **pinned by digest** (§5.5) |
+| container | one definition, one at a time, fixed name `er_s11_neo4j` |
+| ports | **7688** bolt, **7475** http (avoids any local default install, mirroring Postgres 5434) |
+| database name | always the Community default `neo4j` — never used as an isolation boundary |
+| store identity | the **bind-mounted volume**: `./neo4j_stores/<tier>_<family>/` |
+| families | `gsg`, `wd0`, `w1r`, `vendor_native`, `vendor_canon` |
+| store slots | 5 families × 3 tiers = **15 stores**, created and destroyed by script |
+| concurrency | **exactly one store mounted at a time**; a measured run brings the container down, swaps the volume, brings it up |
+
+**Wrong-store protection.** Each store writes a `(:__Stage11Store__ {store_key,
+manifest_sha256})` singleton at import. Every arm asserts, on connect, that
+`store_key` equals the `(tier, family)` it was invoked for and that
+`manifest_sha256` matches the frozen projection manifest. A mismatch aborts the
+run before a single query executes. This is what "no arm can read another's
+nodes" now means operationally, and it is checkable rather than assumed.
+
+**Cost of the correction, stated plainly.** Arms no longer run concurrently
+against one server, so the static campaign is serialized behind container
+restarts (~10–20 s each, ~15 store builds per full pass). That is cheap relative
+to the build cost and it removes an entire class of cross-arm contamination.
+Enterprise Edition with real multi-database is the alternative and is recorded as
+owner decision **O-13**; nothing in the design depends on which is chosen, only
+the isolation mechanism does.
 
 ### 5.2 Projection schema
 
@@ -465,7 +637,33 @@ reported as a failure and the operational-ANN claim is withdrawn, not repaired.
 P1 has no effect on any primary number; it exists so the plan can say honestly
 whether an operational deployment could use ANN.
 
-### 5.4 What Neo4j provides versus what remains custom
+### 5.4 Version pinning — no floating defaults (new in R2)
+
+An experimental library's defaults are not a specification: they change between
+releases, and a result produced against "the default" is not reproducible from
+the frozen artifacts. Every version is pinned at `11A.0` and recorded in
+`contracts/stage11_runtime_pin_v1.json`, hashed with the rest of F5-S.
+
+| Component | Pin form |
+|---|---|
+| Neo4j server | exact tag **and** `sha256:` image digest, e.g. `neo4j:5.x.y-community@sha256:<digest recorded at pin time>` |
+| `neo4j-graphrag` | exact patch version (`==x.y.z`), plus the resolved dependency lock |
+| `neo4j` Python driver | exact patch version (`==5.x.y`) |
+| Python | exact patch version; the existing `constraints.txt` extended, not replaced |
+| Docling / chunker | already frozen in F2 by `chunker_version` + `chunking_config_hash` |
+| Gemini adapter | SDK version + `observed_model_version` per call (§6.4) |
+| Extraction LLM | named model **and** version string, `temperature = 0` |
+
+**The default-materialization rule.** Every library default this experiment
+relies on — splitter size and overlap, extraction prompt template, node and
+relationship label spellings, index parameters, result-record shape — is **read
+out of the pinned library at `11A.0`, written into the frozen config explicitly,
+and asserted by a conformance test** that compares the library's live value to
+the frozen one. An upgrade that changes a default then fails the test loudly
+instead of silently changing arm behaviour. No arm configuration may say
+"library default" as a value.
+
+### 5.5 What Neo4j provides versus what remains custom
 
 | Concern | Neo4j provides | Stage 11 must build |
 |---|---|---|
@@ -504,7 +702,7 @@ itself a finding worth recording before the experiment, because it bounds what a
 | modality | **text only** for the primary experiment |
 | normalization policy | frozen, identical across arms (§6.3) |
 | similarity function | frozen, identical across comparable arms (cosine) |
-| input formatting | Gemini Embedding 2's documented **asymmetric retrieval** roles: query inputs and document/corpus inputs are formatted differently, with both templates frozen **before corpus embedding** |
+| input formatting | Gemini Embedding 2's documented **asymmetric retrieval** roles, encoded **in the prompt text** (an instruction prefix on the input string), not through the legacy API task-type field: query inputs and document/corpus inputs carry different frozen prefixes, both frozen **before corpus embedding** |
 | generation location | **outside Neo4j**, through one shared adapter |
 
 Gemini Embedding 2 supports flexible dimensionality up to 3,072 (Google
@@ -554,7 +752,7 @@ before any vector is generated.
 | `edge` | SRS relation | `subject_surface + predicate_label + object_surface + the single evidence span` | `G-SG` seeds |
 | `entity` | `Entity` | normalized surface + entity type + the display title of its first source posting | `G-SG` seeds |
 | `page` | `Page` | display title + page type + entity type | diagnostic only, never in a primary ranking |
-| `vendor_chunk` | `G-N4J` splitter output | the vendor's chunk text, verbatim | `G-N4J` |
+| `vendor_chunk` | vendor splitter output | the vendor's chunk text, verbatim | `G-N4J-native` |
 
 **Leakage rule, enforced by test.** A chunk embedding may never contain a summary,
 alias, graph relationship, Wiki statement, evaluator label or question-specific
@@ -575,25 +773,46 @@ retrieval surfaces even at equal `K`.
 ```
 object_id                 chunk_id | facet_id | relation_id | entity_key | vendor_chunk_id
 representation_type       chunk | facet_d0 | facet_r | edge | entity | page | vendor_chunk
-exact_embedding_input     the exact normalized string sent to the API
+retrieval_role            query | document           # R2: not an API task_type value
+role_encoding             "prompt_prefix"            # R2: this model encodes the role in the prompt
+role_prefix_text          the exact instruction prefix for that role, verbatim
+role_prefix_sha256
+exact_embedding_input     role_prefix_text + the normalized payload, exactly as sent
 input_sha256
 model_id                  gemini-embedding-2
 output_dimensionality     1536
-task_role                 RETRIEVAL_QUERY | RETRIEVAL_DOCUMENT
-vector                    float32[1536]
-vector_sha256
+provider_vector           the vector exactly as returned, before any post-processing
+provider_vector_sha256    # R2: hashed BEFORE normalization
+normalization_applied     l2 | none
+normalizer_version
+index_vector              what is stored and queried against
+index_vector_sha256       # R2: hashed AFTER normalization / dtype cast
 generated_at, adapter_version, api_version, observed_model_version
 ```
 
 Two manifests are committed and hash-verified before every measured run:
 `stage11_embedding_input_manifest.json` and `stage11_vector_manifest.json`.
 
+**Role encoding, stated precisely (R2).** For this model the query/document
+asymmetry is expressed as an instruction prefix inside the embedded text. The
+manifest therefore records `retrieval_role`, `role_encoding = "prompt_prefix"`
+and the prefix bytes themselves; it does **not** record an API task-type
+parameter, because this model has none to set. Revision 1's
+`task_role = RETRIEVAL_QUERY | RETRIEVAL_DOCUMENT` borrowed the older API's
+vocabulary and would have described a field nobody sends.
+
 **Normalization policy (frozen).** Inputs: Unicode NFC, CRLF→LF, internal
 whitespace collapsed to single spaces, leading/trailing whitespace stripped, no
 case folding, no truncation below the model limit (an over-length input fails
-loudly rather than silently truncating). Outputs: L2-normalized once at
-generation, stored normalized, and cosine computed as a dot product everywhere —
-so no arm can differ by re-normalizing.
+loudly rather than silently truncating).
+
+Outputs are recorded **twice (R2)**: the provider vector exactly as returned, with
+`provider_vector_sha256` taken before anything touches it, and the index vector
+after L2 normalization and dtype cast, with `index_vector_sha256`. Cosine is a dot
+product over index vectors everywhere, so no arm can differ by re-normalizing.
+Keeping both hashes separable is what lets a later provider-drift or
+normalizer-change question be answered from the manifest instead of by
+re-embedding — which F4 forbids.
 
 ### 6.5 Pre-measurement stability and integrity check; then the vectors are authoritative
 
@@ -900,8 +1119,9 @@ A test asserts practice `question_id`s are absent from every result file.
 | `V-lex` | diagnostic | PG | none | "structure = exact identifier match" |
 | `G-SG` | **core** | Neo4j | SRS (`source_explicit` + `deterministic`) | graph representation |
 | `G-SG-explicit` | diagnostic | Neo4j | SRS `source_explicit` only | how much the cue-rule inference layer contributes |
-| `G-N4J` | **core** | Neo4j | vendor LLM-extracted | vendor-native reference |
-| `G-N4J-canon` | **core if P shows parser loss**, else diagnostic | Neo4j | vendor LLM-extracted, but over *Canonical* chunks | separates parsing from extraction+retrieval |
+| `G-SG[path-sem]` | diagnostic (R2) | Neo4j | SRS | whether the structural lane should have been query-semantic after all (§10.2) |
+| `G-N4J-canon` | **core** | Neo4j | vendor LLM-extracted, over *Canonical* chunks | **the full-corpus vendor comparison**; carries H6 |
+| `G-N4J-native` | diagnostic, **PDF subset only** | Neo4j | vendor LLM-extracted over vendor-parsed chunks | the parsing/chunking delta, where it is measurable (§4.2) |
 | `W-D0` | **core** | Neo4j | SRS | deterministic Wiki representation |
 | `W-D0-rev` | **core** | Neo4j | SRS | `W1-R`'s *retrieval policy* on deterministic artifacts |
 | `W1-R-det` | **core** | Neo4j | SRS + enrichment | `W1-R`'s *artifacts* under `W-D0`'s retrieval policy |
@@ -965,7 +1185,8 @@ admission.**
 | Bound | Value | Why this value |
 |---|---|---|
 | `P_seed` — neighbourhoods admitted at Stage A | **5** | must exceed the deepest truth chain's distinct facets (≤ 4 at `S0`) without letting Stage A become a top-K of its own |
-| `M_max` — navigation hops | **3** | `T6` needs 3–6 hops; 3 hops from up to 5 seeds reaches a 6-hop chain from both ends. Higher is not "more navigation", it is an unbounded scan |
+| `M_max` — navigation hops | **6** (R2; was 3) | `T6` requires 3–6 hops, so a 3-hop budget could only reach a 6-hop chain by assembling it from two seed neighbourhoods — which is not traversal and must not be reported as it. 6 matches the deepest authored chain; `F_max`, `C_max` and the per-hop quota bound the cost |
+| `per_hop_quota` — candidates admitted per hop (R2) | **⌈`C_max`/`M_max`⌉ = 34** | breadth-first search fills the candidate ceiling at shallow depth; without a per-hop reservation a 6-hop budget would never actually reach hop 6 |
 | `c_max` — chunks contributed to final `K` by any one **facet** | **2** | `S2` facets hold up to **40** chunks and `K` is 3–8; without this cap one facet could fill `K` entirely and "navigation" would mean "pick a big facet" |
 | `p_max` — chunks contributed by any one **page** | **3** | a page has ~6 facets at `S2`; page-level saturation is the same failure one level up |
 | `e_max` — chunks contributed by any one **graph edge** | **2** | the `G-SG` counterpart of `c_max` |
@@ -1034,10 +1255,29 @@ V(q):
 Frozen: cosine; `K = U + 2`; the eligibility predicate inside the ranking query;
 tie-break. No structure of any kind.
 
-`V+` runs the identical query over a union index of chunk vectors **and**
-`facet_d0` vectors; a facet hit contributes its member chunks under `c_max`,
-scored by the facet's own score, with **no links, no pages and no traversal**. It
-answers: is the benefit "entity-keyed payload repacking" rather than navigation?
+`V+` **(corrected in R2)**. Revision 1 had `V+` rank a union index of chunk and
+`facet_d0` vectors by one cosine. That contradicts §6.3: the two representation
+spaces are never compared to each other, because a facet vector and a chunk
+vector are not interchangeable. `V+` now ranks each space **separately** and
+fuses the two ranked lists:
+
+```
+V+(q):
+  L_chunk = rank( cos(Q, chunk.embedding)    WHERE revision IN eligible )
+  L_facet = rank( cos(Q, facet_d0.embedding) WHERE revision IN eligible )
+  fused   = RRF(L_chunk, L_facet, k0 = 60)          # ranks only, never raw scores
+  for each facet entry in fused, in fused order:
+      expand to at most c_max member chunks by LOCAL cos(Q, chunk.embedding)
+      enforce p_max per page
+  final K by fused order, de-duplicated by chunk_id
+  # no links, no pages, no traversal, no reserved lane
+```
+
+Only ranks cross the space boundary, never scores. `k0 = 60` is the same fusion
+constant `W1-R` Stage A uses (§10.6.2), frozen in F5-S, so the fusion mechanism is
+not itself a difference between the control and the treatment. `V+` still answers
+the question it exists for: is the benefit "entity-keyed payload repacking"
+rather than navigation? It now does so without violating the embedding contract.
 
 `V-lex` adds a deterministic exact-identifier channel: identifiers in the query
 text (F1 regex) match chunks containing the same identifier, and those chunks are
@@ -1062,10 +1302,13 @@ G-SG(q):
                  WHERE edge.document_revision_id IN eligible     # INSIDE
                  ORDER BY (cos(Q, edge.embedding) desc, relation_id asc)
                  LIMIT F_max
-          for each traversed edge:
-              path_score(edge) = decay^hop * seed_score(origin)   # decay = 0.6
-              candidates += evidence chunks of edge, at most e_max per edge,
+          for each traversed edge e:
+              # R2: the path score now depends on the edges actually walked
+              step(e)    = decay * w_class(e) * support(e)        # decay = 0.6
+              path_score = seed_score(origin) * PROD(step) over the walked path
+              candidates += evidence chunks of e, at most e_max per edge,
                             each tagged (relation_id, hop, path_score)
+      enforce per_hop_quota = ceil(C_max / M_max) candidates per hop   # R2
       stop when |candidates| >= C_max
 
   # --- Stage C: final K, scores kept separate ---
@@ -1079,8 +1322,33 @@ G-SG(q):
                path provenance = ordered [(relation_id, evidence chunk, span)])
 ```
 
-`decay = 0.6` and `s = 8` are frozen in F5-S with the rest. Evidence is always the
-cited chunk, never the edge. Path provenance is returned whether or not the path
+**Why the path score changed (R2).** Revision 1 scored a path as
+`decay^hop × seed_score(origin)`, which is a function of the seed and the depth
+alone: among all nodes at the same hop from the same seed, nothing distinguished
+them and ordering fell to the `relation_id` tie-break. That is not a structural
+signal, it is a depth counter. The reserved lane exists so that **structurally
+well-grounded** evidence can survive even when it is semantically distant, so the
+score now reads properties of the edges actually traversed:
+
+| Term | Definition | Range |
+|---|---|---|
+| `w_class(e)` | `source_explicit` → 1.0, `deterministic` → 0.8 | how the relation was derived |
+| `support(e)` | `min(1, distinct_evidence_chunk_count(e) / 2)` | how well the source backs it |
+| `decay` | 0.6 per hop | depth penalty, unchanged |
+
+**Query relevance is deliberately excluded from `path_score`.** Folding
+`cos(Q, edge.embedding)` into it would make the structural lane a second semantic
+ranking and destroy the only mechanism by which semantically distant evidence
+reaches final `K`. Because that is an assumption rather than a fact, it is
+measured: **`G-SG[path-sem]`** is a diagnostic arm, identical except that
+`step(e)` is multiplied by `cos(Q, edge.embedding)`. If the diagnostic wins, the
+record says the structural lane was better off semantic, and says so plainly.
+
+`semantic_score` and `path_score` remain separately computed, separately stored
+and separately reported; `final_score` still ranks on semantics alone, and the
+reserved lane still selects on `path_score`. `decay = 0.6`, `s = 8` and both
+weights are frozen in F5-S before any measurement. Evidence is always the cited
+chunk, never the edge. Path provenance is returned whether or not the path
 contributed to `K`, because `complete_chain_represented` is measured over
 candidates as well as over final `K`.
 
@@ -1116,6 +1384,7 @@ W-D0(q):
                   LIMIT F_max
           reached += destination facets, tagged (link_id, link_type, hop,
                                                  establishing chunk)
+      enforce per_hop_quota = ceil(C_max / M_max) candidates per hop   # R2
       stop when |candidates| >= C_max
 
   # --- Stage B: bounded local evidence selection (the unit-preservation step) ---
@@ -1138,7 +1407,7 @@ distant hop can survive. This makes a static `W-D0` win **more** likely than a
 traversal-ordered design would, and that is stated here, before measurement, so
 the outcome cannot later look like a moved goalpost.
 
-### 10.4 `G-N4J` — Neo4j-native GraphRAG reference
+### 10.4 `G-N4J-canon` and `G-N4J-native` — Neo4j-native GraphRAG reference
 
 **Labelled, everywhere it appears: `vendor-native / LLM-derived graph`.** Its
 extracted graph is never treated as ground truth, and it is never used to
@@ -1148,20 +1417,93 @@ Built with `neo4j-graphrag`'s `SimpleKGPipeline` / KG Builder as close to its
 supported intended configuration as practical. Frozen in F5-S before any arm
 runs, and hashed:
 
+**Two vendor arms, not one (corrected in R2).** Because native file loading
+covers PDF only (§4.2), the vendor comparison splits:
+
+| Arm | Ingestion | Corpus scope | Role |
+|---|---|---|---|
+| `G-N4J-canon` | vendor extraction + vendor retriever over **Canonical chunks** | **full corpus, all formats** | **the primary vendor comparison** |
+| `G-N4J-native` | vendor loader + vendor splitter + vendor extraction + vendor retriever | **PDF subset only** | scoped diagnostic: the parsing/chunking delta |
+
+Revision 1 made the raw native pipeline the headline vendor arm. It cannot be,
+because it cannot read two of the three corpus formats. `G-N4J-canon` carries H6;
+`G-N4J-native` supplies the parsing component of H6's decomposition on the subset
+where it is measurable, and every `G-N4J-native` number is labelled **PDF-scoped**
+wherever it appears. The corpus authors a declared PDF subset at every tier and
+publishes, per tier, the subset's document and chunk counts and the set of
+questions whose required evidence lies wholly inside it.
+
+**Frozen configuration** (every value materialized from the pinned library per
+§5.4 — no entry may read "library default"):
+
 | Frozen | Value |
 |---|---|
 | extraction LLM | one named model + version, `temperature = 0` |
-| extraction prompt | the library's default template, recorded verbatim |
+| extraction prompt | the library's template **as shipped by the pinned version**, copied verbatim into the contract |
 | schema | the **frozen backbone entity types and predicate vocabulary** (§7.2) |
-| splitter | the library's default, its config recorded |
+| splitter | the pinned version's splitter with its size and overlap **written out explicitly** |
 | embeddings | **the shared adapter** (§6.2) — `gemini-embedding-2`, 1536-d, same templates; Neo4j generates nothing |
-| retriever | `VectorCypherRetriever` with the library's default traversal expansion |
-| budgets | the same `K`, `C_max`, `F_max` and authority predicate as every other arm |
+| graph labels | the pinned version's node and relationship label spellings, recorded and asserted by a post-build conformance test |
+| retriever | `VectorCypherRetriever` with the **frozen `retrieval_query` below** |
+| budgets | the same `K`, `C_max`, `F_max`, `e_max`, `M_max` and authority predicate as every other arm |
+
+**The frozen retrieval query (`stage11_vendor_retrieval_query_v1`).** Revision 1
+said "the library's default traversal expansion". No such default exists:
+`VectorCypherRetriever` executes whatever Cypher it is given after the search
+step, and supplying none means no traversal at all. The query is therefore ours,
+frozen and hashed:
+
+```cypher
+// $eligible_revision_ids, $m_max, $c_max are bound per question.
+// Label spellings are materialized from the pinned neo4j-graphrag version
+// (§5.4) and asserted by the post-build conformance test.
+WITH node AS seedChunk, score AS seedScore
+MATCH (e0)-[:FROM_CHUNK]->(seedChunk)
+WITH seedChunk, seedScore, collect(DISTINCT e0) AS seedEntities
+UNWIND seedEntities AS e
+MATCH path = (e)-[rel*1..$m_max]-(m)
+WHERE ALL(r IN rel WHERE type(r) <> "FROM_CHUNK")
+WITH seedScore, path, relationships(path) AS rels, m
+MATCH (m)-[:FROM_CHUNK]->(evidence)
+WHERE evidence.document_revision_id IN $eligible_revision_ids   // authority INSIDE
+WITH evidence, seedScore, length(path) AS hop, rels
+ORDER BY hop ASC, seedScore DESC, evidence.chunk_id ASC
+WITH evidence, min(hop) AS hop, max(seedScore) AS seedScore,
+     head(collect(rels)) AS path_rels
+RETURN evidence.chunk_id             AS chunk_id,
+       evidence.source_text          AS source_text,
+       evidence.document_revision_id AS document_revision_id,
+       hop                           AS hop,
+       seedScore                     AS seed_score,
+       [r IN path_rels | type(r)]    AS path_predicates
+LIMIT $c_max
+```
+
+**Exactly what is vendor-provided versus ours:**
+
+| Vendor-provided (`neo4j-graphrag`, pinned) | Ours (frozen, hashed) |
+|---|---|
+| schema-guided LLM extraction, its prompt and output parser | the schema handed to it; the LLM and its version |
+| the text splitter and the chunk writer | the explicit size and overlap values; the Canonical-chunk substitution in `G-N4J-canon` |
+| the graph writer and its label conventions | the conformance assertion that those labels exist as frozen |
+| `VectorCypherRetriever` mechanics: parameter binding, Cypher execution, record mapping | the `retrieval_query` above; `top_k`; the eligibility predicate and its placement; hop, fan-out and per-edge caps; final-`K` assembly; score separation; tie-break |
+| the vector index implementation | **not used in the primary benchmark** — see the deviation below |
+
+**Declared deviation from stock, and why it is unavoidable.** Two project-wide
+rules bind every arm: authority filtering happens *inside* the ranking query, and
+the primary benchmark is exact rather than approximate. Neo4j's vector index
+offers neither a pre-filter nor exact search, so the vendor arm's seed step
+performs **exact cosine over the authority-eligible chunk set** and passes the
+result into the vendor retriever, instead of calling the vendor's index search.
+This makes the vendor arm *less* stock than a production deployment would be, in
+a direction that removes two confounds rather than adding one. It is recorded
+here, repeated in every vendor scorecard, and it means no Stage 11 result may be
+quoted as "what you get out of the box".
 
 **Giving the vendor arm the backbone schema is a deliberate concession, and it is
 parity, not leakage.** `G-SG` is built from the same frozen predicate vocabulary;
-withholding it from `G-N4J` would measure schema discovery, not retrieval. Neither
-arm receives evaluator truth, required/forbidden facts, expected chains or
+withholding it from the vendor arms would measure schema discovery, not
+retrieval. Neither arm receives evaluator truth, required/forbidden facts, expected chains or
 `elaboration_reason` tags.
 
 **Gate X — extraction quality and repeatability, measured before any `G-N4J`
@@ -1170,13 +1512,26 @@ retrieval claim.** Against the SRS, restricted to SRS-visible channels
 outside the SRS and are reported separately as *vendor-only extractions*, which is
 where the vendor arm can legitimately exceed the deterministic arms:
 
-| Measure | Definition |
-|---|---|
-| `relation_precision` / `recall` / `f1` | against the SRS under a frozen matching rule (normalized subject, predicate, object; direction significant) |
-| `direction_accuracy` | of matched relations, the fraction with the same direction |
-| `entity_resolution_precision` | distinct SRS entities not merged; `CTL-114` vs `CTL-114A` never merged |
-| `vendor_only_relation_count` | extracted relations with no SRS counterpart, sampled and human-adjudicated (100 per tier) into *correct prose-only* / *incorrect* |
-| `extraction_repeatability` | 3 runs on a frozen stratified 10 % chunk sample: accepted-relation-set Jaccard, plus the *same-output/different-outcome* vs *different-output* split |
+**Machine-checked exhaustively versus human-adjudicated by sample (R3).** Gate X
+is split on the same principle as Gate Q2: anything a machine can decide exactly
+is decided exhaustively by code, and human attention is spent only on semantics,
+direction and referent.
+
+| Measure | Definition | Checked by |
+|---|---|---|
+| `relation_precision` / `recall` / `f1` | against the SRS under a frozen matching rule (normalized subject, predicate, object; direction significant) | **machine, 100 %** |
+| `direction_accuracy` | of relations matched to the SRS, the fraction with the same direction | **machine, 100 %** |
+| `entity_resolution_precision` | distinct SRS entities not merged; `CTL-114` vs `CTL-114A` never merged | **machine, 100 %** |
+| `span_resolution_validity` | every extracted relation's cited span resolves into a real chunk with a matching SHA | **machine, 100 %** |
+| `predicate_vocabulary_conformance` | predicate is in the frozen vocabulary | **machine, 100 %** |
+| `extraction_repeatability` | 3 runs on a frozen stratified 10 % chunk sample: accepted-relation-set Jaccard, plus the *same-output/different-outcome* vs *different-output* split | **machine, 100 %** of the sample |
+| `vendor_only_relation_correctness` | relations with no SRS counterpart, judged *correct prose-only* vs *incorrect* | **human**, 25-packet Phase-1 block under §11.1, expansion only under T-H |
+
+The human dimension is the only one that cannot be mechanized: a relation with no
+SRS counterpart is either a genuine prose-only extraction the deterministic rules
+could not reach — the vendor arm's legitimate advantage — or a hallucination, and
+only a reader of the cited span can say which. It is issued as §11.1a packets,
+identically to Gate Q2's.
 
 **Gate X has no pass/fail threshold and blocks nothing.** It supplies the
 denominators that make H6's decomposition possible. Its binding effect is
@@ -1185,31 +1540,35 @@ shows extraction recall is comparable, and a `G-N4J` win may not be attributed t
 the vendor retriever unless `vendor_only_relation_count` and `G-N4J-canon`
 together say so.
 
-### 10.5 `G-N4J-canon` — the parsing/extraction separator
+### 10.5 Decomposition: separating parsing from extraction from retrieval
 
-`G-N4J`'s pipeline changes **five** things at once relative to `G-SG`: parser,
+A raw vendor pipeline changes **five** things at once relative to `G-SG`: parser,
 chunker, extractor, graph shape and retriever. `G-N4J-canon` runs the vendor's
 extractor and retriever over **Canonical chunks** (the frozen parse, the frozen
-chunker, the frozen chunk vectors), holding parsing constant.
+chunker, the frozen chunk vectors), holding parsing and chunking constant — and
+it carries H6, because it is the only vendor arm that can read the whole corpus.
 
 ```
 G-SG            canonical parse | canonical chunks | deterministic SRS | custom retriever
-G-N4J-canon     canonical parse | canonical chunks | vendor extraction | vendor retriever
-G-N4J           vendor parse    | vendor chunks    | vendor extraction | vendor retriever
+G-N4J-canon     canonical parse | canonical chunks | vendor extraction | vendor retriever   [full corpus]
+G-N4J-native    vendor parse    | vendor chunks    | vendor extraction | vendor retriever   [PDF subset]
 ```
 
-`G-N4J-canon − G-SG` isolates extraction + retriever. `G-N4J − G-N4J-canon`
-isolates parsing and chunking. Neither difference is interpretable without the
-other, which is why `G-N4J-canon` is **core whenever sub-experiment P shows
-material parser divergence** and diagnostic otherwise.
+`G-N4J-canon − G-SG` isolates extraction plus retriever, over the full corpus.
+`G-N4J-native − G-N4J-canon`, **read on the PDF subset only and on the questions
+whose required evidence lies wholly inside it**, isolates parsing and chunking.
+`G-N4J-canon` is core unconditionally in R2; `G-N4J-native` is the scoped
+diagnostic. A parsing claim may never be generalized from the PDF subset to the
+`docx` and `pptx` corpus, and the scorecard prints the subset size beside it.
 
 **Cross-parser evidence attribution (a measurement problem, not a detail).** The
-evaluator scores Canonical `chunk_id`s. `G-N4J`'s evidence is vendor chunks, which
-do not exist in Canonical. Attribution rule, frozen before measurement: a vendor
+evaluator scores Canonical `chunk_id`s. `G-N4J-native`'s evidence is vendor
+chunks, which do not exist in Canonical (`G-N4J-canon` retrieves Canonical chunks
+directly and needs no attribution step). Attribution rule, frozen before measurement: a vendor
 chunk maps to every Canonical chunk with which it shares **≥ 50 % of that
 Canonical chunk's characters**, by span alignment on the normalized source text.
 A vendor chunk mapping to nothing increments `unattributable_evidence_count`. A
-`G-N4J` result whose unattributable rate exceeds **0.10** on a question is
+A `G-N4J-native` result whose unattributable rate exceeds **0.10** on a question is
 reported with an explicit attribution caveat, and the rate is published per tier.
 This rule can only *lose* credit for the vendor arm where alignment fails, never
 invent it, and the direction of that bias is recorded in §17.
@@ -1240,14 +1599,21 @@ between `W-D0` and `W1-R`.
 
 ```
 W1-R(q):
-  # --- Stage A: neighbourhood selection (which page/facet deserves attention) ---
+  # --- Stage A0: INITIAL SEEDS (R2: path-free by construction) ---
+  # Only query-to-artifact signals. No path signal participates here, so a seed
+  # can never be justified by reachability from a seed.
   signals, all preregistered, combined by frozen rank fusion (RRF, k0 = 60):
      a. cos(Q, facet_r.embedding)          # enriched facet semantics
-     b. Wiki path: facets reachable in <= M_max hops from an A-seed
-     c. source anchor / exact identifier match on page_key
-     d. source-backed statement match: statement subject or object matches a
+     b. source anchor / exact identifier match on page_key
+     c. source-backed statement match: statement subject or object matches a
         query identifier or normalized phrase
-  A = top_P_seed(fused)                    # P_seed = 5, unchanged from W-D0
+  A0 = top_P_seed(fused)                   # P_seed = 5, unchanged from W-D0
+  record seed_rank_source per seed (a | b | c)
+
+  # --- Stage A1: PATH EXPANSION (structurally qualified, not re-seeded) ---
+  reached = facets reachable from A0 in <= M_max hops, per W-D0 Stage A'
+  # reached facets enter through the navigation lane only; they are NEVER
+  # re-fused into A0 and never displace an A0 seed
 
   # --- Stage B: evidence selection inside the reached neighbourhood ---
   for each structurally qualified facet f:
@@ -1256,6 +1622,15 @@ W1-R(q):
       take at most c_max;  enforce p_max per page
   # --- Stage C: final K, with r_nav reserved (identical to W-D0) ---
 ```
+
+**The Revision 1 circularity, named.** R1 listed "facets reachable in <= M_max
+hops from an A-seed" as one of the signals that *produced* `A`. `A` cannot be an
+input to its own selection. R2 splits the stage: `A0` is chosen by
+query-to-artifact signals alone, and path reachability is an *expansion* of `A0`,
+never a criterion for membership in it. This makes `W1-R` Stage A structurally
+identical to `W-D0` Stage A followed by Stage A' (§10.3), which is also what makes
+`W-D0-rev` a clean control: the two arms differ in signals and selector, not in
+the shape of the decision.
 
 **Stage B's score is a local selector inside a structurally qualified lane, not a
 global ranking signal.** It is never compared across facets, never used to admit a
@@ -1294,10 +1669,129 @@ no earlier stage's outcome sets a threshold here.
 ### 11.1 Population and timing
 
 Evaluated on the **frozen, as-built** `W1-R` enrichment artifact, per tier, after
-the compile and **before any `W1-R` retrieval runs**. Adjudication sample: 120
-accepted statements + 80 aliases + 60 derived links per tier, drawn by a frozen
-stratified sampling frame (by page type, facet size, and revision status) declared
-before the compile.
+the compile and **before any `W1-R` retrieval runs**.
+
+**Machine-checked exhaustively versus human-adjudicated by sample (reworked in
+R2).** Revision 1 sent a fixed 260 items per tier to human review, including
+several properties a machine can decide exactly. R2 splits the gate by what kind
+of judgment each dimension actually needs:
+
+| Checked | Dimensions | Population |
+|---|---|---|
+| **Machine, exhaustive, no human** | citation span resolves and lies inside a member chunk; chunk SHA matches; revision scope; malformed triples; predicate-vocabulary conformance; alias **span validity**; unsupported derived links; accepted-set Jaccard across repeats; direction *consistency* across repeats | **100 %** of statements, aliases and links, every tier |
+| **Human, sampled** | statement **semantic accuracy**; statement **direction correctness**; alias **referent correctness** | sequential stratified sample (below) |
+
+The split follows a rule this project already learned: span validity is not
+semantic correctness, citation validity is not claim correctness, and alias span
+validity is not alias referent correctness. The first of each pair is mechanical
+and must never consume adjudication effort; the second is irreducibly a human
+judgment.
+
+**Sequential stratified sampling (retuned in R3 to a ~100-item Phase 1).** Strata:
+page type × facet-size band × revision status, allocated proportionally. All of
+this is frozen before the compile, so no stopping decision can be made after
+seeing which way the numbers lean.
+
+**Phase 1 — the provisional screen, `S1` only.**
+
+| Gate | Human dimensions | Initial sample | Phase-1 total |
+|---|---|---|---|
+| Q2 | semantic accuracy, direction correctness, referent correctness | **25 each** | **75** |
+| X | vendor-only relation correctness | **25** | **25** |
+| | | | **100 items** |
+
+**The stopping rule, and the declared uncertainty band.** For a dimension with
+threshold `t`, compute the two-sided 95 % Wilson interval on the observed
+accuracy after each block:
+
+- interval lies **entirely above** `t` → `provisional_pass`, stop;
+- interval lies **entirely below** `t` → **FAIL**, stop — decisive, and no further
+  adjudication is spent on a dimension already failed;
+- interval **contains** `t` → the result is inside the uncertainty band, and the
+  dimension is recorded `undecided`. Expansion is **not** automatic: it draws a
+  further block of 25 only under trigger **T-H** (§1.7).
+
+**What 25 items can and cannot establish, stated before the run.** At a 0.90
+threshold a perfect 25-item sample yields a two-sided 95 % Wilson lower bound of
+about 0.866, and at 0.95 it is lower still. **A 25-item block can therefore fail a
+dimension decisively but cannot certify one.** Certification needs roughly 40
+perfect items at `t = 0.90` and roughly 60 at `t = 0.95`. Phase 1 deliberately buys
+the cheaper half of that: it detects a bad enrichment layer immediately, and it
+defers the cost of proving a good one until something depends on the proof.
+
+**Certification is demand-driven (the R3 rule).** A provisional verdict is expanded
+to a certifying sample **only when the arm it governs is load-bearing for the
+Strategic Decision Checkpoint's recommendation** (§1.8):
+
+| Situation at the checkpoint | Q2 action |
+|---|---|
+| `W1-R` does not clear `W-D0` | none — nothing rests on Q2; the provisional numbers are published *as provisional* and H4 is unsupported regardless |
+| `W1-R` clears, and D-3 is the favoured class | **expand to certification** (≈ 40 / 60 items per dimension) before D-3 may be recommended |
+| `W1-R` clears but the checkpoint favours another class | record the ambiguity; expand only if T-H's load-bearing test is met |
+
+This is the fast path applied to adjudication: pay for proof exactly where a
+decision depends on it, and nowhere else. Phase-1 hard cap is **200 items across
+both gates**; beyond that, expansion is a checkpoint decision with a named
+recommendation at stake, never an automatic spend.
+
+**Other tiers.** `S0` and `S2` adjudication exists only if T-C built those tiers,
+and then only as a 25-item confirmation block per dimension whose sole job is to
+contradict or not contradict the `S1` verdict.
+
+### 11.1a Adjudication packets — the reviewer never reads the corpus (new in R3)
+
+Every human judgment is issued as a **self-contained packet**. A reviewer who has
+to open a source document to decide an item is a reviewer being asked to do the
+machine's job, and the resulting judgment is slow, inconsistent and unauditable.
+
+```
+packet_id
+gate                  Q2 | X
+dimension             semantic_accuracy | direction | referent
+item_kind             statement | alias | derived_link | vendor_relation
+candidate_rendered    the assertion in words, e.g.
+                      "CTL-114  --satisfied_by-->  OBL-207"
+cited_span_text       the cited span, verbatim
+cited_span_locator    chunk_id, start_char, end_char
+context_before        <= 400 chars from the SAME chunk, clipped to a sentence start
+context_after         <= 400 chars from the SAME chunk, clipped to a sentence end
+container_identity    facet_id, page_key, display_title, page_type
+                      (entity_key + entity_type for Gate X items)
+revision              document_revision_id, version_label, revision_number,
+                      heading_path of the cited chunk
+sibling_titles        the other assertions in the same facet, titles only,
+                      so duplication and contradiction are visible
+question              ONE judgment, stated as a question
+options               correct | incorrect | cannot_decide_from_packet
+notes                 free text, optional
+```
+
+**Rules, all frozen with the rubric:**
+
+1. **One judgment per packet.** Never "rate these three properties".
+2. **`cannot_decide_from_packet` is a first-class outcome**, not a failure to
+   comply. Its rate is a reported metric, `packet_insufficiency_rate`. If it
+   exceeds **0.10** for a dimension, the *packet generator* is fixed and those
+   items are re-issued — a packet-design defect must never be recorded as an
+   enrichment-quality defect.
+3. **Blind.** A packet never reveals which arm, run or compile produced the item,
+   whether it was machine-accepted, or any evaluator truth. Presentation order is
+   randomized with a frozen seed.
+4. **Direction packets are forced-choice.** They show the assertion *and* its
+   reverse and ask which the span supports, with *neither* available. Direction is
+   the sharpest failure class, and "is this correct?" invites assent where a
+   forced choice does not.
+5. **Referent packets** show the alias, the page identity it was attached to, and
+   the competing same-type identities within the same document — which is the only
+   context in which a referent error is visible.
+6. **Double-adjudication.** A frozen 15 % of packets are issued twice to different
+   reviewers; inter-rater agreement is reported beside every human metric. A
+   dimension whose agreement falls below **0.80** has its rubric — not its
+   result — revisited, and that fact is published.
+
+Packets are generated mechanically from frozen artifacts, hashed as a set, and
+committed, so any judgment can be re-examined later against exactly what the
+reviewer saw.
 
 ### 11.2 Dimensions, metrics and thresholds (all frozen before measurement)
 
@@ -1352,7 +1846,8 @@ to fail. That is a reason to *expect* a possible failure, not a reason to lower 
 bar. **If Gate Q2 fails on any threshold, every `W1-R` and `Agent-W1-R` number is
 reported as `NON-QUALIFYING / DIAGNOSTIC` — even if `W1-R` beats every other
 arm** — and the failing dimension is named in every table where those numbers
-appear. The stage does not abort; `W-D0`, `G-SG`, `V` and `G-N4J` are unaffected,
+appear. The stage does not abort; `W-D0`, `G-SG`, `V` and the vendor arms are
+unaffected,
 and the §9.6 factorial still runs, because the mechanism question is separable
 from the artifact-quality question.
 
@@ -1399,7 +1894,41 @@ together**, because `U ≤ R` by construction here.
 | `final_k_admission_source_mix` | counts by `selection_reason` |
 | `required_fact_contribution_by_admission_source` | which lane actually delivered the answer |
 | `candidate_recall_before_final_k` | `required_evidence_unit` recall over the pre-`K` candidate set — **the reachability metric H3 is stated on** |
-| `unattributable_evidence_count` | `G-N4J` only (§10.5) |
+| `traversal_depth_achieved` | Max hops walked along **one contiguous path**, per question (R2) |
+| `chain_complete_single_walk` | 1 iff the expected chain is covered by one contiguous walk from one seed (R2) |
+| `chain_complete_multiseed` | 1 iff the chain is covered only by combining ≥ 2 disjoint seed neighbourhoods (R2) |
+| `seeds_contributing_to_chain` | How many distinct seeds the chain coverage required (R2) |
+| `unattributable_evidence_count` | vendor arms only (§10.5) |
+
+**Per-link-class Wiki diagnostics (new in R2).** Every navigation metric above is
+*also* reported broken down by link class — `structural`, `exact_anchor`,
+`typed_source_backed`, `derived_model` — because an aggregate hides exactly the
+thing `W1-R` is being asked to justify. The model-derived layer is the only part
+of `W1-R` that costs LLM calls, adjudication and a qualification gate, so it must
+be shown to earn its place:
+
+| Metric | What it answers |
+|---|---|
+| `links_exposed_by_class`, `links_traversed_by_class` | supply and use, per class |
+| `unique_destinations_by_class` | destinations reachable **only** via that class — the class's exclusive contribution to reach |
+| `model_derived_unique_destination_count` | how many facets the enrichment layer alone made reachable |
+| `required_fact_contribution_by_link_class` | which class delivered each required fact |
+| `required_fact_contribution_of_model_derived_links` | **the headline number for H4**: required facts that arrived only through a model-derived link |
+| `derived_link_share_of_structural_lane` | how much of the reserved lane the enrichment layer consumed |
+| `derived_link_traversal_precision` | of traversed derived links, the fraction whose destination contributed any candidate |
+
+If `model_derived_unique_destination_count` is near zero, or if
+`required_fact_contribution_of_model_derived_links` is near zero while `W1-R`
+still beats `W-D0`, the gain came from the revised retrieval policy rather than
+from enrichment — which `W-D0-rev` then confirms, and H4 is reported as false in
+the specific sense of §18.
+
+**Multi-seed assembly is not traversal (R2).** `complete_chain_represented` is
+always reported split into `chain_complete_single_walk` and
+`chain_complete_multiseed`. A deep-chain result assembled from two or more seed
+neighbourhoods is a finding about **seeding plus fusion**, not about six-hop
+navigation, and any prose claiming traversal depth must cite
+`traversal_depth_achieved`, never the hop budget `M_max`.
 
 The two most important rows are `candidate_recall_before_final_k` and
 `final_k_admission_source_mix`: together they say whether a structured arm failed
@@ -1551,6 +2080,18 @@ Efficiency ratios are reported as ratios, never folded into quality:
 
 ### 13.8 Run counts
 
+**Phase 1 (R3) — the pilot, and the only agent runs initially approved:**
+
+| Block | Runs |
+|---|---|
+| `Agent-V`, `Agent-W-D0`, `Agent-G-SG` × the preregistered 10-question pilot subset × `S1`, single pass | **30** |
+
+The pilot produces exactly one determination: whether trigger **T-D** fires
+(§1.7). It is not a Gate A reading and may not be reported as one.
+
+**The full campaign below runs only if T-D fires**, under the same F6 contract,
+frozen before the pilot:
+
 | Block | Runs |
 |---|---|
 | primary: 4 core agent arms × 12-question agent subset × `S1`, `S2` | 96 |
@@ -1563,7 +2104,9 @@ Efficiency ratios are reported as ratios, never folded into quality:
 
 Tier order `S1 → S0 → S2`, with a cost checkpoint between each: `S1` alone yields
 a readable primary result, `S0` makes the richness interaction readable, `S2`
-tests the strongest claim last. Because every contract is frozen before the first
+tests the strongest claim last. In R3 the `S0` and `S2` blocks additionally
+require T-C to have built those tiers; if it has not, the campaign is `S1`-only
+and says so. Because every contract is frozen before the first
 run, run order cannot bias any arm. Runs are **paired and interleaved** by
 question so provider-side drift cannot align with an arm.
 
@@ -1591,6 +2134,13 @@ across agent arms; identical budgets recorded per arm; metric completeness (§12
 | 8 | **A-attrib** attribution | is it navigation, or payload / exact-match / ordering? | the advantage is reattributed, not discarded |
 | 9 | **R** robustness | does it survive repeats and the covariate checks? | the claim is reported as unreplicated |
 
+**Phase-1 gate reading (R3).** At Phase 1 the readable gates are P0, P1, X
+(machine part + provisional screen), Q2 (machine part + provisional screen), S and
+N. Gate A is **not** readable from a 30-run pilot and is not read; the pilot
+produces only the T-D determination. Gates A-attrib and R become readable only if
+T-D fires and the full campaign runs. A gate that Phase 1 cannot read is recorded
+as `not_read_phase1`, never as passed.
+
 Gate S requires no arm to win. Gate A's bar, frozen before any run, stated in
 question counts first: on the 12-question agent subset, at `S1` **or** `S2`, a
 structured agent arm must improve on **≥ 3 of 12** questions, regress on **≤ 1**,
@@ -1616,7 +2166,8 @@ run; a mismatch **aborts the run**.
 | **F2** — corpus | source bytes + per-file SHA-256, `generation_manifest.json`, chunker version + `chunking_config_hash`, `canonical_evidence_index_v1` covering hash | before embedding | any post-hoc corpus edit voids the stage |
 | **F3** — benchmark truth | facts, questions, query text, intents, `as_of_date`, required/forbidden facts, expected chains, answer variants, `U`, `K`, the tier-invariant slice hash | before embedding | **no question or truth change after any arm result is seen, ever** |
 | **F4** — embeddings | `model_id`, dimensionality, task roles, query/document templates, normalization policy, per-representation input rules, input manifest, vector manifest | before any arm runs | re-embedding in a measured stage is a hard failure |
-| **F5-P** — projections | SRS, `G-SG` graph, `W-D0` wiki, `W1-R` enrichment artifact, Neo4j import artifacts + rebuild hash, `G-N4J` extraction config and its output graph | before any arm runs | a projection rebuilt mid-campaign is a different experiment |
+| **F0** — runtime pin (new in R2) | Neo4j image tag **and digest**, `neo4j-graphrag` and driver versions, Python version, extraction-LLM version, and every materialized library default (§5.4) | **before any store is built** | a floating default silently changes arm behaviour; result not reproducible |
+| **F5-P** — projections | SRS, `G-SG` graph, `W-D0` wiki, `W1-R` enrichment artifact, Neo4j import artifacts + rebuild hash, the 15 store manifests and their `store_key`s (§5.1), vendor extraction config and output graphs | before any arm runs | a projection rebuilt mid-campaign is a different experiment |
 | **F5-S** — static configuration | every arm's retrieval config; `P_seed`, `M_max`, `c_max`, `p_max`, `e_max`, `r_nav`, `C_max`, `F_max`, `s`, `decay`, RRF `k0`, Wiki-native selector weights; tie-break; `K`; Gate P0/P1/X/Q2/S/N definitions and thresholds | before any arm runs | per-question tuning; result void |
 | **F6** — agent contract | tool names, signatures, caps, ordering semantics; prompt bytes; every budget; output schema; validation rules; Gates A / A-attrib / R with their margins and order | **before *any* Stage-11 measured result is observed, static included** | the agent contract could be shaped by static outcomes; result void |
 | **F7** — evaluation code | the scorer, its import identity, the metric definitions | before any arm runs | metrics changed after seeing results |
@@ -1637,29 +2188,31 @@ boundary and committed artifacts.
 | Stage | Scope | Key artifacts | Freeze on exit |
 |---|---|---|---|
 | **11.0** | this design | `docs/STAGE11_KNOWLEDGE_INTERFACE_BENCHMARK_PLAN.md` | — (owner review) |
-| **11A.0** | F1 contracts: derivation rules, identity lanes, backbone, predicate vocabulary, task taxonomy, question schema | `contracts/stage11_derivation_v1.json`, `stage11_backbone_v1.json`, `stage11_questions_schema_v1.json` | **F1** |
-| **11A.1** | corpus authoring + generation `S0`/`S1`/`S2`; Canonical parse; chunking with the frozen config; §7.6 screens | `fixtures/stage11/<tier>/`, `generation_manifest.json`, `reports/stage11_corpus_profile.json`, screen reports | **F2, F3** |
+| **11A.0** | F1 contracts: derivation rules, identity lanes, backbone, predicate vocabulary, task taxonomy, question schema; **F0 runtime pin and default materialization (§5.4)** | `contracts/stage11_derivation_v1.json`, `stage11_backbone_v1.json`, `stage11_questions_schema_v1.json`, `stage11_runtime_pin_v1.json` | **F0, F1** |
+| **11A.1** | corpus authoring for **`S1` only** (R3); Canonical parse; chunking with the frozen config; §7.6 screens. The `S0`/`S2` *specifications* are frozen here with `S1` so the ladder stays tier-invariant, but their documents are generated only under T-C | `fixtures/stage11/S1/`, `generation_manifest.json`, `reports/stage11_corpus_profile.json`, screen reports | **F2, F3** |
 | **11A.2** | SRS derivation; table records; evidence index | `canonical_relation_candidates_v1.json` + hashes, SRS coverage report | part of **F5-P** |
-| **11A.3** | embedding adapter, templates, guards, batch/retry, §6.5 stability + integrity checks, fake provider, all representations | input + vector manifests, probe report | **F4** |
+| **11A.3** | embedding adapter, templates, guards, batch/retry, §6.5 stability + integrity checks, fake provider, all representations — **`S1` vectors only** | input + vector manifests, probe report | **F4** |
 | **11A.4** | Neo4j deployment; `G-SG` and `W-D0` projections; import + rebuild-hash test; **Gate P0**, then **Gate P1** | projection reports, parity report, ANN-recall report | **F5-P** (partial) |
-| **11A.5** | `W1-R` enrichment compile + **Gate Q2** (incl. adjudication) | enrichment artifact + hash, `reports/stage11_gateq2_scorecard.md` | **F5-P** (complete) |
-| **11A.6** | `G-N4J` build + **Gate X**; sub-experiment **P** (parser comparison) | vendor graph + config hash, `reports/stage11_gatex_extraction.md`, `reports/stage11p_parser_comparison.md` | — |
+| **11A.5** | `W1-R` enrichment compile (`S1`) + **Gate Q2**: exhaustive machine checks, then the **75-packet provisional screen** (§11.1, §11.1a) | enrichment artifact + hash, packet set + hash, `reports/stage11_gateq2_scorecard.md` | **F5-P** (complete) |
+| **11A.6** | `G-N4J-canon` build (`S1`) + **Gate X** machine checks + the **25-packet screen**. `G-N4J-native` and sub-experiment **P** are **deferred to T-E** | vendor graph + config hash, packet set, `reports/stage11_gatex_extraction.md` | — |
 | **11A.7** | **the complete agent contract is written and frozen here**, before any measured result | `contracts/stage11_agent_contract_v1.json` + `contract_sha256` | **F5-S, F6, F7** |
-| **11A.8** | static measured run: every core arm + §9.6 factorial × 3 tiers. **The first measured number in Stage 11** | `reports/stage11a_static_results.json`, scorecard, §12.2 diagnostics | — |
+| **11A.8** | **Phase-1 static run (R3): the six §1.6 arms at `S1` only.** No factorial, no ladder. **The first measured number in Stage 11** | `reports/stage11a_static_results.json`, scorecard, §12.2 diagnostics | — |
 | **11B.0** | agent harness implementing the already-frozen F6 contract: tool servers, budget meters, validators, pairing/interleaving, audit tests, dry run **on the practice set only** | harness tests, contract-conformance test against `contract_sha256`, fairness-matrix audit | — |
-| **11B.1** | primary agent campaign — 192 runs, `S1 → S0 → S2`, paired and interleaved | `reports/stage11b_agent_results.json`, per-run transcripts with tool-call ledgers | — |
-| **11B.2** | conditional follow-ups, each run iff its trigger fired | per-follow-up report naming the trigger | — |
-| **11B.3** | analysis: gates in declared order, attribution, confound audit, decision record | `docs/STAGE11_KNOWLEDGE_INTERFACE_DECISION.md`, findings page | decision frozen |
+| **11B.1p** | **Agent pilot (R3): 30 runs** — `Agent-V`, `Agent-W-D0`, `Agent-G-SG` × the preregistered 10-question subset × `S1`, single pass, paired and interleaved | `reports/stage11b_pilot_results.json`, per-run transcripts with tool-call ledgers | — |
+| **11C.0** | **Strategic Decision Checkpoint (§1.8)** — recommendation class + ambiguity register + trigger determinations | `docs/STAGE11_STRATEGIC_CHECKPOINT.md` | checkpoint record frozen |
+| **11D.*** | **conditional only** — each block runs iff its §1.7 trigger fired *and* the checkpoint recorded which recommendation it could flip: T-C ladder, T-A separators, T-D full agent campaign, T-E vendor/parser, T-F factorial, T-G second model, T-H adjudication expansion, T-I repeats | per-block report naming the trigger and the ambiguity it resolves | — |
+| **11E.0** | final analysis: gates in declared order, attribution, confound audit, decision record | `docs/STAGE11_KNOWLEDGE_INTERFACE_DECISION.md`, findings page | decision frozen |
 
 **Proposed repository changes (not made yet).** New packages
 `src/ingestion_bench/source_relations/` (SRS derivation),
 `src/ingestion_bench/gemini_embeddings/` (adapter, templates, manifests, fake),
 `src/ingestion_bench/neo4j_substrate/` (schema, import, rebuild, parity),
 `src/ingestion_bench/stage11_graph/` (`G-SG`), `src/ingestion_bench/stage11_wiki/`
-(`W-D0`, `W1-R`), `src/ingestion_bench/stage11_vendor/` (`G-N4J`, `G-N4J-canon`,
-sub-experiment P), `src/ingestion_bench/stage11_benchmark/` (runner, evaluator,
-agent harness, tool servers); `fixtures/stage11/`; `contracts/stage11_*.json`; new
-Postgres tables prefixed **`edib_stage11_`** only; Neo4j databases `s11*` only.
+(`W-D0`, `W1-R`), `src/ingestion_bench/stage11_vendor/` (`G-N4J-canon`,
+`G-N4J-native`, sub-experiment P), `src/ingestion_bench/stage11_benchmark/`
+(runner, evaluator, agent harness, tool servers); `fixtures/stage11/`;
+`contracts/stage11_*.json`; new Postgres tables prefixed **`edib_stage11_`**
+only; Neo4j stores under `./neo4j_stores/<tier>_<family>/` only (§5.1).
 Reused **read-only and unmodified**: the chunker and `ChunkingConfig`, the Stage 7R
 registry/resolver, the Stage 7B.0 evaluator, the identifier regex, the
 fixture-determinism pattern. Explicitly **not modified**: every Stage-7B and
@@ -1679,7 +2232,7 @@ separator; each separator costs a scan or a small extra build, never a new corpu
 | # | The confound | Why it happens | Separator (already in the plan) |
 |---|---|---|---|
 | **1** | **`W1-R` = enriched artifacts **and** revised retrieval** | §8/§10 of the briefing define `W1-R` as both at once, so `W1-R − W-D0` is uninterpretable | `W-D0-rev` (new policy, old artifacts) and `W1-R-det` (new artifacts, old policy) are **core**, §9.1 |
-| **2** | **`G-N4J` = new parser + new chunker + new extractor + new graph shape + new retriever** | the vendor pipeline replaces the whole stack | `G-N4J-canon` holds parsing and chunking constant, §10.5; sub-experiment P measures the parser difference independently, §4.2 |
+| **2** | **A raw vendor pipeline = new parser + chunker + extractor + graph shape + retriever** | the vendor pipeline replaces the whole stack | `G-N4J-canon` holds parsing and chunking constant and is the primary vendor arm, §10.5; `G-N4J-native` and sub-experiment P measure the parsing difference on the PDF subset, §4.2 |
 | **3** | **Neo4j as substrate ∧ ANN as search** | moving arms to Neo4j while switching exact→approximate would mix storage with retrieval math | primary benchmark is **exact everywhere**; Gate P0 proves substrate parity; ANN is a separate preregistered Gate P1, §5.3 |
 | **4** | **eligibility expansion ∧ within-navigation selector** | the briefing's §11 describes them together | the 2×2 factorial with reservation on/off, §9.6 |
 | **5** | **facet embeddings ∧ page structure ∧ links** (the "does `W` just have richer payloads?" question) | `W`'s index entries carry more text per entry than `V`'s | `V+` embeds the **identical** facet payloads with no structure, §10.1; `Agent-V+` is the agent counterpart |
@@ -1749,7 +2302,8 @@ Embedding is a one-off and is not a constraint on this experiment.
 |---|---|---|
 | `W1-R` enrichment compile | ~7,840 facet compiles (340 + 1,700 + 5,800) | one pass, `temperature = 0` |
 | Gate Q2 repeatability | ~1,570 extra (10 % sample × 2 extra compiles) | |
-| `G-N4J` extraction | ~4,800 chunk extractions | one pass |
+| `G-N4J-canon` extraction | ~4,800 chunk extractions | one pass, full corpus |
+| `G-N4J-native` extraction | ~1,400 vendor-chunk extractions | one pass, PDF subset only |
 | Gate X repeatability | ~960 extra | |
 | **build total** | **~15,200 LLM calls** | |
 | agent campaign | **192 primary runs**, ≤ 40 calls each, ≤ 400 k input tokens each | hard stop 260 runs |
@@ -1757,10 +2311,39 @@ Embedding is a one-off and is not a constraint on this experiment.
 **Worst-case primary agent input tokens:** 192 × 400 k = **76.8 M** before prompt
 caching; realistically order **18–30 M** with caching and typical sub-40-call runs.
 
-**Human cost, which is not optional:** Gate Q2 adjudication is ~260 items per tier
-(780 total) and Gate X adjudication is 100 vendor-only relations per tier (300
-total). At the observed rate of this project's earlier adjudications this is the
-schedule's critical path, not the compute.
+**Phase-1 budget (R3), the number that actually gets approved:**
+
+| Item | Phase 1 (`S1` only) |
+|---|---|
+| Embedding tokens | ~1.5 M (one tier, all representations) |
+| `W1-R` enrichment compiles | ~1,700 + ~510 repeatability |
+| Vendor extractions | ~1,000 (`G-N4J-canon` only) + ~200 repeatability |
+| **Build LLM calls** | **~3,400** (versus ~15,200 for the full R2 design) |
+| Static arm runs | 6 arms × 52 questions, LLM-free |
+| Agent runs | **30**, ≤ 40 tool calls and ≤ 400 k input tokens each |
+| Worst-case pilot input tokens | 30 × 400 k = **12 M** before caching |
+| **Human adjudications** | **100 initial, 200 Phase-1 cap** |
+
+Everything beyond that is trigger-gated and separately approved at the checkpoint,
+so the initial commitment is roughly a fifth of the full design's build cost and a
+sixth of its agent cost.
+
+**Human cost, reworked in R2 and retuned in R3.** Every mechanical property is now machine-checked
+over 100 % of the population, and human judgment is spent only on semantics,
+direction and referent (§11.1). Under the sequential stratified rule:
+
+| Stage | Q2 | X | Total |
+|---|---|---|---|
+| **Phase 1 initial** | 75 (25 × 3 dimensions) | 25 | **100** |
+| Phase 1 hard cap | — | — | **200** |
+| Certification, if and only if T-H fires on a load-bearing arm | +≈ 45–105 | +≈ 35 | by checkpoint approval |
+| `S0`/`S2` confirmation, only if T-C built them | 25 × 3 per tier | 25 per tier | by checkpoint approval |
+
+Revision 1 committed to ~1,080 reviews by default; R2 made that a worst case of
+~1,010 with ~550 expected; **R3 makes the initial commitment 100.** Everything
+above it requires a named recommendation to be at stake. Adjudication is still the
+schedule's critical path, but the path now starts at a day of review rather than a
+month of it.
 
 **The single largest controllable cost is the `S2` `W1-R` compile (5,800 facets).**
 Owner decision O-7 (§19): compile `W1-R` at `S2` in full — recommended, because
@@ -1811,7 +2394,11 @@ H4 is **unevaluable**, not false, and is labelled so.
 Agent is **not larger** than the same arm's static advantage on the same 12
 questions at the same tier and the same `K`. The comparison is paired and
 question-matched; a structured arm that wins statically and wins no more under the
-Agent falsifies H5 even while winning.
+Agent falsifies H5 even while winning. **This test is read on the full campaign
+only.** At Phase 1
+the 30-run pilot can return *signal*, *no signal* or *harness defect*; "no signal"
+at pilot power is recorded as **H5 unevaluated**, never as H5 falsified, and the
+Phase-1 scorecard prints the power limitation beside it.
 
 **H6 (vendor comparison) is falsified as an attributable claim** if a
 `G-N4J − G-SG` difference exists that **cannot** be decomposed — i.e. Gate X shows
@@ -1843,7 +2430,17 @@ suggested at smaller scale, and nothing in the harness asserts against it.
 | **O-9** | Agent model and version for `11B`; second-model confirmation as a conditional? | owner choice; conditional follow-up recommended |
 | **O-10** | Sub-experiment P scope: `S0` only, or `S0` + a `S1` sample? | `S0` only unless P shows material divergence |
 | **O-11** | Blind `S1-B` replication by a second author — commissioned now or only on a positive result? | on a positive result, as a conditional (§17.2) |
-| **O-12** | Is the human adjudication load (~1,080 items) accepted as the schedule's critical path? | it must be accepted or Gates Q2 and X shrink, and the plan must say which |
+| **O-12** | **Reworked in R2.** Approve the machine/human split (mechanical properties checked exhaustively; humans judge only semantics, direction and referent) **and** the sequential stratified sampling rule of §11.1, in place of R1's fixed ~1,080 manual reviews? | approve; expected load ~550 items, worst case 1,010, and the worst case is reached only where the evidence genuinely demands it |
+| **O-13** | **New in R2.** Neo4j isolation: Community Edition with **physical store swapping** (15 volumes, one mounted at a time, `store_key` assertion), or Enterprise Edition with real multi-database? | **Community + store swapping.** It is executable today, needs no licence, and gives stronger isolation than a database boundary; the cost is serialized runs (§5.1) |
+| **O-14** | **New in R2.** Vendor scope: accept `G-N4J-canon` as the full-corpus vendor comparison carrying H6, with `G-N4J-native` reduced to a PDF-subset diagnostic? | accept — native file loading does not cover `docx`/`pptx`, so R1's full-corpus native arm was not executable (§4.2, §10.4) |
+| **O-15** | **New in R2.** Raise `M_max` from 3 to **6**, with a per-hop candidate quota, so that `T6` can be answered by genuine traversal rather than multi-seed assembly? | accept; multi-seed assembly is still reported, but under its own label, never as traversal depth (§9.5, §12.2) |
+| **O-16** | **New in R2.** `G-SG` path score: accept the structural formulation (seed score × ∏ decay × derivation-class weight × evidence support), with `G-SG[path-sem]` as the diagnostic that tests whether query relevance belonged in it? | accept; R1's `decay^hop` was a depth counter, not a structural signal (§10.2) |
+| **O-18** | **New in R3.** Approve the `S1`-only Phase 1 — six static arms, a 30-run Agent pilot, ~100 adjudications — with `S0`/`S2`, the factorials, the full Agent campaign, the parser study and second-model confirmation behind the §1.7 triggers? | approve; the null then terminates the experiment cheaply, and nothing is built that no decision depends on |
+| **O-19** | **New in R3.** Approve the §1.8 Strategic Decision Checkpoint, including the rule that a follow-on stage runs **only** if it could flip a recommendation class? | approve; this is the mechanism that keeps a fast path from silently becoming the full campaign |
+| **O-20** | **New in R3.** Approve demand-driven gate certification — Phase 1 buys a 25-item screen per dimension that can fail but not certify, and certification is purchased only for a load-bearing arm? | approve, with the §11.1 disclosure that a Phase-1 `provisional_pass` is never a published pass |
+| **O-21** | **New in R3.** Approve the §11.1a packet contract, including `cannot_decide_from_packet` as a first-class outcome and 15 % double-adjudication? | approve; the packet is what makes a 100-item budget defensible rather than merely small |
+| **O-22** | **New in R3.** Are the three pilot arms (`Agent-V`, `Agent-W-D0`, `Agent-G-SG`) and the 10-question pilot subset acceptable as **preregistered**, i.e. chosen before any static result is seen? | approve; choosing the pilot arm after seeing static results would make the pilot unfalsifiable |
+| **O-17** | **New in R2.** Accept the declared vendor deviation from stock — exact cosine over the authority-eligible set instead of the vendor index — given that it is forced by the authority and exact-retrieval rules? | accept, and accept that no Stage 11 number may be quoted as out-of-box behaviour (§10.4) |
 
 **Closed by owner instruction, not re-opened here:** the embedding binding —
 `gemini-embedding-2`, 1536-d, text-only, asymmetric query/document templates,
@@ -1898,12 +2495,91 @@ and authoritative thereafter (§6).
 | 17 | expected cost/runtime | §17.3 |
 | 18 | risks/confounds | §17.1–§17.2 |
 | 19 | falsification criteria per hypothesis | §18 |
-| 20 | Neo4j provides vs remains custom | §5.4 |
+| 20 | Neo4j provides vs remains custom | §5.5 |
+| 23 | Runtime version pinning (R2) | §5.4 |
 | 21 | parser/reference sub-experiment | §4.2 |
 | 22 | multi-variable change highlights | **§17.1** |
+| 24 | Decision-oriented fast path, Phase 1 (R3) | §1.6 |
+| 25 | Conditional triggers (R3) | §1.7 |
+| 26 | Strategic Decision Checkpoint (R3) | §1.8 |
+| 27 | Adjudication packet contract (R3) | §11.1a |
+| 28 | Revision 2 → Revision 3 diff of intent | §22 |
+| 29 | Revision 1 → Revision 2 diff of intent | §23 |
+
+---
+
+---
+
+## 22. Diff of intent — Revision 2 → Revision 3
+
+R3 changes **what runs first and what has to be true before more runs**. It
+changes no contract, no threshold, no bound, no metric definition and no fairness
+rule. The full matrix in §9 remains the design of record; Phase 1 is a subset of
+it, not a different experiment.
+
+| # | Requirement | Resolution | Where |
+|---|---|---|---|
+| 1 | A decision-oriented fast path | **Phase 1 = `S1` only**: six static arms (`V`, `V+`, `W-D0`, `G-SG`, `W1-R`, `G-N4J-canon`) + a 30-run Agent pilot. Build cost drops from ~15,200 LLM calls to ~3,400; agent runs from 192 to 30 | §1.6, §16, §17.3 |
+| 2 | Move breadth behind explicit triggers | **Nine preregistered triggers T-A … T-I**, each stating its condition, what it unlocks, and what is recorded if it does not fire. `S0`/`S2`, the six-cell factorial, the full agent campaign, repeats, the parser study, `G-N4J-native` and second-model confirmation are all trigger-gated | §1.7 |
+| 3 | Mechanical properties checked exhaustively; humans judge only semantics, direction, referent | Gate Q2 was already split in R2; **Gate X is now split the same way** — precision/recall, direction consistency, entity merges, span resolution, vocabulary conformance and repeatability are all machine, 100 %. The single human dimension is vendor-only relation correctness | §10.4, §11.1 |
+| 4 | Self-contained adjudication packets | **§11.1a**: candidate, verbatim cited span and locator, ≤ 400 chars of same-chunk context each side, facet/entity identity, revision and heading path, sibling titles, one question, closed options. Plus `cannot_decide_from_packet` as a first-class outcome with a 0.10 ceiling on the packet generator, blinding, forced-choice direction packets, and 15 % double-adjudication | §11.1a |
+| 5 | Sequential stratified sampling with a declared uncertainty band | **25-item blocks**; two-sided 95 % Wilson interval against the threshold; entirely above → `provisional_pass`, entirely below → decisive **FAIL**, **contains the threshold → `undecided`** and expansion is not automatic | §11.1 |
+| 6 | ~100 items, not ~1,000 | **100 initial** (75 Q2 + 25 X), Phase-1 cap 200. Certification (≈ 40 items at `t = 0.90`, ≈ 60 at `t = 0.95`) is **demand-driven** — purchased only when the arm it governs is load-bearing for the recommendation | §11.1, §17.3 |
+| 7 | A formal Strategic Decision Checkpoint | **§1.8**: six preregistered recommendation classes (D-1 Vector … D-6 Ambiguous), a mandatory ambiguity register, and the rule that **a stage that cannot flip a recommendation does not run**. The checkpoint may not alter any frozen contract or invent a class after seeing data | §1.8, §16 (`11C.0`) |
+| 8 | Preserve validity disciplines | Unchanged: F0–F7 freezes, the AST leakage tests, authority-before-ranking, provenance on every returned chunk, the single evaluator, the symmetric tool surfaces, Gate P0, exact primary retrieval, and **F6 — the whole Agent contract, pilot included, frozen before any measured result** | §15, §13 |
+
+**Two honest consequences of the fast path, recorded before it runs.**
+
+1. **A 30-run pilot cannot certify a small agent effect.** It is explicitly not a
+   Gate A reading, and Gate A is marked `not_read_phase1` unless T-D fires and the
+   full campaign runs. Reporting a pilot signal as an agent result would be the
+   single easiest way to misuse this design.
+2. **`S1`-only means no richness claim.** H2's depth interaction and H5's richness
+   interaction are *unevaluable* at Phase 1 — not unsupported. Any statement about
+   how the effect scales with corpus richness requires T-C, and the Phase-1
+   scorecard says so on its face.
+
+---
+
+## 23. Diff of intent — Revision 1 → Revision 2
+
+Eleven review findings, each resolved without redesigning the experiment. Nothing
+below changes the SRS principle, the four-stage Wiki decision model,
+`W-D0-rev` / `W1-R-det`, Gate P0, exact primary retrieval, the freshness of Gate
+Q2, or the pre-static Agent freeze.
+
+| # | Finding in R1 | Resolution in R2 | Where |
+|---|---|---|---|
+| 1 | `neo4j:5-community` promised a database per tier and family — Community serves one user database | Physical **store swapping**: one container, 15 volumes, one mounted at a time, with a `store_key` + manifest-hash assertion on connect. Enterprise multi-database offered as **O-13** | §5.1 |
+| 2 | Native vendor ingestion was scoped to the whole corpus, but `SimpleKGPipeline` file loading does not cover `docx`/`pptx` | Vendor arm splits: **`G-N4J-canon`** is the full-corpus comparison and carries H6; **`G-N4J-native`** is a **PDF-subset** diagnostic. Sub-experiment P is PDF-scoped | §4.2, §10.4, §10.5 |
+| 3 | "`VectorCypherRetriever` with the library's default traversal expansion" — no such default exists | An explicit **frozen `retrieval_query`**, printed in full, plus a vendor-provided-versus-ours table and a declared deviation from stock (exact cosine over the eligible set, because the index offers neither pre-filter nor exact search) | §10.4 |
+| 4 | `V+` ranked chunk and facet vectors in one cosine, contradicting the rule that the two spaces are never compared | `V+` ranks each space **separately** and fuses the **ranks** by RRF (`k0 = 60`, the same constant Stage A uses); facet entries expand under `c_max`. No score crosses the space boundary | §10.1 |
+| 5 | `W1-R` Stage A used "reachable from an A-seed" as a signal that produced `A` | Split into **`A0`** (query-to-artifact signals only) and **`A1`** (path expansion from `A0`, never re-fused into it) | §10.6.2 |
+| 6 | `path_score = decay^hop × seed_score` ignored the edges actually walked | Path score now multiplies a per-edge `decay × derivation-class weight × evidence support`; query relevance stays **out** of it, and `G-SG[path-sem]` is the diagnostic that tests that choice. Semantic and path scores remain separate | §10.2, §9.1 |
+| 7 | `M_max = 3` could only reach a 6-hop chain by multi-seed assembly, which R1 counted as traversal | `M_max = 6` with a **per-hop candidate quota** of ⌈`C_max`/`M_max`⌉, plus `traversal_depth_achieved` and a mandatory split of chain completion into **single-walk** versus **multiseed** | §9.5, §12.2 |
+| 8 | Navigation diagnostics were aggregate, so the enrichment layer's own contribution was invisible | Every navigation metric is also reported **per link class**, with `unique_destinations_by_class`, `model_derived_unique_destination_count` and `required_fact_contribution_of_model_derived_links` as the headline H4 numbers | §12.2 |
+| 9 | Versions were unpinned and several settings read "library default" | New **F0 runtime pin** — image tag **and digest**, library and driver versions — plus the **default-materialization rule**: every default is read out at pin time, written into the frozen config, and asserted by a conformance test | §5.4, §15 |
+| 10 | The manifest used the legacy API `task_type` vocabulary, and hashed only one vector | `retrieval_role` + `role_encoding = "prompt_prefix"` + the prefix bytes and their hash; **`provider_vector_sha256` before normalization and `index_vector_sha256` after**, both persisted | §6.1, §6.4 |
+| 11 | ~1,080 manual reviews committed by default, including properties a machine can decide | Mechanical properties are machine-checked over **100 %** of the population; humans judge only semantics, direction and referent, under a **sequential stratified rule** (block 50, then 25, Wilson bounds, cap 150, confirmation samples at the other tiers). Expected ~550, worst case 1,010 | §11.1, §17.3 |
+
+**Deliberately unchanged.** The layer separation and the SRS as the single
+projection-neutral relationship universe; the four-stage admission / eligibility /
+bounded-selection / final-`K` model and its caps other than `M_max`;
+`W-D0-rev` and `W1-R-det` as core arms; Gate P0 substrate parity; exact similarity
+everywhere in the primary benchmark; Gate Q2 inheriting no qualification from any
+earlier stage; and F6, which freezes the entire Agent contract before any measured
+result — static included — is observed.
+
+**Owner decisions:** O-1 through O-11 stand as in Revision 1. O-12 is reworked.
+O-13 through O-17 are new and all five arise from the findings above.
 
 ---
 
 **STOP.** This is the end of the design phase. No corpus is generated, no code is
 implemented, no arm is run, and no outcome is inspected until the §19 decisions
 are settled and this plan is approved.
+
+When it is approved, what is approved is **Phase 1** — `S1`, six static arms, a
+30-run pilot and ~100 adjudications — and nothing beyond it. Every further block
+requires its §1.7 trigger to have fired **and** the §1.8 checkpoint to have
+recorded which recommendation that block could change.
